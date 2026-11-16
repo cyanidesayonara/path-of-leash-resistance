@@ -730,16 +730,35 @@ static func _bars(wc: ShapeBatch, st) -> void:
 		wc.circle(lamp, 3.0, GREEN if open else RED)
 
 
+# the car's two ends, and a door's two leaves (west, east): hoisted so the
+# per-frame loops allocate nothing
+const ENDS: Array[int] = [1, -1]
+const SIDES: Array[float] = [-1.0, 1.0]
+const SHAKER_AT: Array[Vector2] = [Vector2(430.0, -860.0), Vector2(852.0, -872.0)]
+const SHAKER_KEY: Array[int] = [41, 53]
+static var _canopy := PackedVector2Array()
+
+
 static func _doors(wc: ShapeBatch, tr, t: float) -> void:
 	var warn: bool = tr.state == 1 or tr.state == 2
-	for end: int in [1, -1]:
+	var caught: bool = tr.state == 3
+	for end: int in ENDS:
 		var y := M.CAR_S if end > 0 else M.CAR_N
 		var g: float = tr.gap_s if end > 0 else tr.gap_n
 		var leaf := M.DOOR_HALF * (1.0 - g)
-		for side: float in [-1.0, 1.0]:
+		var pinched: bool = caught and end == tr.open_end
+		for side: float in SIDES:
 			var edge := M.DOOR_L if side < 0.0 else M.DOOR_R
 			var x0 := minf(edge, edge - side * leaf)
 			var w := leaf
+			if pinched:
+				# closed on the strap where it crosses (Metro._pinch's rects)
+				if side < 0.0:
+					x0 = M.DOOR_L
+					w = float(tr.pinch_x) - M.PINCH - M.DOOR_L
+				else:
+					x0 = float(tr.pinch_x) + M.PINCH
+					w = M.DOOR_R - x0
 			# the leaves slide into pockets in the end wall
 			wc.rect(Rect2(x0, y - 5.0, w, 10.0), DOOR)
 			if w > 6.0:
@@ -747,8 +766,9 @@ static func _doors(wc: ShapeBatch, tr, t: float) -> void:
 				var lip := x0 + w if side < 0.0 else x0
 				wc.rect(Rect2(lip - 1.5, y - 6.0, 3.0, 12.0), DOOR_EDGE)
 		# the warning lamp over the doorway, flashing with the chime
-		var on: bool = warn and end == tr.open_end and fmod(t * 4.0, 1.0) < 0.5
-		for lx: float in [M.DOOR_L - 8.0, M.DOOR_R + 8.0]:
+		var on: bool = (warn or pinched) and end == tr.open_end and fmod(t * 4.0, 1.0) < 0.5
+		for side: float in SIDES:
+			var lx := M.DOOR_L - 8.0 if side < 0.0 else M.DOOR_R + 8.0
 			wc.circle(Vector2(lx, y), 4.0, WARN_ON if on else WARN_OFF)
 			if on:
 				wc.glow(Vector2(lx, y), 26.0, Color(1.0, 0.76, 0.2, 0.35), 0.2)
@@ -827,20 +847,19 @@ static func _busker(wc: ShapeBatch, t: float) -> void:
 
 # out of the rain: two people at the foot of the stairs shaking out their umbrellas
 static func _shakers(wc: ShapeBatch, t: float) -> void:
-	var spots := [[Vector2(430.0, -860.0), 41], [Vector2(852.0, -872.0), 53]]
-	for s: Array in spots:
-		var p: Vector2 = s[0]
-		var k: int = s[1]
+	for si in range(SHAKER_AT.size()):
+		var p: Vector2 = SHAKER_AT[si]
+		var k: int = SHAKER_KEY[si]
 		var face := Vector2.RIGHT if p.x < M.CX else Vector2.LEFT
 		NpcFigure.person(wc, p, face, k, -1.0, {"arms": NpcFigure.Arms.READY})
 		var shake := sin(t * 11.0 + float(k)) * 0.5
 		var tip := p + face.rotated(shake) * 30.0
 		var col: Color = AWNINGS[k % AWNINGS.size()]
-		var pts := PackedVector2Array()
+		_canopy.resize(8)
 		for i in range(8):
 			var a := TAU * float(i) / 8.0
-			pts.append(tip + Vector2(cos(a) * 15.0, sin(a) * 11.0).rotated(shake))
-		wc.polygon(pts, col)
+			_canopy[i] = tip + Vector2(cos(a) * 15.0, sin(a) * 11.0).rotated(shake)
+		wc.polygon(_canopy, col)
 		wc.circle(tip, 2.0, Color(0.10, 0.10, 0.10))
 		wc.line(p + face * 8.0, tip, Color(0.12, 0.12, 0.12), 1.6)
 		# the water flung off it

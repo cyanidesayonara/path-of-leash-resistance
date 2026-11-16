@@ -90,7 +90,7 @@ const JAMON_POS := {
 	"espanya": Vector2(860.0, -3200.0),
 	"eixample": Vector2(470.0, -2900.0),
 	"diagonal": Vector2(760.0, -1720.0),
-	"metro": Vector2(846.0, -4330.0),   # behind the last pillar at Sant Gos
+	"metro": Vector2(846.0, -4330.0),   # by the platform edge at Sant Gos, past the last pillar
 	"angels": Vector2(380.0, -2950.0),
 	"poble": Vector2(820.0, -2480.0),
 	"cremada": Vector2(800.0, -4200.0),

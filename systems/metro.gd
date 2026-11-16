@@ -142,6 +142,9 @@ const SWAY := 46.0                     # the car's sway, as a shove, px/s
 const LURCH := 150.0                   # pulling away and braking, px/s
 const HOLD_D := 110.0                  # your human waits this close to a shut door
 const CATCH_PULL := 260.0
+const DWELL_T := 3.0                   # doors open at a station: nobody is shut in getting off
+const PINCH := 6.0                     # half the slot the caught leaves leave the strap (the rope keeps 3 px off a rect)
+const DOOR_CLEAR := 10.0               # a body this close to a doorway's line holds the doors
 
 # --- the surge: a train in on the other track, and its crowd ------------------
 const SURGE_IN_T := 1.6
@@ -151,6 +154,7 @@ const SURGE_STAY_T := 6.0              # the train stands this long after
 const SURGE_OUT_T := 2.0
 const SURGE_N := 26
 const SURGE_DOORS: Array[float] = [-2720.0, -2840.0, -2960.0, -3080.0, -3180.0]
+const BOTH: Array[int] = [0, 1]       # her, then your human
 const PERSON_R := 13.0
 const DOG_R := 12.0
 const HUMAN_R := 15.0
@@ -195,8 +199,12 @@ class Train:
 	var rides := 0
 	var announced := false
 	var caught_gap := 0.0
+	var pinch_x := 0.0         # where the caught leaves close on the strap
+	var pinch: Array[Rect2] = []   # the caught leaves, while they are in main.rope_rects
 	var body_s: CollisionShape2D = null
 	var body_n: CollisionShape2D = null
+	var solid_s := false       # what each door body was last set to
+	var solid_n := false
 
 
 class Surge:
@@ -300,7 +308,10 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	for x: float in CAB_XS:
 		out.append(cab_rect(x))
 	out.append(CAB_END)
-	out.append_array([MACHINES, BOOTH, STAIR_RAIL, BAL_A, BAL_B, BUSKER_R, VENDING])
+	out.append_array([MACHINES, BOOTH, STAIR_RAIL, BAL_A, BAL_B, VENDING])
+	# the busker is a body only while he is there to play
+	if Outdoors.underground_busker(Game.weather, Game.hour):
+		out.append(BUSKER_R)
 	out.append_array(car_walls())
 	out.append_array(seats())
 	return out
@@ -430,14 +441,38 @@ static func add_doors(m: Node2D) -> void:
 			st.train.body_s = cs
 		else:
 			st.train.body_n = cs
-	_set_door_bodies(st.train)
+		cs.disabled = true
+	_set_door_bodies(m, st.train)
 
 
-static func _set_door_bodies(tr: Train) -> void:
-	if tr.body_s != null:
-		tr.body_s.set_deferred("disabled", tr.gap_s > 0.15)
-	if tr.body_n != null:
-		tr.body_n.set_deferred("disabled", tr.gap_n > 0.15)
+# A door is a body once it is nearly shut, and set only when that changes.
+# It never shuts onto someone standing in the doorway: CLOSING reopens for
+# them first, and a body stays off while one is there.
+static func _set_door_bodies(m: Node2D, tr: Train) -> void:
+	var want_s := tr.gap_s <= 0.15 and not door_occupied(m, 1)
+	var want_n := tr.gap_n <= 0.15 and not door_occupied(m, -1)
+	if want_s != tr.solid_s:
+		tr.solid_s = want_s
+		if tr.body_s != null:
+			tr.body_s.set_deferred("disabled", not want_s)
+	if want_n != tr.solid_n:
+		tr.solid_n = want_n
+		if tr.body_n != null:
+			tr.body_n.set_deferred("disabled", not want_n)
+
+
+# her or your human standing in a doorway's line
+static func door_occupied(m: Node2D, end: int) -> bool:
+	var y := CAR_S if end > 0 else CAR_N
+	for who: int in BOTH:
+		var body: Node2D = m.dog if who == 0 else m.human
+		if body == null:
+			continue    # the walls are built before the pair
+		var r := DOG_R if who == 0 else HUMAN_R
+		var p: Vector2 = body.global_position
+		if absf(p.y - y) < 6.0 + r + DOOR_CLEAR and p.x > DOOR_L - r and p.x < DOOR_R + r:
+			return true
+	return false
 
 
 # --- hooks: what things are --------------------------------------------------------
@@ -474,8 +509,9 @@ static func tree_kind(m: Node2D, _p: Vector2) -> int:
 
 
 # the street's shopfronts, after dark (world/night_fronts.gd): along the
-# east side of both streets, where the shops are. Underground, nothing:
-# its light is its own, at every hour.
+# east side of the street at the way in, where the shops are. The street at
+# Sant Gos is only the stair head below the plaça, and underground has
+# none: its light is its own, at every hour.
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var NF: GDScript = load("res://world/night_fronts.gd")
@@ -605,8 +641,25 @@ static func human_in_car(m: Node2D) -> bool:
 	return hy < CAR_S - 8.0 and hy > CAR_N + 8.0
 
 
+static func dog_in_car(m: Node2D) -> bool:
+	var dy: float = m.dog.global_position.y
+	return dy < CAR_S - 8.0 and dy > CAR_N + 8.0
+
+
+# The end they get on by: the south door on the way out, the north door on
+# the way home. The train only leaves with that door open, so a car that has
+# just arrived waits for them to get off.
+static func boarding_end(m: Node2D) -> int:
+	return -1 if m.human.homeward else 1
+
+
 # the rope across a door's line, inside its opening
 static func rope_through(m: Node2D, end: int) -> bool:
+	return is_finite(rope_cross_x(m, end))
+
+
+# where the rope crosses a door's line inside its opening, or INF
+static func rope_cross_x(m: Node2D, end: int) -> float:
 	var y := CAR_S if end > 0 else CAR_N
 	var pts: Array[Vector2] = m.leash.pts
 	for i in range(pts.size() - 1):
@@ -615,8 +668,8 @@ static func rope_through(m: Node2D, end: int) -> bool:
 		if (a.y - y) * (b.y - y) < 0.0:
 			var x := lerpf(a.x, b.x, (y - a.y) / (b.y - a.y))
 			if x > DOOR_L - 6.0 and x < DOOR_R + 6.0:
-				return true
-	return false
+				return x
+	return INF
 
 
 static func _gap(tr: Train, end: int) -> float:
@@ -652,13 +705,14 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 				tr.state = Train.St.OPENING
 				tr.t = 0.0
 				Sfx.play("door_chime", 1.12, -6.0)
-			elif inside and tr.cool <= 0.0 and absf(hum.y - door_y) > BOARD_IN:
+			elif inside and tr.cool <= 0.0 and end == boarding_end(m) and absf(hum.y - door_y) > BOARD_IN \
+					and not door_occupied(m, end):
 				tr.state = Train.St.CHIME
 				tr.t = 0.0
 				Sfx.play("door_chime", 1.0, -4.0)
 				m.float_text(Vector2(CX, door_y + 20.0 * float(end)), "Doors closing!", Color(1, 1, 1), m.POP_SAY)
 		Train.St.CHIME:
-			if not inside:
+			if not inside or end != boarding_end(m):
 				tr.state = Train.St.DOCKED
 				tr.cool = 1.0
 			elif tr.t >= CHIME_T:
@@ -667,11 +721,17 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 		Train.St.CLOSING:
 			var g := 1.0 - clampf(tr.t / CLOSE_T, 0.0, 1.0)
 			_set_gap(tr, end, g)
-			if not inside:
+			if not inside or door_occupied(m, end):
+				# someone stepped back into the doorway: the doors give way
 				tr.state = Train.St.REOPEN
 				tr.t = 0.0
 			elif g < 0.75 and rope_through(m, end):
 				_catch(m, tr, end, g)
+			elif g <= 0.0 and not dog_in_car(m):
+				# shut with her outside and the strap not across the door
+				# (round a doorpost): open up rather than ride without her
+				tr.state = Train.St.REOPEN
+				tr.t = 0.0
 			elif g <= 0.0:
 				tr.state = Train.St.RIDE
 				tr.t = 0.0
@@ -681,6 +741,7 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 		Train.St.CAUGHT:
 			_set_gap(tr, end, tr.caught_gap)
 			if tr.t >= CAUGHT_T:
+				_unpinch(m, tr)
 				tr.state = Train.St.REOPEN
 				tr.t = 0.0
 		Train.St.REOPEN:
@@ -689,6 +750,7 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 				tr.state = Train.St.DOCKED
 				tr.cool = RETRY_T
 		Train.St.RIDE:
+			_keep_aboard(m)
 			tr.speed = TUNNEL_SPEED * clampf(tr.t / 1.5, 0.0, 1.0)
 			tr.travel += tr.speed * delta
 			# pulling away, then the sway: whoever is standing is thrown about
@@ -706,6 +768,7 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 				tr.t = 0.0
 				Sfx.play("groan", 0.7, -10.0)
 		Train.St.BRAKE:
+			_keep_aboard(m)
 			tr.speed = TUNNEL_SPEED * (1.0 - clampf(tr.t / BRAKE_T, 0.0, 1.0))
 			tr.travel += tr.speed * delta
 			_shove(m, Vector2(0.0, float(-end)), LURCH, delta)
@@ -724,7 +787,9 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 			if _gap(tr, end) >= 1.0:
 				tr.state = Train.St.DOCKED
 				tr.t = 0.0
-	_set_door_bodies(tr)
+				# the stop: time to get off before anyone else gets on
+				tr.cool = DWELL_T
+	_set_door_bodies(m, tr)
 	# your human waits at a shut door ahead of them, inside the car
 	if inside:
 		var ahead := 1 if m.human.homeward else -1
@@ -738,6 +803,7 @@ static func _catch(m: Node2D, tr: Train, end: int, g: float) -> void:
 	tr.t = 0.0
 	tr.caught_gap = g
 	m.metro_door_catches += 1
+	_pinch(m, tr, end)
 	var door := Vector2(CX, CAR_S if end > 0 else CAR_N)
 	Sfx.play("crack", 0.7, -6.0)
 	m.feed.say("THE DOORS CAUGHT THE LEASH!", EventFeed.Tone.LOUD)
@@ -747,6 +813,45 @@ static func _catch(m: Node2D, tr: Train, end: int, g: float) -> void:
 		m.dog.velocity = to_door.normalized() * CATCH_PULL
 	m.human.patience = maxf(0.0, m.human.patience - 0.25)
 	m.human.notice("Hey! The doors!", 1.4)
+
+
+# The caught leaves close on the strap: while CAUGHT they are two solid
+# rects in main.rope_rects, the same list the rope's solver keeps out of
+# every stall and bench, with PINCH either side of where it crosses. Each
+# reaches across its end wall to the car's side, so a strap pulled sideways
+# is put back toward the slot rather than past a leaf's outer edge. The
+# rope is pressed into that slot by its own solver; nothing else holds it.
+static func _pinch(m: Node2D, tr: Train, end: int) -> void:
+	_unpinch(m, tr)
+	var y := CAR_S if end > 0 else CAR_N
+	var x := rope_cross_x(m, end)
+	if not is_finite(x):
+		x = CX
+	x = clampf(x, DOOR_L + PINCH + 4.0, DOOR_R - PINCH - 4.0)
+	tr.pinch_x = x
+	tr.pinch = [Rect2(CAR_L, y - 6.0, x - PINCH - CAR_L, 12.0), Rect2(x + PINCH, y - 6.0, CAR_R - x - PINCH, 12.0)]
+	m.rope_rects.append_array(tr.pinch)
+
+
+static func _unpinch(m: Node2D, tr: Train) -> void:
+	for r: Rect2 in tr.pinch:
+		var i: int = m.rope_rects.rfind(r)
+		if i >= 0:
+			m.rope_rects.remove_at(i)
+	tr.pinch.clear()
+
+
+# Riding, both of them are aboard. If a door ever shut with her on the
+# platform side (pushed through it in a crush), she is put back in the car
+# beside your human rather than left a carriage away on a stretched leash.
+static func _keep_aboard(m: Node2D) -> void:
+	if dog_in_car(m):
+		return
+	var hum: Vector2 = m.human.global_position
+	var y := clampf(hum.y + (40.0 if hum.y < (CAR_S + CAR_N) * 0.5 else -40.0), CAR_N + 30.0, CAR_S - 30.0)
+	m.dog.global_position = Vector2(clampf(hum.x + 30.0, CAR_L + SEAT_D + DOG_R, CAR_R - SEAT_D - DOG_R), y)
+	m.dog.velocity = Vector2.ZERO
+	m.leash.resnap()
 
 
 # the car throwing everyone in it about; a planted dog stands it better
@@ -923,7 +1028,7 @@ static func _tick_people(m: Node2D, st: State, delta: float) -> void:
 				if absf(pos.y - float(m.cam.position.y)) > 1400.0:
 					continue
 		# step round her and your human, and shove them
-		for who: int in [0, 1]:
+		for who: int in BOTH:
 			var body: Vector2 = dog if who == 0 else hum
 			var r := PERSON_R + (DOG_R if who == 0 else HUMAN_R)
 			var d := pos - body

@@ -134,6 +134,7 @@ func _run() -> void:
 		chimed += DT
 	_check(absf(chimed - M.CHIME_T) < 0.05, "the doors move CHIME_T after the chime (%.2f s)" % chimed)
 	var catches0: int = m.metro_door_catches
+	var rects0: int = m.rope_rects.size()
 	var closing := 0.0
 	while tr.state == tr.St.CLOSING and closing < 2.0:
 		_rope(m)
@@ -141,12 +142,45 @@ func _run() -> void:
 		closing += DT
 	_check(tr.state == tr.St.CAUGHT, "a leash across the door is caught")
 	_check(m.metro_door_catches == catches0 + 1, "and counted")
+	# the caught leaves are rope rects, closed on the strap where it crosses
+	_check(m.rope_rects.size() == rects0 + 2 and m.leash.rope_rects.size() == rects0 + 2,
+		"the caught leaves are in the rope's solid rects")
+	_check(absf(float(tr.pinch_x) - 640.0) < 1.0, "closed on the strap where it crosses (%.0f)" % float(tr.pinch_x))
+	# the rope's own solver presses a strap that crosses off-centre into the slot
+	# the dog off to one side on the platform, your human to the other in the
+	# car: the straight chord would cross at about 600
+	m.dog.global_position = Vector2(560.0, M.CAR_S + 60.0)
+	m.human.global_position = Vector2(700.0, M.CAR_S - 160.0)
+	for i in range(20):
+		m.leash.tick(DT)
+	var cx: float = M.rope_cross_x(m, 1)
+	_check(is_finite(cx) and absf(cx - float(tr.pinch_x)) <= M.PINCH + 2.0,
+		"the strap is held in the slot between the leaves (crosses at %.0f, slot %.0f)" % [cx, float(tr.pinch_x)])
+	m.dog.global_position = Vector2(640.0, M.CAR_S + 60.0)
+	m.human.global_position = Vector2(640.0, M.CAR_S - 160.0)
 	var t := 0.0
 	while tr.state != tr.St.DOCKED and t < 4.0:
 		_rope(m)
 		M.tick(m, DT)
 		t += DT
 	_check(tr.state == tr.St.DOCKED and tr.gap_s >= 0.99, "the doors open again")
+	_check(m.rope_rects.size() == rects0 and tr.pinch.is_empty(), "and let the strap go")
+
+	# --- 5b. the doors never shut on someone in the doorway ---
+	t = 0.0
+	while tr.cool > 0.0 and t < 4.0:
+		M.tick(m, DT)
+		t += DT
+	m.dog.global_position = Vector2(640.0, M.CAR_S - 4.0)
+	m.human.global_position = Vector2(640.0, M.CAR_S - 160.0)
+	_rope(m)
+	var shut_on_her := false
+	for i in range(240):
+		m.dog.global_position = Vector2(640.0, M.CAR_S - 4.0)
+		M.tick(m, DT)
+		shut_on_her = shut_on_her or tr.gap_s < 0.9 or tr.solid_s
+	_check(not shut_on_her, "a dog standing in the doorway holds the doors open")
+	_check(m.metro_door_catches == catches0 + 1, "and is not a catch")
 
 	# --- 6. both aboard: the ride, and out at Sant Gos ---
 	m.dog.global_position = Vector2(600.0, M.CAR_S - 200.0)
@@ -166,6 +200,65 @@ func _run() -> void:
 	_check(m.metro_door_catches == catches0 + 1, "a clear door catches nothing")
 	_check(tr.rides == 1 and tr.open_end == -1, "one stop: the north door opens at Sant Gos")
 	_check(tr.gap_n >= 0.99 and tr.gap_s <= 0.01, "and the south door stays shut")
+	_check(tr.solid_s and not tr.solid_n, "the shut door is solid, the open one is not")
+
+	# --- 6b. getting off: the train waits for them ---
+	# your human lingers in the car by the open door, the dog further in
+	t = 0.0
+	var left_again := false
+	while t < 8.0:
+		m.human.global_position = Vector2(640.0, M.CAR_N + 100.0)
+		m.dog.global_position = Vector2(600.0, M.CAR_N + 250.0)
+		_rope(m)
+		M.tick(m, DT)
+		t += DT
+		left_again = left_again or tr.state != tr.St.DOCKED
+	_check(not left_again, "an arrived car does not leave with them still aboard on the way out")
+	# your human walks out at Sant Gos; the dog lingers a while, then follows
+	t = 0.0
+	var hy: float = M.CAR_N + 100.0
+	while t < 8.0:
+		hy = maxf(hy - 120.0 * DT, M.CAR_N - 260.0)
+		m.human.global_position = Vector2(640.0, hy)
+		var dy: float = M.CAR_N + 150.0 if t < 3.0 else maxf(M.CAR_N + 150.0 - (t - 3.0) * 150.0, M.CAR_N - 200.0)
+		m.dog.global_position = Vector2(640.0, dy)
+		_rope(m)
+		M.tick(m, DT)
+		t += DT
+		left_again = left_again or tr.state != tr.St.DOCKED
+	_check(not left_again, "a lingering dog does not ride back")
+	_check(tr.rides == 1 and m.metro_door_catches == catches0 + 1, "and getting off normally catches nothing")
+	# a dog left behind a shut door mid-ride is put back aboard
+	m.human.global_position = Vector2(640.0, M.CAR_N + 200.0)
+	m.dog.global_position = Vector2(640.0, M.CAR_S + 100.0)
+	M._keep_aboard(m)
+	_check(M.dog_in_car(m), "a dog stranded outside a riding car is put back in it")
+
+	# --- 6c. the way home: on at Sant Gos, off at Paraigües ---
+	m.human.homeward = true
+	t = 0.0
+	var rode_home := false
+	while t < 20.0:
+		m.human.global_position = Vector2(640.0, M.CAR_N + 200.0)
+		m.dog.global_position = Vector2(600.0, M.CAR_N + 240.0)
+		_rope(m)
+		M.tick(m, DT)
+		t += DT
+		rode_home = rode_home or tr.state == tr.St.RIDE
+		if tr.rides > 1 and tr.state == tr.St.DOCKED:
+			break
+	_check(rode_home and tr.rides == 2 and tr.open_end == 1, "home: on at Sant Gos, and the south door opens at Paraigües")
+	t = 0.0
+	var left_home := false
+	while t < 8.0:
+		m.human.global_position = Vector2(640.0, M.CAR_S - 100.0)
+		m.dog.global_position = Vector2(600.0, M.CAR_S - 250.0)
+		_rope(m)
+		M.tick(m, DT)
+		t += DT
+		left_home = left_home or tr.state != tr.St.DOCKED
+	_check(not left_home and m.metro_door_catches == catches0 + 1, "and it waits for them to get off there too")
+	m.human.homeward = false
 
 	# --- 7. the surge ---
 	var s = st.surge
