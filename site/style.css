@@ -1,28 +1,30 @@
-/* One stylesheet for the landing page and the press kit. The palette is the
-   intro's: cream walls, brick-red title, teal shutters, cobble grey. */
-:root {
-  --bg: #fbf3e4;
-  --card: #fffaf1;
-  --ink: #3a2a20;
-  --muted: #6e5a4c;
-  --brick: #b5372b;
-  --brick-dark: #8e2a20;
-  --teal: #2f7f78;
-  --line: #e6d6bd;
-  --max: 980px;
+/* One stylesheet for the landing page and the press kit, in the game's own
+   look: Trencadis, saffron, turquoise and magenta on deep navy, with the
+   game's two faces. Every colour is a variable from palette.css, which
+   tools/site_palette.gd generates from hud/ui_kit.gd; never write a colour
+   here (tests/test_site_palette.gd fails on one). The fonts are the game's
+   files, copied into fonts/ by the Pages workflow. */
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("fonts/BricolageGrotesque.ttf") format("truetype");
+  font-weight: 200 800;
+  font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #211a16;
-    --card: #2c231e;
-    --ink: #f3e7d6;
-    --muted: #c3ae98;
-    --brick: #e0574a;
-    --brick-dark: #b5372b;
-    --teal: #5cb8ae;
-    --line: #47392f;
-  }
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  --max: 1000px;
+  --display: "Bricolage Grotesque", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --line: color-mix(in srgb, var(--ink) 14%, transparent);
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -31,12 +33,13 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--navy-deep);
   color: var(--ink);
-  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 500 17px/1.6 var(--body);
 }
 
-a { color: var(--teal); }
+a { color: var(--turquoise); }
+a:hover { color: var(--saffron); }
 
 img { max-width: 100%; height: auto; display: block; }
 
@@ -46,136 +49,187 @@ img { max-width: 100%; height: auto; display: block; }
   padding: 0 16px;
 }
 
+/* the mosaic band across the top of the page, as on the game's cards */
+.tiles {
+  height: 14px;
+  background:
+    linear-gradient(100deg,
+      var(--saffron) 0 7%, transparent 7% 7.6%,
+      var(--turquoise) 7.6% 15%, transparent 15% 15.6%,
+      var(--magenta) 15.6% 21%, transparent 21% 21.6%,
+      var(--saffron) 21.6% 30%, transparent 30% 30.6%,
+      var(--leaf) 30.6% 36%, transparent 36% 36.6%,
+      var(--turquoise) 36.6% 45%, transparent 45% 45.6%,
+      var(--ink) 45.6% 49%, transparent 49% 49.6%,
+      var(--magenta) 49.6% 58%, transparent 58% 58.6%,
+      var(--saffron) 58.6% 66%, transparent 66% 66.6%,
+      var(--turquoise) 66.6% 72%, transparent 72% 72.6%,
+      var(--magenta) 72.6% 80%, transparent 80% 80.6%,
+      var(--leaf) 80.6% 86%, transparent 86% 86.6%,
+      var(--saffron) 86.6% 93%, transparent 93% 93.6%,
+      var(--turquoise) 93.6% 100%);
+  border-bottom: 3px solid var(--navy-deep);
+}
+
 header.top {
-  padding: 40px 0 8px;
+  padding: 44px 0 8px;
   text-align: center;
 }
 
 .top img.logo {
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 12px;
-  border-radius: 16px;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px;
+  border-radius: 18px;
+  box-shadow: 0 6px 0 var(--navy);
+}
+
+h1, h2, .play, .store, .count {
+  font-family: var(--display);
+  font-weight: 800;
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(2rem, 7vw, 3.4rem);
-  line-height: 1.05;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-  color: var(--brick);
+  font-size: clamp(2.1rem, 7.4vw, 3.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  color: var(--saffron);
+  text-wrap: balance;
 }
 
 h2 {
-  font-size: 1.05rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  margin: 48px 0 12px;
+  color: var(--turquoise);
+  margin: 56px 0 14px;
 }
 
 .pitch {
   max-width: 34em;
-  margin: 14px auto 0;
+  margin: 16px auto 0;
   font-size: 1.15rem;
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 
 .hero {
-  margin: 28px auto 0;
+  margin: 30px auto 0;
   max-width: 720px;
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid var(--line);
-  image-rendering: auto;
+  border-top: 5px solid var(--saffron);
+  box-shadow: 0 10px 30px var(--navy-deep);
 }
 
 .hero img { width: 100%; }
 
 .cta {
-  margin: 28px 0 0;
+  margin: 32px 0 0;
   text-align: center;
 }
 
+/* a key cap, like the game's prompt bar */
 .play {
   display: inline-block;
-  padding: 18px 36px;
-  border-radius: 14px;
-  background: var(--brick);
-  color: #fff;
-  font-weight: 900;
-  font-size: 1.35rem;
-  letter-spacing: 0.06em;
+  padding: 16px 40px;
+  border-radius: 12px;
+  background: var(--saffron);
+  color: var(--navy-deep);
+  font-size: 1.45rem;
+  letter-spacing: 0.04em;
   text-decoration: none;
-  box-shadow: 0 5px 0 var(--brick-dark);
+  box-shadow: 0 6px 0 var(--navy-raised);
 }
 
-.play:hover { filter: brightness(1.06); }
-.play:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--brick-dark); }
+.play:hover { color: var(--navy-deep); filter: brightness(1.06); }
+.play:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--navy-raised); }
 
 .stores {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
-  margin-top: 22px;
+  margin-top: 24px;
 }
 
 .store {
   display: inline-block;
-  padding: 11px 18px;
-  border: 2px solid var(--ink);
+  padding: 10px 18px;
+  border: 2px solid var(--ink-soft);
   border-radius: 10px;
   color: var(--ink);
-  font-weight: 700;
   text-decoration: none;
 }
 
-.store:hover { background: var(--card); }
+.store:hover { color: var(--navy-deep); background: var(--turquoise); border-color: var(--turquoise); }
 
 .note {
   text-align: center;
-  color: var(--muted);
+  color: var(--ink-faint);
   font-size: 0.92rem;
   margin-top: 12px;
 }
 
-ul.features {
+ul.features, ul.news {
   padding-left: 1.2em;
   margin: 0;
 }
 
-ul.features li { margin: 6px 0; }
+ul.features li, ul.news li { margin: 7px 0; }
+ul.features li::marker { color: var(--saffron); }
+ul.news li::marker { color: var(--magenta); }
+
+/* the walks, as tiles of the mosaic */
+.count { color: var(--saffron); }
+
+ul.walks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+ul.walks li {
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: var(--navy);
+  border-left: 4px solid var(--turquoise);
+  font-size: 0.95rem;
+}
+
+ul.walks li:nth-child(3n+2) { border-left-color: var(--saffron); }
+ul.walks li:nth-child(3n) { border-left-color: var(--magenta); }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .grid figure {
   margin: 0;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  background: var(--navy);
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .grid figcaption {
-  padding: 8px 12px;
+  padding: 9px 14px;
   font-size: 0.9rem;
-  color: var(--muted);
+  color: var(--ink-soft);
 }
 
 dl.facts {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 6px 20px;
+  gap: 8px 22px;
   margin: 0;
 }
 
-dl.facts dt { font-weight: 700; }
+dl.facts dt { font-weight: 700; color: var(--saffron); }
 dl.facts dd { margin: 0; }
 
 @media (max-width: 520px) {
@@ -184,26 +238,29 @@ dl.facts dd { margin: 0; }
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
+  background: var(--navy);
+  border-top: 4px solid var(--turquoise);
   border-radius: 12px;
-  padding: 18px 20px;
+  padding: 18px 22px;
 }
 
+.card p:first-child { margin-top: 0; }
+.card p:last-child { margin-bottom: 0; }
+
 .todo {
-  background: #ffe9a8;
-  color: #3a2a20;
+  background: var(--saffron);
+  color: var(--navy-deep);
   padding: 0 4px;
   border-radius: 4px;
 }
 
 footer {
-  margin: 56px 0 0;
+  margin: 64px 0 0;
   padding: 24px 0 40px;
   border-top: 1px solid var(--line);
-  color: var(--muted);
+  color: var(--ink-faint);
   font-size: 0.9rem;
   text-align: center;
 }
 
-footer a { color: var(--muted); }
+footer a { color: var(--ink-soft); }

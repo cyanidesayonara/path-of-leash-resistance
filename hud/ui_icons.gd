@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Kit := preload("res://hud/ui_kit.gd")
+
 # The game's UI iconography, drawn as vectors.
 #
 # Everything on the HUD used to be ASCII - [x], [ ], #----- - and not by
@@ -14,11 +16,11 @@ extends RefCounted
 
 enum Check { OPEN, PARTIAL, DONE_NOW, DONE_BEFORE }
 
-const GOLD := Color(0.94, 0.79, 0.35)
-const GREEN := Color(0.56, 0.89, 0.60)
-const GREEN_OLD := Color(0.44, 0.55, 0.46)
+const GOLD := Kit.SAFFRON
+const GREEN := Kit.LEAF
+const GREEN_OLD := Kit.LEAF_DIM
 const FAINT := Color(1, 1, 1, 0.22)
-const BONE := Color(0.93, 0.90, 0.83)
+const BONE := Kit.INK
 
 
 static func draw_check(c: Object, at: Vector2, s: float, state: int) -> void:
@@ -53,7 +55,7 @@ static func draw_meter(c: Object, at: Vector2, w: float, h: float, f: float,
 	# progress on a multi-step goal. A bar reads as momentum in a way "2/5"
 	# alone does not, which is the whole reason the ASCII one existed.
 	var r := Rect2(at.x, at.y, w, h)
-	c.draw_rect(r, Color(0.08, 0.09, 0.12, 0.55))
+	c.draw_rect(r, Color(Kit.NAVY, 0.55))
 	var fw: float = w * clampf(f, 0.0, 1.0)
 	if fw > 1.0:
 		c.draw_rect(Rect2(at.x, at.y, fw, h), col)
