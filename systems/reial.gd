@@ -85,12 +85,25 @@ const PALMS: Array[Vector2] = [
 	Vector2(820.0, -4150.0),
 ]
 
-# Cast-iron Barcelona pilones flanking the south and north grand archways
+# The arcade end-wings framing the square's archways: tiled blocks with a row
+# of pillars along their outer face. The south pair stands past the start
+# line; the north pair is solid (walls, rope and the owner's keep-outs), and
+# the archway between them is the way on.
+const WING_SOUTH_Y := 290.0
+const WING_NORTH_Y := -4580.0
+const WING_PILLARS_X: Array[float] = [405.0, 460.0, 515.0, 765.0, 820.0, 875.0]
+const NORTH_WINGS: Array[Rect2] = [
+	Rect2(CORRIDOR_L, WING_NORTH_Y - 10.0, 175.0, 70.0),
+	Rect2(755.0, WING_NORTH_Y - 10.0, CORRIDOR_R - 755.0, 70.0),
+]
+
+# Cast-iron Barcelona pilones at the south entrance and flanking the north
+# archway, just clear of the wings so they are seen where they wrap the leash
 const PILONES: Array[Vector2] = [
 	Vector2(506.0, 220.0),
 	Vector2(774.0, 220.0),
-	Vector2(506.0, -4530.0),
-	Vector2(774.0, -4530.0),
+	Vector2(542.0, -4494.0),
+	Vector2(738.0, -4494.0),
 ]
 
 # Late-night bar terraces with marble bistro tables under the portico arcades
@@ -121,6 +134,7 @@ const PIGEON_SPOTS: Array[Vector2] = [
 ]
 
 # Night-time street sellers with goods on a white sheet (fold up & run at the whistle)
+# to the nearest arch of the arcade, just inside the colonnade
 const SELLER_SPECS: Array = [
 	[Rect2(495.0, -1490.0, 72.0, 50.0), "glow"],
 	[Rect2(715.0, -2250.0, 72.0, 50.0), "shades"],
@@ -131,6 +145,11 @@ const SELLER_WHISTLE_FIRST := 16.0
 const SELLER_WHISTLE_EVERY := 28.0
 const SELLER_RUN_SPEED := 155.0
 const SELLER_AWAY_TIME := 6.0
+const SELLER_RUN_DY := 160.0
+const SELLER_ARCH_INSET := 14.0
+const GLOW_COLS: Array[Color] = [Color(0.35, 0.95, 0.90), Color(0.98, 0.45, 0.75), Color(0.98, 0.92, 0.32)]
+const BAG_COLS: Array[Color] = [Color(0.76, 0.28, 0.24), Color(0.24, 0.46, 0.68), Color(0.82, 0.66, 0.26)]
+const CHAIR_DY: Array[float] = [-13.0, 13.0]
 
 const PATRON_COATS: Array[Color] = [
 	Color(0.24, 0.28, 0.38),
@@ -164,6 +183,8 @@ static func wrap_rects() -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	for t: Rect2 in TERRACES:
 		out.append(t)
+	for w: Rect2 in NORTH_WINGS:
+		out.append(w)
 	return out
 
 
@@ -174,6 +195,8 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	# Central fountain collision footprint
 	out.append(Rect2(FOUNTAIN_POS.x - FOUNTAIN_RADIUS, FOUNTAIN_POS.y - FOUNTAIN_RADIUS,
 		FOUNTAIN_RADIUS * 2.0, FOUNTAIN_RADIUS * 2.0))
+	for w: Rect2 in NORTH_WINGS:
+		out.append(w)
 	return out
 
 
@@ -201,12 +224,14 @@ static func _seller_home(r: Rect2) -> Vector2:
 
 static func _init_sellers(m: Node2D) -> void:
 	var list: Array[Dictionary] = []
-	for sp_item: Array in SELLER_SPECS:
+	for si in range(SELLER_SPECS.size()):
+		var sp_item: Array = SELLER_SPECS[si]
 		var r: Rect2 = sp_item[0]
 		var home := _seller_home(r)
 		list.append({
 			"rect": r,
 			"goods": String(sp_item[1]),
+			"run_dy": -SELLER_RUN_DY if si % 2 == 0 else SELLER_RUN_DY,
 			"home": home,
 			"pos": home,
 			"to": Vector2.ZERO,
@@ -239,6 +264,9 @@ static func build(m: Node2D) -> Array:
 	m.islands = Array([{"rect": Rect2(FOUNTAIN_POS - Vector2(FOUNTAIN_RADIUS + 24.0, FOUNTAIN_RADIUS + 24.0), Vector2((FOUNTAIN_RADIUS + 24.0) * 2.0, (FOUNTAIN_RADIUS + 24.0) * 2.0)), "side": 1.0, "lead": 180.0}], TYPE_DICTIONARY, &"", null)
 
 	setup_poles(m)
+	# the owner aims through the north archway, not into a wing's end
+	for w: Rect2 in NORTH_WINGS:
+		m.owner_keepouts.append(w)
 	_init_sellers(m)
 
 	# Sniffable landmarks (hydrants)
@@ -268,7 +296,7 @@ static func _draw_pilona(b: ShapeBatch, p: Vector2) -> void:
 	b.circle(p, 2.2, GAUDI_GOLD)
 
 
-static func _draw_terrace(b: ShapeBatch, tr: Rect2, ti: int) -> void:
+static func _draw_terrace(b: ShapeBatch, tr: Rect2, ti: int, patrons: bool) -> void:
 	var on_west := tr.get_center().x < 640.0
 	b.rect(Rect2(tr.position + Shade.light * 4.0, tr.size), SHADOW)
 	# Warm slate-wood terrace deck and brass rail border
@@ -287,7 +315,7 @@ static func _draw_terrace(b: ShapeBatch, tr: Rect2, ti: int) -> void:
 		for c in range(cols):
 			var tp := tr.position + Vector2(18.0 + float(c) * 42.0, 26.0 + float(r) * 48.0)
 			# Bistro chairs north & south
-			for dy: float in [-13.0, 13.0]:
+			for dy: float in CHAIR_DY:
 				b.circle(tp + Vector2(0.0, dy), 5.0, Color(0.18, 0.16, 0.16))
 			b.circle(tp + Shade.light * 3.0, 11.5, SHADOW)
 			b.circle(tp, 10.5, Color(0.92, 0.90, 0.86)) # marble top
@@ -297,7 +325,7 @@ static func _draw_terrace(b: ShapeBatch, tr: Rect2, ti: int) -> void:
 			b.circle(tp + Vector2(-4.0, 2.5), 2.0, Color(0.75, 0.88, 0.94))
 			# Seated late-night patron at alternate chairs
 			var idx := ti * 7 + r * 2 + c
-			if idx % 3 != 0:
+			if patrons and idx % 3 != 0:
 				var side_y := -14.0 if idx % 2 == 0 else 14.0
 				var sp := tp + Vector2(0.0, side_y)
 				b.circle(sp + Vector2(1.5, 2.5), 8.5, SHADOW)
@@ -327,16 +355,14 @@ static func _draw_busker_scene(b: ShapeBatch, pos: Vector2, is_guitar: bool, t: 
 	b.circle(cp + Vector2(0, -4), 2.0, Color(0.94, 0.82, 0.25))
 	b.circle(cp + Vector2(2, 4), 1.8, Color(0.90, 0.80, 0.30))
 	# Two onlookers listening
+	if not Outdoors.busker_onlookers(Game.weather, Game.hour):
+		return
 	var dir := 1.0 if is_guitar else -1.0
 	for k in range(2):
 		var lp := pos + Vector2(dir * (38.0 + float(k) * 10.0), -14.0 + float(k) * 28.0)
 		b.circle(lp + Vector2(2, 3), 9.0, SHADOW)
 		b.circle(lp, 8.5, PATRON_COATS[(k + (0 if is_guitar else 2)) % PATRON_COATS.size()])
 		b.circle(lp + Vector2(0.0, -2.0), 5.0, PATRON_HAIR[(k + 1) % PATRON_HAIR.size()])
-	# Rain/snow umbrella when weather keeps them sheltered
-	if not Outdoors.busking(Game.weather, Game.hour):
-		b.circle(pos + Vector2(0.0, -4.0), 22.0, Color(0.18, 0.22, 0.30, 0.9))
-		b.circle(pos + Vector2(0.0, -4.0), 3.0, Color(0.85, 0.82, 0.76))
 
 
 static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: float = 0.0) -> void:
@@ -418,9 +444,10 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 	for pl: Vector2 in PILONES:
 		_draw_pilona(b, pl)
 
-	# Dining terraces under the arcades
+	# Dining terraces under the arcades, their tables empty when it is wet
+	var patrons := Outdoors.terrace_patrons(Game.weather, Game.hour)
 	for ti in range(TERRACES.size()):
-		_draw_terrace(b, TERRACES[ti], ti)
+		_draw_terrace(b, TERRACES[ti], ti, patrons)
 
 	# Hot churros and chocolate prize
 	b.circle(PRIZE + Shade.light * 3.0, 10.0, SHADOW)
@@ -442,10 +469,10 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 		py += PILLAR_STEP
 
 	# South and north arcade end-wings framing the square's grand archways
-	for ey: float in [290.0, -4580.0]:
+	for ey: float in [WING_SOUTH_Y, WING_NORTH_Y]:
 		b.rect(Rect2(CORRIDOR_L, ey, 165.0, 60.0), ARCADE_TILE)
 		b.rect(Rect2(765.0, ey, 165.0, 60.0), ARCADE_TILE)
-		for ex: float in [405.0, 460.0, 515.0, 765.0, 820.0, 875.0]:
+		for ex: float in WING_PILLARS_X:
 			b.rect(Rect2(ex - 10.0, ey - 10.0, 20.0, 20.0), STONE_DARK)
 			b.rect(Rect2(ex - 8.0, ey - 8.0, 16.0, 16.0), ARCADE_PILLAR)
 
@@ -485,16 +512,14 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 static func _draw_seller_good(b: ShapeBatch, goods: String, gp: Vector2, k: int) -> void:
 	match goods:
 		"glow":
-			var cols: Array[Color] = [Color(0.35, 0.95, 0.90), Color(0.98, 0.45, 0.75), Color(0.98, 0.92, 0.32)]
-			b.circle(gp, 3.8, cols[k % cols.size()])
+			b.circle(gp, 3.8, GLOW_COLS[k % GLOW_COLS.size()])
 			b.circle(gp, 1.6, Color(1.0, 1.0, 0.95))
 		"shades":
 			b.rect(Rect2(gp.x - 5.0, gp.y - 2.0, 4.0, 3.0), Color(0.14, 0.14, 0.18))
 			b.rect(Rect2(gp.x + 1.0, gp.y - 2.0, 4.0, 3.0), Color(0.14, 0.14, 0.18))
 			b.line(gp + Vector2(-1.0, -1.0), gp + Vector2(1.0, -1.0), Color(0.86, 0.72, 0.28), 1.2)
 		_:
-			var bag_cols: Array[Color] = [Color(0.76, 0.28, 0.24), Color(0.24, 0.46, 0.68), Color(0.82, 0.66, 0.26)]
-			b.rect(Rect2(gp.x - 4.0, gp.y - 3.5, 8.0, 7.0), bag_cols[k % bag_cols.size()])
+			b.rect(Rect2(gp.x - 4.0, gp.y - 3.5, 8.0, 7.0), BAG_COLS[k % BAG_COLS.size()])
 
 
 static func _draw_sellers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
@@ -517,8 +542,10 @@ static func _draw_sellers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> voi
 			b.rect(sr, Color(0.92, 0.91, 0.88))
 			b.line(Vector2(sr.get_center().x, sr.position.y + 2.0), Vector2(sr.get_center().x, sr.end.y - 2.0), Color(0.82, 0.80, 0.76), 1.4)
 			# Corner cords gathered toward seller's hand
-			for corner: Vector2 in [sr.position, Vector2(sr.end.x, sr.position.y), Vector2(sr.position.x, sr.end.y), sr.end]:
-				b.line(corner, corner.lerp(sp, 0.42), Color(0.28, 0.28, 0.32, 0.8), 1.2)
+			_sheet_cord(b, sr.position, sp)
+			_sheet_cord(b, Vector2(sr.end.x, sr.position.y), sp)
+			_sheet_cord(b, Vector2(sr.position.x, sr.end.y), sp)
+			_sheet_cord(b, sr.end, sp)
 			var goods := String(sl["goods"])
 			for gi in range(6):
 				var gp := sr.position + Vector2(14.0 + float(gi % 3) * 21.0, 14.0 + float(gi / 3) * 20.0)
@@ -529,22 +556,29 @@ static func _draw_sellers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> voi
 		b.circle(sp + Vector2(2.0, 3.0), 10.5, SHADOW)
 		b.circle(sp, 10.0, Color(0.20, 0.24, 0.32))
 		b.circle(sp + Vector2(0.0, -3.0), 6.0, Color(0.36, 0.24, 0.17))
-		if st in ["carry", "away", "back"]:
+		if st == "carry" or st == "away" or st == "back":
 			# Bundled sheet slung over shoulder
 			b.circle(sp + Vector2(11.0, 3.0), 12.0, Color(0.88, 0.86, 0.82))
 			b.circle(sp + Vector2(9.0, 1.0), 8.0, Color(0.94, 0.93, 0.90))
 
 
+static func _sheet_cord(b: ShapeBatch, corner: Vector2, sp: Vector2) -> void:
+	b.line(corner, corner.lerp(sp, 0.42), Color(0.28, 0.28, 0.32, 0.8), 1.2)
+
+
 # The waiter, buskers, water ripples and street sellers draw on the live world pass.
+# A busker is out only in busking weather (Outdoors.busking); in the wet the
+# arches stand empty.
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	var t: float = AnimClock.msec() / 1000.0
 	if FOUNTAIN_POS.y > vt - 120.0 and FOUNTAIN_POS.y < vb + 120.0:
 		var rip := 20.0 + fposmod(t * 14.0, 12.0)
 		wc.circle(FOUNTAIN_POS, rip, Color(0.75, 0.92, 0.98, 0.22 * (1.0 - (rip - 20.0) / 12.0)))
-	if BUSKER_POS.y > vt - 120.0 and BUSKER_POS.y < vb + 120.0:
-		_draw_busker_scene(wc, BUSKER_POS, true, t)
-	if BUSKER2_POS.y > vt - 120.0 and BUSKER2_POS.y < vb + 120.0:
-		_draw_busker_scene(wc, BUSKER2_POS, false, t)
+	if Outdoors.busking(Game.weather, Game.hour):
+		if BUSKER_POS.y > vt - 120.0 and BUSKER_POS.y < vb + 120.0:
+			_draw_busker_scene(wc, BUSKER_POS, true, t)
+		if BUSKER2_POS.y > vt - 120.0 and BUSKER2_POS.y < vb + 120.0:
+			_draw_busker_scene(wc, BUSKER2_POS, false, t)
 	_draw_sellers(m, wc, vt, vb)
 	if m.waiter != null:
 		m.waiter.draw(m, wc, vt, vb)
@@ -575,7 +609,7 @@ static func _tick_sellers(m: Node2D, delta: float) -> void:
 			wt = 5.0
 		else:
 			wt = SELLER_WHISTLE_EVERY
-			m.float_text(Vector2(640.0, cam_y - 200.0), "PHWEEET!", Color(0.9, 0.95, 1.0))
+			m.float_text(Vector2(640.0, cam_y - 200.0), "PHWEET!", Color(0.9, 0.95, 1.0))
 			m.feed.say("PHWEET! SELLERS PACK UP!", EventFeed.Tone.LOUD)
 			for sl: Dictionary in near_laid:
 				sl["state"] = "warn"
@@ -604,9 +638,11 @@ static func _tick_sellers(m: Node2D, delta: float) -> void:
 		match st:
 			"warn":
 				if float(sl["t"]) >= SELLER_WARN_DURATION:
+					# into the nearest arch: a bay's middle, between two pillars
 					var to_west := r.get_center().x < 640.0
-					var ax := 318.0 if to_west else 962.0
-					var ay := clampf(r.get_center().y + (-160.0 if int(r.position.y) % 2 == 0 else 160.0), float(m.GATE_Y) + 120.0, float(m.START_Y) - 120.0)
+					var ax := CORRIDOR_L + SELLER_ARCH_INSET if to_west else CORRIDOR_R - SELLER_ARCH_INSET
+					var ay := clampf(r.get_center().y + float(sl["run_dy"]), float(m.GATE_Y) + 120.0, float(m.START_Y) - 120.0)
+					ay = roundf((ay + 4500.0) / PILLAR_STEP) * PILLAR_STEP - 4500.0
 					sl["to"] = Vector2(ax, ay)
 					sl["state"] = "carry"
 					sl["t"] = 0.0
@@ -647,7 +683,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			m.reial_fountain_drank = true
 
 	# Check barking at either busker
-	if not bool(m.get("reial_busker_barked")) and m.dog.bark_anim > 0.0:
+	if not bool(m.get("reial_busker_barked")) and m.dog.bark_anim > 0.0 and Outdoors.busking(Game.weather, Game.hour):
 		if m.dog.global_position.distance_to(BUSKER_POS) < 110.0 or m.dog.global_position.distance_to(BUSKER2_POS) < 110.0:
 			m.set("reial_busker_barked", true)
 			m.float_text(m.dog.global_position + Vector2(0, -28), "¡Olé!", Color(0.96, 0.88, 0.35))
@@ -693,6 +729,7 @@ static func night_lights(_m: Node2D) -> Array[Vector3]:
 	for tr: Rect2 in TERRACES:
 		var lx := 275.0 if tr.get_center().x < 640.0 else 1005.0
 		out.append(Vector3(lx, tr.get_center().y, 200.0))
-	for bp: Vector2 in [BUSKER_POS, BUSKER2_POS]:
-		out.append(Vector3(bp.x, bp.y, 190.0))
+	if Outdoors.busking(Game.weather, Game.hour):
+		out.append(Vector3(BUSKER_POS.x, BUSKER_POS.y, 190.0))
+		out.append(Vector3(BUSKER2_POS.x, BUSKER2_POS.y, 190.0))
 	return out

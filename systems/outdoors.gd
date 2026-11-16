@@ -100,9 +100,21 @@ static func terrace_parasols(weather: String, hour: String) -> bool:
 	return hour != "night" and weather != "snow"
 
 
-# Street sellers with wares on a blanket stay in when it is raining or snowing.
-static func street_sellers(weather: String, _hour: String) -> bool:
+# Street sellers with wares on a sheet come out after dark, and only when it
+# is dry.
+static func street_sellers(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and hour == "night"
+
+
+# People sit out at a cafe or bar terrace at any hour it is dry; in rain or
+# snow the tables stand empty.
+static func terrace_patrons(weather: String, _hour: String) -> bool:
 	return weather == "clear" or weather == "wind"
+
+
+# A busker draws a little crowd when busking, though not at first light.
+static func busker_onlookers(weather: String, hour: String) -> bool:
+	return busking(weather, hour) and hour != "dawn"
 
 
 # The share of a walk's usual crowd (tourists, people browsing at a stall)
