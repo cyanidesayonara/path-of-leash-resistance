@@ -129,3 +129,32 @@ static func crowd_here(n: int, floor_n := 1) -> int:
 
 static func pair_gap(weather: String, hour: String) -> float:
 	return float(PAIR_GAP_HOUR.get(hour, 1.0)) * float(PAIR_GAP_WEATHER.get(weather, 1.0))
+
+
+# A village street's mornings (Sarrià's, and any walk with the same people).
+# The bakery is open and its bread crates are out from first light until it
+# shuts for the night; in the rain they stand under the awning all the same.
+static func bakery_open(_weather: String, hour: String) -> bool:
+	return hour != "night"
+
+
+# The shops roll their shutters up by day and keep them down at night, in
+# any weather; so does the market.
+static func shops_open(_weather: String, hour: String) -> bool:
+	return hour != "night"
+
+
+# The municipal sweepers work the early and the late shifts, rain or not.
+static func street_sweeping(_weather: String, hour: String) -> bool:
+	return hour == "dawn" or hour == "night"
+
+
+# Joggers run in the dry and the light, from first light on.
+static func jogging(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and hour != "night"
+
+
+# Balcony plants are watered in the cool of the morning or the evening, and
+# never in the rain.
+static func watering_plants(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and (hour == "dawn" or hour == "dusk")
