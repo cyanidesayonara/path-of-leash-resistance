@@ -12,9 +12,11 @@ extends RefCounted
 # square, the placeta, with its plane trees and the biggest terrace.
 #
 # Temptation is the walk. Your human does not want her eating off the
-# floor: heading for a dropped pintxo gets "Leave it!" (0.8 s or more before
-# she can reach it), and eating it while told costs a third of their
-# patience. Leaving it pays, and gives a little patience back. A pintxo
+# floor: heading for a dropped pintxo gets "Leave it!" (LEAVE_LEAD before
+# she can reach it at the speed she is closing, so always at least 0.8 s),
+# and eating it while told costs a third of their patience (none in the
+# grace after a correction). Leaving it (turning off it, or staying out of
+# reach until the telling stands down) pays, and gives a little patience back. A pintxo
 # given from a terrace (sit pretty by a diner) or caught in the air is not
 # off the floor, and is fine.
 #
@@ -109,12 +111,17 @@ const GROUP_R := 15.0
 const DOORWAY_BARS: Array[int] = [0, 3, 5, 6, 10, 14]
 
 # --- tuning: the floor, the leave-it and the trays ---------------------------------
-const LEAVE_SEE := 96.0         # px: she is this close to floor food and heading for it
+const LEAVE_SEE := 96.0         # px: the least warning distance, at a dawdle
+const LEAVE_LEAD := 0.9         # s: warned this long before she can bite at her closing speed (0.8 s and a margin)
+const LEAVE_AIM := 56.0         # px: the pintxo is this near her line of travel: she is on course for it
+const LEAVE_REACH_MAX := 720.0  # px: past this nobody is reading her course (a fast dog in turbo needs ~660)
+const EAT_R := 26.0             # px: main.gd's floor-food bite radius
 const LEAVE_HEAD := 18.0        # px/s toward it that counts as heading for it
+const LEAVE_BACKOFF := 40.0     # px back off her nearest approach: she has turned away from it
 const LEAVE_CLOSE := 54.0       # px: this close counts whatever she is doing
 const LEAVE_HUMAN := 320.0      # px: your human sees this far
 const LEAVE_T := 2.2            # s the "Leave it!" stands
-const LEAVE_PASS := 140.0       # px from it: she has left it
+const LEAVE_PASS := 140.0       # px from it when the telling stands down: out of reach, she has left it
 const LEAVE_SPILL_T := 3.0
 const LEAVE_SPILL_R := 150.0
 const LEAVE_COST := 0.34        # patience, for eating it while told
@@ -122,6 +129,7 @@ const LEAVE_BACK := 0.25        # patience back for leaving it
 const LEAVE_PAY := 2
 const LEAVE_SPILL_PAY := 4
 const LEAVE_COOL := 1.2         # s before the same nag again
+const SPILL_WAIT := 2.5         # s the spill's "Leave it! All of it!" waits for your human to be free to say it
 const WAITER_SPEED := 118.0
 const WAITER_NEAR := 460.0      # px along the street: a run starts once she is this near
 const WAITER_REST := 5.0
@@ -316,6 +324,7 @@ static func build(m: Node2D) -> Array:
 	m.blai_begged = 0
 	m.blai_beg_t = 0.0
 	m.blai_spill_at = Vector2.INF
+	m.blai_spill_wait = 0.0
 	var hour: String = Game.hour
 	var weather: String = Game.weather
 	m.blai_open = []
@@ -489,6 +498,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	for w: TrayRun in m.blai_waiters:
 		_tick_waiter(m, w, delta)
 	_tick_pieces(m, delta)
+	_tick_spill(m, delta)
 	_tick_floor(m, delta)
 	_tick_beg(m, delta)
 
@@ -562,6 +572,7 @@ static func _tip(m: Node2D, w: TrayRun) -> void:
 	m.blai_trays_tipped += 1
 	var tray := w.pos + w.face * 12.0
 	m.blai_spill_at = tray + w.face * 70.0
+	m.blai_spill_wait = SPILL_WAIT
 	for i in range(SPILL_N):
 		var a := w.face.angle() + (float(i) - float(SPILL_N - 1) * 0.5) * 0.34
 		var dist := 44.0 + 80.0 * _h(w.key + i * 17 + m.blai_trays_tipped)
@@ -575,11 +586,12 @@ static func _tip(m: Node2D, w: TrayRun) -> void:
 	m.float_text(tray + Vector2(0.0, -20.0), "CRASH", Color(1.0, 0.96, 0.86))
 	m.float_text(w.pos + Vector2(0.0, -36.0), "Mare meva!", Color(0.96, 0.94, 0.88), m.POP_SAY)
 	m.feed.say("TRAY DOWN! CATCH ONE", EventFeed.Tone.LOUD)
-	# her doing, in front of a full terrace: your human is mortified
+	# her doing, in front of a full terrace: your human is mortified (short:
+	# the spill's leave-it follows as the pintxos land, _tick_spill)
 	if w.cause == "bump" or w.cause == "bark":
-		m.human.patience = maxf(0.0, float(m.human.patience) - TIP_COST)
+		m.human.lose_patience(TIP_COST)
 		if m.human.can_warn_external():
-			m.human.notice("Sorry! Sorry!", 1.2)
+			m.human.notice("Sorry! Sorry!", 0.4)
 
 
 static func _tick_pieces(m: Node2D, delta: float) -> void:
@@ -603,17 +615,29 @@ static func _tick_pieces(m: Node2D, delta: float) -> void:
 			continue
 		keep.append(pc)
 	m.blai_pieces = keep
-	# the last one down: your human has seen the lot
-	if keep.is_empty() and m.blai_spill_at.x < INF:
-		var at: Vector2 = m.blai_spill_at
+
+
+# The last pintxo down: your human has seen the lot and says leave it, as
+# soon as they are free to (the "Sorry!" may still be up), for SPILL_WAIT.
+static func _tick_spill(m: Node2D, delta: float) -> void:
+	if m.blai_spill_at.x == INF or not m.blai_pieces.is_empty():
+		return
+	var at: Vector2 = m.blai_spill_at
+	if m.human.global_position.distance_to(at) >= LEAVE_HUMAN + 60.0:
 		m.blai_spill_at = Vector2.INF
-		if m.human.global_position.distance_to(at) < LEAVE_HUMAN + 60.0 and m.human.can_warn_external():
-			_start_leave(m, at, LEAVE_SPILL_R, LEAVE_SPILL_T, LEAVE_SPILL_PAY, "Leave it! All of it!", -1)
+		return
+	if m.human.can_warn_external():
+		m.blai_spill_at = Vector2.INF
+		_start_leave(m, at, LEAVE_SPILL_R, LEAVE_SPILL_T, LEAVE_SPILL_PAY, "Leave it! All of it!", -1)
+		return
+	m.blai_spill_wait = float(m.blai_spill_wait) - delta
+	if m.blai_spill_wait <= 0.0:
+		m.blai_spill_at = Vector2.INF
 
 
 static func _scold(m: Node2D, gobbled: int) -> void:
 	m.blai_gobbled += gobbled
-	m.human.patience = maxf(0.0, float(m.human.patience) - LEAVE_COST * float(gobbled))
+	m.human.lose_patience(LEAVE_COST * float(gobbled))
 	m.human.glance_t = maxf(float(m.human.glance_t), 2.2)
 	m.float_text(m.human.global_position + Vector2(0.0, -34.0), "I said leave it!", Color(1.0, 0.86, 0.80), m.POP_SAY)
 	m.feed.say("YOUR HUMAN SAW THAT", EventFeed.Tone.BAD)
@@ -629,8 +653,12 @@ static func _floor_eaten(m: Node2D) -> int:
 	return n
 
 
+# r is how far off counts as out of reach when the telling stands down;
+# told from further off than that, she must also turn away (LEAVE_BACKOFF)
 static func _start_leave(m: Node2D, at: Vector2, r: float, t: float, pay: int, line: String, idx: int) -> void:
-	m.blai_leave = {"at": at, "r": r, "t": t, "pay": pay, "idx": idx}
+	var d: float = (m.dog.global_position as Vector2).distance_to(at)
+	m.blai_leave = {"at": at, "r": r, "t": t, "pay": pay, "idx": idx, "near": d,
+		"clear": maxf(r, d + LEAVE_BACKOFF)}
 	m.human.notice(line, 1.3)
 	m.human.glance_t = maxf(float(m.human.glance_t), 2.2)
 	if m.has_method("owner_news"):
@@ -652,10 +680,17 @@ static func _tick_floor(m: Node2D, delta: float) -> void:
 	if not m.blai_leave.is_empty():
 		var lv: Dictionary = m.blai_leave
 		lv.t = float(lv.t) - delta
-		var away: bool = dog.distance_to(lv.at as Vector2) > float(lv.r)
-		if away or float(lv.t) <= 0.0:
+		var d: float = dog.distance_to(lv.at as Vector2)
+		lv.near = minf(float(lv.near), d)
+		# turned away from it: off her nearest approach, or further than she
+		# was told from; or out of reach when the telling stands down
+		var turned: bool = d >= float(lv.near) + LEAVE_BACKOFF or d >= float(lv.clear)
+		if turned or float(lv.t) <= 0.0:
 			m.blai_leave = {}
 			m.blai_leave_cool = LEAVE_COOL
+			# hovering within reach until it stands down is not leaving it
+			if not turned and d < float(lv.r):
+				return
 			var idx: int = int(lv.idx)
 			var fresh := idx < 0 or not bool(m.kebabs[idx].get("left", false))
 			if idx >= 0:
@@ -668,27 +703,43 @@ static func _tick_floor(m: Node2D, delta: float) -> void:
 				if m.human.can_warn_external():
 					m.human.notice("Good dog.", 1.0)
 		return
-	if m.blai_leave_cool > 0.0 or not m.human.can_warn_external():
+	if m.blai_leave_cool > 0.0 or m.blai_spill_at.x < INF or not m.human.can_warn_external():
 		return
 	if m.human.global_position.distance_to(dog) > LEAVE_HUMAN:
 		return
 	var vel: Vector2 = m.dog.velocity
 	var best := -1
-	var best_d := LEAVE_SEE
+	var best_d := INF
 	for i in range(m.kebabs.size()):
 		var k: Dictionary = m.kebabs[i]
 		if bool(k.eaten):
 			continue
 		var to: Vector2 = (k.pos as Vector2) - dog
 		var d := to.length()
-		if d >= best_d:
+		if d >= best_d or d >= LEAVE_REACH_MAX:
 			continue
-		var heading := d > 0.5 and vel.dot(to / d) > LEAVE_HEAD
-		if heading or d < LEAVE_CLOSE:
+		if d < LEAVE_CLOSE:
+			best = i
+			best_d = d
+			continue
+		# on course for it: closing on it, and it lies near her line of travel
+		var closing := vel.dot(to / d)
+		if closing <= LEAVE_HEAD:
+			continue
+		if absf(to.cross(vel.normalized())) > LEAVE_AIM:
+			continue
+		# told LEAVE_LEAD before she can bite at the speed she is closing
+		if d <= leave_reach(closing):
 			best = i
 			best_d = d
 	if best >= 0:
 		_start_leave(m, m.kebabs[best].pos, LEAVE_PASS, LEAVE_T, LEAVE_PAY, "Leave it!", best)
+
+
+# How far off a pintxo she is told, closing on it at this speed: early
+# enough to obey (LEAVE_LEAD before the bite), never nearer than LEAVE_SEE.
+static func leave_reach(closing: float) -> float:
+	return clampf(LEAVE_LEAD * closing + EAT_R, LEAVE_SEE, LEAVE_REACH_MAX)
 
 
 # Sitting pretty by someone with a plate: they share. Taken from a hand, not
@@ -1192,15 +1243,21 @@ static func _pintxo_top(b: ShapeBatch, p: Vector2, kind: int, s: float) -> void:
 
 
 # a dropped pintxo on its napkin, on the floor (main's kebabs)
+# the napkin and its shadow, reused for every dropped pintxo (the batch
+# copies what it is given)
+static var _napkin := PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO])
+static var _napkin_shadow := PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO])
+
+
 static func draw_snack(_m: Node2D, wc: ShapeBatch, kp: Vector2) -> void:
 	var k := int(absf(kp.x * 0.37 + kp.y * 0.11))
 	var a := _h(k) * TAU
-	var pts := PackedVector2Array()
 	for q in range(4):
-		pts.append(kp + Vector2.from_angle(a + float(q) * TAU / 4.0 + 0.785) * 10.0)
-	wc.polygon(PackedVector2Array([pts[0] + Vector2(1.5, 2.0), pts[1] + Vector2(1.5, 2.0), pts[2] + Vector2(1.5, 2.0), pts[3] + Vector2(1.5, 2.0)]), SHADOW)
-	wc.polygon(pts, NAPKIN)
-	wc.line(pts[0].lerp(pts[1], 0.5), pts[2].lerp(pts[3], 0.5), NAPKIN_SHADE, 1.0)
+		_napkin[q] = kp + Vector2.from_angle(a + float(q) * TAU / 4.0 + 0.785) * 10.0
+		_napkin_shadow[q] = _napkin[q] + Vector2(1.5, 2.0)
+	wc.polygon(_napkin_shadow, SHADOW)
+	wc.polygon(_napkin, NAPKIN)
+	wc.line(_napkin[0].lerp(_napkin[1], 0.5), _napkin[2].lerp(_napkin[3], 0.5), NAPKIN_SHADE, 1.0)
 	_pintxo(wc, kp, k % TOPPINGS.size(), 1.15, a)
 
 

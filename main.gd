@@ -349,7 +349,8 @@ var lvl := "street":
 # margin pines are forest trees with tree_kind, and sends its mountain bikes
 # down the middle of the track with rider_lane. El Laberint d'Horta draws its
 # gravel, hedges and Eros as draw_cross_section, the gardens round the maze
-# as draw_edge_layer, and the gardener's barrow as draw_live.
+# as draw_edge_layer, and the gardener's barrow as draw_live. Carrer de Blai
+# lays its own terrace tables with draw_table.
 # The tutorial is laid out on El Barri (lvl "barri"), so El Barri's hooks run
 # in it too. tests/test_walk_hooks.gd holds each walk's declared hooks: a new
 # hook in a module, or a helper named like one, fails there until declared.
@@ -691,6 +692,7 @@ var diagonal_kiosk_barked := false
 var blai_waiters: Array = []
 var blai_pieces: Array = []
 var blai_spill_at := Vector2.INF
+var blai_spill_wait := 0.0
 var blai_leave: Dictionary = {}
 var blai_leave_cool := 0.0
 var blai_floor_seen := 0
