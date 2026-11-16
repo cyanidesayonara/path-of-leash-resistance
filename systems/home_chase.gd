@@ -131,7 +131,7 @@ const AEROPORT_BANDS := [
 # Montserrat: the goat wedges its horns in the mel i mató cheese stall,
 # then gets held at the Sant Joan funicular turnstile crossing gate
 const MONTSERRAT_BANDS := [
-	{"id": "cheese_stall", "kind": "respite", "jam_y": -3300.0},
+	{"id": "cheese_stall", "kind": "respite", "jam_y": -3300.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
