@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - New walk: Sarrià
+
+- Added `systems/sarria.gd`, the walk module for `sarria` (Sarrià, "The village the city swallowed, as its shutters go up"): up Carrer Major de Sarrià between two-storey village houses with green shutters and geranium balconies, past a bakery with its bread crates out and the Mercat de Sarrià with a delivery tricycle at its door, across the Plaça de Sarrià with the church of Sant Vicenç and its bell tower, plane trees and pigeons, then past the balcony gardener and a second bakery to the little Plaça de Sant Vicenç with its saint on a column, and off the leash in the square past its gate. Panots, pilones, paperera bins; lit night fronts (`night_fronts`); the plaça and square handle as pavement (`surface`).
+- The live event is the bells: the tower clock whirs for 0.8 s, then Sant Vicenç strikes the hour (the quarter on the way home). The plaça's pigeons go up, your human looks up from the phone, and a dog near the tower goes BARKY; barking while they ring is a howl along. New `church_bell` sound in `autoload/sfx.gd` and a glockenspiel-and-brushes `sarria` style in `audio/music.gd`.
+- Goals: howl along with the bells, sniff the bread at two bakeries, bark good morning to the balcony gardener, plus the staples; clock target 2:55 and a hidden pernil in `systems/tony_hawk.gd`; its own off-leash prop list and a pastries sign material.
+- Campaign sky `["clear", "dawn"]`. `systems/outdoors.gd` gains one rule per new kind: `bakery_open`, `shops_open`, `street_sweeping`, `jogging`, `watering_plants`.
+- Inserted into `Game.LEVELS` and `CAROUSEL` right before El Bosc, with El Bosc's star gate (21) and chase gate (`vet`); no other walk moved or retuned. README, `store/listing.md` and `docs/itch-page.md` now count forty walks and list it.
+- Tests: `tests/test_sarria.gd` (registered in `tests/ci_tests.txt`); added to `tests/test_walk_hooks.gd`, `tests/test_npc_clear_of_solids.gd`, `tools/shot_sweep.sh`, `tools/surface_map.sh` and `tools/behaviour_snapshot.sh`. Played through with `tools/playtest.gd` (no stuck walker, nobody inside a solid) and checked with the surface map.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.

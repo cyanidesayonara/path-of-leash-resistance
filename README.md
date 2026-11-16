@@ -30,7 +30,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Thirty-nine walks in and around Barcelona**, each built as its own place, plus a
+- **Forty walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -81,6 +81,7 @@ you want to go; constant hauling wears their patience down until they say
 | L'Eixample | the grid of cut corners round the basilica |
 | El Tibidabo | the mountain road |
 | El Veterinari | the clinic escape |
+| Sarrià | the village the city swallowed, at first light |
 | El Bosc | the forest |
 | Els Àngels | the skate plaza |
 | La Castanyada | the chestnut festival |
