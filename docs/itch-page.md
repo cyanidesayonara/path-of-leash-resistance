@@ -129,6 +129,28 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
 ```
 
+## What's new in 1.74
+
+For a devlog post or the top of the body. Everything since v1.73, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Boss arena additions and visual polish:
+  - El Drac's serpentine trencadís bench in El Mosaic: herd him onto the curved flanks to trigger a 0.8 s bolt telegraph and grind him to a daze in the far bend.
+  - El Gat's striped café awnings on Rambla del Raval: bait his Phase 2 pounce onto the canvas to bounce him back into the middle for a long daze while sheltering anyone underneath.
+  - Harbour wake ripples off the Golondrina (Els Lleons), lake ripples and rowboat details (El Mamut), feathered shore surf on the dog beaches, and a bakery bag beside the pigeons.
+- Living streets:
+  - El Gòtic's retractable lit bollards (pilones retràctils): cast-iron posts that lower and rise on a timed cycle with amber warning beacons, opening or closing alley shortcuts.
+  - El Besòs riverside lampposts, benches, and a drinking fountain along the path's bare stretches.
+  - Remaining bespoke passers-by (birdwatcher, street sweeper, mushroom forager, chestnut seller, skaters, surfers, lost tourists, and pickpockets) upgraded to the full character rig.
+- Camera and chase polish:
+  - Boss arena zoom-out, boss reveal letterbox, enrage tilt, and near-miss slow-motion.
+  - Late-campaign chases spaced evenly across the thirty-nine walks (`Festa de Gràcia`, `L'Aeroport`, `Montserrat`), plus `Montserrat` goat-herd respite checkpoints, steering, and boulder targeting fixes.
+- Performance and Android readiness:
+  - Cached static scenery and culled bike crossings on La Rambla, cached grid rows on La Diagonal, and smarter canopy updates.
+  - Display safe-area insets, Android system Back handling, pause/save flush on backgrounding, adaptive icons, and Google Play release pipeline setup.
+```
+
 ## What's new in 1.73
 
 For a devlog post or the top of the body. Everything since v1.72, from
