@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Retractable lit bollards (pilones retràctils) in El Gòtic
+
+- Added `systems/pilones_retractils.gd` (`PilonesRetractils`) wired through `systems/detour.gd` on `oldtown` (`El Gòtic`): two pedestrian-zone bollard gates (`y = -1350`, `y = -3720`) with flush steel street plates, glowing amber LED caps, `StaticBody2D` collision when raised, `0.8 s` amber strobe telegraphs before dropping (`WARN_DOWN`) and rising (`WARN_UP`), a delivery van rolling through while lowered, gentle radial clear-nudge on rise, and sensor-trip on `on_bark()` (`sensor beep! +2`).
+- Tests: `tests/test_pilones_retractils.gd` (registered in `tests/ci_tests.txt`), `oldtown --selftest`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
+
 ## 2026-11-16 - Fix Montserrat chase respites, herd steering, and boulder targeting
 
 - Registered Montserrat's two chase respites (`CHEESE_STALL_POS` at `y = -3300` and the trail gate midpoint at `y = -1900`) in `m.chase_jams` (`systems/montserrat.gd`) and marked `cheese_stall` as a checkpoint in `MONTSERRAT_BANDS` (`systems/home_chase.gd`), so the goat herd jams and saves checkpoints consistently with the other seven chase walks.

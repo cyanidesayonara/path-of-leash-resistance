@@ -766,3 +766,6 @@
 
 # Android readiness: safe-area insets, back/lifecycle hooks, export preset & icons
 --headless --path . --script res://tests/test_android_readiness.gd
+
+# Retractable lit bollards in El Gotic
+--headless --path . --script res://tests/test_pilones_retractils.gd
