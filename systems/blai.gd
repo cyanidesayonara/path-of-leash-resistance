@@ -97,7 +97,7 @@ const RUNS: Array = [
 	[Vector2(448.0, -4170.0), Vector2(752.0, -4410.0)],
 ]
 const PRIZE := Vector2(838.0, -2752.0)
-const PRIZE_TEXT := "snatch the tortilla pintxo off the bar's window ledge"
+const PRIZE_TEXT := "snatch the tortilla pintxo off the bar's window"
 # where groups stand with a drink in the evening: [x, y] centres by a door
 const STAND_GROUPS: Array[Vector2] = [
 	Vector2(476.0, -330.0), Vector2(804.0, -1100.0), Vector2(476.0, -1780.0),

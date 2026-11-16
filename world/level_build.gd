@@ -3075,7 +3075,7 @@ const FREEDOM_PROPS := {
 	],
 	"blai": [
 		[Vector2(280.0, -460.0), "dig"], [Vector2(1000.0, -300.0), "dig"], [Vector2(640.0, -300.0), "dig"],
-		[Vector2(360.0, -470.0), "planter"], [Vector2(920.0, -480.0), "planter"],
+		[Vector2(360.0, -470.0), "planter"], [Vector2(1030.0, -490.0), "planter"],
 		[Vector2(220.0, -340.0), "post"], [Vector2(520.0, -460.0), "post"], [Vector2(760.0, -450.0), "post"],
 		[Vector2(1060.0, -360.0), "post"], [Vector2(240.0, -220.0), "shrub"], [Vector2(1080.0, -230.0), "shrub"],
 	],

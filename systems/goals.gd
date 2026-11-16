@@ -172,7 +172,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"tram_dodge": {"text": "Dodge the tram %d times", "target": 3, "fn": func() -> int: return m.diagonal_tram_dodges},
 		"tram_clean": {"text": "Get home without the tram bumping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.diagonal_tram_hits == 0) else 0},
 		"kiosk": {"text": "Bark at the newspaper kiosk", "target": 1, "fn": func() -> int: return 1 if m.diagonal_kiosk_barked else 0},
-		"leave_it": {"text": "Leave it %d times when your human says so", "target": 3, "fn": func() -> int: return m.blai_leaves},
+		"leave_it": {"text": "Leave it %d times when told", "target": 3, "fn": func() -> int: return m.blai_leaves},
 		"tray": {"text": "Catch a pintxo off a tipping tray", "target": 1, "fn": func() -> int: return m.blai_tray_catches},
 		"beg": {"text": "Sit pretty at a terrace until someone shares", "target": 1, "fn": func() -> int: return m.blai_begged},
 		"pond": {"text": "Paddle in the pond by the basilica", "target": 1, "fn": func() -> int: return 1 if m.eixample_pond_paddled else 0},
