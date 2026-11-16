@@ -345,7 +345,6 @@ const STREET_W := 120.0                  # the one-way street past the west kerb
 const FACADE_E := RAIL_E + PAVE_W        # the east block's front
 const RAILING := Color(0.18, 0.26, 0.21)
 const PANOT := Color(0.66, 0.64, 0.60)
-const PANOT_DOT := Color(0.58, 0.56, 0.52)
 const KERB := Color(0.78, 0.76, 0.72)
 const ASPHALT := Color(0.30, 0.30, 0.32)
 const TERRAT := Color(0.74, 0.50, 0.38)
@@ -384,6 +383,11 @@ const RAIL_GATES: Array[Vector2] = [
 	Vector2(RAIL_W, -1420.0), Vector2(RAIL_E, -2160.0), Vector2(RAIL_W, -3380.0), Vector2(RAIL_E, -4260.0),
 ]
 const BICING_Y := -2760.0
+# the side street off the west street meets it at the west gate's crossing
+const SIDE_STREET_Y := -3380.0
+const SIDE_STREET_HALF := 60.0
+const KIOSK_COVERS: Array[Color] = [Color(0.86, 0.24, 0.20), Color(0.24, 0.40, 0.70), Color(0.94, 0.80, 0.24),
+	Color(0.92, 0.92, 0.90), Color(0.36, 0.62, 0.36), Color(0.88, 0.52, 0.22)]
 const STREET_TREE_STEP := 300.0
 const WASHING: Array[Color] = [Color(0.92, 0.90, 0.86), Color(0.40, 0.56, 0.78), Color(0.86, 0.42, 0.40)]
 
@@ -716,16 +720,16 @@ static func _draw_west_street(m: Node2D, b: ShapeBatch, top: float, bot: float) 
 	while by < bot:
 		var near_xing := false
 		for g: Vector2 in RAIL_GATES:
-			if absf(by - g.y) < 42.0:
+			if g.x == RAIL_W and absf(by - g.y) < 42.0:
 				near_xing = true
 				break
 		if not near_xing:
 			b.rect(Rect2(kerb_x - 48.0, by, 48.0, 1.5), Color(0.86, 0.86, 0.82, 0.45))
 		by += 92.0
-	# pedestrian crossings at the park gates: panots step down at a dropped kerb
+	# pedestrian crossings at the west railing's gates: panots step down at a dropped kerb
 	# onto asphalt with zebra stripes, flanked by cast-iron pilones
 	for g: Vector2 in RAIL_GATES:
-		if g.y < top - 60.0 or g.y > bot + 60.0:
+		if g.x != RAIL_W or g.y < top - 60.0 or g.y > bot + 60.0:
 			continue
 		b.rect(Rect2(kerb_x - 2.0, g.y - 26.0, 10.0, 52.0), ASPHALT.lightened(0.08))
 		b.rect(Rect2(kerb_x + 6.0, g.y - 26.0, 4.0, 52.0), KERB.darkened(0.08))
@@ -744,7 +748,7 @@ static func _draw_west_street(m: Node2D, b: ShapeBatch, top: float, bot: float) 
 		var in_recycle := my > RECYCLE_LANE.x - 30.0 and my < RECYCLE_LANE.y + 10.0
 		var in_xing := false
 		for g: Vector2 in RAIL_GATES:
-			if absf(my + 23.0 - g.y) < 56.0:
+			if g.x == RAIL_W and absf(my + 23.0 - g.y) < 56.0:
 				in_xing = true
 				break
 		if _h1(k, -1.0) > 0.35 and absf(my - BICING_Y) > 140.0 and not in_terrace and not in_recycle and not in_xing:
@@ -936,10 +940,8 @@ static func _shopfront(m: Node2D, b: ShapeBatch, y: float, kind: int) -> void:
 			b.rect(Rect2(kr.position.x + 12.0, kr.position.y + 24.0, 16.0, 32.0), KIOSK_GREEN.lightened(0.16))
 			# front magazine & newspaper rack
 			b.rect(Rect2(kr.position.x - 6.0, kr.position.y + 6.0, 6.0, kr.size.y - 12.0), Color(0.88, 0.88, 0.82))
-			var covers: Array[Color] = [Color(0.86, 0.24, 0.20), Color(0.24, 0.40, 0.70), Color(0.94, 0.80, 0.24),
-				Color(0.92, 0.92, 0.90), Color(0.36, 0.62, 0.36), Color(0.88, 0.52, 0.22)]
 			for i in range(6):
-				b.rect(Rect2(kr.position.x - 5.0, kr.position.y + 8.0 + float(i) * 11.0, 4.5, 9.0), covers[i])
+				b.rect(Rect2(kr.position.x - 5.0, kr.position.y + 8.0 + float(i) * 11.0, 4.5, 9.0), KIOSK_COVERS[i])
 			# red & white header awning + postcard spinner at south corner
 			b.rect(Rect2(kr.position.x + 4.0, kr.position.y - 5.0, kr.size.x - 8.0, 5.0), Color(0.86, 0.20, 0.18))
 			var sp := Vector2(kr.position.x - 5.0, kr.end.y + 10.0)
@@ -1400,7 +1402,7 @@ static func _bicing(m: Node2D, b: ShapeBatch, at: Vector2) -> void:
 # The rooftop terraces past the street: each building its own depth, a
 # parapet round its terrat of red tiles, a water tank, a skylight, and a
 # washing line or pots of geraniums along the street front. On the west side,
-# a side-street mouth opens at y = -2220..-2100 with asphalt and zebra bars.
+# a side street opens across the roofs at the west gate's crossing.
 static func _terrats(b: ShapeBatch, x0: float, side: float, top: float, bot: float) -> void:
 	var y := floorf(top / 600.0) * 600.0
 	var k := int(absf(y) / 600.0) * 7
@@ -1408,16 +1410,6 @@ static func _terrats(b: ShapeBatch, x0: float, side: float, top: float, bot: flo
 		var depth := 70.0 + _h1(k, 1.0) * 60.0
 		var ny := y + depth
 		if ny > top:
-			# west side-street opening at the mid-walk crossing (-2220..-2100)
-			if side < 0.0 and ny > -2220.0 and y < -2100.0:
-				var sy0 := maxf(y, -2220.0)
-				var sy1 := minf(ny, -2100.0)
-				b.rect(Rect2(x0 - 520.0, sy0, 520.0, sy1 - sy0), ASPHALT)
-				if sy0 <= -2160.0 and sy1 >= -2160.0:
-					_zebra(b, x0 - 44.0, x0 - 8.0, -2160.0, 44.0)
-				y = ny
-				k += 1
-				continue
 			var r := Rect2(x0 if side > 0.0 else x0 - 520.0, y, 520.0, depth)
 			var face: float = x0 + side * 6.0
 			b.rect(r, PARAPET)
@@ -1464,6 +1456,29 @@ static func _terrats(b: ShapeBatch, x0: float, side: float, top: float, bot: flo
 						b.circle(pp + Vector2(1, -1), 1.6, Color(0.90, 0.24, 0.30))
 		y = ny
 		k += 1
+	if side < 0.0:
+		_side_street(b, x0, top, bot)
+
+
+# The side street's mouth, painted over whatever roofs it cuts: asphalt to the
+# edge of the screen, a kerb along each corner and a zebra across the mouth
+static func _side_street(b: ShapeBatch, x0: float, top: float, bot: float) -> void:
+	var s0 := SIDE_STREET_Y - SIDE_STREET_HALF
+	var s1 := SIDE_STREET_Y + SIDE_STREET_HALF
+	if s1 < top or s0 > bot:
+		return
+	b.rect(Rect2(x0 - 520.0, s0, 520.0, s1 - s0), ASPHALT)
+	for ky: float in [s0, s1 - 6.0]:
+		b.rect(Rect2(x0 - 520.0, ky, 520.0, 6.0), KERB)
+	_zebra_across(b, s0 + 12.0, s1 - 12.0, x0 - 44.0, x0 - 8.0)
+
+
+# a zebra for a street running east-west: five bars stacked down its width
+static func _zebra_across(b: ShapeBatch, y0: float, y1: float, x0: float, x1: float) -> void:
+	var n := 5
+	var bh := (y1 - y0) / float(n * 2 - 1)
+	for i in range(n):
+		b.rect(Rect2(x0, y0 + float(i * 2) * bh, x1 - x0, bh), Color(0.92, 0.91, 0.87, 0.88))
 
 
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
@@ -1474,7 +1489,8 @@ static func night_fronts(m: Node2D) -> Array[Dictionary]:
 		var s: Vector2 = SHOPS[i]
 		var kind := "bar" if int(s.y) == 0 else "shop"
 		out.append(NightFronts.front(Vector2(FACADE_E, s.x), -1.0, kind, 400 + i))
-	var y := maxf(float(m.GATE_Y) + 40.0, -4800.0)
+	# on the doors' grid in _draw_east_block, every 232 px
+	var y := ceilf(maxf(float(m.GATE_Y) + 40.0, -4800.0) / 232.0) * 232.0
 	var k := 0
 	while y < minf(float(m.START_Y) + 60.0, 200.0):
 		if not _near_shop(y, 20.0):

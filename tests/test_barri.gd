@@ -80,6 +80,18 @@ func _run() -> void:
 	_check(m.surface_at(Vector2(640.0, -2000.0)) == m.Surfaces.S.PAVEMENT, "the square's walkway is pavement")
 	_check(m.surface_at(Vector2(270.0, -2000.0)) == m.Surfaces.S.GRASS, "the outer lawn is grass")
 	_check(m.surface_at(Vector2(200.0, -2000.0)) == m.Surfaces.S.PAVEMENT, "past the railing is the street's pavement")
+	# every lit doorway at night stands on a door: a shopfront or a portal on
+	# the east block's 232 px grid
+	var BarriMod: GDScript = load("res://systems/barri.gd")
+	var off_door := 0
+	for f: Dictionary in BarriMod.night_fronts(m):
+		var fy: float = (f["at"] as Vector2).y
+		var on_shop := false
+		for s: Vector2 in BarriMod.SHOPS:
+			on_shop = on_shop or absf(fy - s.x) < 1.0
+		if not on_shop and absf(fy - roundf(fy / 232.0) * 232.0) > 0.5:
+			off_door += 1
+	_check(off_door == 0, "the night fronts sit on the east block's doors (%d off)" % off_door)
 	for i in range(240):
 		await physics_frame
 	_check(m.get_tree().get_nodes_in_group("tourists").is_empty() and m.get_tree().get_nodes_in_group("pickpockets").is_empty(),

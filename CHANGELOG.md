@@ -6,9 +6,9 @@ Append-only session history, newest first.
 
 - Upgraded `systems/barri.gd` (`El Barri`, Walk 1) while keeping its gentle opening-walk balance and zero-hazard layout intact:
   - Replaced the placeholder 18 px dot grid in `_panots()` with `Panot.flor()` (*flor de Barcelona* tiles) across both street pavements and all four desire-path crossings.
-  - Added four asphalt pedestrian zebra crossings along the west street aligned with `RAIL_GATES` (dropped granite kerbs, white zebra bars, flanking cast-iron `pilones`, and parked-motorbike clearance), plus a west side-street opening at `y = -2160`.
+  - Added asphalt pedestrian zebra crossings on the west street at the two west-railing gates in `RAIL_GATES` (`y = -1420` and `-3380`; the east-railing gates face the block, not the street), with dropped granite kerbs, five-bar zebras, flanking cast-iron `pilones` and parked-motorbike clearance, plus a side street that opens across the west roofs to meet the `-3380` crossing, asphalt and kerbs across its whole mouth and its own five-bar zebra.
   - Upgraded street furniture and shopfronts: street `papereres` along both pavements, a detailed *forn de pa* corner bakery (bread baskets with baguettes/loaves, slatted bench, A-board), an illuminated projecting pharmacy cross with white/mint fascia and bay pot, a *quiosc* newsstand with ribbed roof, magazine racks and postcard spinner, varied corner bars, hairdresser barber pole, detailed Bicing dock with totem and red basket bikes, scooter fairings/top-boxes, and varied rooftop terraces.
-  - Added `Barri.night_fronts()` (declared in `tests/test_walk_hooks.gd`) so shopfronts and residential entries spill warm light across the paving at dusk and night.
+  - Added `Barri.night_fronts()` (declared in `tests/test_walk_hooks.gd`) so shopfronts and residential entries spill warm light across the paving at dusk and night; the entries' fronts sit on the doors' 232 px grid, which `tests/test_barri.gd` now checks.
   - Improved `Petanca` live-event readability in `_draw_square()` with a pulsing throwing-circle highlight and dotted aim line during the 0.8 s `"Watch the boule!"` wind-up, plus a sauló dust wake behind the rolling boule.
 - Verified with before/after `--shot --level=barri` captures, `tools/playtest.gd`, `tests/test_barri.gd`, `tests/test_walk_hooks.gd`, and `tests/test_night_fronts.gd`.
 
