@@ -86,17 +86,17 @@ dog walking
 ### What's new in this version
 
 ```
-- Three new walks, thirty-nine in all: L'Aeroport (Terminal 1's pier and security chase), Montserrat (funicular trail and wild goats), and La Diagonal (seen at a 45-degree angle, with its tram and two-way bike lanes).
-- Two new statue bosses: Els Lleons (twin bronze lions at El Port) and El Drac (El Mosaic's salamander), each with story films, plus boss arenas for all four statues (El Mamut's jetty and chairs, El Drac's jets and riding tiles, Els Lleons' crane net, mooring bollards and boat horn, El Gat's yarn stalls).
-- Chases rebuilt (cartoon sweeper and Dimoni vehicles; vet, boar, devil and airport squads on foot) and tug of war reworked with a bending rope, wind-up tells and meter.
-- Off the leash: El Barri's agility chalk line, pause table and medals; frisbee leap catches and streaks; fetch on the bounce; pigeons in every plaça; waves at the dog beaches; and squirrels in the woodland clearings.
-- Barcelona streets and polish: pilona bollards instead of hydrants, panot flower and Gaudí hex tiles, riders in eight styles with painted bike crossings, passers-by redrawn like dog walkers, place-fitting props, home walk-in steps, and gentle night lighting.
+- Boss arena additions: El Drac's trencadís serpentine bench in El Mosaic (herd him along the curve for a grind and daze), El Gat's striped café awnings on Rambla del Raval (bait his pounce onto the canvas to bounce him back), and harbour wakes, lake ripples and feathered beach surf.
+- El Gòtic's retractable lit bollards (pilones retràctils) with amber warning lights, plus new riverside lampposts, benches and a drinking fountain on El Besòs.
+- Camera tricks for bosses and close shaves: boss arena zoom-out, reveal letterbox, enrage tilt, and near-miss slow-motion.
+- Late-campaign chases spaced evenly across all thirty-nine walks, plus Montserrat goat-herd respite checkpoints and boulder targeting fixes.
+- Remaining passers-by upgraded to the full character rig, faster La Rambla and La Diagonal rendering, and Android safe-area and back-button readiness.
 ```
 
 ### Notes for certification
 
 ```
-Update 1.73: three new walks (La Diagonal, L'Aeroport, Montserrat), two statue bosses (Els Lleons, El Drac), boss arenas for all four statues, off-leash games (agility, frisbee, fetch, pigeons, waves, squirrels), riders and NPC overhaul, Barcelona pilones and panots, chases rebuilt, tug of war reworked, night lighting polish. Update 1.72: two new walks (La Ciutadella with El Mamut statue boss, La Cremada with the Dimoni float chase), live events (churro cart, kite flyer), Castellers human towers, Fur-goneta dog van, lit doorways and shopfronts at night, boss fight tuning, and live-event bump fixes. Update 1.71: three new walks (L'Eixample, Els Àngels, El Poble Espanyol), a rebuilt tutorial, a labeled status card, and El Barri, El Parc and Plaça d'Espanya redrawn. Update 1.70: four new walks (La Superilla, Els Búnquers, El Fòrum, Plaça d'Espanya), dawn and dusk lighting, squarer streets with walkable front yards, three new galleries. No change to capabilities, network use or data handling since 1.55.
+Update 1.74: El Drac serpentine bench and El Gat café awnings, El Gòtic retractable bollards, El Besòs riverside props, boss/near-miss camera tricks, even late-campaign chase spacing, Montserrat chase fixes, remaining NPC rig upgrades, La Rambla and La Diagonal rendering caching, and Android safe-area/back-button readiness. Update 1.73: three new walks (La Diagonal, L'Aeroport, Montserrat), two statue bosses (Els Lleons, El Drac), boss arenas for all four statues, off-leash games, riders and NPC overhaul, Barcelona pilones and panots, chases rebuilt, tug of war reworked. Update 1.72: two new walks (La Ciutadella with El Mamut, La Cremada with the Dimoni float), live events, Castellers, Fur-goneta, night shopfronts. Update 1.71: three new walks, rebuilt tutorial, labeled status card. No change to capabilities, network use or data handling since 1.55.
 
 Path of Leash Resistance is a single-player Win32 desktop game built with the Godot engine (4.7), packaged as MSIX.
 
