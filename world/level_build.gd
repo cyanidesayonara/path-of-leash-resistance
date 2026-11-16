@@ -390,11 +390,16 @@ static func besos(m: Node2D, hyd_list: Array, keb_list: Array) -> void:
 	m.manholes = Array([], TYPE_VECTOR2, &"", null)
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
 	m.poles.clear()
-	for yy: float in [-600.0, -1400.0, -2500.0, -3400.0, -4500.0]:
+	for yy: float in [-600.0, -1400.0, -2250.0, -2500.0, -3400.0, -3950.0, -4500.0]:
 		m.poles.append(Vector2(m.sw_l + 36.0, yy))
 	m.deco_pole_count = m.poles.size()
 	m.bins = Array([Vector2(m.sw_l + 120.0, -800.0), Vector2(m.sw_l + 140.0, -3200.0)], TYPE_VECTOR2, &"", null)
-	m.benches = Array([Vector2(m.sw_r - 36.0, -1200.0)], TYPE_VECTOR2, &"", null)
+	m.benches = Array([
+		Vector2(m.sw_r - 36.0, -1200.0),
+		Vector2(m.sw_r - 36.0, -2250.0),
+		Vector2(m.sw_r - 36.0, -3650.0),
+	], TYPE_VECTOR2, &"", null)
+	m.fountains = Array([Vector2(m.sw_l + 48.0, -2800.0)], TYPE_VECTOR2, &"", null)
 	m.cone_spots = Array([
 		Vector2(m.walk_cx, -500.0), Vector2(m.walk_cx + 40.0, -1100.0),
 		Vector2(m.walk_cx - 30.0, -2300.0), Vector2(m.walk_cx + 20.0, -3000.0),

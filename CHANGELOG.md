@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Fill El Besòs riverside dead stretches
+
+- Added two west-embankment lampposts (`y = -2250`, `-3950`), two riverside benches (`y = -2250`, `-3650`), and a park drinking fountain (`y = -2800`) to `LevelBuild.besos()` in `world/level_build.gd`, breaking up the 1100 px bare stretches along the river path while staying clear of the weir jam and concrete apron.
+- Tests: `tests/test_besos.gd`, `tests/test_besos_ornitoleg.gd`, `besos --selftest`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
+
 ## 2026-11-16 - Cull and cache bike lanes, La Rambla static scenery, and static canopies (#482)
 
 - Culled `lane_ys` bike lane crossings by `vt..vb` and cached their static asphalt, stripes, `BikePaint.squares`, and `BikePaint.glyph` markings via `_draw_section("bike_lanes", ...)` (`_draw_bike_lanes()` / `_draw_world_bike_lanes()` in `main.gd`), leaving only the blinking amber warning light live; cut `lanes to pickups` 300-frame GL `street` draw cost from `225.28 ms` to `134.90 ms` (-40%).
