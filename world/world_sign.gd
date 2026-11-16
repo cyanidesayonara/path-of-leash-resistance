@@ -29,7 +29,7 @@ const Letters := preload("res://world/sign_letters.gd")
 
 # the material per walk; a walk not listed keeps main.gd's drawn styles
 const MATERIALS := {
-	"barri": "leaves", "diagonal": "papers", "street": "carnations", "park": "flowerbed", "beach": "sand",
+	"barri": "leaves", "diagonal": "papers", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
@@ -70,6 +70,7 @@ const FEEL := {
 	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
 	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
 	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
+	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"rosemary": {"spacing": 0.18, "r": 0.07, "drag": 5.2, "take": 0.8, "spin": 3.5, "segment": true},
 	"pebbles": {"spacing": 0.11, "r": 0.07, "drag": 1.8, "take": 1.0, "roll": true},
@@ -527,6 +528,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_tickets(c, sign, h)
 		"papers":
 			_papers(c, sign, h)
+		"pastries":
+			_pastries(c, sign, h)
 		"pebbles":
 			_pebbles(c, sign, h, light)
 		"cactus":
@@ -984,6 +987,37 @@ static func _papers(c: Object, sign: Dictionary, _h: float) -> void:
 		c.draw_colored_polygon(_box(p + ay * r * 0.12 + ax * r * 0.45, rot, r * 0.5, r * 0.38), Color(0.70, 0.69, 0.66))
 		if v > 0.65:
 			c.draw_colored_polygon(_box(p - ay * r * 0.3, rot, r * 1.1, r * 0.1), Color(0.80, 0.16, 0.14))
+
+
+# a croissant's three lobes along its curve, and their bake from the
+# underside to the glazed top (consts: _pastries runs every frame)
+const PASTRY_LOBES: Array[float] = [-1.0, 0.0, 1.0]
+const PASTRY_COLS: Array[Color] = [Color(0.62, 0.38, 0.16), Color(0.86, 0.60, 0.28), Color(0.96, 0.78, 0.46)]
+
+
+static func _pastries(c: Object, sign: Dictionary, _h: float) -> void:
+	# the bakery's morning trays tipped out: croissants, a golden crescent
+	# with its rolled ridges, and the odd ensaimada, a flat sugared coil
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.r) * 1.05, Color(0, 0, 0, 0.26))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var ax := Vector2.from_angle(float(pc.rot))
+		var ay := ax.orthogonal()
+		if float(pc["var"]) > 0.72:
+			c.draw_circle(p, r * 1.05, Color(0.66, 0.44, 0.20))
+			c.draw_circle(p, r * 0.92, Color(0.90, 0.70, 0.40))
+			c.draw_arc(p, r * 0.58, 0.0, TAU * 0.85, 10, Color(0.74, 0.52, 0.26), r * 0.16)
+			c.draw_circle(p, r * 0.22, Color(0.98, 0.96, 0.92))
+			continue
+		# the crescent: three lobes along a curve, the middle one fattest
+		for layer in range(3):
+			var grow := 1.0 - float(layer) * 0.2
+			for k: float in PASTRY_LOBES:
+				var q: Vector2 = p + ax * k * r * 0.62 + ay * absf(k) * r * 0.34 - Vector2(0.6, 0.6) * float(layer)
+				c.draw_circle(q, r * (0.62 if k == 0.0 else 0.44) * grow, PASTRY_COLS[layer])
+		c.draw_line(p - ay * r * 0.4, p + ay * r * 0.3, Color(0.62, 0.38, 0.16), r * 0.1)
 
 
 static func _bagtags(c: Object, sign: Dictionary, _h: float) -> void:

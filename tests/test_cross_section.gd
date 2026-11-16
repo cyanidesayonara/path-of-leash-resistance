@@ -57,9 +57,10 @@ func _run() -> void:
 			var want: int = main.Surfaces.S.GRASS if kind == "grass" else main.Surfaces.S.PAVEMENT
 			_check(main.surface_at(p) == want, "%s: the %s strip is %s underfoot" % [lv, "left" if side == 0 else "right", kind])
 		# the off-leash area past the gate keeps its own ground (El Fòrum's is a
-		# paved bathing esplanade, as the station, site and scrapyard are paved)
+		# paved bathing esplanade, as the station, site and scrapyard are paved,
+		# and Sarrià's Plaça de Sant Vicenç is paved wall to wall)
 		var yard := Vector2(main.walk_cx - main.walk_half - 60.0, main.GATE_Y - 300.0)
-		_check(main.surface_at(yard) != main.Surfaces.S.PAVEMENT or lv == "station" or lv == "site" or lv == "scrap" or lv == "forum" or lv == "aeroport",
+		_check(main.surface_at(yard) != main.Surfaces.S.PAVEMENT or lv == "station" or lv == "site" or lv == "scrap" or lv == "forum" or lv == "aeroport" or lv == "sarria",
 			"%s: the off-leash area is not turned into sidewalk" % lv)
 		# a dog pushed at the building line stops at it (moved inside a physics
 		# step: outside one, move_and_slide uses the last frame's wall time)
