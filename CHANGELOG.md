@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Cull and cache bike lanes, La Rambla static scenery, and static canopies (#482)
+
+- Culled `lane_ys` bike lane crossings by `vt..vb` and cached their static asphalt, stripes, `BikePaint.squares`, and `BikePaint.glyph` markings via `_draw_section("bike_lanes", ...)` (`_draw_bike_lanes()` / `_draw_world_bike_lanes()` in `main.gd`), leaving only the blinking amber warning light live; cut `lanes to pickups` 300-frame GL `street` draw cost from `225.28 ms` to `134.90 ms` (-40%).
+- Split `Rambla.draw_pavement_waves`, `Rambla.draw_tree_leaf_drifts`, `Rambla.draw_miro_mosaic`, and `RAMBLA_ICECREAM` into `_draw_section("rambla_static", ...)` (`_draw_rambla_static()` in `main.gd`) and drew live Rambla props directly into `_wc`, cutting `live, scenery` 300-frame GL `street` draw cost from `102.12 ms` to `52.91 ms` (-48%).
+- Updated `world/canopylayer.gd` to redraw `_faded_node` only when `_fade_key`, `_sky_key`, or an in-view animated faded piece (`TREE_PALM`, `Over.LAUNDRY`, `Over.WALL_LAMP`, `Over.BOARD`) updates, and redraw `self` only on those changes or a >150 px camera move, skipping idle 30 fps canopy rebuilds on static-tree walks such as La Rambla.
+- Tests: `tests/test_shape_batch.gd` (GL Compatibility), `tests/test_walk_hooks.gd` (1072 checks), `tests/test_members_exist.gd` (8327 checks), `tests/test_npc_clear_of_solids.gd` (392 checks), and `street --selftest`.
+
 ## 2026-11-16 - Space late-campaign chases evenly
 
 - Reordered the late campaign in `autoload/game.gd` (`CAROUSEL`, `STAR_GATE`, `CHASE_GATE`) so the eight chases fall every four to six walks across the 39-walk campaign (`5, 10, 15, 19, 25, 29, 34, 38`): `Festa de Gràcia` moves to walk 29 (`STAR_GATE` 40, gated by `cremada`), `L'Aeroport` moves to walk 34 (`STAR_GATE` 47, gated by `gracia`), and `Montserrat` stays at walk 38 (`STAR_GATE` 52, gated by `aeroport`), keeping `El Port` near walk 31 and all other walk star/chase gates unchanged.

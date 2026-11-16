@@ -3957,15 +3957,24 @@ func _seller_pos(r: Rect2) -> Vector2:
 	return Vector2(r.get_center().x + inward * (r.size.x * 0.5 + 16.0), r.get_center().y)
 
 
-func _draw_rambla(vt: float, vb: float) -> void:
-	var b := ShapeBatch.new()
-	Rambla.draw_pavement_waves(self, b, vt, vb)
-	Rambla.draw_tree_leaf_drifts(self, b, vt, vb)
+func _draw_rambla_static(vt: float, vb: float) -> void:
+	Rambla.draw_pavement_waves(self, _wc, vt, vb)
+	Rambla.draw_tree_leaf_drifts(self, _wc, vt, vb)
 	# the round pavement mosaic in the square: Joan Miro's Pla de l'Os mosaic
 	var mc: Vector2 = LevelBuild.RAMBLA_MOSAIC
 	var mr: float = LevelBuild.RAMBLA_MOSAIC_R
 	if mc.y > vt - 100.0 and mc.y < vb + 100.0:
-		Rambla.draw_miro_mosaic(b, mc, mr)
+		Rambla.draw_miro_mosaic(_wc, mc, mr)
+	# the dropped ice cream: the cone, upside down in its pink puddle
+	var ic: Vector2 = LevelBuild.RAMBLA_ICECREAM
+	if ic.y > vt - 40.0 and ic.y < vb + 40.0:
+		_wc.polygon(PackedVector2Array([ic + Vector2(-3, -2), ic + Vector2(12, -9), ic + Vector2(10, -1)]), Color(0.85, 0.66, 0.40))
+		_wc.circle(ic + Vector2(-2, 1), 6.0, Color(0.98, 0.84, 0.88))
+
+
+func _draw_rambla(vt: float, vb: float) -> void:
+	_draw_section("rambla_static", [], vt, vb, _draw_rambla_static)
+	var b := _wc
 	# the blankets and their goods, and the seller beside each; bundled up
 	# and carried off when the whistle goes
 	for bl: Dictionary in blankets:
@@ -4012,11 +4021,6 @@ func _draw_rambla(vt: float, vb: float) -> void:
 		b.circle(sp + Vector2(2, 3), 11.0, Color(0, 0, 0, 0.18))
 		b.circle(sp, 11.0, Color(0.20, 0.24, 0.32))
 		b.circle(sp + Vector2(0, -3), 6.5, Color(0.36, 0.24, 0.17))
-	# the dropped ice cream: the cone, upside down in its pink puddle
-	var ic: Vector2 = LevelBuild.RAMBLA_ICECREAM
-	if ic.y > vt - 40.0 and ic.y < vb + 40.0:
-		b.polygon(PackedVector2Array([ic + Vector2(-3, -2), ic + Vector2(12, -9), ic + Vector2(10, -1)]), Color(0.85, 0.66, 0.40))
-		b.circle(ic + Vector2(-2, 1), 6.0, Color(0.98, 0.84, 0.88))
 	# the shell game: a cardboard box, three cups, the man working it and his
 	# shills leaning in; scattered and gone once it is busted
 	if not shell_game.is_empty():
@@ -4096,7 +4100,6 @@ func _draw_rambla(vt: float, vb: float) -> void:
 				b.circle(hp + Vector2(ex + 0.6 * sin(t * 3.0), 3.9), 0.8, Color(0.1, 0.1, 0.1))
 	if florista != null:
 		florista.draw(self, b, vt, vb)
-	b.flush(_wc)
 
 
 # The Canaletes fountain: a cast-iron column with four taps and a lamp on
@@ -12471,6 +12474,43 @@ func _draw_cross_section(top: float, bottom: float, ctop: float, vt: float, vb: 
 			walk_mod.draw_over_walkway(self, _wc, vt, vb)
 
 
+func _draw_bike_lanes(vt: float, vb: float) -> void:
+	var xing_col := Color(0.92, 0.90, 0.84, 0.88)
+	for i in range(lane_ys.size()):
+		var ly: float = lane_ys[i]
+		if ly + LANE_HALF + 50.0 < vt or ly - LANE_HALF - 50.0 > vb:
+			continue
+		_wc.draw_rect(Rect2(-400, ly - LANE_HALF, 2100, LANE_HALF * 2.0), COL_ROAD)
+		var x := -380.0
+		while x < 1700.0:
+			_wc.draw_line(Vector2(x, ly), Vector2(x + 30.0, ly), COL_STRIPE, 3.0)
+			x += 70.0
+		_wc.draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
+		_wc.draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
+		# it is a bike lane: where it crosses the walk, the cyclists'
+		# crossing in white squares either side, and the bicycle each way
+		for e: float in [-1.0, 1.0]:
+			BikePaint.squares(_wc, Vector2(sw_l - 30.0, ly + e * (LANE_HALF - 10.0)),
+				Vector2(sw_r + 30.0, ly + e * (LANE_HALF - 10.0)), 9.0, xing_col)
+		for gx: float in [sw_l - 70.0, sw_r + 40.0]:
+			BikePaint.glyph(_wc, Vector2(gx, ly - 32.0), Vector2.LEFT, xing_col, COL_ROAD)
+			BikePaint.glyph(_wc, Vector2(gx + 30.0, ly + 32.0), Vector2.RIGHT, xing_col, COL_ROAD)
+
+
+func _draw_world_bike_lanes(vt: float, vb: float) -> void:
+	_draw_section("bike_lanes", [lane_ys.size()], vt, vb, _draw_bike_lanes)
+	for i in range(lane_ys.size()):
+		var ly: float = lane_ys[i]
+		if ly + LANE_HALF + 50.0 < vt or ly - LANE_HALF - 50.0 > vb:
+			continue
+		var ls: Dictionary = lane_state[i]
+		if ls.phase == 1 and fmod(AnimClock.msec() / 150.0, 2.0) < 1.0:
+			var wx := 40.0 if ls.dir > 0 else 1240.0
+			_wc.draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
+			_wc.draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
+			_wc.draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
+
+
 func _draw_world() -> void:
 	_dprof("")
 	var top := GATE_Y - 800.0
@@ -12588,31 +12628,7 @@ func _draw_world() -> void:
 	if walk_mod != null and walk_mod.has_method("draw_scenery"):
 		walk_mod.draw_scenery(self, _wc, vt, vb)
 	_dprof("live, scenery")
-	# bike lanes crossing the sidewalk
-	for i in range(lane_ys.size()):
-		var ly: float = lane_ys[i]
-		_wc.draw_rect(Rect2(-400, ly - LANE_HALF, 2100, LANE_HALF * 2.0), COL_ROAD)
-		var x := -380.0
-		while x < 1700.0:
-			_wc.draw_line(Vector2(x, ly), Vector2(x + 30.0, ly), COL_STRIPE, 3.0)
-			x += 70.0
-		_wc.draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
-		_wc.draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
-		# it is a bike lane: where it crosses the walk, the cyclists'
-		# crossing in white squares either side, and the bicycle each way
-		var xing_col := Color(0.92, 0.90, 0.84, 0.88)
-		for e: float in [-1.0, 1.0]:
-			BikePaint.squares(_wc, Vector2(sw_l - 30.0, ly + e * (LANE_HALF - 10.0)),
-				Vector2(sw_r + 30.0, ly + e * (LANE_HALF - 10.0)), 9.0, xing_col)
-		for gx: float in [sw_l - 70.0, sw_r + 40.0]:
-			BikePaint.glyph(_wc, Vector2(gx, ly - 32.0), Vector2.LEFT, xing_col, COL_ROAD)
-			BikePaint.glyph(_wc, Vector2(gx + 30.0, ly + 32.0), Vector2.RIGHT, xing_col, COL_ROAD)
-		var ls: Dictionary = lane_state[i]
-		if ls.phase == 1 and fmod(AnimClock.msec() / 150.0, 2.0) < 1.0:
-			var wx := 40.0 if ls.dir > 0 else 1240.0
-			_wc.draw_circle(Vector2(wx, ly), 16.0, Color(0.95, 0.8, 0.25))
-			_wc.draw_rect(Rect2(wx - 2.0, ly - 9.0, 4.0, 10.0), Color(0.15, 0.15, 0.15))
-			_wc.draw_circle(Vector2(wx, ly + 6.0), 2.2, Color(0.15, 0.15, 0.15))
+	_draw_world_bike_lanes(vt, vb)
 	# manholes - open for street work; the cones are real nodes now.
 	# This one has to read as A HOLE from a glance at speed, because falling
 	# in ends the walk: hence the lifted cover leaning beside it, the lit
