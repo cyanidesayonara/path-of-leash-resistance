@@ -30,6 +30,7 @@ extends RefCounted
 # - Zero new draw calls: Batched into La Castanyada's ShapeBatch (draw_live).
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const START_POS := Vector2(405.0, -1780.0)
 const END_POS := Vector2(875.0, -1780.0)
@@ -220,38 +221,23 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var st_cycle := fmod(anim_time * 2.0, 1.0)
 		b.circle(paperina_pos + Vector2(sin(anim_time * 3.0) * 2.0, -8.0 - st_cycle * 8.0), 2.5 + st_cycle * 2.0, Color(STEAM_WHITE.r, STEAM_WHITE.g, STEAM_WHITE.b, STEAM_WHITE.a * (1.0 - st_cycle)))
 
-	# Castanyera shadow
-	b.circle(pos + Vector2(1, 4), 16.0, SHADOW)
-
-	# Footsteps
-	var bob := sin(anim_time * 9.0) * 1.5 if state == State.WALKING else 0.0
-	var leg_step := sin(anim_time * 9.0) * 5.0 if state == State.WALKING else 0.0
-	b.circle(pos + Vector2(-4.0 + leg_step, 6.0), 3.5, Color(0.12, 0.12, 0.14))
-	b.circle(pos + Vector2(4.0 - leg_step, 6.0), 3.5, Color(0.12, 0.12, 0.14))
-
-	# Dark woollen skirt
-	b.circle(pos + Vector2(0.0, 2.0 + bob), 12.0, SKIRT_CHARCOAL)
-	b.rect(Rect2(pos.x - 10.0, pos.y - 4.0 + bob, 20.0, 8.0), SKIRT_CHARCOAL)
-
-	# Apron with lace hem
-	b.rect(Rect2(pos.x - 7.0, pos.y - 3.0 + bob, 14.0, 8.0), APRON_DARK)
-	b.line(Vector2(pos.x - 7.0, pos.y + 5.0 + bob), Vector2(pos.x + 7.0, pos.y + 5.0 + bob), APRON_LACE, 1.5)
-
-	# Woollen shawl draped over shoulders
-	b.circle(pos + Vector2(0.0, -5.0 + bob), 11.0, SHAWL_BROWN)
-	b.circle(pos + Vector2(0.0, -6.0 + bob), 9.0, SHAWL_WARM)
-
-	# Head with black kerchief and grey hair peeking
-	b.circle(pos + Vector2(0.0, -10.0 + bob), 7.0, KERCHIEF_BLACK)
-	b.circle(pos + Vector2(0.0, -9.0 + bob), 5.5, SKIN_TONE)
-	b.circle(pos + Vector2(-3.5, -11.0 + bob), 2.2, HAIR_GREY)
-	b.circle(pos + Vector2(3.5, -11.0 + bob), 2.2, HAIR_GREY)
-	# Kerchief knot under chin
-	b.circle(pos + Vector2(0.0, -4.5 + bob), 2.0, KERCHIEF_BLACK)
+	var walking := state == State.WALKING
+	NpcFigure.person(b, pos, Vector2.RIGHT, 414, anim_time * 9.0 if walking else -1.0, {
+		"size": 1.2, "top": SHAWL_BROWN, "legs": SKIRT_CHARCOAL,
+		"skin": SKIN_TONE, "hair": HAIR_GREY, "hair_style": "bun",
+		"arms": NpcFigure.Arms.READY,
+	})
+	# Warm woollen shawl trim & dark lace apron front
+	b.circle(pos + Vector2(3.5, 0.0), 5.0, APRON_DARK)
+	b.line(pos + Vector2(7.0, -5.5), pos + Vector2(7.0, 5.5), APRON_LACE, 1.5)
+	# Black kerchief over grey hair
+	var head_p := pos + Vector2(1.0, 0.0)
+	b.circle(head_p, 5.4, KERCHIEF_BLACK)
+	b.circle(head_p + Vector2(-3.2, 0.0), 2.0, HAIR_GREY)
 
 	# Steaming woven wicker basket held in arms in front
-	var bkt_x := pos.x + 10.0
-	var bkt_y := pos.y - 2.0 + bob
+	var bkt_x := pos.x + 11.0
+	var bkt_y := pos.y
 	b.circle(Vector2(bkt_x + 1, bkt_y + 3), 8.5, SHADOW)
 	# Basket body
 	b.rect(Rect2(bkt_x - 8.0, bkt_y - 6.0, 16.0, 12.0), BASKET_WICKER)

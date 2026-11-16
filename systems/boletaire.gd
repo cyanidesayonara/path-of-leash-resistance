@@ -31,6 +31,7 @@ extends RefCounted
 # - Zero new draw calls: Batched into El Bosc's ShapeBatch (draw_live).
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const START_POS := Vector2(380.0, -1650.0)
 const END_POS := Vector2(920.0, -1650.0)
@@ -201,47 +202,34 @@ func draw(_m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	if wobble_t > 0.0:
 		draw_pos.y += sin(wobble_t * 32.0) * 3.0
 
-	# 1. Ground shadow
-	b.circle(draw_pos + Vector2(1.0, 8.0), 16.0, SHADOW)
-
-	# 2. Dropped rovelló mushroom (if dropped and not yet snatched)
+	# Dropped rovelló mushroom (if dropped and not yet snatched)
 	if mushroom_dropped and not mushroom_snatched:
 		b.circle(mushroom_pos + Vector2(1.0, 1.5), 5.0, SHADOW)
 		b.circle(mushroom_pos, 5.5, MUSHROOM_ORANGE)
 		b.circle(mushroom_pos, 3.2, MUSHROOM_CORE)
 		b.circle(mushroom_pos + Vector2(0.0, 1.0), 1.4, MUSHROOM_STEM)
 
-	# 3. Boots & trousers
-	var step_phase := sin(anim_time * 9.0)
-	var left_foot := draw_pos + Vector2(-4.0 + step_phase * 4.0, 6.0)
-	var right_foot := draw_pos + Vector2(4.0 - step_phase * 4.0, 6.0)
-	b.circle(left_foot, 3.5, BOOTS_BROWN)
-	b.circle(right_foot, 3.5, BOOTS_BROWN)
-	b.rect(Rect2(draw_pos.x - 6.0, draw_pos.y - 2.0, 12.0, 8.0), PANTS_OLIVE)
+	var walking := state == State.WALKING
+	NpcFigure.person(b, draw_pos, Vector2.RIGHT, 415, anim_time * 9.0 if walking else -1.0, {
+		"size": 1.15, "top": SHIRT_RED, "legs": PANTS_OLIVE,
+		"skin": SKIN_TONE, "hair": BEARD_GREY, "headwear": "cap",
+		"headwear_col": CAP_BROWN, "arms": NpcFigure.Arms.READY,
+	})
 
-	# 4. Flannel shirt torso
-	b.circle(draw_pos + Vector2(0.0, -2.0), 8.5, SHIRT_RED)
-	b.rect(Rect2(draw_pos.x - 6.0, draw_pos.y - 6.0, 12.0, 8.0), SHIRT_DARK)
+	# Grey beard peeking forward & corduroy cap accent
+	b.circle(draw_pos + Vector2(3.8, 0.0), 2.2, BEARD_GREY)
 
-	# 5. Head, beard & flat cap ("gorra de pana")
-	b.circle(draw_pos + Vector2(0.0, -10.0), 5.5, SKIN_TONE)
-	b.circle(draw_pos + Vector2(0.0, -8.0), 4.5, BEARD_GREY)
-	b.circle(draw_pos + Vector2(0.0, -11.0), 5.8, CAP_BROWN)
-	b.rect(Rect2(draw_pos.x + 1.0, draw_pos.y - 13.0, 4.0, 4.0), CAP_BROWN) # cap visor
+	# Walking stick on right side (+Y)
+	b.line(draw_pos + Vector2(5.0, 7.0), draw_pos + Vector2(9.0, 11.0), STICK_WOOD, 2.0)
 
-	# 6. Walking stick in right hand (+Y)
-	var hand_pos := draw_pos + Vector2(6.0, 1.0)
-	b.circle(hand_pos, 2.2, SKIN_TONE)
-	b.line(draw_pos + Vector2(8.0, -12.0), draw_pos + Vector2(9.0, 10.0), STICK_WOOD, 2.0)
-
-	# 7. Wicker basket of rovellons carried on left arm (-Y)
-	var basket_pos := draw_pos + Vector2(-6.0, -2.0)
-	b.circle(basket_pos, 2.2, SKIN_TONE) # left hand
-	b.circle(basket_pos + Vector2(-3.0, 0.0), 7.0, BASKET_RIM)
-	b.circle(basket_pos + Vector2(-3.0, 0.0), 6.0, BASKET_WICKER)
+	# Wicker basket of rovellons carried on left arm (-Y)
+	var basket_pos := draw_pos + Vector2(2.0, -9.0)
+	b.circle(basket_pos + Shade.light * 2.0, 6.8, SHADOW)
+	b.circle(basket_pos, 6.8, BASKET_RIM)
+	b.circle(basket_pos, 5.8, BASKET_WICKER)
 	# Fresh orange saffron milk caps inside basket
-	b.circle(basket_pos + Vector2(-4.0, -2.0), 2.8, MUSHROOM_ORANGE)
-	b.circle(basket_pos + Vector2(-1.5, 1.0), 2.5, MUSHROOM_ORANGE)
-	b.circle(basket_pos + Vector2(-5.0, 1.5), 2.2, MUSHROOM_CORE)
+	b.circle(basket_pos + Vector2(-1.5, -1.5), 2.6, MUSHROOM_ORANGE)
+	b.circle(basket_pos + Vector2(1.5, 1.0), 2.4, MUSHROOM_ORANGE)
+	b.circle(basket_pos + Vector2(-1.0, 2.0), 2.0, MUSHROOM_CORE)
 
 	b.flush(wc)

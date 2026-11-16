@@ -28,6 +28,7 @@ extends RefCounted
 # - Zero new draw calls: batched directly into El Laberint d'Horta's existing ShapeBatch.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const START_POS := Vector2(350.0, -1740.0)
 const END_POS := Vector2(930.0, -1740.0)
@@ -162,54 +163,35 @@ func draw(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	var t: float = AnimClock.msec() / 1000.0
 	var run_anim: float = sin(t * 14.0) if state == State.RUNNING else 0.0
 
-	# Contact shadow
-	m.contact_shadow(wc, pos + Vector2(0.0, 6.0), 16.0, 7.0, 0.26)
+	var walking := state == State.RUNNING
+	NpcFigure.person(wc, pos, Vector2.RIGHT, 417, t * 14.0 if walking else -1.0, {
+		"size": 1.15, "top": Color(0.92, 0.42, 0.35), "legs": Color(0.76, 0.70, 0.52),
+		"skin": Color(0.88, 0.74, 0.60), "arms": NpcFigure.Arms.READY,
+	})
+	# Floral speckles over shirt shoulders
+	wc.circle(pos + Vector2(-2.0, -5.0), 1.4, Color(0.98, 0.88, 0.50))
+	wc.circle(pos + Vector2(1.0, 5.0), 1.4, Color(0.98, 0.88, 0.50))
+	wc.circle(pos + Vector2(-3.0, 2.0), 1.2, Color(0.40, 0.78, 0.60))
 
-	# Running legs with shorts
-	var leg_l := pos + Vector2(-4.0 + run_anim * 4.0, 6.0 + absf(run_anim) * 2.0)
-	var leg_r := pos + Vector2(4.0 - run_anim * 4.0, 6.0 + absf(run_anim) * 2.0)
-	# Khaki shorts
-	wc.rect(Rect2(pos.x - 7.0, pos.y, 14.0, 7.0), Color(0.76, 0.70, 0.52))
-	# Legs
-	wc.circle(leg_l, 2.5, Color(0.88, 0.74, 0.60))
-	wc.circle(leg_r, 2.5, Color(0.88, 0.74, 0.60))
-	# Trekking sandals & white socks
-	wc.circle(leg_l + Vector2(0.0, 2.0), 2.0, Color(0.95, 0.95, 0.95))
-	wc.circle(leg_r + Vector2(0.0, 2.0), 2.0, Color(0.95, 0.95, 0.95))
-	wc.circle(leg_l + Vector2(0.0, 3.0), 1.8, Color(0.38, 0.28, 0.20))
-	wc.circle(leg_r + Vector2(0.0, 3.0), 1.8, Color(0.38, 0.28, 0.20))
-
-	# Torso: tropical floral shirt (coral/tropical red with floral speckles)
-	var shirt_col := Color(0.92, 0.42, 0.35)
-	wc.circle(pos + Vector2(0.0, -1.0), 8.5, shirt_col)
-	# Floral speckles
-	wc.circle(pos + Vector2(-3.0, -2.0), 1.6, Color(0.98, 0.88, 0.50))
-	wc.circle(pos + Vector2(3.0, 1.0), 1.6, Color(0.98, 0.88, 0.50))
-	wc.circle(pos + Vector2(1.0, -4.0), 1.4, Color(0.40, 0.78, 0.60))
-
-	# Camera strap diagonally across chest
-	wc.line(pos + Vector2(-6.0, -5.0), pos + Vector2(5.0, 4.0), Color(0.20, 0.20, 0.20), 1.4)
-	# Vintage compact camera
-	wc.rect(Rect2(pos.x + 3.0, pos.y + 1.0, 5.0, 4.0), Color(0.28, 0.28, 0.30))
-	wc.circle(pos + Vector2(5.5, 3.0), 1.4, Color(0.70, 0.72, 0.75))
-
-	# Head & neck
-	wc.circle(pos + Vector2(0.0, -6.0), 4.5, Color(0.88, 0.74, 0.60))
+	# Camera strap & compact camera
+	wc.line(pos + Vector2(-5.0, -5.0), pos + Vector2(4.0, 5.0), Color(0.20, 0.20, 0.20), 1.4)
+	wc.rect(Rect2(pos.x + 2.0, pos.y + 3.0, 5.0, 4.0), Color(0.28, 0.28, 0.30))
+	wc.circle(pos + Vector2(4.5, 5.0), 1.3, Color(0.70, 0.72, 0.75))
 
 	# Safari bucket hat (straw/khaki brim with dark olive band)
+	var hat_p := pos + Vector2(1.0, 0.0)
 	var hat_col := Color(0.86, 0.80, 0.62)
-	wc.circle(pos + Vector2(0.0, -7.0), 9.0, hat_col)
-	wc.circle(pos + Vector2(0.0, -7.0), 6.0, hat_col.darkened(0.12))
-	# Olive hatband
-	wc.draw_arc(pos + Vector2(0.0, -7.0), 5.5, 0.0, TAU, 16, Color(0.35, 0.42, 0.28), 1.5)
+	wc.circle(hat_p, 8.2, hat_col)
+	wc.circle(hat_p, 5.8, Color(0.35, 0.42, 0.28))
+	wc.circle(hat_p, 4.5, hat_col.darkened(0.08))
 
 	# Labyrinth paper map held out in front
 	_draw_map(wc, pos, run_anim)
 
 
-func _draw_map(wc: ShapeBatch, p: Vector2, run_anim: float) -> void:
+func _draw_map(wc: ShapeBatch, p: Vector2, _run_anim: float) -> void:
 	var wobble: float = sin(AnimClock.msec() / 80.0) * 1.5 if state == State.RUNNING else 0.0
-	var map_center := p + Vector2(12.0, -2.0 + wobble)
+	var map_center := p + Vector2(13.0, wobble)
 	var map_w := 16.0
 	var map_h := 12.0
 	var map_rect := Rect2(map_center.x - map_w * 0.5, map_center.y - map_h * 0.5, map_w, map_h)
@@ -228,10 +210,6 @@ func _draw_map(wc: ShapeBatch, p: Vector2, run_anim: float) -> void:
 
 	# Red "YOU ARE HERE" dot
 	wc.circle(map_rect.position + Vector2(8.0, 6.0), 1.2, Color(0.92, 0.22, 0.20))
-
-	# Arms holding map
-	wc.line(p + Vector2(4.0, -3.0), map_rect.position + Vector2(2.0, 6.0), Color(0.88, 0.74, 0.60), 1.8)
-	wc.line(p + Vector2(4.0, 1.0), map_rect.position + Vector2(2.0, 10.0), Color(0.88, 0.74, 0.60), 1.8)
 
 
 func _draw_carquinyoli(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:

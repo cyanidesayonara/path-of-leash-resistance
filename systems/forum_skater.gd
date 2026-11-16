@@ -25,6 +25,7 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const NearMiss := preload("res://systems/near_miss.gd")
+const NpcFigure := preload("res://entities/npc_figure.gd")
 
 enum State { IDLE, TELEGRAPH, SKATING, SETTLED }
 
@@ -161,46 +162,35 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var is_skating: bool = (state == State.SKATING)
 	var lean_offset: float = sin(roll_phase) * 2.0 if is_skating else 0.0
 
-	# Shadow
-	b.circle(pos + Vector2(2, 6), 14.0, sh)
-
 	if state == State.SETTLED:
-		# Resting pose holding deck vertically
-		b.circle(pos + Vector2(0, -6), 9.0, PANTS_GREY)
-		b.circle(pos + Vector2(0, -14), 10.0, HOODIE_TEAL)
-		b.circle(pos + Vector2(0, -22), 6.5, Color(0.88, 0.72, 0.58))
-		b.circle(pos + Vector2(0, -23), 7.0, CAP_BLACK)
-		# Held vertical deck
-		b.rect(Rect2(pos + Vector2(7, -24), Vector2(5, 26)), DECK_MAPLE)
-		b.rect(Rect2(pos + Vector2(7, -24), Vector2(2, 26)), GRIP_TAPE)
+		# Resting pose holding deck beside him
+		NpcFigure.person(b, pos, Vector2.LEFT, 416, -1.0, {
+			"size": 1.15, "top": HOODIE_TEAL, "legs": PANTS_GREY,
+			"skin": Color(0.88, 0.72, 0.58), "arms": NpcFigure.Arms.SIDE,
+		})
+		b.circle(pos + Vector2(-0.8, 0.0), 5.0, CAP_BLACK)
+		b.rect(Rect2(pos + Vector2(1.0, -1.5), Vector2(3.5, 3.0)), CAP_BLACK.darkened(0.2))
+		# Held upright deck beside him
+		b.rect(Rect2(pos + Vector2(7.0, -13.0), Vector2(5.0, 26.0)), DECK_MAPLE)
+		b.rect(Rect2(pos + Vector2(7.0, -13.0), Vector2(2.0, 26.0)), GRIP_TAPE)
 		return
 
-	# Skateboard Deck (horizontal rolling)
-	var deck_y: float = pos.y + 4.0
-	b.rect(Rect2(pos.x - 16.0, deck_y, 32.0, 7.0), DECK_MAPLE)
-	b.rect(Rect2(pos.x - 15.0, deck_y + 1.0, 30.0, 5.0), GRIP_TAPE)
+	# Skateboard Deck (horizontal rolling under feet)
+	var deck_y: float = pos.y + 3.0
+	b.rect(Rect2(pos.x - 16.0, deck_y, 32.0, 7.0), sh)
+	b.rect(Rect2(pos.x - 16.0, deck_y - 2.0, 32.0, 7.0), DECK_MAPLE)
+	b.rect(Rect2(pos.x - 15.0, deck_y - 1.0, 30.0, 5.0), GRIP_TAPE)
 
 	# Wheels
 	var wheel_rot: float = sin(roll_phase * 2.0) * 1.5
-	b.circle(Vector2(pos.x - 11.0, deck_y + 7.0 + wheel_rot), 2.5, WHEELS_URETHANE)
-	b.circle(Vector2(pos.x + 11.0, deck_y + 7.0 - wheel_rot), 2.5, WHEELS_URETHANE)
+	b.circle(Vector2(pos.x - 11.0, deck_y + 5.0 + wheel_rot), 2.5, WHEELS_URETHANE)
+	b.circle(Vector2(pos.x + 11.0, deck_y + 5.0 - wheel_rot), 2.5, WHEELS_URETHANE)
 
-	# Skater Body in sideways stance
-	var hip_pos := pos + Vector2(lean_offset, -4.0)
-	var torso_pos := hip_pos + Vector2(0.0, -9.0)
-	var head_pos := torso_pos + Vector2(1.0, -8.0)
-
-	# Baggy pants & legs
-	b.circle(hip_pos + Vector2(-6.0, 2.0), 4.5, PANTS_GREY)
-	b.circle(hip_pos + Vector2(6.0, 2.0), 4.5, PANTS_GREY)
-
-	# Hoodie Torso
-	b.circle(torso_pos, 8.5, HOODIE_TEAL)
-	b.circle(torso_pos + Vector2(-5.0, -1.0), 4.0, HOODIE_TEAL.darkened(0.15))
-	b.circle(torso_pos + Vector2(5.0, -1.0), 4.0, HOODIE_TEAL.lightened(0.12))
-
-	# Head and backward cap
-	b.circle(head_pos, 5.5, Color(0.88, 0.72, 0.58))
-	b.circle(head_pos + Vector2(0.0, -1.5), 6.0, CAP_BLACK)
-	# Cap visor turned backward
-	b.rect(Rect2(head_pos.x - 8.0, head_pos.y - 3.5, 4.0, 2.0), CAP_BLACK.darkened(0.2))
+	# Skater standing sideways on the rolling board with backward cap
+	var sk_pos := pos + Vector2(lean_offset, 0.0)
+	NpcFigure.person(b, sk_pos, Vector2.DOWN, 416, -1.0, {
+		"size": 1.15, "top": HOODIE_TEAL, "legs": PANTS_GREY,
+		"skin": Color(0.88, 0.72, 0.58), "arms": NpcFigure.Arms.UP if is_skating else NpcFigure.Arms.SIDE,
+	})
+	b.circle(sk_pos + Vector2(0.0, 0.5), 5.2, CAP_BLACK)
+	b.rect(Rect2(sk_pos.x - 7.5, sk_pos.y - 1.5, 4.0, 3.0), CAP_BLACK.darkened(0.2))
