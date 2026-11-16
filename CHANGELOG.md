@@ -11,6 +11,10 @@ Append-only session history, newest first.
   - **Telegraphed night-time street sellers**: three street sellers on the plaza flagstones (`SELLER_SPECS`) with wares on white sheets and corner cords who get a `0.8 s` `"Pack up!"` telegraph on the lookout whistle or a nearby bark before bundling their sheets and running, alternately up and down the square, to the nearest arch of the arcade; they are out only on a dry night (`Outdoors.street_sellers`).
 - Verified with before/after `--shot --level=reial` captures, `tools/playtest.gd` (`0` problems), `reial --selftest`, `test_reial.gd`, `test_reial_waiter.gd`, `test_walk_hooks.gd`, and all 246 tests in `tests/ci_tests.txt` (`246 passed, 0 failed`).
 
+## 2026-11-16 - Plan the 51-walk campaign
+
+- `docs/ROADMAP.md`: the target is now exactly 51 walks (chases every fifth, a boss after every second chase), with the twelve walks still to build, a draft order, a proposed 1.75-1.78 grouping and the decision to reset progress once the campaign is locked. The 1.73 and 1.74 entries and the film list are brought up to date. No code change.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
