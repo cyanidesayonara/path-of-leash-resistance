@@ -167,6 +167,33 @@ func _run() -> void:
 	M.on_bark(m, m.dog.global_position)
 	_check(m.montserrat_mato_barked, "barking near cheese stall sets montserrat_mato_barked")
 
+	# 7. Chase respites, steering clamp, and boulder impacts
+	_check(m.chase_jams.size() == 2, "montserrat registers two chase respites (got %d)" % m.chase_jams.size())
+	var goat_bands: Array = HC.profile_for("montserrat").get("bands", [])
+	_check(goat_bands.size() == 2 and bool(goat_bands[0].get("checkpoint", false)) and bool(goat_bands[1].get("checkpoint", false)),
+		"both montserrat respites are checkpoints")
+	var gt: Node2D = Threat.new()
+	root.add_child(gt)
+	gt.setup(m, -3400.0, m.walk_cx, m.walk_half, 138.0)
+	gt.jams = m.chase_jams.duplicate()
+	var hit_jams := 0
+	for _k in range(400):
+		gt.advance(0.05, 300.0, 180.0)
+		if gt.jammed_now:
+			hit_jams += 1
+		_check(absf(gt.position.x - m.walk_cx) <= m.walk_half * 0.6, "goat herd stays in corridor with pixel aim (x=%.1f)" % gt.position.x)
+		if hit_jams == 2:
+			break
+	_check(hit_jams == 2, "goat herd jams at both cheese stall and midpoint (got %d)" % hit_jams)
+	m.auto_walk = false
+	m.human.state = m.human.HState.WALK
+	m.human.global_position = Vector2(m.walk_cx, -2400.0)
+	m.dog.global_position = Vector2(m.walk_cx + 150.0, -2400.0)
+	var ghits0: int = gt.hits
+	gt._resolve_boulder_impact({"target": m.human.global_position})
+	_check(gt.hits == ghits0 + 1 and m.human.state == m.human.HState.STUMBLE, "boulder can bump your human too")
+	gt.queue_free()
+
 	if failures.is_empty():
 		print("test_montserrat: %d checks, OK" % checks)
 	else:

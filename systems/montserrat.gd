@@ -168,6 +168,9 @@ static func wrap_rects() -> Array[Rect2]:
 
 static func build(m: Node2D) -> Array:
 	m.gate_text = "MONESTIR DE MONTSERRAT"
+	m.chase_jams.clear()
+	m.chase_jams.append(CHEESE_STALL_POS)
+	m.chase_jams.append(Vector2(640.0, -1900.0))
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)

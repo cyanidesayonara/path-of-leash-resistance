@@ -9,6 +9,12 @@ Append-only session history, newest first.
 - Updated `world/canopylayer.gd` to redraw `_faded_node` only when `_fade_key`, `_sky_key`, or an in-view animated faded piece (`TREE_PALM`, `Over.LAUNDRY`, `Over.WALL_LAMP`, `Over.BOARD`) updates, and redraw `self` only on those changes or a >150 px camera move, skipping idle 30 fps canopy rebuilds on static-tree walks such as La Rambla.
 - Tests: `tests/test_shape_batch.gd` (GL Compatibility), `tests/test_walk_hooks.gd` (1072 checks), `tests/test_members_exist.gd` (8327 checks), `tests/test_npc_clear_of_solids.gd` (392 checks), and `street --selftest`.
 
+## 2026-11-16 - Fix Montserrat chase respites, herd steering, and boulder targeting
+
+- Registered Montserrat's two chase respites (`CHEESE_STALL_POS` at `y = -3300` and the trail gate midpoint at `y = -1900`) in `m.chase_jams` (`systems/montserrat.gd`) and marked `cheese_stall` as a checkpoint in `MONTSERRAT_BANDS` (`systems/home_chase.gd`), so the goat herd jams and saves checkpoints consistently with the other seven chase walks.
+- Fixed pixel-to-ratio steering blow-up in `entities/goat_threat.gd` (`clampf(aim, -half * 0.55, half * 0.55)` instead of multiplying pixel `aim` by `half * 0.55`), added velocity-led boulder targeting alternating between dog and human clamped to the trail corridor, added human bump handling on boulder impacts, and guarded impacts/dodges against `auto_walk`.
+- Tests: `tests/test_montserrat.gd` (319 checks), `tests/test_chase_checkpoint.gd` (165 checks), `tests/test_chase_squad_walks.gd` (28 checks), `tests/test_cremada.gd`, `tests/test_aeroport.gd`, `tests/test_besos.gd`, `tests/test_vet.gd`, `tests/test_neteja.gd`.
+
 ## 2026-11-16 - Space late-campaign chases evenly
 
 - Reordered the late campaign in `autoload/game.gd` (`CAROUSEL`, `STAR_GATE`, `CHASE_GATE`) so the eight chases fall every four to six walks across the 39-walk campaign (`5, 10, 15, 19, 25, 29, 34, 38`): `Festa de Gràcia` moves to walk 29 (`STAR_GATE` 40, gated by `cremada`), `L'Aeroport` moves to walk 34 (`STAR_GATE` 47, gated by `gracia`), and `Montserrat` stays at walk 38 (`STAR_GATE` 52, gated by `aeroport`), keeping `El Port` near walk 31 and all other walk star/chase gates unchanged.
