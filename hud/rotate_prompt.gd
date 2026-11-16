@@ -12,8 +12,8 @@ extends CanvasLayer
 # only in fullscreen) it is requested too; it fails silently everywhere else.
 
 const LAYER := 120            # above the HUD, the panels and the dim
-const BG := Color(0.1, 0.12, 0.11, 0.96)
-const INK := Color(0.96, 0.93, 0.84)
+const BG := Color("14203d", 0.96)
+const INK := Color("f4f1ea")
 
 var _paused_it := false
 var _root: Control

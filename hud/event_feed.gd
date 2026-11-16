@@ -118,15 +118,15 @@ const DESC_H := 0.10
 const SLOT_MARGIN := 4.0
 
 const TONE_COL := {
-	Tone.PLAIN: Color(0.94, 0.92, 0.86),
-	Tone.GOOD: Color(0.78, 1.00, 0.80),
-	Tone.BAD: Color(1.00, 0.70, 0.62),
-	Tone.LOUD: Color(1.00, 0.88, 0.46),
+	Tone.PLAIN: Color("f4f1ea"),
+	Tone.GOOD: Color("b5e37a"),
+	Tone.BAD: Color("ff8a7c"),
+	Tone.LOUD: Color("ffc24d"),
 }
 
 var main: Node2D
 var banner := ""
-var banner_col := Color(1.0, 0.92, 0.72)
+var banner_col := Color("fff1d6")
 # newest last; each is {"text": String, "tone": int, "t": float}
 var lines: Array[Dictionary] = []
 # the owner's news, holding the banner for a moment
@@ -195,7 +195,7 @@ func clear() -> void:
 	queue_redraw()
 
 
-func set_banner(text: String, col: Color = Color(1.0, 0.92, 0.72)) -> void:
+func set_banner(text: String, col: Color = Color("fff1d6")) -> void:
 	if text == banner:
 		return
 	banner = text
@@ -273,7 +273,7 @@ func _pill(vs: Vector2, y: float, text: String, col: Color) -> void:
 	var up := text.to_upper()
 	var r := _pill_rect(vs, y, text)
 	draw_rect(Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.25 * col.a))
-	draw_rect(r, Color(0.07, 0.075, 0.09, 0.82 * col.a))
+	draw_rect(r, Color("14203d", 0.82 * col.a))
 	draw_circle(Vector2(r.position.x + 16.0, y - 6.0), 5.0, Color(col.r, col.g, col.b, col.a))
 	draw_string(f, Vector2(r.position.x + 30.0, y), up, HORIZONTAL_ALIGNMENT_LEFT, -1, BANNER_PX,
 		Color(col.r, col.g, col.b, col.a))
@@ -334,7 +334,7 @@ func _draw_toasts(vs: Vector2) -> void:
 			x = vs.x - 8.0 - tw + (1.0 - slide) * 60.0
 		var r := Rect2(x, y, tw, 50.0)
 		draw_rect(Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.25 * a))
-		draw_rect(r, Color(0.07, 0.075, 0.09, 0.9 * a))
+		draw_rect(r, Color("14203d", 0.9 * a))
 		draw_rect(Rect2(r.position, Vector2(4.0, r.size.y)), Color(col.r, col.g, col.b, a))
 		var tx := r.position.x + 16.0
 		if side == "goal":
@@ -343,7 +343,7 @@ func _draw_toasts(vs: Vector2) -> void:
 		draw_string(Kit.display(), Vector2(tx, r.position.y + 22.0), String(tst.title), HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 15, Color(col.r, col.g, col.b, a))
 		draw_string(Kit.body(), Vector2(r.position.x + 16.0, r.position.y + 41.0), String(tst.text),
-			HORIZONTAL_ALIGNMENT_LEFT, tw - 28.0, 14, Color(0.92, 0.90, 0.85, a))
+			HORIZONTAL_ALIGNMENT_LEFT, tw - 28.0, 14, Color("f4f1ea", a))
 
 
 func _draw_cards(vs: Vector2) -> void:
@@ -358,7 +358,7 @@ func _draw_cards(vs: Vector2) -> void:
 		var w := clampf(maxf(Kit.text_w(Kit.display(), title, 22), Kit.text_w(Kit.body(), hint, 16)) + 60.0, 360.0, vs.x - 80.0)
 		var r := Rect2(vs.x * 0.5 - w * 0.5, y, w, 70.0)
 		var glow: Color = main.tut_label.modulate
-		Kit.card(self, r, Color(0.52, 0.80, 0.98).lerp(Color(0.6, 1.0, 0.65), 1.0 - glow.b), 12)
+		Kit.card(self, r, Color("1fc9b7").lerp(Color("8bcb3c"), 1.0 - glow.b), 12)
 		Kit.heading(self, Vector2(r.position.x, r.position.y + 32.0), title, 22, Kit.INK, HORIZONTAL_ALIGNMENT_CENTER, w)
 		draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 56.0), hint, HORIZONTAL_ALIGNMENT_CENTER, w, 16,
 			Kit.INK_SOFT)
@@ -486,7 +486,7 @@ func _take_row(at: Vector2, col: Color, waiting: bool) -> float:
 		var f := Kit.display()
 		var tw := Kit.text_w(f, label, TAKE_PX)
 		draw_string(f, Vector2(face.position.x + (w - tw) * 0.5, face.position.y + TAKE_CAP * 0.5 + float(TAKE_PX) * 0.36),
-			label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAKE_PX, Color(0.12, 0.11, 0.12))
+			label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAKE_PX, Color("14203d"))
 		Kit.heading(self, Vector2(cap.end.x + 12.0, at.y + TAKE_CAP * 0.5 + 7.0), "DARE ON!", 18, col)
 	return at.y + TAKE_CAP + 12.0
 
@@ -522,7 +522,7 @@ func layout(vs: Vector2) -> Array[Dictionary]:
 		# at the top, out of the middle: what is true right now, not news.
 		# Gently pulsing, so it reads as live rather than painted on.
 		var a: float = 0.82 + 0.18 * sin(AnimClock.msec() / 240.0)
-		var bc: Color = Color(1.0, 0.86, 0.5) if flash_t > 0.0 else banner_col
+		var bc: Color = Color("ffb020") if flash_t > 0.0 else banner_col
 		out.append({"text": shown, "size": BANNER_PX, "outline": 0,
 			"col": Color(bc.r, bc.g, bc.b, a), "y": BANNER_Y, "punch": 1.0,
 			"rise": 0.0, "pill": true})
@@ -603,7 +603,7 @@ func _line(f: Font, w: float, y: float, text: String, size: int, outline: int,
 	outline = fit[1]
 	var tw: float = fit[2]
 	var cx := w * 0.5
-	var shade := Color(0.04, 0.03, 0.06, col.a)
+	var shade := Color("0b1430", col.a)
 	if punch != 1.0:
 		# scaled about the middle of the line, so a punch grows outward from
 		# the centre rather than shoving the text sideways

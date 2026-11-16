@@ -28,9 +28,9 @@ const LABEL_X := 28.0
 const BAR_X := 90.0
 const BAR_H := 8.0
 const LABEL_PX := 11
-const LABEL_COL := Color(0.80, 0.78, 0.72)
-const TANK_COL := Color(0.94, 0.82, 0.25)
-const ZOOM_COL := Color(0.35, 0.88, 0.45)
+const LABEL_COL := Color("c9cfdf")
+const TANK_COL := Color("ffc93c")
+const ZOOM_COL := Color("8bcb3c")
 
 # what a lesson can point at, and the outline drawn round it
 const POINT_RECTS := {
@@ -50,7 +50,7 @@ func setup(m: Node2D) -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	sb = StyleBoxFlat.new()
-	sb.bg_color = Color(0.08, 0.09, 0.10, 0.42)
+	sb.bg_color = Color("14203d", 0.55)
 	sb.set_corner_radius_all(10)
 
 
@@ -110,7 +110,7 @@ func _label(text: String, x: float, row: float, col := LABEL_COL) -> void:
 # a horizontal meter from BAR_X to the card's right padding
 func _bar(row: float, frac: float, col: Color) -> void:
 	var r := Rect2(BAR_X, row + 3.0, CARD_W - PAD - BAR_X, BAR_H)
-	_b.draw_rect(r, Color(0.04, 0.05, 0.06, 0.70))
+	_b.draw_rect(r, Color("0b1430", 0.70))
 	var w := r.size.x * clampf(frac, 0.0, 1.0)
 	if w > 1.0:
 		_b.draw_rect(Rect2(r.position, Vector2(w, r.size.y)), col)
@@ -128,21 +128,21 @@ func _draw_shapes() -> void:
 	for i in range(3):
 		var on: bool = i < main.phone_hp
 		Icons.draw_phone_pip(_b, Vector2(PAD + i * 15, ROW_PHONE), 20.0, on)
-	var phone_col := LABEL_COL if main.phone_hp > 1 else Color(1.0, 0.52, 0.42)
+	var phone_col := LABEL_COL if main.phone_hp > 1 else Color("ff6b5a")
 	_label("PHONE", 58.0, ROW_PHONE + 4.0, phone_col)
 
 	# the bones banked, right-aligned to the card's padding
 	var bones_s := str(main.bones)
 	var bw := Kit.text_w(Kit.display(), bones_s, 18)
 	_b.draw_string(Kit.display(), Vector2(CARD_W - PAD - bw, ROW_PHONE + 18.0), bones_s,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(0.95, 0.94, 0.90))
-	Icons.draw_bone(_b, Vector2(CARD_W - PAD - bw - 14.0, ROW_PHONE + 11.0), 11.0, Color(0.93, 0.90, 0.83))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("f4f1ea"))
+	Icons.draw_bone(_b, Vector2(CARD_W - PAD - bw - 14.0, ROW_PHONE + 11.0), 11.0, Color("f4f1ea"))
 
 	# her pee (yellow): full, the bar pulses (the banner says what to do)
 	var full: bool = main.pee >= 0.999
 	var tcol := TANK_COL
 	if full and fmod(t / 350.0, 2.0) < 1.0:
-		tcol = Color(1.0, 0.94, 0.45)
+		tcol = Color("ffe08a")
 	Icons.draw_droplet(_b, Vector2(PAD + 7.0, ROW_TANK + 7.5), 13.0, TANK_COL)
 	_label("PEE", LABEL_X, ROW_TANK)
 	_bar(ROW_TANK, main.pee, tcol)
@@ -150,9 +150,9 @@ func _draw_shapes() -> void:
 	# the zoomies (green), gold while a golden bone lasts
 	var ecol := ZOOM_COL
 	if float(main.golden_t) > 0.0:
-		ecol = Color(1.0, 0.80, 0.30).lerp(Color(1.0, 0.95, 0.60), 0.5 + 0.5 * sin(t / 90.0))
+		ecol = Color("ffb020").lerp(Color("ffe08a"), 0.5 + 0.5 * sin(t / 90.0))
 	elif main.dog.turbo_active and fmod(t / 120.0, 2.0) < 1.0:
-		ecol = Color(0.65, 1.0, 0.75)
+		ecol = Color("b5e37a")
 	Icons.draw_bolt(_b, Vector2(PAD + 7.0, ROW_ZOOM + 7.5), 13.0, ecol)
 	_label("ZOOMIES", LABEL_X, ROW_ZOOM)
 	_bar(ROW_ZOOM, main.dog.energy, ecol)
@@ -174,17 +174,17 @@ func _draw_shapes() -> void:
 		var st := "x%d STREAK" % main.streak
 		var sw := Kit.text_w(Kit.display(), st, 10) + 10.0
 		var sr := Rect2(CARD_W - PAD - sw, ROW_MARKS, sw, 15.0)
-		_b.draw_rect(sr, Color(0.18, 0.50, 0.32, 0.55))
-		_b.draw_rect(sr, Color(0.40, 0.85, 0.55, 0.75), false, 1.0)
+		_b.draw_rect(sr, Color("1fc9b7", 0.30))
+		_b.draw_rect(sr, Color("1fc9b7", 0.85), false, 1.0)
 		_b.draw_string(Kit.display(), Vector2(sr.position.x + 5.0, sr.position.y + 11.0), st,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.80, 1.0, 0.84))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color("d6fff9"))
 
 	# the meter a lesson is about, outlined and pulsing while it is up; the
 	# phone's pips while THAT'S THE BASICS names them
 	var point := "phone" if String(main.confirm_id) == "basics" else String(main.hud_point)
 	if POINT_RECTS.has(point):
 		var a := 0.55 + 0.45 * sin(t / 160.0)
-		_b.draw_rect(POINT_RECTS[point], Color(0.98, 0.80, 0.38, a), false, 2.5)
+		_b.draw_rect(POINT_RECTS[point], Color("ffb020", a), false, 2.5)
 
 	var extra := extra_rows()
 	for i in range(extra.size()):
@@ -196,7 +196,7 @@ func _draw_shapes() -> void:
 				var left: float = float(main.urge_timer) / float(main.POOP_URGE_S) if int(main.poop_state) == 1 else 0.0
 				var pcol := POOP_COL
 				if left < 10.0 / float(main.POOP_URGE_S) and fmod(t / 250.0, 2.0) < 1.0:
-					pcol = Color(1.0, 0.45, 0.35)
+					pcol = Color("ff6b5a")
 				var c := Vector2(PAD + 7.0, row + 9.0)
 				_b.draw_circle(c + Vector2(0.0, 2.0), 5.0, POOP_COL.darkened(0.2))
 				_b.draw_circle(c + Vector2(0.0, -1.5), 3.8, POOP_COL)

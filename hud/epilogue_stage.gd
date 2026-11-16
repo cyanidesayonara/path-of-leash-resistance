@@ -100,7 +100,7 @@ func _draw() -> void:
 		var inv := get_global_transform().affine_inverse()
 		var lat := inv.basis_xform(at) + inv.origin
 		draw_set_transform(lat, 0.0, Vector2.ONE / scale)
-		draw_rect(Rect2(-10, -8, w + 20, 32), Color(0.06, 0.06, 0.08, 0.55 * a))
+		draw_rect(Rect2(-10, -8, w + 20, 32), Color("0b1430", 0.55 * a))
 		Kit.keycap(self, Vector2.ZERO, label, px, 24.0, a)
 		draw_string(Kit.display(), Vector2(cap_w + 8.0, 17.0), word, HORIZONTAL_ALIGNMENT_LEFT, -1, px,
 			Color(Kit.INK.r, Kit.INK.g, Kit.INK.b, a))
