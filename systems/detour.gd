@@ -5,6 +5,7 @@ const Gotic := preload("res://world/gotic.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const GoticCastellers := preload("res://systems/gotic_castellers.gd")
+const PilonesRetractils := preload("res://systems/pilones_retractils.gd")
 
 # ARTSY DETOURS ("EXPOSICIÓ - ENTRADA LLIURE"):
 # Hidden-in-plain-sight side rooms off major Barcelona walks.
@@ -236,6 +237,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	if not m.detour_active:
 		if m.lvl == "oldtown":
 			GoticCastellers.tick(m, delta)
+			PilonesRetractils.tick(m, delta)
 		if dp.distance_to(m.detour_door_pos) < DOOR_TRIGGER_R:
 			enter(m)
 		return
@@ -433,6 +435,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	if m.scooter:
 		m.scooter.draw(m, wc, vt, vb)
 	Gotic.draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
+	PilonesRetractils.draw(m, wc, vt, vb)
 
 
 # the Pont del Bisbe over the alley, above everyone
@@ -465,4 +468,5 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 		return
 	if not m.detour_active and m.lvl == "oldtown":
 		GoticCastellers.on_bark(m, pos)
+		PilonesRetractils.on_bark(m, pos)
 
