@@ -1,5 +1,7 @@
 extends Control
 
+const Kit := preload("res://hud/ui_kit.gd")
+
 # The goal card, top right, Tony Hawk style: a fixed, stable list where a
 # finished goal stays put with a tick and dims out rather than vanishing.
 #
@@ -46,8 +48,8 @@ const HEAD_ASCENT := 11.0
 # collapsed: the second row's baseline and where its ink ends
 const COLLAPSED_BASE := 27.0
 const COLLAPSED_INK := 29.0
-const READ_OK := Color(0.78, 0.73, 0.55)
-const READ_BAD := Color(1.0, 0.52, 0.42)
+const READ_OK := Kit.INK_SOFT
+const READ_BAD := Kit.BAD
 
 var main: Node2D
 var sb: StyleBoxFlat
@@ -62,7 +64,7 @@ func _ready() -> void:
 	sb = StyleBoxFlat.new()
 	# opaque enough that dimmed, completed rows stay legible over bright
 	# ground - at 0.3 they washed out completely against pale pavement
-	sb.bg_color = Color(0.07, 0.08, 0.09, 0.66)
+	sb.bg_color = Color(Kit.NAVY, 0.72)
 	sb.set_corner_radius_all(10)
 
 
@@ -117,14 +119,14 @@ func _draw() -> void:
 	position.y = 8.0 + ins.y
 	draw_style_box(sb, Rect2(0, 0, w, h))
 	var all_done: bool = bool(data.all_done)
-	var head_col := Color(0.62, 0.90, 0.66) if all_done else Color(0.91, 0.86, 0.75)
+	var head_col := Kit.LEAF if all_done else Kit.INK
 	if bool(data.peeking):
-		head_col = Color(1.0, 0.90, 0.55)
+		head_col = Kit.SAFFRON
 	draw_string(f, Vector2(PAD, PAD + 10.0), "GOALS  %d/%d" % [int(data.done), int(data.total)],
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 15, head_col)
 	if all_done and open:
 		draw_string(f, Vector2(PAD + 108.0, PAD + 10.0), "ALL CLEAR",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.62, 0.90, 0.66))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Kit.LEAF)
 
 	# key / button prompt pill
 	var key_str := String(data.key)
@@ -133,7 +135,7 @@ func _draw() -> void:
 	draw_rect(krect, Color(1, 1, 1, 0.10))
 	draw_rect(krect, Color(1, 1, 1, 0.22), false, 1.0)
 	draw_string(f, Vector2(krect.position.x + 6.0, krect.position.y + 12.0), key_str,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.78, 0.76, 0.70))
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Kit.INK_SOFT)
 
 	if not open:
 		# mini progress bar under the title
@@ -146,7 +148,7 @@ func _draw() -> void:
 		draw_rect(bar_r, Color(1, 1, 1, 0.12))
 		if frac > 0.0:
 			draw_rect(Rect2(PAD, bar_y, bar_w * frac, 3.5),
-				Color(0.62, 0.90, 0.66) if all_done else Color(0.94, 0.79, 0.35))
+				Kit.LEAF if all_done else Kit.SAFFRON)
 		# the walk's time against the clock goal, while that goal is open
 		var clk: Dictionary = data.get("clock", {})
 		if not clk.is_empty():
@@ -159,11 +161,11 @@ func _draw() -> void:
 	for row: Dictionary in rows:
 		var state := int(row.state)
 		Icons.draw_check(self, Vector2(PAD, y + (0.0 if compact else 1.0)), BOX, state)
-		var txt_col := Color(0.95, 0.93, 0.88)
+		var txt_col := Kit.INK
 		if state == Icons.Check.DONE_NOW:
-			txt_col = Color(0.73, 0.85, 0.74)
+			txt_col = Kit.LEAF_DONE
 		elif state == Icons.Check.DONE_BEFORE:
-			txt_col = Color(0.47, 0.53, 0.48)
+			txt_col = Kit.INK_MUTE
 		var target := int(row.target)
 		var open_row: bool = state != Icons.Check.DONE_NOW and state != Icons.Check.DONE_BEFORE
 		var letters: Array = row.get("letters", []) if open_row else []
@@ -204,11 +206,11 @@ func _draw() -> void:
 			Icons.draw_meter(self, Vector2(mx, y + (4.0 if compact else 5.0)), METER_W, 7.0 if not compact else 6.0,
 				float(got) / float(target))
 			draw_string(f, Vector2(right - COUNT_W, y + 12.0), "%d/%d" % [got, target],
-				HORIZONTAL_ALIGNMENT_RIGHT, COUNT_W, 13, Color(0.78, 0.73, 0.55))
+				HORIZONTAL_ALIGNMENT_RIGHT, COUNT_W, 13, Kit.INK_SOFT)
 		y += row_h
 	if folded > 0:
 		draw_string(f, Vector2(TEXT_X, y + 11.0), "+ %d done" % folded,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.47, 0.53, 0.48))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_MUTE)
 	elif extra > 0:
 		draw_string(f, Vector2(TEXT_X, y + 11.0), "+ %d more" % extra,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.56, 0.53, 0.48))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_FAINT)

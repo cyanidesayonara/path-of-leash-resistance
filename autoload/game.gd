@@ -6,9 +6,9 @@ const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "mark
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
-	# are walking through, ASCII only (the web font has no accents, and the HUD
-	# upper-cases everything). The tutorial stays English on purpose - it
-	# names a mode, not a place.
+	# are walking through, spelled as in Catalan, accents and all (the game's
+	# fonts carry them, and the HUD upper-cases everything). The tutorial
+	# stays English on purpose - it names a mode, not a place.
 	#
 	# "La Rambla" is a real street, and naming a level after the street it
 	# depicts is DESCRIPTIVE use, not trademark use - the same category as the
@@ -1027,6 +1027,14 @@ const MAX_PHYSICS_STEPS := 4
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# The game's reading face, set before any Control exists. A Control looks
+	# its font up in the engine's default theme, whose own default font
+	# (Open Sans) comes before ThemeDB.fallback_font, so both are set: the
+	# theme's for every Label and Button, the fallback for draw_string calls
+	# that ask ThemeDB directly.
+	var body := preload("res://hud/ui_kit.gd").body()
+	ThemeDB.get_default_theme().default_font = body
+	ThemeDB.fallback_font = body
 	Engine.max_physics_steps_per_frame = MAX_PHYSICS_STEPS
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()
