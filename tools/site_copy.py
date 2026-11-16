@@ -12,6 +12,9 @@ and site/press/index.html:
 
     python tools/site_copy.py           rewrites the blocks in place
     python tools/site_copy.py --check   exits 1 if any block is stale
+    python tools/site_copy.py --from=DIR
+        takes the listing and the walk list from another checkout (the
+        released commit) while filling this one's pages
 
 The Pages workflow runs it before every deploy, so the published site always
 says what the listing and the game say, whether or not the committed pages
@@ -24,10 +27,15 @@ import re
 import sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+SRC = ROOT
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import store_listing  # noqa: E402
 
-PAGES = ["site/index.html", "site/press/index.html"]
+# each page and the blocks it must carry; a missing or unclosed marker fails
+PAGES = {
+    "site/index.html": ["features", "whatsnew", "count", "walks"],
+    "site/press/index.html": ["description"],
+}
 
 ONES = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
         "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
@@ -47,7 +55,7 @@ def words(n: int) -> str:
 
 
 def walks() -> list:
-    src = open(os.path.join(ROOT, "autoload/game.gd"), encoding="utf-8").read()
+    src = open(os.path.join(SRC, "autoload/game.gd"), encoding="utf-8").read()
     m = re.search(r"^const LEVELS[^=]*=\s*\[(.*?)\]", src, re.S | re.M)
     if not m:
         raise SystemExit("autoload/game.gd has no LEVELS")
@@ -63,7 +71,7 @@ def walks() -> list:
 
 
 def blocks() -> dict:
-    md = open(os.path.join(ROOT, "store/listing.md"), encoding="utf-8").read()
+    md = open(os.path.join(SRC, "store/listing.md"), encoding="utf-8").read()
     f = store_listing.fields(md)
     names = walks()
     def e(t):
@@ -80,6 +88,23 @@ def blocks() -> dict:
 
 
 BLOCK = re.compile(r"(<!-- gen:(\w+) -->)(.*?)(<!-- /gen:\2 -->)", re.S)
+OPEN = re.compile(r"<!-- gen:(\w+) -->")
+CLOSE = re.compile(r"<!-- /gen:(\w+) -->")
+
+
+def markers_ok(rel: str, page: str, want: list) -> None:
+    opens = OPEN.findall(page)
+    closes = CLOSE.findall(page)
+    whole = [m.group(2) for m in BLOCK.finditer(page)]
+    problems = []
+    for name in want:
+        if name not in opens:
+            problems.append(f"no <!-- gen:{name} --> marker")
+    for name in set(opens) | set(closes):
+        if opens.count(name) != 1 or closes.count(name) != 1 or whole.count(name) != 1:
+            problems.append(f"gen:{name} needs exactly one opening and one closing marker")
+    if problems:
+        raise SystemExit(f"{rel}: " + "; ".join(sorted(set(problems))))
 
 
 def fill(page: str, vals: dict) -> str:
@@ -96,13 +121,18 @@ def fill(page: str, vals: dict) -> str:
 
 
 def main() -> int:
+    global SRC
     check = "--check" in sys.argv[1:]
+    for a in sys.argv[1:]:
+        if a.startswith("--from="):
+            SRC = os.path.abspath(a[len("--from="):])
     vals = blocks()
     stale = []
-    for rel in PAGES:
+    for rel, want in PAGES.items():
         p = os.path.join(ROOT, rel)
         with open(p, encoding="utf-8", newline="") as fh:
             old = fh.read()
+        markers_ok(rel, old, want)
         new = fill(old, vals)
         if new != old:
             stale.append(rel)

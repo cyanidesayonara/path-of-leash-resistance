@@ -19,9 +19,9 @@ name: Website
 #     latest GitHub release and the committed images
 #   - a finished release.yml run for a tag: rebuilds with that tag's web zip
 #     (the one release.yml attaches); if the zip is missing, the latest
-#     release that has one is used, so the site never loses /play. Fresh
-#     screenshots and clips are rendered first; if that fails the committed
-#     ones are published instead
+#     release that has one is used, so the site never loses /play. The
+#     screenshots, clips and copy come from the tagged commit; if rendering
+#     fails the committed images are published instead
 #   - manual dispatch
 # workflow_run always runs on the default branch, which keeps the deploy
 # inside the github-pages environment's default-branch rule.
@@ -67,9 +67,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # a release: every screenshot and clip from the game as it now is. Not
-      # fatal, so a rendering hiccup never holds back /play; the committed
-      # images go out instead.
+      # A release: the screenshots, clips and copy come from the released
+      # commit (head_sha), checked out beside main in rel/, while the pages,
+      # styles and fonts deployed stay main's. Rendering is not fatal, so a
+      # hiccup never holds back /play; the committed images go out instead.
+      - name: Check out the released commit
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          path: rel
+
       - name: Cache Godot
         if: ${{ github.event_name == 'workflow_run' }}
         uses: actions/cache@v4
@@ -77,7 +85,7 @@ jobs:
           path: godot.zip
           key: godot-4.7-stable-linux-x86_64
 
-      - name: Render screenshots and clips
+      - name: Render screenshots and clips from the released commit
         if: ${{ github.event_name == 'workflow_run' }}
         continue-on-error: true
         run: |
@@ -85,15 +93,22 @@ jobs:
           if [ ! -s godot.zip ]; then
             curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
           fi
-          unzip -q -o godot.zip
-          chmod +x Godot_v4.7-stable_linux.x86_64
+          unzip -q -o godot.zip -d rel
+          chmod +x rel/Godot_v4.7-stable_linux.x86_64
           sudo apt-get update
           sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils fonts-dejavu-core python3-pil
+          cd rel
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
           bash tools/site_media.sh
+          cd ..
+          cp rel/site/img/* site/img/
 
+      # main's pages, filled from the release's listing and walk list on a
+      # release, from main's otherwise
       - name: Fill in the copy
-        run: python3 tools/site_copy.py
+        env:
+          FROM: ${{ github.event_name == 'workflow_run' && '--from=rel' || '' }}
+        run: python3 tools/site_copy.py ${FROM}
 
       - name: Assemble the site
         env:

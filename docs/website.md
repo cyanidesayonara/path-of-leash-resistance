@@ -35,7 +35,10 @@ The `<!-- gen:NAME -->` blocks in both pages are filled by
 `python tools/site_copy.py` from `store/listing.md` (features, What's new,
 description) and the game's walk list (count and names). The deploy runs it
 every time, so the live site follows the listing without anyone touching
-`site/`; run it locally to preview.
+`site/`; run it locally to preview. After a release the deploy checks out the
+tagged commit beside main, renders the images there (`tools/site_media.sh`)
+and fills main's pages from its listing (`site_copy.py --from=rel`). A page
+missing one of its markers, or with an unclosed one, fails the deploy.
 
 ## Images
 

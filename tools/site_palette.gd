@@ -2,9 +2,9 @@ extends SceneTree
 
 # Writes site/palette.css, the website's colours, from the game's own palette
 # in hud/ui_kit.gd, so the site and the game cannot drift apart. The site's
-# style.css uses only these variables for its colours. The Pages workflow
-# runs this before every deploy, and tests/test_site_palette.gd fails when the
-# committed file is stale.
+# style.css uses only these variables for its colours. Run it after changing
+# a colour there and commit the result: tests/test_site_palette.gd fails in CI
+# while the committed file is stale, and the deploy publishes it as committed.
 #
 #   godot --headless --path . --script res://tools/site_palette.gd
 
