@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Trencadis: one art style for the game and the website
+
+- Settled the look: Trencadis, Gaudi's broken-tile mosaic. Deep navy panels (`#14203D`), saffron (`#FFB020`) as the primary colour, turquoise (`#1FC9B7`) for the screens beside the walk, magenta (`#E5487A`) for questions and warnings, leaf green (`#8BCB3C`) for done. The constants live at the top of `hud/ui_kit.gd`; the per-screen pastels are gone (two accents plus magenta), and every HUD panel, gauge, feed chip, goal card, results panel, settings row and word-strip coin takes its colour from the palette.
+- Fonts: Bricolage Grotesque (800) for headings and Inter (500) for body text, both OFL, in `fonts/` with their licences. `Game._ready` makes Inter the fallback font, so every Label and speech bubble uses it. Both carry Catalan accents; the walk names already spelled them, and the stale "ASCII only" note in `autoload/game.gd` is gone.
+- `UiKit.mosaic()`: a two-course trencadis strip along the top of the main menu, pause and results cards, one batched draw call each. `UiKit.pick_fill()`: picked rows on a saffron screen lift to a lighter navy instead of a muddy saffron wash.
+- Website restyled from the same palette and fonts: `tools/site_palette.gd` writes `site/palette.css` from `ui_kit.gd` (`tests/test_site_palette.gd` fails if it is stale or `style.css` spells out a colour); `tools/site_copy.py` fills the features, What's new, description, walk count and walk list from `store/listing.md` and `Game.LEVELS`/`LEVEL_NAMES`. `pages.yml` runs it on every deploy, copies the fonts in, redeploys when the listing, the walk list, the palette or the fonts change, and on a release re-renders every screenshot and clip with `tools/site_media.sh` (falling back to the committed images if that fails).
+- `AGENTS.md`: the fonts join `icon.png` as the only file assets, and the palette's home is named.
+- Web build: about 0.8 MB more (the imported font data).
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
