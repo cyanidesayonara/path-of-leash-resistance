@@ -379,6 +379,7 @@ const WALK_MODULES := {
 	"eixample": preload("res://systems/eixample.gd"),
 	"diagonal": preload("res://systems/diagonal.gd"),
 	"metro": preload("res://systems/metro.gd"),
+	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
 	"raval": preload("res://systems/boss_gat.gd"),
@@ -691,6 +692,8 @@ var metro_turnstile_slipped := false
 var metro_surge_held := false
 var metro_door_catches := 0
 var metro_busker_cheered := false
+# Sarrià: the bells, the bakeries, the shutters and the cast (systems/sarria.gd)
+var sarria: RefCounted = null
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
 var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
 var montserrat_funicular_dodged := false
@@ -11085,6 +11088,8 @@ const FREEDOM_KINDS := {
 	"raval": "placa",
 	# the garden inside the next block of the grid (systems/eixample.gd)
 	"eixample": "yard",
+	# Plaça de Sant Vicenç at the top of Carrer Major
+	"sarria": "placa",
 	# Plaça de les Glòries, where the avenue ends: a plaça with its pigeons
 	"diagonal": "placa",
 	# up the stairs at Sant Gos, into its little square

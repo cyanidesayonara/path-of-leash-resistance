@@ -16,6 +16,7 @@ const TonyHawk := preload("res://systems/tony_hawk.gd")
 const Aigues := preload("res://systems/aigues.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Eixample := preload("res://systems/eixample.gd")
+const Sarria := preload("res://systems/sarria.gd")
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
 	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
@@ -79,6 +80,8 @@ const LEVEL_GOAL_IDS := {
 	# El Metro: the turnstiles, the rush-hour surge, the car's doors
 	"metro": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "turnstile", "surge", "doors_clean", "combo", "prize", "spell", "jamon", "clock"],
 	"diagonal": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "tram_dodge", "tram_clean", "kiosk", "combo", "prize", "spell", "jamon", "clock"],
+	# Sarrià: the bells of Sant Vicenç, the two bakeries, the balcony gardener
+	"sarria": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bells", "bread", "gardener", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
 	"angels": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ledge", "decks", "lamps", "combo", "prize", "spell", "jamon", "clock"],
 	# El Poble Espanyol: Plaza Mayor arcade columns, craft workshops, and Andalusian watering cans
@@ -175,6 +178,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"surge": {"text": "Dig in against the rush-hour crowd", "target": 1, "fn": func() -> int: return 1 if m.metro_surge_held else 0},
 		"doors_clean": {"text": "Get home without the doors catching the leash", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.metro_door_catches == 0) else 0},
 		"kiosk": {"text": "Bark at the newspaper kiosk", "target": 1, "fn": func() -> int: return 1 if m.diagonal_kiosk_barked else 0},
+		"bells": {"text": "Howl along with the church bells", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.howled else 0},
+		"bread": {"text": "Sniff the bread at %d bakeries", "target": 2, "fn": func() -> int: return Sarria.bread_sniffed(m)},
+		"gardener": {"text": "Bark good morning to the balcony gardener", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.greeted else 0},
 		"pond": {"text": "Paddle in the pond by the basilica", "target": 1, "fn": func() -> int: return 1 if m.eixample_pond_paddled else 0},
 		"circles": {"text": "Sprint through %d painted circles", "target": 3, "fn": func() -> int: return m.superilla_circles_sprinted},
 		"skater": {"text": "Dodge or cheer the esplanade skater", "target": 1, "fn": func() -> int: return 1 if (m.skater != null and (m.skater.dodge_done or m.skater.cheered or m.skater.booped)) else 0},

@@ -367,6 +367,8 @@ func _build_library() -> void:
 	lib["train_rumble"] = _noiseburst(1.4, 1.8)
 	lib["bleat"] = _bleat()
 	lib["crossing_bell"] = _crossing_bell()
+	# Sant Vicenç de Sarrià striking the hour (systems/sarria.gd)
+	lib["church_bell"] = _church_bell()
 	lib["lion_roar"] = _lion_roar()
 	lib["drac_click"] = _drac_click()
 	lib["drac_jet"] = _drac_jet()
@@ -771,6 +773,26 @@ func _van_horn() -> AudioStreamWAV:
 		var env := sin(PI * t / dur)
 		var s := 0.5 * sin(TAU * 440.0 * t) + 0.35 * sin(TAU * 554.37 * t) + 0.15 * sin(TAU * 880.0 * t)
 		out[i] = s * env * 0.35
+	return _pack(out)
+
+
+func _church_bell() -> AudioStreamWAV:
+	# a big bronze bell struck once: the hum, the strike note and its minor
+	# third, quint and nominal, each with its own decay, so the strike is
+	# bright and the hum is what hangs in the air after it
+	var dur := 2.6
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var f0 := 196.0
+	var partials := [[0.5, 0.55, 0.9], [1.0, 0.60, 1.6], [1.2, 0.34, 2.2], [1.5, 0.22, 2.8], [2.0, 0.30, 3.4], [2.67, 0.12, 5.0]]
+	for i in range(n):
+		var t := float(i) / RATE
+		var v := 0.0
+		for pt: Array in partials:
+			v += sin(TAU * f0 * float(pt[0]) * t) * float(pt[1]) * exp(-t * float(pt[2]))
+		var atk := minf(1.0, float(i) / (0.002 * RATE))
+		out[i] = v * atk * 0.36
 	return _pack(out)
 
 
