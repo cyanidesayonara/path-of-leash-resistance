@@ -408,6 +408,9 @@
 --headless --path . --script res://tests/test_diagonal.gd
 --headless --path . --script res://tests/test_diagonal_riders.gd
 
+# El Metro: the turnstile fumble, the doors, the ride and the surge
+--headless --path . --script res://tests/test_metro.gd
+
 # Montserrat (the wild goat herd chase) test
 --headless --path . --script res://tests/test_montserrat.gd
 
