@@ -15,6 +15,7 @@ extends Control
 
 const Icons := preload("res://hud/ui_icons.gd")
 const WordStrip := preload("res://hud/word_strip.gd")
+const UiScale := preload("res://hud/ui_scale.gd")
 
 const W := 416.0
 const GOALS_X := 856.0
@@ -110,8 +111,10 @@ func _draw() -> void:
 	# or less than the 1280 reference width on most phone shapes), so
 	# collapsing pulls it into the true corner instead of drifting toward
 	# the middle of a wide window, or off the edge of a narrow one
-	var right_margin := 1280.0 - (GOALS_X + W)  # 8px, preserved from the original tuning
+	var ins := UiScale.safe_insets(get_window() if is_inside_tree() else null)
+	var right_margin := 1280.0 - (GOALS_X + W) + ins.z  # 8px, preserved from the original tuning
 	position.x = get_viewport_rect().size.x - right_margin - w
+	position.y = 8.0 + ins.y
 	draw_style_box(sb, Rect2(0, 0, w, h))
 	var all_done: bool = bool(data.all_done)
 	var head_col := Color(0.62, 0.90, 0.66) if all_done else Color(0.91, 0.86, 0.75)

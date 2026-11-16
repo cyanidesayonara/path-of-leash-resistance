@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Android readiness and Google Play release pipeline
+
+- Added display safe-area inset handling (`UiScale.safe_insets()` and `apply_safe_area()` in `hud/ui_scale.gd`, with `--safe-area=L,T,R,B` for desktop testing) across the HUD vitals panel, goal card (`hud/goals_card.gd`), touch controls cluster (`hud/touch_controls.gd`), and menu prompt bar (`hud/ui_kit.gd`); zero inset on desktop/web.
+- Added Android system Back (`NOTIFICATION_WM_GO_BACK_REQUEST` / `on_back_request()` with `quit_on_go_back = false` in `main.gd` and `MenuFlow.back_requested`) to skip intros, pause active walks, or step back through menus, plus mobile pause/save flush on `NOTIFICATION_APPLICATION_PAUSED` and `NOTIFICATION_WM_WINDOW_FOCUS_OUT` (`on_app_paused()`).
+- Extended `tools/make_icon.gd` (`--android`) to generate 432x432 adaptive icon foreground and background layers (`store/android/icon_foreground.png`, `store/android/icon_background.png`), added `[preset.2]` `"Android"` (`com.santtunykanen.pathofleashresistance`, `target_sdk="35"`) in `export_presets.cfg`, added a conditional `android` export + Play Closed/Internal Test upload job to `.github/workflows/release.yml`, and documented Play Console setup in `docs/android-play-store.md`.
+- Tests: `tests/test_android_readiness.gd` (19 checks, registered in `tests/ci_tests.txt`), `tests/test_menu_tree.gd`, `tests/test_menu_flow.gd`, `tests/test_prompts.gd`, `tests/test_hud_anchoring.gd`, `tests/test_touch_controls.gd`, `tests/test_rotate_prompt.gd`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
+
 ## 2026-11-16 - Upgrade remaining bespoke NPCs to NpcFigure
 
 - Converted the remaining circle-stack passers-by and live event characters to `NpcFigure.person()` (`entities/npc_figure.gd`): `Ornitoleg` (`systems/ornitoleg.gd`), `Escombriaire` (`systems/escombriaire.gd`), `Banderer` (`systems/banderer.gd`), `Guitarrista` (`systems/guitarrista.gd`), `Castanyera` (`systems/castanyera.gd`), `Boletaire` (`systems/boletaire.gd`), `Angels` sitting/rolling skaters and `AngelsSkate` (`systems/angels.gd`, `systems/angels_skate.gd`), `ForumSkater` (`systems/forum_skater.gd`), `LostTourist` and Horta's gardener (`systems/lost_tourist.gd`, `systems/horta.gd`), `Surfer` (`systems/surfer.gd`), and `Pickpocket`'s upright stride (`entities/pickpocket.gd`) while preserving each character's props, headwear, and event choreography (and removing a mid-batch `draw_arc` flush on `LostTourist`).

@@ -1239,8 +1239,11 @@ func _ready() -> void:
 	TonyHawk.setup_walk(self)
 	_build_quests()
 	UiScale.apply(self)
+	if get_tree() != null:
+		get_tree().quit_on_go_back = false
 	get_tree().root.size_changed.connect(_on_window_resized)
 	_build_hud()
+	UiScale.apply_safe_area(self)
 	_pops_layer().add_speaker(human, _human_speech)
 	_spawn_challenger()
 	_spawn_wallcats()
@@ -1349,6 +1352,44 @@ func start_at_home() -> void:
 # a small screen gets a bigger interface, the same walk (hud/ui_scale.gd)
 func _on_window_resized() -> void:
 	UiScale.apply(self)
+	UiScale.apply_safe_area(self)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		on_back_request()
+	elif what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		on_app_paused()
+
+
+func on_back_request() -> void:
+	if intro_playing or film_playing:
+		for ch in get_children():
+			if ch is IntroPlayer:
+				if (ch as IntroPlayer).done_t < 0.0:
+					(ch as IntroPlayer).skipped = true
+					(ch as IntroPlayer).done_t = (ch as IntroPlayer).t
+				return
+			if ch.has_method("_finish"):
+				ch._finish()
+				return
+		return
+	if started and arriving and Arrival.can_skip(self):
+		Arrival.skip(self)
+		return
+	if started and not frozen and not paused:
+		MenuFlow.open_pause(self)
+		return
+	MenuFlow.back_requested = true
+
+
+func on_app_paused(force_mobile := false) -> void:
+	if Game.persist:
+		Game.save_records()
+	var mobile := force_mobile or OS.has_feature("android") or OS.has_feature("mobile") \
+		or DisplayServer.is_touchscreen_available()
+	if mobile and started and not frozen and not paused and not arriving:
+		MenuFlow.open_pause(self)
 
 
 # the soundtrack: the loop that belongs on screen now (see Sfx.music_tick)

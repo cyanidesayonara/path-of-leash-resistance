@@ -229,3 +229,124 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload $env:GITHUB_REF_NAME (Get-ChildItem build/msix/*.msix).FullName --repo $env:GITHUB_REPOSITORY --clobber
+
+  # Android AAB + APK build for Google Play Closed Testing / GitHub release.
+  # Runs only on version tags when ANDROID_KEYSTORE_BASE64 is configured;
+  # skips gracefully until signing secrets are provisioned.
+  android:
+    needs: publish
+    if: ${{ github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - name: Check signing secrets
+        id: check
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -z "${ANDROID_KEYSTORE_BASE64}" ]; then
+            echo "ANDROID_KEYSTORE_BASE64 secret not set; skipping Android export and Play upload."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -z "${GOOGLE_PLAY_SERVICE_ACCOUNT_JSON}" ]; then
+            echo "play=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "play=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        if: steps.check.outputs.enabled == 'true'
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: android-actions/setup-android@v3
+        if: steps.check.outputs.enabled == 'true'
+
+      - name: Install Android SDK components
+        if: steps.check.outputs.enabled == 'true'
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;28.1.13356709"
+
+      - name: Download Godot + export templates
+        if: steps.check.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+          curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o templates.tpz https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz
+          unzip -q templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/4.7.stable
+          mv templates/* ~/.local/share/godot/export_templates/4.7.stable/
+
+      - name: Import, bake music, stamp version
+        if: steps.check.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tools/bake_music.gd
+          bash tools/stamp_version.sh
+
+      - name: Export signed AAB and sideload APK
+        if: steps.check.outputs.enabled == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > /tmp/upload.keystore
+          # Derive numeric monotonic versionCode from tag (v1.74 -> 107400)
+          VER="${TAG#v}"
+          IFS=. read -r MAJ MIN PAT <<< "${VER}.0"
+          PAT_NUM="${PAT%%[^0-9]*}"
+          export VCODE=$(( MAJ * 10000 + MIN * 100 + ${PAT_NUM:-0} ))
+          python3 - <<PY
+          import os, re
+          txt = open("export_presets.cfg", "r", encoding="utf-8").read()
+          txt = re.sub(r'version/code=\d+', f'version/code={os.environ["VCODE"]}', txt)
+          txt = re.sub(r'version/name="[^"]*"', f'version/name="{os.environ["TAG"].lstrip("v")}"', txt)
+          extra = (
+              f'\nkeystore/release="/tmp/upload.keystore"'
+              f'\nkeystore/release_user="{os.environ["ANDROID_KEY_ALIAS"]}"'
+              f'\nkeystore/release_password="{os.environ["ANDROID_KEY_PASSWORD"]}"\n'
+          )
+          open("export_presets.cfg", "w", encoding="utf-8").write(txt + extra)
+          PY
+          mkdir -p build/android
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Android" build/android/PathOfLeashResistance.aab
+          test -s build/android/PathOfLeashResistance.aab
+          # Restore AAB preset and produce sideload APK too
+          sed -i 's/gradle_build\/export_format=1/gradle_build\/export_format=0/' export_presets.cfg
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Android" build/android/PathOfLeashResistance.apk
+          test -s build/android/PathOfLeashResistance.apk
+          git checkout -- export_presets.cfg
+          rm -f /tmp/upload.keystore
+
+      - name: Attach Android bundles to GitHub release
+        if: steps.check.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" build/android/PathOfLeashResistance.aab build/android/PathOfLeashResistance.apk --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Upload AAB to Google Play internal track
+        if: steps.check.outputs.enabled == 'true' && steps.check.outputs.play == 'true'
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.santtunykanen.pathofleashresistance
+          releaseFiles: build/android/PathOfLeashResistance.aab
+          track: internal
+          status: completed

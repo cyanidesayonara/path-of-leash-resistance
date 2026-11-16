@@ -1,6 +1,7 @@
 extends Control
 
 const TutorialSteps := preload("res://systems/tutorial.gd")
+const UiScale := preload("res://hud/ui_scale.gd")
 
 # Virtual touch controls for phones and tablets. A floating joystick on
 # the left half of the screen feeds the move_* input actions with analog
@@ -65,7 +66,8 @@ func _layout() -> void:
 	# button offsets from the bottom-right corner, preserved from the
 	# original tuning (authored against a 1280x720 corner at 130,130)
 	var sz := get_viewport_rect().size
-	var corner := sz - Vector2(130.0, 130.0)
+	var ins := UiScale.safe_insets(get_window() if is_inside_tree() else null)
+	var corner := sz - Vector2(130.0 + ins.z, 130.0 + ins.w)
 	# "when": always, walking (mid-walk only) or stopped (paused, or the walk
 	# over). Touch had no way to pause, open settings or turbo (#62), and R
 	# sat on top of the goals card all walk, one tap from restarting it.
@@ -83,14 +85,14 @@ func _layout() -> void:
 		# beside the vitals card, well away from the thumbs. The menus need
 		# no MENU button: BARK is back on every one of them
 		# (hud/menu_flow.gd), and the stick and DIG pick and confirm
-		{"action": "pause", "label": "MENU", "center": Vector2(MENU_X, 40.0), "r": 26.0, "id": -1, "when": "menu"},
+		{"action": "pause", "label": "MENU", "center": Vector2(MENU_X + ins.x, 40.0 + ins.y), "r": 26.0, "id": -1, "when": "menu"},
 		# C / Y skips a tutorial lesson; kept clear of the results card and
 		# the thumbs.
-		{"action": "share", "label": "SKIP", "center": Vector2(360.0, 40.0), "r": 30.0, "id": -1, "when": "tutorial"},
+		{"action": "share", "label": "SKIP", "center": Vector2(360.0 + ins.x, 40.0 + ins.y), "r": 30.0, "id": -1, "when": "tutorial"},
 		# R restarts at once, so it only appears when the walk has stopped.
 		# Big, and at the left edge: the results card, the death card and the
 		# pause text all sit in the middle, and nothing needs the stick then
-		{"action": "restart", "label": "R", "center": Vector2(sz.x * 0.09, sz.y * 0.5), "r": 38.0, "id": -1, "when": "stopped"},
+		{"action": "restart", "label": "R", "center": Vector2(sz.x * 0.09 + ins.x, sz.y * 0.5), "r": 38.0, "id": -1, "when": "stopped"},
 	]
 	split_x = sz.x * 0.5 - 20.0
 	queue_redraw()
