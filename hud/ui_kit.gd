@@ -94,8 +94,9 @@ static func display() -> Font:
 	return _display
 
 
-# The reading face, for everything else. Game makes it the fallback font at
-# start, so every Label and every draw_string that asks ThemeDB gets it too.
+# The reading face, for everything else. Game._ready makes it the engine
+# default theme's font (what every Label and Button uses) and the ThemeDB
+# fallback font (what a draw_string that asks ThemeDB uses).
 static func body() -> Font:
 	if _body == null:
 		_body = FontVariation.new()

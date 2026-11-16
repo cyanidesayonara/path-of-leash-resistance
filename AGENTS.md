@@ -22,7 +22,8 @@ before proposing features.
 - All art is vectors drawn in `_draw()`. The only file assets are `icon.png`
   (generated - see `tools/make_icon.gd`) and the two OFL fonts in `fonts/`
   with their licences: Bricolage Grotesque (headings, `UiKit.display()`) and
-  Inter (body, `UiKit.body()`, also `ThemeDB.fallback_font`)
+  Inter (body, `UiKit.body()`; `Game._ready` also makes it the default
+  theme's font, which every Control uses, and `ThemeDB.fallback_font`)
 - The look is "Trencadis" (November 2026): saffron, turquoise and magenta
   on deep navy. Its colours are the constants at the top of `hud/ui_kit.gd`;
   take them from there, never a new hard-coded gold. The website's colours

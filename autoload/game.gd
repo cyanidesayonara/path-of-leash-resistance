@@ -1019,9 +1019,14 @@ const MAX_PHYSICS_STEPS := 4
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# the game's reading face for every Label and every draw_string that asks
-	# ThemeDB, before anything is drawn
-	ThemeDB.fallback_font = preload("res://hud/ui_kit.gd").body()
+	# The game's reading face, set before any Control exists. A Control looks
+	# its font up in the engine's default theme, whose own default font
+	# (Open Sans) comes before ThemeDB.fallback_font, so both are set: the
+	# theme's for every Label and Button, the fallback for draw_string calls
+	# that ask ThemeDB directly.
+	var body := preload("res://hud/ui_kit.gd").body()
+	ThemeDB.get_default_theme().default_font = body
+	ThemeDB.fallback_font = body
 	Engine.max_physics_steps_per_frame = MAX_PHYSICS_STEPS
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()
