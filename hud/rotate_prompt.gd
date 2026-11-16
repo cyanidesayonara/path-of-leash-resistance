@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const Kit := preload("res://hud/ui_kit.gd")
+
 # The game is laid out for a landscape window. In portrait the 1280x720
 # reference squeezes into the short axis: the world renders at about a third of
 # its size, the HUD is unreadable, and the camera shows the empty street behind
@@ -12,8 +14,8 @@ extends CanvasLayer
 # only in fullscreen) it is requested too; it fails silently everywhere else.
 
 const LAYER := 120            # above the HUD, the panels and the dim
-const BG := Color(0.1, 0.12, 0.11, 0.96)
-const INK := Color(0.96, 0.93, 0.84)
+const BG := Color(Kit.NAVY, 0.96)
+const INK := Kit.INK
 
 var _paused_it := false
 var _root: Control
