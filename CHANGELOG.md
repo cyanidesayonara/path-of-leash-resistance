@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Camera tricks for chases and boss fights
+
+- Added `systems/cam_tricks.gd` (`CamTricks.tick()`) wired into `main.gd`:
+  - Smooth arena zoom-out (`ARENA_ZOOM = 0.88`, multiplicative over `UiScale`) while an active boss fight is underway, restoring to `1.0` on defeat.
+  - Brief enrage dutch tilt (`TILT_DEG = 2.8`, `TILT_SECS = 0.55`) triggered once when a boss enters Phase 2 / `enraged`, always returning cleanly to `LevelBuild.CAM_ROT` (never continuous tilt; kept `cam.rotation != 0.0` separate from `diagonal` x-tracking).
+  - Cinema letterbox bars (`letterbox_top`, `letterbox_bot` in `hud/hud_build.gd`) sliding in during boss reveal cards (`hush_banner`).
+  - Automatic near-miss slow motion (`_slowmo()`) on `saves_done`, `close_calls`, and `HomeChase` `CLOSE SHAVE` (guarded against stacking).
+- Tests: `tests/test_cam_tricks.gd` (registered in `tests/ci_tests.txt`), `tests/test_boss_gat.gd`, `tests/test_drac.gd`, `tests/test_lleons.gd`, `tests/test_ciutadella.gd`, `tests/test_diagonal.gd`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
+
 ## 2026-11-16 - Fix Montserrat chase respites, herd steering, and boulder targeting
 
 - Registered Montserrat's two chase respites (`CHEESE_STALL_POS` at `y = -3300` and the trail gate midpoint at `y = -1900`) in `m.chase_jams` (`systems/montserrat.gd`) and marked `cheese_stall` as a checkpoint in `MONTSERRAT_BANDS` (`systems/home_chase.gd`), so the goat herd jams and saves checkpoints consistently with the other seven chase walks.

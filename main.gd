@@ -60,6 +60,20 @@ var drac_dragon_greeted := 0
 var detour_layer: Node2D = null
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
+var shot_zoom_set := false
+const CamTricks := preload("res://systems/cam_tricks.gd")
+var arena_zoom_mult := 1.0
+var _arena_zoom_applied := 1.0
+var cam_tilt_t := 0.0
+var _cam_tilt_dir := 1.0
+var _cam_tilt_base_rot := 0.0
+var _cam_tilt_base_ignore := true
+var _boss_was_enraged := false
+var _prev_saves_done := 0
+var _prev_close_calls := 0
+var letterbox_amt := 0.0
+var letterbox_top: ColorRect = null
+var letterbox_bot: ColorRect = null
 var strip_l := 0.0
 var strip_r := 0.0
 var strip_kind_l := "none"
@@ -6790,6 +6804,7 @@ func _process(_delta: float) -> void:
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-zoom="):
 					cam.zoom *= float(a.substr(12))
+					shot_zoom_set = true
 				elif a.begins_with("--shot-cam="):
 					var xy := a.substr(11).split(",")
 					shot_cam = Vector2(float(xy[0]), float(xy[1]))
@@ -6875,7 +6890,7 @@ func _process(_delta: float) -> void:
 	var cx_want := _cam_x()
 	# SPIKE: on a turned camera a step off the path is a step across the
 	# screen, so the camera follows the pair across as well as along
-	if cam.rotation != 0.0 and phase != "freedom":
+	if LevelBuild.CAM_ROT.has(lvl) and phase != "freedom":
 		cx_want = (dog.global_position.x + human.global_position.x) * 0.5
 	if cam_x_now > 1e8:
 		cam_x_now = cx_want
@@ -6904,6 +6919,7 @@ func _process(_delta: float) -> void:
 	if _redraw_acc >= 0.033 or shake_t > 0.0 or teeter.active or grind.active:
 		_redraw_acc = 0.0
 		queue_redraw()
+	CamTricks.tick(self, _delta)
 	# keep the grade's surface texture pinned to world space, and give the
 	# water's shimmer its clock. Three uniform writes a frame - negligible
 	# next to a redraw.
@@ -11972,6 +11988,8 @@ func on_litter_caught(pos: Vector2) -> void:
 
 
 func _slowmo() -> void:
+	if Engine.time_scale < 0.99:
+		return
 	Engine.time_scale = SLOWMO_SCALE
 	# 0.35s of real time, measured in scaled game time rather than on the wall
 	# clock: a real-time timer let a slow machine spend more game frames in
