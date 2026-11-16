@@ -14,6 +14,10 @@ Append-only session history, newest first.
 - Inserting the walk moves every later campaign walk down one: `test_aeroport` and `test_cremada` now expect 35 and 26. La Cremada's chase is on walk 26, not a multiple of five, until the 51-walk reorder.
 - Tests: new `tests/test_metro.gd` (registered in `tests/ci_tests.txt`); `metro --selftest`, `test_walk_hooks`, `test_walk_registry`, `test_outdoors`, `test_night_fronts`, `test_goals`, `test_npc_clear_of_solids`, `test_chase_milestone_gates`, `test_campaign_mastery`, `test_wrap`. Walk counts and lists updated in README, `store/listing.md` and `docs/itch-page.md`.
 
+## 2026-11-16 - Plan the 51-walk campaign
+
+- `docs/ROADMAP.md`: the target is now exactly 51 walks (chases every fifth, a boss after every second chase), with the twelve walks still to build, a draft order, a proposed 1.75-1.78 grouping and the decision to reset progress once the campaign is locked. The 1.73 and 1.74 entries and the film list are brought up to date. No code change.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
