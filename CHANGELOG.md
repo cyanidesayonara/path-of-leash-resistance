@@ -12,6 +12,10 @@ Append-only session history, newest first.
 - Goals: leave it three times when told, catch a pintxo off a tipping tray, sit pretty until someone shares, and the usual twelve. A `draw_table` hook lets a walk lay its own terrace tables.
 - Tests: `tests/test_blai.gd` (registration, the placeta, nothing standing inside anything, bars lit at night and shuttered by day, leave it paid once and eating it costed, the tray telegraphed and caught, begging free); `tests/test_outdoors.gd` covers the new rules. Store, itch and README: forty walks.
 
+## 2026-11-16 - Plan the 51-walk campaign
+
+- `docs/ROADMAP.md`: the target is now exactly 51 walks (chases every fifth, a boss after every second chase), with the twelve walks still to build, a draft order, a proposed 1.75-1.78 grouping and the decision to reset progress once the campaign is locked. The 1.73 and 1.74 entries and the film list are brought up to date. No code change.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
