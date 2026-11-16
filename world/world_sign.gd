@@ -989,6 +989,12 @@ static func _papers(c: Object, sign: Dictionary, _h: float) -> void:
 			c.draw_colored_polygon(_box(p - ay * r * 0.3, rot, r * 1.1, r * 0.1), Color(0.80, 0.16, 0.14))
 
 
+# a croissant's three lobes along its curve, and their bake from the
+# underside to the glazed top (consts: _pastries runs every frame)
+const PASTRY_LOBES: Array[float] = [-1.0, 0.0, 1.0]
+const PASTRY_COLS: Array[Color] = [Color(0.62, 0.38, 0.16), Color(0.86, 0.60, 0.28), Color(0.96, 0.78, 0.46)]
+
+
 static func _pastries(c: Object, sign: Dictionary, _h: float) -> void:
 	# the bakery's morning trays tipped out: croissants, a golden crescent
 	# with its rolled ridges, and the odd ensaimada, a flat sugared coil
@@ -1006,12 +1012,11 @@ static func _pastries(c: Object, sign: Dictionary, _h: float) -> void:
 			c.draw_circle(p, r * 0.22, Color(0.98, 0.96, 0.92))
 			continue
 		# the crescent: three lobes along a curve, the middle one fattest
-		var cols: Array[Color] = [Color(0.62, 0.38, 0.16), Color(0.86, 0.60, 0.28), Color(0.96, 0.78, 0.46)]
 		for layer in range(3):
 			var grow := 1.0 - float(layer) * 0.2
-			for k: float in [-1.0, 0.0, 1.0]:
+			for k: float in PASTRY_LOBES:
 				var q: Vector2 = p + ax * k * r * 0.62 + ay * absf(k) * r * 0.34 - Vector2(0.6, 0.6) * float(layer)
-				c.draw_circle(q, r * (0.62 if k == 0.0 else 0.44) * grow, cols[layer])
+				c.draw_circle(q, r * (0.62 if k == 0.0 else 0.44) * grow, PASTRY_COLS[layer])
 		c.draw_line(p - ay * r * 0.4, p + ay * r * 0.3, Color(0.62, 0.38, 0.16), r * 0.1)
 
 

@@ -154,6 +154,13 @@ static func jogging(weather: String, hour: String) -> bool:
 	return (weather == "clear" or weather == "wind") and hour != "night"
 
 
+# The balcony gardener is out on her balcony in the dry by daylight. In the
+# rain or the snow she stays behind her balcony door, and at night behind
+# her lit window; from either she still answers a dog's good morning.
+static func gardener_on_balcony(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and hour != "night"
+
+
 # Balcony plants are watered in the cool of the morning or the evening, and
 # never in the rain.
 static func watering_plants(weather: String, hour: String) -> bool:

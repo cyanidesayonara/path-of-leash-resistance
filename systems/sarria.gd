@@ -103,12 +103,20 @@ const GARDENER_BARK_R := 230.0
 
 # the cast's pace
 const SWEEP_SPEED := 26.0
-const SWEEP_Y0 := 120.0
-const SWEEP_Y1 := -1120.0
+# his beat along the east gutter, short of the pilona at the street's foot
+# (y 130) and the marking post below the market (y -1060)
+const SWEEP_Y0 := 70.0
+const SWEEP_Y1 := -990.0
 const JOG_SPEED := 150.0
 const JOG_Y0 := 160.0
 const JOG_Y1 := -2150.0
 const JOG_CLEAR := 64.0
+const JOG_SIDE := 220.0                # his sideways speed changing line
+const JOG_LOOK := 6                    # he picks a line clear this many steps ahead
+const JOG_LOOK_STEP := 20.0
+const JOG_WALL := 30.0                 # how close to the house fronts he runs
+const DOG_CLEAR := 36.0                # he never comes nearer her than this
+const CAST_R := 14.0                   # a passer-by's body, kept clear of things
 const SHUTTER_NEAR := 620.0
 const SHUTTER_T := 2.2
 
@@ -172,6 +180,17 @@ const WATER := Color(0.40, 0.62, 0.74)
 const WET := Color(0.10, 0.14, 0.20, 0.16)
 const HI_VIS := Color(0.98, 0.84, 0.10)
 const PHARMACY := Color(0.20, 0.82, 0.36)
+# what the draw loops iterate, kept as consts so a frame allocates nothing
+const SIDES: Array[float] = [-1.0, 1.0]
+const WINDOW_ROWS: Array[float] = [-24.0, 22.0]
+const MARKET_ARCHES: Array[float] = [-130.0, 0.0, 130.0]
+const FRUIT_COLS: Array[Color] = [Color(0.92, 0.56, 0.16), Color(0.86, 0.18, 0.16), Color(0.50, 0.70, 0.22), Color(0.96, 0.84, 0.24)]
+const GOODS_FORN: Array[Color] = [BREAD, BREAD_LIT, Color(0.78, 0.52, 0.26)]
+const GOODS_FARMACIA: Array[Color] = [Color(0.94, 0.94, 0.96), PHARMACY]
+const GOODS_LLIBRERIA: Array[Color] = [Color(0.72, 0.20, 0.20), Color(0.20, 0.36, 0.62), Color(0.90, 0.80, 0.40), Color(0.24, 0.50, 0.32)]
+const GOODS_CAFE: Array[Color] = [Color(0.40, 0.26, 0.18), Color(0.94, 0.92, 0.88)]
+# the tower's ground shadow, filled in place each frame
+static var _shadow_buf := PackedVector2Array()
 
 
 # --- the walk's own state, on main as m.sarria --------------------------------------
@@ -197,6 +216,7 @@ class State:
 	var jog_y := -1600.0
 	var jog_dir := 1.0
 	var jog_x := 640.0
+	var jog_line := 640.0            # the line he is running on, or changing to
 	var jog_said := false
 	var drip_t := 0.0
 
@@ -378,7 +398,7 @@ static func night_fronts(m: Node2D) -> Array[Dictionary]:
 			y += 150.0
 			continue
 		var e := edges_at(y)
-		for side: float in [-1.0, 1.0]:
+		for side: float in SIDES:
 			var k := i * 2 + (0 if side < 0.0 else 1) + 1311
 			var kind := NightFronts.kind_of(k)
 			if kind != "":
@@ -539,12 +559,55 @@ static func sweeper_pos(st: State) -> Vector2:
 	return Vector2(edges_at(st.sweep_y).y - 24.0, st.sweep_y)
 
 
+# A passer-by of the walk's own (the sweeper, the jogger) standing at p is
+# clear of everything solid: the solids, the poles and pilones, the marking
+# posts, the bins, the benches and the fountains
+static func cast_clear(m: Node2D, p: Vector2) -> bool:
+	for r: Rect2 in m.solid_rects:
+		if r.grow(CAST_R).has_point(p):
+			return false
+	for q: Vector2 in m.poles:
+		if p.distance_to(q) < CAST_R + float(m.POLE_RADIUS):
+			return false
+	for h in m.hydrants:
+		if p.distance_to(h.pos) < CAST_R + float(m.HYDRANT_RADIUS):
+			return false
+	for q: Vector2 in m.bins:
+		if p.distance_to(q) < CAST_R + 12.0:
+			return false
+	for q: Vector2 in m.benches:
+		if p.distance_to(q) < CAST_R + 30.0:
+			return false
+	for q: Vector2 in m.fountains:
+		if p.distance_to(q) < CAST_R + 30.0:
+			return false
+	return true
+
+
+# the jogger's footing at p: on the paving, off the solids and off the dog
+static func _jog_ok(m: Node2D, p: Vector2, dog: Vector2) -> bool:
+	var e := edges_at(p.y)
+	if p.x < e.x + JOG_WALL - 0.5 or p.x > e.y - JOG_WALL + 0.5:
+		return false
+	return p.distance_to(dog) >= DOG_CLEAR and cast_clear(m, p)
+
+
+# a line at x is clear for the next stretch of his run
+static func _jog_line_ok(m: Node2D, x: float, y: float, dir: float, dog: Vector2) -> bool:
+	for k in range(1, JOG_LOOK + 1):
+		if not _jog_ok(m, Vector2(x, y + dir * float(k) * JOG_LOOK_STEP), dog):
+			return false
+	return true
+
+
 # The jogger: up and down the lower street at a steady trot, keeping to
-# whichever side your human is not on, and swerving round her
+# whichever side your human is not on. He picks a line that is clear a
+# little way ahead (the crates, the market's fruit and tricycle, the posts,
+# and her), changes line at a run, and jogs on the spot if she is right in
+# his way: he never runs through anything, her included.
 static func _tick_jogger(m: Node2D, st: State, delta: float, dog: Vector2) -> void:
 	if not Outdoors.jogging(_weather(), _hour()):
 		return
-	st.jog_y += st.jog_dir * JOG_SPEED * delta
 	if st.jog_y < JOG_Y1:
 		st.jog_dir = 1.0
 	elif st.jog_y > JOG_Y0:
@@ -553,10 +616,31 @@ static func _tick_jogger(m: Node2D, st: State, delta: float, dog: Vector2) -> vo
 	var hum: Vector2 = m.human.global_position
 	var mid := (e.x + e.y) * 0.5
 	var want := e.y - JOG_CLEAR if hum.x < mid else e.x + JOG_CLEAR
-	# swerve round her if she is in the way
-	if absf(dog.y - st.jog_y) < 90.0 and absf(dog.x - want) < 60.0:
-		want = clampf(dog.x + (70.0 if want > dog.x else -70.0), e.x + 30.0, e.y - 30.0)
-	st.jog_x = move_toward(st.jog_x, clampf(want, e.x + 30.0, e.y - 30.0), 120.0 * delta)
+	# the line he wants if it is clear, else the one he is on if that still
+	# is, else the clear line nearest the one he wants, searched outward
+	var line := st.jog_line
+	if _jog_line_ok(m, want, st.jog_y, st.jog_dir, dog):
+		line = want
+	elif not _jog_line_ok(m, line, st.jog_y, st.jog_dir, dog):
+		var off := 20.0
+		var found := false
+		while off <= e.y - e.x and not found:
+			for s: float in SIDES:
+				var x := want + s * off
+				if x >= e.x + JOG_WALL and x <= e.y - JOG_WALL and _jog_line_ok(m, x, st.jog_y, st.jog_dir, dog):
+					line = x
+					found = true
+					break
+			off += 20.0
+	st.jog_line = line
+	var nx := move_toward(st.jog_x, line, JOG_SIDE * delta)
+	var here := Vector2(st.jog_x, st.jog_y)
+	var ok_here := _jog_ok(m, here, dog)
+	if not ok_here or _jog_ok(m, Vector2(nx, st.jog_y), dog):
+		st.jog_x = nx
+	var ahead := Vector2(st.jog_x, st.jog_y + st.jog_dir * JOG_SPEED * delta)
+	if _jog_ok(m, ahead, dog) or (not ok_here and ahead.distance_to(dog) >= here.distance_to(dog)):
+		st.jog_y = ahead.y
 	if not st.jog_said and Vector2(st.jog_x, st.jog_y).distance_to(dog) < 60.0:
 		st.jog_said = true
 		m.float_text(Vector2(st.jog_x, st.jog_y - 30.0), "Morning, pup!", Color(0.96, 0.94, 0.88), m.POP_SAY)
@@ -578,7 +662,11 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 	if not st.greeted and bp.distance_to(gardener_pos()) < GARDENER_BARK_R:
 		st.greeted = true
 		m.award_points(2, "good morning! +2")
-		var reply := "Shh! It's late, rei." if _hour() == "night" else "Bon dia, rei! Good dog."
+		var reply := "Bon dia, rei! Good dog."
+		if _hour() == "night":
+			reply = "Shh! It's late, rei."
+		elif not Outdoors.gardener_on_balcony(_weather(), _hour()):
+			reply = "Bon dia, rei! Stay dry."
 		m.float_text(gardener_pos() + Vector2(10.0, -34.0), reply, Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
@@ -635,7 +723,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 			var cb := (eb.x + eb.y) * 0.5
 			b.line(Vector2(ca, y), Vector2(cb, y2), CHANNEL, 12.0)
 			b.line(Vector2(ca, y), Vector2(cb, y2), CHANNEL.darkened(0.25), 3.0)
-			for side: float in [-1.0, 1.0]:
+			for side: float in SIDES:
 				var a0 := ea.x if side < 0.0 else ea.y - 80.0
 				var b0 := eb.x if side < 0.0 else eb.y - 80.0
 				b.quad(Vector2(a0, y), Vector2(a0 + 80.0, y), Vector2(b0 + 80.0, y2), Vector2(b0, y2), PANOT_BASE)
@@ -643,7 +731,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 				var kerb2 := eb.x + 80.0 if side < 0.0 else eb.y - 80.0
 				b.line(Vector2(kerb, y), Vector2(kerb2, y2), STONE_DARK, 2.0)
 			# the flower tiles, a row at a time so the strip follows the bend
-			for side: float in [-1.0, 1.0]:
+			for side: float in SIDES:
 				var xa := ea.x if side < 0.0 else ea.y - 80.0
 				Panot.flor_row(b, xa, xa + 80.0, y, xa)
 		y = y2
@@ -667,7 +755,14 @@ static func _ground_extras(_m: Node2D, b: ShapeBatch, lo: float, hi: float) -> v
 		var a := Vector2(TOWER.end.x, TOWER.position.y)
 		var c := TOWER.end
 		var e := Vector2(TOWER.position.x, TOWER.end.y)
-		b.polygon(PackedVector2Array([a, a + d, c + d, e + d, e, c]), Color(0.04, 0.05, 0.07, 0.14))
+		_shadow_buf.resize(6)
+		_shadow_buf[0] = a
+		_shadow_buf[1] = a + d
+		_shadow_buf[2] = c + d
+		_shadow_buf[3] = e + d
+		_shadow_buf[4] = e
+		_shadow_buf[5] = c
+		b.polygon(_shadow_buf, Color(0.04, 0.05, 0.07, 0.14))
 		_tower(b)
 	if SAINT.end.y + 80.0 > lo and SAINT.position.y - 40.0 < hi:
 		_saint(b)
@@ -691,7 +786,7 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var lo := maxf(vt - 260.0, float(m.GATE_Y) - 40.0)
 	var hi := minf(vb + 260.0, float(m.START_Y) + 600.0)
 	if hi > lo:
-		for side: float in [-1.0, 1.0]:
+		for side: float in SIDES:
 			_lots(b, side, lo, hi)
 		if NAVE.end.y + 40.0 > lo and NAVE.position.y - 40.0 < hi:
 			_church(b)
@@ -744,7 +839,8 @@ static func _lots(b: ShapeBatch, side: float, lo: float, hi: float) -> void:
 		var ym := (y0 + y1) * 0.5
 		var mx := (e0 + e1) * 0.5 + side * FACE * 0.55
 		var shut := h % 3 == 0
-		for wy: float in [ym - 24.0, ym + 22.0]:
+		for wo: float in WINDOW_ROWS:
+			var wy := ym + wo
 			if absf(wy - ym) > (y1 - y0) * 0.5 - 10.0:
 				continue
 			# a window or balcony door with its pair of green shutters,
@@ -865,7 +961,9 @@ static func _tower(b: ShapeBatch) -> void:
 	var c := r.get_center()
 	b.line(Vector2(r.position.x + 20.0, c.y), Vector2(r.end.x - 20.0, c.y), BELL_BEAM, 7.0)
 	b.line(Vector2(c.x, r.position.y + 20.0), Vector2(c.x, r.end.y - 20.0), BELL_BEAM.darkened(0.2), 3.0)
-	for corner: Vector2 in [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]:
+	for ci in range(4):
+		# the corners in turn: top left, top right, bottom right, bottom left
+		var corner := Vector2(r.end.x if ci == 1 or ci == 2 else r.position.x, r.end.y if ci >= 2 else r.position.y)
 		var p := corner + (c - corner).normalized() * 9.0
 		b.circle(p + Shade.light * 5.0, 9.0, SHADOW)
 		b.circle(p, 8.0, STONE_LIT)
@@ -902,7 +1000,8 @@ static func _market(b: ShapeBatch) -> void:
 	b.rect(Rect2(fx, r.position.y, FACE, r.size.y), BRICK)
 	b.line(Vector2(fx + FACE, r.position.y), Vector2(fx + FACE, r.end.y), BRICK_LIT, 3.0)
 	b.line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), BRICK.darkened(0.3), 3.0)
-	for ay: float in [MARKET_DOOR_Y - 130.0, MARKET_DOOR_Y, MARKET_DOOR_Y + 130.0]:
+	for ao: float in MARKET_ARCHES:
+		var ay := MARKET_DOOR_Y + ao
 		var open := absf(ay - MARKET_DOOR_Y) < 1.0
 		b.rect(Rect2(fx + 2.0, ay - 34.0, FACE - 4.0, 68.0), BRICK.darkened(0.35))
 		b.rect(Rect2(fx + 4.0, ay - 28.0, FACE - 8.0, 56.0), SHOP_LIGHT.darkened(0.25) if open else GLASS.darkened(0.35))
@@ -1023,13 +1122,12 @@ static func _shop(wc: ShapeBatch, i: int, side: float, kind: String, y: float, u
 	var r := Rect2(x0, y - SHOP_LEN * 0.5, FACE, SHOP_LEN)
 	wc.rect(r.grow(2.0), STONE_DARK)
 	wc.rect(r, SHOP_LIGHT.darkened(0.18))
-	var goods: Array[Color] = []
+	var goods: Array[Color] = GOODS_CAFE
 	match kind:
-		"fruit": goods = [Color(0.92, 0.56, 0.16), Color(0.86, 0.18, 0.16), Color(0.50, 0.70, 0.22), Color(0.96, 0.84, 0.24)]
-		"forn": goods = [BREAD, BREAD_LIT, Color(0.78, 0.52, 0.26)]
-		"farmacia": goods = [Color(0.94, 0.94, 0.96), PHARMACY]
-		"llibreria": goods = [Color(0.72, 0.20, 0.20), Color(0.20, 0.36, 0.62), Color(0.90, 0.80, 0.40), Color(0.24, 0.50, 0.32)]
-		_: goods = [Color(0.40, 0.26, 0.18), Color(0.94, 0.92, 0.88)]
+		"fruit": goods = FRUIT_COLS
+		"forn": goods = GOODS_FORN
+		"farmacia": goods = GOODS_FARMACIA
+		"llibreria": goods = GOODS_LLIBRERIA
 	var gy := r.position.y + 10.0
 	var k := 0
 	while gy < r.end.y - 8.0:
@@ -1081,7 +1179,7 @@ static func _baker(wc: ShapeBatch, t: float) -> void:
 static func _fruit(wc: ShapeBatch) -> void:
 	var r := FRUIT
 	wc.rect(Rect2(r.position + Shade.light * 6.0, r.size), SHADOW)
-	var cols: Array[Color] = [Color(0.92, 0.56, 0.16), Color(0.86, 0.18, 0.16), Color(0.50, 0.70, 0.22), Color(0.96, 0.84, 0.24)]
+	var cols: Array[Color] = FRUIT_COLS
 	for k in range(3):
 		var cr := Rect2(r.position.x, r.position.y + float(k) * r.size.y / 3.0, r.size.x, r.size.y / 3.0 - 2.0)
 		wc.rect(cr, CRATE_DARK)
@@ -1099,7 +1197,8 @@ static func _trike(wc: ShapeBatch, t: float) -> void:
 	wc.rect(box, Color(0.16, 0.42, 0.62))
 	wc.rect(box.grow(-3.0), Color(0.22, 0.52, 0.74))
 	wc.rect(Rect2(box.position.x + 6.0, box.position.y + 12.0, box.size.x - 12.0, 14.0), Color(0.94, 0.92, 0.86))
-	for wx: float in [r.position.x - 2.0, r.end.x - 2.0]:
+	for wi in range(2):
+		var wx := r.position.x - 2.0 if wi == 0 else r.end.x - 2.0
 		wc.rect(Rect2(wx, box.position.y + 6.0, 4.0, 14.0), IRON)
 	var cx := r.get_center().x
 	wc.line(Vector2(cx, box.end.y), Vector2(cx, r.end.y - 6.0), IRON, 3.0)
@@ -1119,6 +1218,13 @@ static func _gardener(wc: ShapeBatch, st: State, t: float) -> void:
 	var g := gardener_pos()
 	if _hour() == "night":
 		wc.rect(Rect2(g.x - 6.0, g.y - 10.0, 10.0, 20.0), SHOP_LIGHT.darkened(0.1))
+		return
+	if not Outdoors.gardener_on_balcony(_weather(), _hour()):
+		# kept in by the weather: her balcony door ajar, and her at the gap
+		wc.rect(Rect2(g.x - 6.0, g.y - 12.0, 10.0, 24.0), WINDOW_DARK)
+		wc.rect(Rect2(g.x - 6.0, g.y - 12.0, 10.0, 9.0), SHUTTER_GREEN)
+		wc.rect(Rect2(g.x - 6.0, g.y + 5.0, 10.0, 7.0), SHUTTER_GREEN)
+		wc.circle(Vector2(g.x - 1.0, g.y + 1.0), 4.6, Color(0.86, 0.86, 0.88))
 		return
 	NpcFigure.person(wc, g + Vector2(-6.0, 0.0), Vector2(1.0, 0.0), 88, -1.0,
 		{"top": Color(0.52, 0.36, 0.56), "legs": Color(0.26, 0.24, 0.30), "hair": Color(0.86, 0.86, 0.88), "hair_style": "bun", "arms": NpcFigure.Arms.READY, "size": 0.92})
@@ -1151,7 +1257,7 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	if m.lvl != "sarria":
 		return
 	var b := ShapeBatch.new(ci)
-	for side: float in [-1.0, 1.0]:
+	for side: float in SIDES:
 		var y := 200.0
 		var k := 0
 		while y > float(m.GATE_Y) + 60.0:
