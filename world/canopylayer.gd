@@ -23,6 +23,8 @@ var _faded_node: Node2D
 var _solid: Array[Dictionary] = []
 var _faded: Array[Dictionary] = []
 var _fade_key := ""
+var _sky_key: Array = []
+var _drawn_y := 1.0e20
 
 
 func setup(m: Node2D) -> void:
@@ -35,20 +37,35 @@ func setup(m: Node2D) -> void:
 	_faded_node.draw.connect(_draw_faded)
 
 
+func _has_animated(items: Array[Dictionary]) -> bool:
+	for t: Dictionary in items:
+		if t.has("over"):
+			var ov := int(t["over"])
+			if ov == main.Over.LAUNDRY or ov == main.Over.WALL_LAMP or ov == main.Over.BOARD:
+				return true
+		elif int(t.get("kind", -1)) == main.TREE_PALM:
+			return true
+	return false
+
+
 func _physics_process(_delta: float) -> void:
 	if main == null:
 		return
 	_collect()
-	# which crowns are faded is the only state that changes the picture
-	# between redraws, apart from the palms' sway; the world redraws at 30 fps
-	# and so do the crowns
 	var key := ""
 	for t: Dictionary in _faded:
 		key += "%d," % int(t["id"])
-	if key != _fade_key or Engine.get_physics_frames() % 2 == 0:
-		_fade_key = key
+	var sky := [Game.weather, Game.hour, main.detour_active]
+	var cy: float = main.cam.position.y if main.cam != null else 0.0
+	var changed := key != _fade_key or sky != _sky_key
+	var tick30 := Engine.get_physics_frames() % 2 == 0
+	if changed or absf(cy - _drawn_y) > 150.0 or (tick30 and _has_animated(_solid)):
+		_drawn_y = cy
 		Redraw.later(self)
+	if changed or (tick30 and _has_animated(_faded)):
 		_faded_node.queue_redraw()
+	_fade_key = key
+	_sky_key = sky
 
 
 func _collect() -> void:
