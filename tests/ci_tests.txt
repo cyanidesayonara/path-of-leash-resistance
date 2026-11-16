@@ -408,6 +408,9 @@
 --headless --path . --script res://tests/test_diagonal.gd
 --headless --path . --script res://tests/test_diagonal_riders.gd
 
+# Sarrià: the bells of Sant Vicenç, the bakeries, the gardener, who is out
+--headless --path . --script res://tests/test_sarria.gd
+
 # Montserrat (the wild goat herd chase) test
 --headless --path . --script res://tests/test_montserrat.gd
 
