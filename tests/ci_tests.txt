@@ -769,3 +769,6 @@
 
 # Camera tricks for chases and boss fights
 --headless --path . --script res://tests/test_cam_tricks.gd
+
+# Retractable lit bollards in El Gotic
+--headless --path . --script res://tests/test_pilones_retractils.gd

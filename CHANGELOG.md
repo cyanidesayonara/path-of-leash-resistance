@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Retractable lit bollards (pilones retràctils) in El Gòtic
+
+- Added `systems/pilones_retractils.gd` (`PilonesRetractils`) wired through `systems/detour.gd` on `oldtown` (`El Gòtic`): two pedestrian-zone bollard gates (`y = -1350`, `y = -3720`) with flush steel street plates, glowing amber LED caps, `StaticBody2D` collision when raised, `0.8 s` amber strobe telegraphs before dropping (`WARN_DOWN`) and rising (`WARN_UP`), a delivery van rolling through while lowered, gentle radial clear-nudge on rise, and sensor-trip on `on_bark()` (`sensor beep! +2`).
+- Tests: `tests/test_pilones_retractils.gd` (registered in `tests/ci_tests.txt`), `oldtown --selftest`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
+
 ## 2026-11-16 - Camera tricks for chases and boss fights
 
 - Added `systems/cam_tricks.gd` (`CamTricks.tick()`) wired into `main.gd`:

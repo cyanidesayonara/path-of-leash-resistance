@@ -806,6 +806,7 @@ var chase_kerb_blocks: Array[Rect2] = []
 var wallcat_spots: Array[Vector2] = []
 var laundry_lines: Array[float] = []
 var wall_cats_spooked := 0
+var gotic_pilones: Array[Dictionary] = []
 # El Bosc: the owner keeps losing signal; muddy patches slow the going
 var signal_prone := false
 var mud_zones: Array[Rect2] = []
