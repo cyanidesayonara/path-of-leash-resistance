@@ -245,12 +245,18 @@ jobs:
         id: check
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
           if [ -z "${ANDROID_KEYSTORE_BASE64}" ]; then
             echo "ANDROID_KEYSTORE_BASE64 secret not set; skipping Android export and Play upload."
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -z "${GOOGLE_PLAY_SERVICE_ACCOUNT_JSON}" ]; then
+            echo "play=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "play=true" >> "$GITHUB_OUTPUT"
           fi
 
       - uses: actions/checkout@v5
@@ -336,7 +342,7 @@ jobs:
           gh release upload "$GITHUB_REF_NAME" build/android/PathOfLeashResistance.aab build/android/PathOfLeashResistance.apk --repo "$GITHUB_REPOSITORY" --clobber
 
       - name: Upload AAB to Google Play internal track
-        if: ${{ steps.check.outputs.enabled == 'true' && secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        if: steps.check.outputs.enabled == 'true' && steps.check.outputs.play == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
