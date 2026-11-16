@@ -1,0 +1,106 @@
+name: Website
+
+# Publishes the website to GitHub Pages: site/ at the root and the latest
+# released web build at /play. One workflow builds the whole site every time,
+# so a site edit and a release can never wipe each other's part (a Pages
+# deploy replaces the entire site).
+#
+# Triggers:
+#   - a push to main that touches site/ (or this file): rebuilds with the
+#     web build from the latest GitHub release
+#   - a finished release.yml run for a tag: rebuilds with that tag's web zip
+#     (the one release.yml attaches); if the zip is missing, the latest
+#     release that has one is used, so the site never loses /play
+#   - manual dispatch
+# workflow_run always runs on the default branch, which keeps the deploy
+# inside the github-pages environment's default-branch rule.
+#
+# One-time setup (docs/website.md): Settings > Pages > Source: GitHub Actions.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+  workflow_run:
+    workflows: ["Release to itch.io"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# one deploy at a time, and never cancel one halfway
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # a release run started by a tag push; manual release runs from a branch
+    # publish nothing new to the site
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Assemble the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site/play
+          cp -r site/. _site/
+          rm -f _site/.gdignore
+
+          zip=leash-resistance-web.zip
+          got=""
+          if [ -n "${TAG}" ] && gh release download "${TAG}" --repo "${GITHUB_REPOSITORY}" --pattern "${zip}" --dir dl 2>/dev/null; then
+            got="${TAG}"
+          else
+            # newest release first; the first one with a web zip wins
+            for t in $(gh release list --repo "${GITHUB_REPOSITORY}" --limit 20 --json tagName --jq '.[].tagName'); do
+              if gh release download "${t}" --repo "${GITHUB_REPOSITORY}" --pattern "${zip}" --dir dl 2>/dev/null; then
+                got="${t}"
+                break
+              fi
+            done
+          fi
+          if [ -z "${got}" ]; then
+            echo "No release has ${zip}; refusing to publish a site without /play."
+            exit 1
+          fi
+          echo "Web build from ${got}"
+          unzip -q "dl/${zip}" -d _site/play
+          # Godot's import sidecars are not needed to serve the build
+          rm -f _site/play/*.import
+          test -f _site/play/index.html
+          test -f _site/play/index.wasm
+
+          # GitHub Pages refuses any file over 100 MB
+          big="$(find _site -type f -size +95M)"
+          if [ -n "${big}" ]; then
+            echo "Too close to the 100 MB Pages file limit:"
+            ls -la ${big}
+            exit 1
+          fi
+          ls -la _site/play
+          du -sh _site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

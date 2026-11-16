@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Website on GitHub Pages
+
+- Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
+- Added `tools/site_media.sh`, which regenerates every image in `site/img/` (about 3 MB) from `--shot` runs, `tools/intro_render.gd` and `tools/make_icon.gd`; `tools/frames_to_gif.py` gained `--colors`, `--no-dither`, `--first` and `--last`.
+- Added `.github/workflows/pages.yml`: one job assembles `site/` plus the latest release's web zip at `/play` and deploys it, on pushes to main that touch `site/` and after every tagged `release.yml` run, so neither trigger wipes the other's part. v1.74's `index.wasm` is 39.5 MB, under Pages' 100 MB file limit.
+- Added `docs/website.md`: build, deploy, local preview, the one-time Pages setup (not done yet) and how to add a custom domain later.
+
 ## 2026-11-16 - Update 1.74 release notes
 
 - Updated `store/listing.md` (`What's new in this version`, `Notes for certification`) and `docs/itch-page.md` (`What's new in 1.74`) for v1.74: `El Drac`'s serpentine bench, `El Gat`'s café awnings, boss/off-leash polish, `El Gòtic`'s `pilones retràctils`, `El Besòs` riverside props, boss/near-miss camera tricks, even late-campaign chase spacing, `Montserrat` chase fixes, remaining `NpcFigure` upgrades, `La Rambla` / `La Diagonal` rendering optimizations, and Android readiness.

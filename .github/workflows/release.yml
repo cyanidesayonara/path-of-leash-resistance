@@ -14,7 +14,8 @@ name: Release to itch.io
 #   2. Add it to the repo as a secret named BUTLER_API_KEY
 #      (Settings > Secrets and variables > Actions > New repository secret)
 # After that: `git tag v1.53 && git push --tags` publishes (once CI is green
-# for the tagged SHA).
+# for the tagged SHA). When this workflow finishes, pages.yml puts the tag's
+# web build on the website at /play (docs/website.md).
 
 on:
   push:
@@ -184,7 +185,10 @@ jobs:
             cyanidesayonara/path-of-leash-resistance:windows \
             --userversion "${VERSION}"
 
-      # nice-to-have, so it never fails the deploy it follows
+      # nice-to-have, so it never fails the deploy it follows. The website's
+      # /play is built from this web zip: pages.yml runs when this workflow
+      # finishes and publishes the tag's zip (or the latest release's, if
+      # this step failed), so the site's own part and /play deploy together.
       - name: Attach the zip to the GitHub release
         continue-on-error: true
         uses: softprops/action-gh-release@v2

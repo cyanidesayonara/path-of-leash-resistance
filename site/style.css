@@ -1,0 +1,209 @@
+/* One stylesheet for the landing page and the press kit. The palette is the
+   intro's: cream walls, brick-red title, teal shutters, cobble grey. */
+:root {
+  --bg: #fbf3e4;
+  --card: #fffaf1;
+  --ink: #3a2a20;
+  --muted: #6e5a4c;
+  --brick: #b5372b;
+  --brick-dark: #8e2a20;
+  --teal: #2f7f78;
+  --line: #e6d6bd;
+  --max: 980px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #211a16;
+    --card: #2c231e;
+    --ink: #f3e7d6;
+    --muted: #c3ae98;
+    --brick: #e0574a;
+    --brick-dark: #b5372b;
+    --teal: #5cb8ae;
+    --line: #47392f;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+a { color: var(--teal); }
+
+img { max-width: 100%; height: auto; display: block; }
+
+.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+header.top {
+  padding: 40px 0 8px;
+  text-align: center;
+}
+
+.top img.logo {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 12px;
+  border-radius: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 3.4rem);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  color: var(--brick);
+}
+
+h2 {
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 48px 0 12px;
+}
+
+.pitch {
+  max-width: 34em;
+  margin: 14px auto 0;
+  font-size: 1.15rem;
+  color: var(--muted);
+}
+
+.hero {
+  margin: 28px auto 0;
+  max-width: 720px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  image-rendering: auto;
+}
+
+.hero img { width: 100%; }
+
+.cta {
+  margin: 28px 0 0;
+  text-align: center;
+}
+
+.play {
+  display: inline-block;
+  padding: 18px 36px;
+  border-radius: 14px;
+  background: var(--brick);
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.35rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  box-shadow: 0 5px 0 var(--brick-dark);
+}
+
+.play:hover { filter: brightness(1.06); }
+.play:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--brick-dark); }
+
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.store {
+  display: inline-block;
+  padding: 11px 18px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.store:hover { background: var(--card); }
+
+.note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-top: 12px;
+}
+
+ul.features {
+  padding-left: 1.2em;
+  margin: 0;
+}
+
+ul.features li { margin: 6px 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.grid figure {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.grid figcaption {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+dl.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 20px;
+  margin: 0;
+}
+
+dl.facts dt { font-weight: 700; }
+dl.facts dd { margin: 0; }
+
+@media (max-width: 520px) {
+  dl.facts { grid-template-columns: 1fr; gap: 0; }
+  dl.facts dd { margin-bottom: 10px; }
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.todo {
+  background: #ffe9a8;
+  color: #3a2a20;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+footer {
+  margin: 56px 0 0;
+  padding: 24px 0 40px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+footer a { color: var(--muted); }
