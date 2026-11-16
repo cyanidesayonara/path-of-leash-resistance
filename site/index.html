@@ -10,13 +10,16 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="img/shot-street.jpg">
 <link rel="icon" href="img/icon.png">
+<link rel="preload" href="fonts/BricolageGrotesque.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="palette.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="tiles"></div>
 <div class="wrap">
 
 <header class="top">
-  <img class="logo" src="img/icon.png" alt="" width="72" height="72">
+  <img class="logo" src="img/icon.png" alt="" width="80" height="80">
   <h1>Path of Leash Resistance</h1>
   <p class="pitch">Your human is glued to their phone and walking on autopilot. You are on the other end of the leash, and you have errands of your own.</p>
 </header>
@@ -37,14 +40,88 @@
 </div>
 <p class="note">Free. No ads, no purchases, no account. Keyboard, controller or touch.</p>
 
+<!-- Every gen: block below is filled by tools/site_copy.py from
+     store/listing.md and the game's walk list; edit those, not this. -->
+
 <h2>On the walk</h2>
 <ul class="features">
-  <li>The leash is real rope. Wrap it around a lamppost, dig in, and win a tug of war against someone four times your weight.</li>
-  <li>Your human answers the leash like a person. A steady pull leads them; constant hauling runs out their patience.</li>
-  <li>Thirty-nine walks through Barcelona and its edges, in rain, wind or snow, by day or at night.</li>
-  <li>Six chases: the street sweeper, a river surge, the vet, wild boars, fire devils, and a float full of fireworks.</li>
-  <li>Every walk ends off the leash, with tug-of-war, a frisbee and fetch.</li>
-  <li>Goal lists, dares, and tricks like a tetherball whirl around a pole.</li>
+<!-- gen:features -->
+  <li>The leash is real rope physics: wrap it around poles, dig in, win the tug of war</li>
+  <li>A human who answers the leash: a steady pull leads them, constant hauling runs out their patience</li>
+  <li>Forty-one hand-built walks through Barcelona, in any weather, by day or at night</li>
+  <li>Every walk ends off the leash, with agility, tug-of-war and a frisbee</li>
+  <li>Goal lists on every walk, with stars that unlock new walks</li>
+  <li>A dare-giver on every walk, each with their own tune</li>
+  <li>Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides</li>
+  <li>Six chase walks: the street sweeper, the river flood, the clinic escape, the wild boars, the correfoc and the Dimoni float</li>
+  <li>Four statue boss fights: El Mamut the stone mammoth, Els Lleons the twin bronze lions, El Drac the mosaic salamander, and El Gat a bronze cat the size of a car</li>
+  <li>Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice</li>
+  <li>Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid</li>
+  <li>Other dogs and their people with lives of their own: they sniff, mark, greet and tangle</li>
+  <li>Rain, wind, snow and night change how each walk plays</li>
+  <li>Bones to spend on collars, bandanas and coats</li>
+  <li>A three-part tutorial and first-time tips for new players</li>
+  <li>Full controller support</li>
+  <li>No ads, no purchases, no account, and it plays offline</li>
+<!-- /gen:features -->
+</ul>
+
+<h2>What's new</h2>
+<ul class="news">
+<!-- gen:whatsnew -->
+  <li>Boss arena additions: El Drac's trencadís serpentine bench in El Mosaic (herd him along the curve for a grind and daze), El Gat's striped café awnings on Rambla del Raval (bait his pounce onto the canvas to bounce him back), and harbour wakes, lake ripples and feathered beach surf.</li>
+  <li>El Gòtic's retractable lit bollards (pilones retràctils) with amber warning lights, plus new riverside lampposts, benches and a drinking fountain on El Besòs.</li>
+  <li>Camera tricks for bosses and close shaves: boss arena zoom-out, reveal letterbox, enrage tilt, and near-miss slow-motion.</li>
+  <li>Late-campaign chases spaced evenly across all thirty-nine walks, plus Montserrat goat-herd respite checkpoints and boulder targeting fixes.</li>
+  <li>Remaining passers-by upgraded to the full character rig, faster La Rambla and La Diagonal rendering, and Android safe-area and back-button readiness.</li>
+<!-- /gen:whatsnew -->
+</ul>
+
+<h2><span class="count"><!-- gen:count -->Forty-one<!-- /gen:count --></span> walks</h2>
+<ul class="walks">
+<!-- gen:walks -->
+  <li>El Barri</li>
+  <li>La Rambla</li>
+  <li>El Parc</li>
+  <li>Passeig Marítim</li>
+  <li>El Diluvi</li>
+  <li>El Mercat</li>
+  <li>El Gòtic</li>
+  <li>Sarrià</li>
+  <li>El Bosc</li>
+  <li>L'Estació</li>
+  <li>El Besòs</li>
+  <li>Les Obres</li>
+  <li>La Castanyada</li>
+  <li>La Ferralla</li>
+  <li>El Mosaic</li>
+  <li>La Neteja</li>
+  <li>Montjuïc</li>
+  <li>Dia de Partit</li>
+  <li>El Port</li>
+  <li>Plaça Reial</li>
+  <li>El Veterinari</li>
+  <li>El Tibidabo</li>
+  <li>La Carretera de les Aigües</li>
+  <li>El Laberint d'Horta</li>
+  <li>Platja de Llevant</li>
+  <li>Els Senglars</li>
+  <li>Festa de Gràcia</li>
+  <li>Els Búnquers</li>
+  <li>La Superilla</li>
+  <li>El Metro</li>
+  <li>El Fòrum</li>
+  <li>Plaça d'Espanya</li>
+  <li>Rambla del Raval</li>
+  <li>L'Eixample</li>
+  <li>Els Àngels</li>
+  <li>El Poble Espanyol</li>
+  <li>La Ciutadella</li>
+  <li>La Cremada</li>
+  <li>L'Aeroport</li>
+  <li>Montserrat</li>
+  <li>La Diagonal</li>
+<!-- /gen:walks -->
 </ul>
 
 <h2>Screenshots</h2>

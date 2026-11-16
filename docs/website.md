@@ -22,6 +22,24 @@ the root of a custom domain.
 `/play` is not in the repository. It is the `leash-resistance-web.zip` that
 `release.yml` attaches to each GitHub release, unpacked at deploy time.
 
+## Look and copy
+
+The site wears the game's palette and fonts. `site/palette.css` is generated
+from `hud/ui_kit.gd` (run `tools/site_palette.gd` after changing a colour
+there; `tests/test_site_palette.gd` fails until you do), `style.css` uses
+only its variables, and the fonts are the game's own `fonts/*.ttf`, copied
+into `fonts/` by the deploy (copy them into `site/fonts/` by hand for a local
+preview; that folder is not committed).
+
+The `<!-- gen:NAME -->` blocks in both pages are filled by
+`python tools/site_copy.py` from `store/listing.md` (features, What's new,
+description) and the game's walk list (count and names). The deploy runs it
+every time, so the live site follows the listing without anyone touching
+`site/`; run it locally to preview. After a release the deploy checks out the
+tagged commit beside main, renders the images there (`tools/site_media.sh`)
+and fills main's pages from its listing (`site_copy.py --from=rel`). A page
+missing one of its markers, or with an unclosed one, fails the deploy.
+
 ## Images
 
 ```
