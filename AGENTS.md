@@ -49,6 +49,8 @@ path-of-leash-resistance/
   tools/               # shot sweep, idle soak, behaviour snapshot, perf, MSIX,
                        # icon and Store art generators
   store/               # Microsoft Store manifest, tile images, listing record
+  site/                # the website (GitHub Pages): landing page, press kit;
+                       # see docs/website.md
   docs/                # Store procedure, handover archive, plans
   PROJECT.md           # design pillars, roadmap
   CHANGELOG.md         # newest-first session history
