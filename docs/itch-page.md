@@ -81,15 +81,15 @@ La Cremada, Badalona's devil night and the Dimoni
 El Fòrum, the seaside esplanade
 La Diagonal, the avenue that cuts the grid, with its tram
 La Carretera de les Aigües, the hillside hike
+Festa de Gràcia, the decorated festival street
 El Laberint d'Horta, the cypress maze
 El Port, the fishing wharf
 Plaça d'Espanya, the fountain avenue
 El Poble Espanyol, the walled village of copied towns
+L'Aeroport, Terminal 1's long pier, with airport security on your tail
 Les Obres, the work site
 Dia de Partit, match day
 La Ferralla, the junkyard
-Festa de Gràcia, the decorated festival street
-L'Aeroport, Terminal 1's long pier, with airport security on your tail
 Montserrat, the mountain trail across the funicular and the wild goats
 Rambla del Raval, the finale, with El Gat, a bronze cat
 

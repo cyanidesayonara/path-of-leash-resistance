@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Space late-campaign chases evenly
+
+- Reordered the late campaign in `autoload/game.gd` (`CAROUSEL`, `STAR_GATE`, `CHASE_GATE`) so the eight chases fall every four to six walks across the 39-walk campaign (`5, 10, 15, 19, 25, 29, 34, 38`): `Festa de Gràcia` moves to walk 29 (`STAR_GATE` 40, gated by `cremada`), `L'Aeroport` moves to walk 34 (`STAR_GATE` 47, gated by `gracia`), and `Montserrat` stays at walk 38 (`STAR_GATE` 52, gated by `aeroport`), keeping `El Port` near walk 31 and all other walk star/chase gates unchanged.
+- Bumped `GATES_VERSION` to `4` with `V3_STAR_GATE` and `V3_CHASE_GATE` so existing v3 saves keep every walk they had already opened via `_grandfather_from()`.
+- Updated the walk lists in `README.md`, `docs/itch-page.md`, and `store/listing.md`, and updated `tests/test_aeroport.gd` and `tests/test_chase_milestone_gates.gd`.
+- Tests: `tests/test_chase_milestone_gates.gd`, `tests/test_aeroport.gd`, `tests/test_walk_registry.gd`, `tests/test_campaign_mastery.gd`, `tests/test_montserrat.gd`, `tests/test_cremada.gd`, `tests/test_diagonal.gd`, `tests/test_forum.gd`, `tests/test_aigues.gd`, `tests/test_horta.gd`, `tests/test_port.gd`, `tests/test_espanya.gd`, `tests/test_poble.gd`, `tests/test_partit.gd`, `tests/test_menu_flow.gd`, `tests/test_menu_tree.gd`, and `tools/store_listing.py --check`.
+
 ## 2026-11-16 - Android readiness and Google Play release pipeline
 
 - Added display safe-area inset handling (`UiScale.safe_insets()` and `apply_safe_area()` in `hud/ui_scale.gd`, with `--safe-area=L,T,R,B` for desktop testing) across the HUD vitals panel, goal card (`hud/goals_card.gd`), touch controls cluster (`hud/touch_controls.gd`), and menu prompt bar (`hud/ui_kit.gd`); zero inset on desktop/web.

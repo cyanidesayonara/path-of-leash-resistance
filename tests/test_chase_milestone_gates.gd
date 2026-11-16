@@ -44,6 +44,7 @@ func _run() -> void:
 	for lv in game.LEVELS:
 		game.records[lv] = game._default_level_record()
 
+	_check(game.GATES_VERSION == 4, "gates version is 4")
 	_check(game.chase_gate_needed("barri") == "", "barri has no chase gate")
 	_check(game.chase_gate_needed("neteja") == "", "neteja, the first chase, has no chase gate")
 	_check(game.chase_gate_needed("besos") == "neteja", "besos requires neteja completed")
@@ -51,6 +52,8 @@ func _run() -> void:
 	_check(game.chase_gate_needed("vet") == "besos", "vet requires besos completed")
 	_check(game.chase_gate_needed("spook") == "vet", "spook requires vet completed")
 	_check(game.chase_gate_needed("site") == "boars", "site requires boars completed")
+	_check(game.chase_gate_needed("gracia") == "cremada", "gracia requires cremada completed")
+	_check(game.chase_gate_needed("aeroport") == "gracia", "aeroport requires gracia completed")
 	_check(game.chase_gate_needed("raval") == "gracia", "raval requires gracia completed")
 
 	# 2. Check lock text formatting
@@ -154,6 +157,26 @@ func _run() -> void:
 	_check(not game.is_unlocked("superilla"), "without the old save's rules, La Superilla waits for Els Senglars")
 	game._grandfather_from(game.V2_STAR_GATE, game.V2_CHASE_GATE)
 	_check(game.is_unlocked("superilla"), "a 1.69 save with 45 stars and Gràcia walked keeps La Superilla open")
+	game.gate_open.clear()
+
+	# 9b. A save from v3 keeps Festa de Gràcia open at 50 stars and L'Aeroport
+	# open at 51 stars with La Cremada completed
+	game.records = {}
+	for lv in game.LEVELS:
+		game.records[lv] = game._default_level_record()
+	for i: int in range(16):
+		game.records[game.LEVELS[i]].stars = 3
+	game.records[game.LEVELS[16]].stars = 2
+	_check(not game.is_unlocked("gracia"), "without grandfathering, Gracia waits for La Cremada")
+	game._grandfather_from(game.V3_STAR_GATE, game.V3_CHASE_GATE)
+	_check(game.is_unlocked("gracia"), "a v3 save with 50 stars keeps Festa de Gracia open")
+	_check(not game.is_unlocked("aeroport"), "a v3 save with 50 stars without La Cremada keeps L'Aeroport shut")
+	game.gate_open.clear()
+	game.records[game.LEVELS[16]].stars = 3
+	game.records["cremada"].bones = 9
+	_check(not game.is_unlocked("aeroport"), "without grandfathering, L'Aeroport waits for Festa de Gracia")
+	game._grandfather_from(game.V3_STAR_GATE, game.V3_CHASE_GATE)
+	_check(game.is_unlocked("aeroport"), "a v3 save with 51 stars and La Cremada completed keeps L'Aeroport open")
 	game.gate_open.clear()
 
 	# 10. Free play mode opens all walks
