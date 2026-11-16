@@ -7,6 +7,15 @@ Append-only session history, newest first.
 - Added two west-embankment lampposts (`y = -2250`, `-3950`), two riverside benches (`y = -2250`, `-3650`), and a park drinking fountain (`y = -2800`) to `LevelBuild.besos()` in `world/level_build.gd`, breaking up the 1100 px bare stretches along the river path while staying clear of the weir jam and concrete apron.
 - Tests: `tests/test_besos.gd`, `tests/test_besos_ornitoleg.gd`, `besos --selftest`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
 
+## 2026-11-16 - Camera tricks for chases and boss fights
+
+- Added `systems/cam_tricks.gd` (`CamTricks.tick()`) wired into `main.gd`:
+  - Smooth arena zoom-out (`ARENA_ZOOM = 0.88`, multiplicative over `UiScale`) while an active boss fight is underway, restoring to `1.0` on defeat.
+  - Brief enrage dutch tilt (`TILT_DEG = 2.8`, `TILT_SECS = 0.55`) triggered once when a boss enters Phase 2 / `enraged`, always returning cleanly to `LevelBuild.CAM_ROT` (never continuous tilt; kept `cam.rotation != 0.0` separate from `diagonal` x-tracking).
+  - Cinema letterbox bars (`letterbox_top`, `letterbox_bot` in `hud/hud_build.gd`) sliding in during boss reveal cards (`hush_banner`).
+  - Automatic near-miss slow motion (`_slowmo()`) on `saves_done`, `close_calls`, and `HomeChase` `CLOSE SHAVE` (guarded against stacking).
+- Tests: `tests/test_cam_tricks.gd` (registered in `tests/ci_tests.txt`), `tests/test_boss_gat.gd`, `tests/test_drac.gd`, `tests/test_lleons.gd`, `tests/test_ciutadella.gd`, `tests/test_diagonal.gd`, `tests/test_walk_hooks.gd`, and `tests/test_members_exist.gd`.
+
 ## 2026-11-16 - Cull and cache bike lanes, La Rambla static scenery, and static canopies (#482)
 
 - Culled `lane_ys` bike lane crossings by `vt..vb` and cached their static asphalt, stripes, `BikePaint.squares`, and `BikePaint.glyph` markings via `_draw_section("bike_lanes", ...)` (`_draw_bike_lanes()` / `_draw_world_bike_lanes()` in `main.gd`), leaving only the blinking amber warning light live; cut `lanes to pickups` 300-frame GL `street` draw cost from `225.28 ms` to `134.90 ms` (-40%).

@@ -691,6 +691,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.combo.add("CLOSE SHAVE", 6)
 		Sfx.play("save", 1.3)
 		m.float_text(m.dog.global_position, "close shave! +%d" % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
+		m._slowmo()
 	if sweeper.caught(m.human.global_position):
 		_catch(m, String(_behavior(m, held_profile(m)).get("caught_human", "")), "human")
 	elif sweeper.caught(m.dog.global_position):

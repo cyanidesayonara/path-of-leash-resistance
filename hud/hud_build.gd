@@ -44,6 +44,13 @@ static func build(m: Node2D) -> void:
 	m.weather_fx.set_script(load("res://hud/weather_overlay.gd"))
 	m.weather_fx.mode = Game.weather
 	m.hud.add_child(m.weather_fx)
+	for side: String in ["letterbox_top", "letterbox_bot"]:
+		var bar := ColorRect.new()
+		bar.color = Color(0.03, 0.03, 0.05, 0.94)
+		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bar.visible = false
+		m.hud.add_child(bar)
+		m.set(side, bar)
 	# one quiet card for the vitals, one quiet card for the quests -
 	# the world is busy on purpose, the overlay is not
 	m.panel = Control.new()
