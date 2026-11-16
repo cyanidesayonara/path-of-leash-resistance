@@ -35,6 +35,7 @@ const Espanya := preload("res://systems/espanya.gd")
 const Eixample := preload("res://systems/eixample.gd")
 const Diagonal := preload("res://systems/diagonal.gd")
 const Blai := preload("res://systems/blai.gd")
+const Sarria := preload("res://systems/sarria.gd")
 # walks whose camera is turned: degrees clockwise of screen-up their north runs
 const CAM_ROT := {"diagonal": 45.0}
 const Outdoors := preload("res://systems/outdoors.gd")
@@ -129,6 +130,7 @@ const CROSS_SECTIONS := {
 	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
 	"diagonal": ["none", 0.0, "none", 0.0],        # the promenade, the track and the turned grid in systems/diagonal.gd
 	"blai": ["none", 0.0, "none", 0.0],            # the bar street, its placeta and the roofs in systems/blai.gd
+	"sarria": ["none", 0.0, "none", 0.0],          # the village houses at the paving, in systems/sarria.gd
 	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
@@ -1374,6 +1376,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"espanya": half = Espanya.HALF
 		"diagonal": half = Diagonal.HALF   # the central promenade and the tram track
 		"blai": half = Blai.HALF           # facade to facade; the placeta opens it (Blai.edge_nodes)
+		"sarria": half = Sarria.HALF       # the plaça, wall to wall (Sarria.edge_nodes)
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"angels": half = Angels.HALF
 		"poble": half = Poble.HALF
@@ -1550,6 +1553,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Eixample.edge_nodes(m)
 	elif m.lvl == "blai":
 		m.edge_nodes = Blai.edge_nodes(m)
+	elif m.lvl == "sarria":
+		m.edge_nodes = Sarria.edge_nodes(m)
 	elif m.lvl == "angels":
 		m.edge_nodes = Angels.edge_nodes(m)
 	elif m.lvl == "poble":
@@ -1586,7 +1591,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "blai" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "blai" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1705,6 +1710,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_blai: Array = Blai.build(m)
 			hyd_list.assign(pl_blai[0])
 			keb_list.assign(pl_blai[1])
+		"sarria":
+			var pl_sarria: Array = Sarria.build(m)
+			hyd_list.assign(pl_sarria[0])
+			keb_list.assign(pl_sarria[1])
 		"eixample":
 			var pl_eixample: Array = Eixample.build(m)
 			hyd_list.assign(pl_eixample[0])
@@ -2252,6 +2261,9 @@ static func build_level_data(m: Node2D) -> void:
 		m.flock_ys.clear()
 		for sp: Vector2 in BossGat.PIGEON_SPOTS:
 			m.flock_ys.append(sp.y)
+	# Sarrià's pigeons live on the plaça, where the bells put them up
+	if m.lvl == "sarria":
+		m.flock_ys.assign(Sarria.flock_ys())
 	for hp in hyd_list:
 		if m.pond.size.x > 0.0 and m.pond.grow(30.0).has_point(hp):
 			continue
@@ -2516,6 +2528,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "blai":
 		for r: Rect2 in Blai.wrap_rects(m):
 			add_rope_rect(m, r)
+	if m.lvl == "sarria":
+		for r: Rect2 in Sarria.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "montserrat":
 		for r: Rect2 in Montserrat.wrap_rects():
 			add_rope_rect(m, r)
@@ -2624,6 +2639,9 @@ static func build_level_data(m: Node2D) -> void:
 		"blai":
 			m.prize_pos = Blai.PRIZE
 			m.prize_text = Blai.PRIZE_TEXT
+		"sarria":
+			m.prize_pos = Sarria.PRIZE
+			m.prize_text = Sarria.PRIZE_TEXT
 		"eixample":
 			m.prize_pos = Eixample.PRIZE
 			m.prize_text = Eixample.PRIZE_TEXT
@@ -3066,6 +3084,13 @@ const FREEDOM_PROPS := {
 		[Vector2(330.0, -470.0), "planter"], [Vector2(950.0, -470.0), "planter"],
 		[Vector2(200.0, -330.0), "post"], [Vector2(480.0, -440.0), "post"], [Vector2(800.0, -440.0), "post"],
 		[Vector2(1080.0, -330.0), "post"], [Vector2(240.0, -210.0), "shrub"], [Vector2(1100.0, -260.0), "shrub"],
+	],
+	"sarria": [
+		[Vector2(290.0, -440.0), "dig"], [Vector2(660.0, -300.0), "dig"], [Vector2(1050.0, -430.0), "dig"],
+		[Vector2(420.0, -470.0), "planter"], [Vector2(1010.0, -250.0), "planter"],
+		[Vector2(240.0, -330.0), "post"], [Vector2(520.0, -440.0), "post"], [Vector2(790.0, -450.0), "post"],
+		[Vector2(1060.0, -340.0), "post"], [Vector2(300.0, -220.0), "planter"], [Vector2(560.0, -240.0), "post"],
+		[Vector2(820.0, -210.0), "shrub"],
 	],
 	"diagonal": [
 		[Vector2(270.0, -470.0), "dig"], [Vector2(990.0, -310.0), "dig"], [Vector2(600.0, -290.0), "dig"],
@@ -3556,6 +3581,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_blai: Array[Rect2] = Blai.solids(m)
 			for i in range(ps_blai.size()):
 				out.append(["blai_delivery_%d" % i, ps_blai[i]])
+		"sarria":
+			var ps_sarria: Array[Rect2] = Sarria.solids(m)
+			for i in range(ps_sarria.size()):
+				out.append(["sarria_%d" % i, ps_sarria[i]])
 		"eixample":
 			var ps_eixample: Array[Rect2] = Eixample.solids(m)
 			for i in range(ps_eixample.size()):
@@ -4142,6 +4171,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "blai":
 		for r: Rect2 in Blai.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "sarria":
+		for r: Rect2 in Sarria.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "eixample":
 		for r: Rect2 in Eixample.solids(m):
