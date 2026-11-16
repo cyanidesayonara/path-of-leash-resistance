@@ -135,6 +135,37 @@ func _run() -> void:
 	R.tick(m, 0.1)
 	_check(bool(m.get("reial_busker_barked")), "barking at busker triggers reial_busker_barked")
 
+	# 11. Entrance pilones in poles, night lights & arcade back-wall fronts
+	var pilones_ok := true
+	for p: Vector2 in R.PILONES:
+		if not (p in m.poles):
+			pilones_ok = false
+	_check(pilones_ok, "entrance pilones are registered in m.poles")
+	var lights: Array[Vector3] = R.night_lights(m)
+	_check(lights.size() >= R.GAUDI_POSTS.size() + R.TERRACES.size() + 1, "night_lights covers Gaudi posts, fountain, and arcade terraces")
+	var fronts: Array[Dictionary] = R.night_fronts(m)
+	_check(not fronts.is_empty(), "night_fronts places arcade bar openings")
+
+	# 12. Night-time street sellers: outdoors rule & 0.8s telegraphed fold-up and run
+	var Outdoors := load("res://systems/outdoors.gd")
+	_check(Outdoors.street_sellers("clear", "night") and not Outdoors.street_sellers("rain", "night"), "street sellers out in clear night, stay in during rain")
+	_check(m.has_meta("reial_sellers"), "street sellers initialized on reial")
+	var sellers: Array = m.get_meta("reial_sellers")
+	_check(sellers.size() == R.SELLER_SPECS.size(), "all %d street sellers created" % R.SELLER_SPECS.size())
+	var s0: Dictionary = sellers[0]
+	var sr: Rect2 = s0["rect"]
+	_check(String(s0["state"]) == "laid", "seller starts laid")
+	m.dog.global_position = sr.get_center()
+	m.dog.bark_anim = 0.25
+	R.tick(m, 0.05)
+	_check(String(s0["state"]) == "warn", "bark near seller starts 0.8s warn telegraph")
+	R.tick(m, 0.4)
+	_check(String(s0["state"]) == "warn", "seller still in 0.8s warn at t=0.45s")
+	R.tick(m, 0.45)
+	_check(String(s0["state"]) == "carry", "seller transitions to carry after 0.8s warn")
+	var start_x := Vector2(s0["pos"]).x
+	R.tick(m, 0.2)
+	_check(Vector2(s0["pos"]).x != start_x, "seller runs with bundled sheet toward arcade")
 
 	print("\n--- TEST REIAL RESULTS ---")
 	print("Checks: %d, Failures: %d" % [checks, failures.size()])

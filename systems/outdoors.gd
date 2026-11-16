@@ -100,6 +100,11 @@ static func terrace_parasols(weather: String, hour: String) -> bool:
 	return hour != "night" and weather != "snow"
 
 
+# Street sellers with wares on a blanket stay in when it is raining or snowing.
+static func street_sellers(weather: String, _hour: String) -> bool:
+	return weather == "clear" or weather == "wind"
+
+
 # The share of a walk's usual crowd (tourists, people browsing at a stall)
 # that is out, against a clear day.
 static func crowd_share(weather: String, hour: String) -> float:

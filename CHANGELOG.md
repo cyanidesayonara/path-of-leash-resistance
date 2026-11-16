@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Plaça Reial grand square upgrade (`reial`, 1.75)
+
+- Upgraded Plaça Reial (`systems/reial.gd`, `systems/outdoors.gd`, `main.gd`, `tests/test_walk_hooks.gd`, `tests/test_reial.gd`):
+  - **Arcades all round & Barcelona furniture**: continuous 200 px colonnade pillars with cast arch shadows, terracotta portico flooring, panot threshold strips, square ashlar flagstone grid, ochre roof parapets, south and north grand archway end-wings, and cast-iron `pilones` at both square entrances (`PILONES` registered in `m.poles`).
+  - **Light layer integration**: added `night_lights(m)` hook in `main.gd` (declared in `tests/test_walk_hooks.gd`) so Gaudí's 6-armed dragon lampposts, the central Font de les Tres Gràcies uplight, buskers, and arcade terrace lanterns glow through `world/light_layer.gd` in its one batch, alongside `night_fronts(m)` bar and shop openings along the arcade back walls (`ARCADE_BACK_W`, `ARCADE_BACK_E`).
+  - **Late-night terraces & buskers**: dressed the six arcade terraces with marble tables, flickering table candle lanterns, tucked bistro chairs, seated late-night patrons, and striped bar awnings (distinct from pintxos food counters), plus a second busker under the east arcade (`BUSKER2_POS`), onlookers, animated playing motion, and rain/snow umbrellas (`Outdoors.busking`).
+  - **Telegraphed night-time street sellers**: three street sellers on the plaza flagstones (`SELLER_SPECS`) with wares on white sheets and corner cords who get a `0.8 s` `"Pack up!"` telegraph on the lookout whistle or a nearby bark before bundling their sheets and running into the arcades (`Outdoors.street_sellers`).
+- Verified with before/after `--shot --level=reial` captures, `tools/playtest.gd` (`0` problems), `reial --selftest`, `test_reial.gd`, `test_reial_waiter.gd`, `test_walk_hooks.gd`, and all 246 tests in `tests/ci_tests.txt` (`246 passed, 0 failed`).
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
