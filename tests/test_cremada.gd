@@ -54,7 +54,9 @@ func _run() -> void:
 	# 1. Registration
 	_check(game.LEVELS.has("cremada"), "in LEVELS")
 	var ci: int = game.CAROUSEL.find("cremada")
-	_check(ci == 25, "the chase at campaign walk 25: %d" % ci)
+	# walk 26 since Sarrià went in before El Bosc; the 51-walk reorder puts
+	# the chases back on every fifth walk
+	_check(ci == 26, "the chase at campaign walk 26: %d" % ci)
 	_check(game.CAROUSEL[ci - 1] == "reial", "after Plaça Reial")
 	_check(int(game.STAR_GATE["cremada"]) == 36, "opens at 36 stars")
 	_check(String(game.CHASE_GATE.get("cremada", "")) == "boars", "after Els Senglars")
