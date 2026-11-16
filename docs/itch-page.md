@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-THIRTY-NINE WALKS IN AND AROUND BARCELONA
+FORTY WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -80,6 +80,7 @@ Plaça Reial, the arcaded square
 La Cremada, Badalona's devil night and the Dimoni
 El Fòrum, the seaside esplanade
 La Diagonal, the avenue that cuts the grid, with its tram
+Carrer de Blai, the pintxos street, where everything on the floor is food
 La Carretera de les Aigües, the hillside hike
 Festa de Gràcia, the decorated festival street
 El Laberint d'Horta, the cypress maze
@@ -127,6 +128,16 @@ On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right (
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
 Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
+```
+
+## What's new in 1.75
+
+For a devlog post or the top of the body. Everything since v1.74, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- A new walk, forty in all:
+  - Carrer de Blai, open at 39 stars, after La Diagonal: Poble-sec's pedestrian pintxos street at the foot of Montjuïc, at night, bar after bar, terraces on the paving, strings of bulbs overhead, and a little square half way up. The floor is a dog's paradise of dropped pintxos, and your human does not want her eating off it: head for one and they say "Leave it!". Leave it and they relax; eat it anyway and their patience takes a real knock. Sit pretty by a terrace and someone shares, which is fine. Waiters cross with full trays: bump or bark at one and the tray rocks, then goes, six pintxos flying. Catch one before it lands. By day the shutters are down, the deliveries are in, and the terraces are quieter; in the rain everyone stands in the doorways.
 ```
 
 ## What's new in 1.74
