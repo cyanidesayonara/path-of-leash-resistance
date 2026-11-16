@@ -46,7 +46,7 @@ static func build(m: Node2D) -> void:
 	m.hud.add_child(m.weather_fx)
 	for side: String in ["letterbox_top", "letterbox_bot"]:
 		var bar := ColorRect.new()
-		bar.color = Color("0b1430", 0.94)
+		bar.color = Color(Kit.NAVY_DEEP, 0.94)
 		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		bar.visible = false
 		m.hud.add_child(bar)
@@ -118,14 +118,14 @@ static func build(m: Node2D) -> void:
 	m.combo_bar_bg = ColorRect.new()
 	m.combo_bar_bg.position = Vector2(440, 662)
 	pin_box(m.combo_bar_bg, 400.0, 8.0, 0.5, 1.0)
-	m.combo_bar_bg.color = Color("14203d", 0.6)
+	m.combo_bar_bg.color = Color(Kit.NAVY, 0.6)
 	m.combo_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.combo_bar_bg.visible = false
 	m.hud.add_child(m.combo_bar_bg)
 	m.combo_bar = ColorRect.new()
 	m.combo_bar.position = Vector2(440, 662)
 	pin_box(m.combo_bar, 400.0, 8.0, 0.5, 1.0)
-	m.combo_bar.color = Color("ffb020")
+	m.combo_bar.color = Kit.SAFFRON
 	m.combo_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	m.combo_bar.visible = false
 	m.hud.add_child(m.combo_bar)
@@ -133,7 +133,7 @@ static func build(m: Node2D) -> void:
 	# the trick string in the heavy face, outlined like the shouts
 	m.combo_l.add_theme_font_override("font", Kit.display())
 	m.combo_l.add_theme_constant_override("outline_size", 8)
-	m.combo_l.add_theme_color_override("font_outline_color", Color("0b1430", 0.85))
+	m.combo_l.add_theme_color_override("font_outline_color", Color(Kit.NAVY_DEEP, 0.85))
 	pin_wide(m.combo_l, 34.0, 1.0)
 	m.combo_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	m.combo_l.visible = false

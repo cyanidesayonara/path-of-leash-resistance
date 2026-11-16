@@ -41,6 +41,22 @@ const GOLD := SAFFRON
 const GOOD := LEAF
 const BAD := Color("ff6b5a")
 
+# Tints of the palette for the HUD's finer distinctions, kept here so the
+# palette has one source: text a step down from INK_SOFT, met and spent
+# states, gauge glints, the feed's tones.
+const INK_DIM := Color("a3abc2")
+const INK_MUTE := Color("6f7a96")
+const CREAM := Color("fff1d6")
+const SAFFRON_SOFT := Color("ffc24d")
+const SAFFRON_LIGHT := Color("ffc93c")
+const SAFFRON_PALE := Color("ffe08a")
+const SAFFRON_DEEP := Color("b5700a")
+const TURQUOISE_PALE := Color("d6fff9")
+const LEAF_SOFT := Color("b5e37a")
+const LEAF_DONE := Color("a9d672")
+const LEAF_DIM := Color("5f7a52")
+const BAD_SOFT := Color("ff8a7c")
+
 # Two colours for screens, not one per screen: saffron where you are going
 # (the title, the walk, pause, results), turquoise for the screens beside it
 # (details, wardrobe, progress, settings), magenta for a question or warning.

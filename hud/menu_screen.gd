@@ -435,7 +435,7 @@ func _swatch(at: Vector2, kind: String, key: String, d: Dictionary) -> void:
 					draw_arc(at, 10.0, TAU * float(i) / 6.0, TAU * float(i + 1) / 6.0, 6, cols[i], 6.0)
 			else:
 				draw_arc(at, 10.0, 0, TAU, 20, d.col, 6.0)
-			draw_circle(at + Vector2(0, 11.0), 3.0, Color("ffb020"))
+			draw_circle(at + Vector2(0, 11.0), 3.0, Kit.SAFFRON)
 		"bandana":
 			if key == "none":
 				draw_arc(at, 11.0, 0, TAU, 20, Kit.INK_FAINT, 1.6)

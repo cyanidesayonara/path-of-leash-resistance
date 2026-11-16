@@ -80,7 +80,7 @@ func _draw() -> void:
 		Icons.draw_star(self, Vector2(sx + float(i) * 30.0 + 15.0, y), 11.0, i < stars)
 	if String(d.rating) != "":
 		draw_string(f, Vector2(0, y + 30.0), String(d.rating), HORIZONTAL_ALIGNMENT_CENTER, W,
-			17, Color("c9cfdf"))
+			17, Kit.INK_SOFT)
 	# a rating line needs room under it: without the gap its descenders sat
 	# about 4px above the first row's check boxes (#31)
 	y += 50.0 + rating_gap
@@ -93,13 +93,13 @@ func _draw() -> void:
 		var ry := y + float(i - col * per_col) * ROW_H
 		var rx := PAD + float(col) * col_w
 		Icons.draw_check(self, Vector2(rx, ry - 11.0), 14.0, int(row.state))
-		var col_txt := Color("8590ad")
+		var col_txt := Kit.INK_FAINT
 		if int(row.state) == Icons.Check.DONE_NOW:
-			col_txt = Color("b5e37a")
+			col_txt = Kit.LEAF_SOFT
 		elif int(row.state) == Icons.Check.DONE_BEFORE:
-			col_txt = Color("6f7a96")
+			col_txt = Kit.INK_MUTE
 		elif int(row.state) == Icons.Check.PARTIAL:
-			col_txt = Color("f4f1ea")
+			col_txt = Kit.INK
 		draw_multiline_string(f, Vector2(rx + 22.0, ry), String(row.text),
 			HORIZONTAL_ALIGNMENT_LEFT, col_w - 30.0, 16, 1, col_txt)
 	y += float(per_col) * ROW_H + 18.0
@@ -114,21 +114,21 @@ func _draw() -> void:
 	var time_sec: int = int(d.time) if d.has("time") else 0
 	var g_bones: int = int(d.goal_bones) if d.has("goal_bones") else 0
 	draw_string(f, Vector2(tally_x + 26.0, y), str(bones_cnt), HORIZONTAL_ALIGNMENT_LEFT,
-		-1, 19, Color("f4f1ea"))
+		-1, 19, Kit.INK)
 	var px := tally_x + 116.0
 	for i in range(3):
 		Icons.draw_phone_pip(self, Vector2(px + float(i) * 13.0, y - 13.0), 15.0,
 			i < phone_hp)
 	draw_string(f, Vector2(px + 48.0, y), "phone", HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
-		Color("a3abc2"))
+		Kit.INK_DIM)
 	draw_string(f, Vector2(0, y), "%ds" % time_sec, HORIZONTAL_ALIGNMENT_CENTER, W, 19,
-		Color("f4f1ea"))
+		Kit.INK)
 	draw_string(f, Vector2(-PAD, y), "+%d bones from goals" % g_bones,
-		HORIZONTAL_ALIGNMENT_RIGHT, W, 16, Color("c9cfdf"))
+		HORIZONTAL_ALIGNMENT_RIGHT, W, 16, Kit.INK_SOFT)
 	y += 28.0
 	for line: String in extras:
 		draw_string(f, Vector2(0, y), line, HORIZONTAL_ALIGNMENT_CENTER, W, 16,
-			Color("ffc24d"))
+			Kit.SAFFRON_SOFT)
 		y += 22.0
 	# what to do next is on the prompt bar along the bottom of the screen,
 	# with every other screen's (menu_screen.gd)
