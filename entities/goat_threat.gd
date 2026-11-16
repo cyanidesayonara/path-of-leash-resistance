@@ -129,7 +129,7 @@ func advance(delta: float, gap := -1.0, aim := 0.0) -> void:
 				main.get_node("/root/Sfx").play("crack", 1.0)
 			break
 
-	var target_x := cx + aim * (half * 0.55)
+	var target_x := cx + clampf(aim, -half * 0.55, half * 0.55)
 	var steer: float = (target_x - position.x) * 2.2
 	position.x += steer * delta
 	position.y = front_y
@@ -175,7 +175,12 @@ func _tick_boulders(delta: float) -> void:
 func _spawn_boulder() -> void:
 	if main == null or main.dog == null:
 		return
-	var target_pos: Vector2 = main.dog.global_position
+	var target_pos: Vector2
+	if drop_count % 2 == 0 or main.human == null:
+		target_pos = main.dog.global_position + main.dog.velocity * BOULDER_LEAD
+	else:
+		target_pos = main.human.global_position + main.human.velocity * BOULDER_LEAD
+	target_pos.x = clampf(target_pos.x, cx - half + BOULDER_R, cx + half - BOULDER_R)
 	# Don't throw backwards
 	if target_pos.y < front_y + BOULDER_MIN_AHEAD:
 		target_pos.y = front_y + BOULDER_MIN_AHEAD + 40.0
@@ -204,12 +209,15 @@ func _resolve_boulder_impact(b: Dictionary) -> void:
 
 	if main.has_node("/root/Sfx"):
 		main.get_node("/root/Sfx").play("crack", 1.2)
+	if bool(main.get("auto_walk")):
+		return
 
 	var dog_pos: Vector2 = main.dog.global_position
-	var dist := impact_pos.distance_to(dog_pos)
+	var human_pos: Vector2 = main.human.global_position if main.human != null else Vector2(INF, INF)
+	var hit := false
 
-	if dist < BOULDER_R:
-		# Direct hit!
+	if impact_pos.distance_to(dog_pos) < BOULDER_R:
+		hit = true
 		hits += 1
 		main.montserrat_goat_hits += 1
 		if main.dog.has_method("knocked"):
@@ -219,10 +227,21 @@ func _resolve_boulder_impact(b: Dictionary) -> void:
 			main.dog.knocked(knock_dir, "boulder")
 		if main.feed != null:
 			main.feed.say("BOULDER HIT!", EventFeed.Tone.LOUD)
-	elif dist < BOULDER_DODGE_R:
-		# Clean dodge!
+
+	if main.human != null and impact_pos.distance_to(human_pos) < BOULDER_R:
+		hit = true
+		hits += 1
+		main.montserrat_goat_hits += 1
+		var hdir := (human_pos - impact_pos).normalized()
+		if hdir == Vector2.ZERO:
+			hdir = Vector2.DOWN
+		main.human.bumped(hdir)
+		main.float_text(human_pos + Vector2(0.0, -30.0), "Whoa! Loose rock!", Color(1.0, 0.5, 0.3))
+
+	if not hit and (impact_pos.distance_to(dog_pos) < BOULDER_DODGE_R or impact_pos.distance_to(human_pos) < BOULDER_DODGE_R):
 		dodges += 1
 		main.montserrat_boulder_dodges += 1
+		main.combo.add("BOULDER DODGE", 2)
 		main.award_points(2, "dodged! +2")
 		if main.feed != null:
 			main.feed.say("STEPPED CLEAR OF THE BOULDER!", EventFeed.Tone.GOOD)
