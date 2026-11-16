@@ -783,6 +783,8 @@ const ESTACIO_GAPS: Array[float] = [400.0, 640.0, 880.0]
 const ESTACIO_GAP_W := 72.0
 const ESTACIO_TRAIN := Rect2(560.0, -4700.0, 160.0, 1450.0)
 const ESTACIO_BOARD := Vector2(640.0, -1020.0)
+const ESTACIO_PLATFORM_BOARDS: Array[Vector2] = [Vector2(410.0, -3160.0), Vector2(870.0, -3160.0)]
+const ESTACIO_CAFE_RECT := Rect2(955.0, -2130.0, 100.0, 160.0)
 const ESTACIO_LUGGAGE: Array[Vector2] = [
 	Vector2(380.0, -1720.0),
 	Vector2(900.0, -2380.0),
@@ -823,13 +825,14 @@ static func estacio(m: Node2D) -> void:
 	m.conveyor_zone = ESTACIO_WALKWAY
 	m.conveyor_dir = Vector2(0, -1)
 	m.benches = Array([Vector2(336, -1700), Vector2(944, -1700), Vector2(336, -2400), Vector2(944, -2400)], TYPE_VECTOR2, &"", null)
-	m.bins = Array([Vector2(m.sw_l + 30, -800), Vector2(m.sw_r - 30, -2000), Vector2(m.sw_l + 30, -4000)], TYPE_VECTOR2, &"", null)
+	m.bins = Array([Vector2(m.sw_l + 30, -800), Vector2(m.sw_r - 30, -1910), Vector2(m.sw_l + 30, -4000)], TYPE_VECTOR2, &"", null)
 	# rows of nested trolleys, where a street has parked vans
 	m.vans = Array([Vector2(360, -1320), Vector2(920, -2750)], TYPE_VECTOR2, &"", null)
 	m.performers = Array([Vector2(880, -1150)], TYPE_VECTOR2, &"", null)   # a busker by the pillars
 	m.fountains = Array([Vector2(930, -3300)], TYPE_VECTOR2, &"", null)
 	if not m.tutorial_mode:
 		m.luggage_trolley = LuggageTrolley.new()
+		m.estacio_crowd = EstacioCrowd.new()
 	# the owner goes through the middle gate, and keeps to the east platform
 	m.narrows = Array([{"y0": ESTACIO_BARRIER_Y - 12.0, "y1": ESTACIO_BARRIER_Y + 12.0,
 		"x0": ESTACIO_GAPS[1] - ESTACIO_GAP_W * 0.5 + 16.0, "x1": ESTACIO_GAPS[1] + ESTACIO_GAP_W * 0.5 - 16.0}], TYPE_DICTIONARY, &"", null)
@@ -3497,6 +3500,7 @@ static func level_solid_rects(m: Node2D) -> Array:
 				out.append(["groin_%d" % i, Rect2(-140.0, Llevant.GROIN_YS[i] - 18.0, 420.0, 36.0)])
 		"station":
 			out.append(["estacio_train", ESTACIO_TRAIN])
+			out.append(["estacio_cafe", ESTACIO_CAFE_RECT])
 		"oldtown":
 			out.append(["gotic_castellers", GoticCastellers.COLLISION_RECT])
 		"park":
@@ -3849,6 +3853,7 @@ static func build_walls(m: Node2D) -> void:
 		m.add_child(wood)
 	if m.lvl == "station":
 		add_rect_body(m, ESTACIO_TRAIN.get_center(), ESTACIO_TRAIN.size)
+		add_rect_body(m, ESTACIO_CAFE_RECT.get_center(), ESTACIO_CAFE_RECT.size)
 	if m.lvl == "oldtown":
 		var fb := StaticBody2D.new()
 		fb.collision_layer = 1

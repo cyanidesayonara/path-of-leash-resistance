@@ -121,6 +121,7 @@ var awning_dump: AwningDump
 var jackhammer: Jackhammer
 var fisherman: Fisherman
 var luggage_trolley: LuggageTrolley
+var estacio_crowd: EstacioCrowd
 var waiter: Waiter
 var cone_dog: ConeDog
 var unicyclist: Unicyclist

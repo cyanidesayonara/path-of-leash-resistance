@@ -1,13 +1,17 @@
 class_name Estacio
 extends RefCounted
 
-# WALK 9: L'ESTACIO (a Rodalies station). Its drawing as static functions over
-# main's state (main.WALK_MODULES): the concourse and its terrazzo, the ticket
-# gates, the departures board, the platforms and the train, the luggage and
-# trolleys, the hall's pillars, the goods yard off leash and the running lines
-# past its wall.
+# WALK 9: L'ESTACIO (a mainline train station). Its drawing as static functions
+# over main's state (main.WALK_MODULES): the concourse and its terrazzo, the
+# departures boards, the café counter, the ticket gates, the platforms and the
+# train, the luggage and trolleys, the commuter waves, the hall's pillars, the
+# goods yard off leash and the running lines past its wall.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const Surfaces := preload("res://world/surfaces.gd")
+const AnimClock := preload("res://systems/anim_clock.gd")
+
+const OVERHEAD_FOLLOWS_CAMERA := true
 
 # L'Estacio's floor and fittings
 const TERRAZZO := Color(0.72, 0.73, 0.74)
@@ -19,17 +23,16 @@ const CHIPS: Array[Color] = [Color(0.42, 0.40, 0.38, 0.55), Color(0.62, 0.40, 0.
 	Color(0.95, 0.94, 0.90, 0.6), Color(0.30, 0.34, 0.36, 0.45)]
 const LUGGAGE_COLS: Array[Color] = [Color(0.20, 0.45, 0.82), Color(0.82, 0.22, 0.24),
 	Color(0.92, 0.70, 0.16), Color(0.18, 0.65, 0.45)]
-# The departures board's rows, amber dot-matrix on black: time, where to and
-# the platform, the way Rodalies boards read. One train is always cancelled,
-# and the airport line runs direct to L'Aeroport T1.
-const DEPARTURES := [["10:42", "SITGES", "4"], ["10:47", "MATARÓ", "CANCEL·LAT"],
-	["10:55", "GIRONA", "2"], ["11:03", "VIC", "5"], ["11:15", "AEROPORT T1", "1"]]
+# The departures board's rows, amber dot-matrix on black: time, invented
+# destination and platform. One train is always cancelled.
+const DEPARTURES := [["10:42", "VALLCLARA", "4"], ["10:47", "PORT VELL NORD", "CANCEL·LAT"],
+	["10:55", "ROCA ALTA", "2"], ["11:03", "PUIGVERD", "5"], ["11:15", "SERRA BLAVA", "1"]]
 
 
 # L'ESTACIO: the concourse floor's big tiles, the departures board, the
 # barrier cabinets, the platform edges and the train standing between them.
 static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
-	var b := ShapeBatch.new()
+	var b := ShapeBatch.new(m._wc.canvas)
 	# polished terrazzo in big square panels: brass divider strips between
 	# them, the marble chips set in each, and the roof lights' reflections
 	# lying across the polish
@@ -63,6 +66,9 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 	var bd: Vector2 = m.LevelBuild.ESTACIO_BOARD
 	if bd.y > vt - 80.0 and bd.y < vb + 80.0:
 		b.rect(Rect2(bd.x - 154.0 + 10.0, bd.y - 38.0 + 16.0, 308.0, 76.0), Color(0, 0, 0, 0.18))
+	for pb: Vector2 in m.LevelBuild.ESTACIO_PLATFORM_BOARDS:
+		if pb.y > vt - 60.0 and pb.y < vb + 60.0:
+			b.rect(Rect2(pb.x - 76.0 + 8.0, pb.y - 20.0 + 14.0, 152.0, 40.0), Color(0, 0, 0, 0.16))
 	# the ticket barriers: a row of steel gate cabinets, each with its black
 	# glass top, the card reader and the light; at each gap the glass paddles
 	# swung open toward the platforms
@@ -109,6 +115,9 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 				py_stud += 14.0
 		b.rect(Rect2(tr.position + Vector2(10, 14), tr.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 		_train(m, b, tr, vt, vb)
+		_draw_platforms(m, b, tr, vt, vb)
+	# the station café counter along the east concourse wall
+	_draw_cafe(m, b, vt, vb)
 	# the concourse luggage: colourful hard-shell rolling suitcases
 	for i in range(m.LevelBuild.ESTACIO_LUGGAGE.size()):
 		var lp: Vector2 = m.LevelBuild.ESTACIO_LUGGAGE[i]
@@ -117,6 +126,8 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 			_suitcase(m, b, lp, lcol)
 	if m.luggage_trolley != null:
 		m.luggage_trolley.draw(m, b, vt, vb)
+	if m.estacio_crowd != null:
+		m.estacio_crowd.draw(m, b, vt, vb)
 	b.flush(m._wc)
 
 
@@ -309,6 +320,11 @@ static func departures_board(m: Node2D, b: ShapeBatch, bd: Vector2) -> void:
 		b.line(Vector2(bd.x - 146.0, bd.y - 7.0 + float(row) * 11.0), Vector2(bd.x + 146.0, bd.y - 7.0 + float(row) * 11.0),
 			Color(1, 1, 1, 0.04), 1.0)
 	var amber := Color(1.0, 0.72, 0.18)
+	var active_row := -1
+	var flash := false
+	if m.estacio_crowd != null and m.estacio_crowd.is_active():
+		active_row = m.estacio_crowd.called_row
+		flash = ((AnimClock.msec() / 240) % 2) == 0
 	b.draw_string(m.font, Vector2(bd.x - 144.0, bd.y - 24.0), "SORTIDES", HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
 		Color(0.94, 0.96, 1.0))
 	b.draw_string(m.font, Vector2(bd.x + 40.0, bd.y - 24.0), "departures", HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
@@ -316,11 +332,20 @@ static func departures_board(m: Node2D, b: ShapeBatch, bd: Vector2) -> void:
 	for row in range(DEPARTURES.size()):
 		var d: Array = DEPARTURES[row]
 		var y := bd.y - 10.0 + float(row) * 11.0
-		b.draw_string(m.font, Vector2(bd.x - 144.0, y), String(d[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
-		b.draw_string(m.font, Vector2(bd.x - 100.0, y), String(d[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, amber)
+		var is_called := (row == active_row)
+		if is_called:
+			b.rect(Rect2(bd.x - 147.0, y - 9.0, 294.0, 11.0),
+				Color(1.0, 0.72, 0.18, 0.24 if flash else 0.10))
+		var col := (Color(1.0, 0.96, 0.72) if flash else amber) if is_called else amber
+		b.draw_string(m.font, Vector2(bd.x - 144.0, y), String(d[0]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, col)
+		b.draw_string(m.font, Vector2(bd.x - 100.0, y), String(d[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, col)
 		var cancelled := String(d[2]).length() > 2
-		b.draw_string(m.font, Vector2(bd.x + 144.0 - (68.0 if cancelled else 10.0), y), String(d[2]),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.98, 0.34, 0.28) if cancelled else amber)
+		if is_called:
+			b.draw_string(m.font, Vector2(bd.x + 76.0, y), "BOARDING  " + String(d[2]),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.45, 0.98, 0.56) if flash else col)
+		else:
+			b.draw_string(m.font, Vector2(bd.x + 144.0 - (68.0 if cancelled else 10.0), y), String(d[2]),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.98, 0.34, 0.28) if cancelled else col)
 
 
 # A row of luggage trolleys nested into each other, the length of a van.
@@ -452,3 +477,175 @@ static func draw_column(m: Node2D, _wc: ShapeBatch, p: Vector2) -> void:
 # luggage trolleys where another walk parks a van
 static func draw_van(m: Node2D, _wc: ShapeBatch, v: Vector2) -> void:
 	_draw_trolleys(m, v)
+
+
+# The platforms seen past the ticket barriers: VIA 1 / VIA 2 floor stencils,
+# coach position markers along the tactile edge, platform benches, and a few
+# waiting passengers.
+static func _draw_platforms(m: Node2D, b: ShapeBatch, tr: Rect2, vt: float, vb: float) -> void:
+	for py: float in [-3320.0, -4120.0]:
+		if py < vt - 40.0 or py > vb + 40.0:
+			continue
+		b.rect(Rect2(360.0, py - 18.0, 96.0, 26.0), Color(0.18, 0.24, 0.34, 0.85))
+		b.draw_string(m.font, Vector2(380.0, py), "VIA 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.95, 0.96, 0.98))
+		b.rect(Rect2(824.0, py - 18.0, 96.0, 26.0), Color(0.18, 0.24, 0.34, 0.85))
+		b.draw_string(m.font, Vector2(844.0, py), "VIA 2", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.95, 0.96, 0.98))
+	var coach_ys: Array[float] = [-3450.0, -3780.0, -4110.0, -4440.0]
+	for idx in range(coach_ys.size()):
+		var cy := coach_ys[idx]
+		if cy < vt - 30.0 or cy > vb + 30.0:
+			continue
+		var label := str(idx + 1)
+		for cx: float in [tr.position.x - 42.0, tr.end.x + 28.0]:
+			b.rect(Rect2(cx, cy - 12.0, 16.0, 18.0), Color(0.20, 0.24, 0.30, 0.85))
+			b.draw_string(m.font, Vector2(cx + 4.0, cy + 2.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.98, 0.86, 0.28))
+	# platform shelter benches tucked near the outer walls (clear of the owner's walk line)
+	for bp: Vector2 in [Vector2(304.0, -3700.0), Vector2(976.0, -3700.0), Vector2(304.0, -4320.0), Vector2(976.0, -4320.0)]:
+		if bp.y > vt - 50.0 and bp.y < vb + 50.0:
+			draw_bench(m, b, bp)
+	# a few calm waiting passengers on Platform 1 and 2
+	for wp: Array in [[Vector2(470.0, -3560.0), Color(0.24, 0.38, 0.56)], [Vector2(488.0, -4240.0), Color(0.56, 0.28, 0.24)],
+			[Vector2(940.0, -3540.0), Color(0.32, 0.42, 0.32)], [Vector2(932.0, -4200.0), Color(0.42, 0.34, 0.48)]]:
+		var p: Vector2 = wp[0]
+		if p.y < vt - 30.0 or p.y > vb + 30.0:
+			continue
+		var col: Color = wp[1]
+		b.circle(p + Shade.light * 4.0, 8.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+		b.rect(Rect2(p.x - 8.0, p.y - 5.0, 16.0, 10.0), col)
+		b.circle(p, 5.2, Color(0.88, 0.72, 0.60))
+		b.circle(p + Vector2(1.5, 0.0), 4.6, Color(0.22, 0.18, 0.16))
+
+
+# Station café counter along the east concourse wall: oak/slate bar, chrome
+# espresso machine, pastry display case, bar stools, barista and menu strip.
+static func _draw_cafe(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var cr: Rect2 = m.LevelBuild.ESTACIO_CAFE_RECT
+	if cr.end.y < vt - 60.0 or cr.position.y > vb + 60.0:
+		return
+	# warm tile apron & drop shadow
+	b.rect(Rect2(cr.position - Vector2(36.0, 10.0), Vector2(cr.size.x + 36.0, cr.size.y + 20.0)), Color(0.66, 0.64, 0.60, 0.45))
+	b.rect(Rect2(cr.position + Vector2(8.0, 10.0), cr.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24))
+	# counter body & oak front rim
+	b.rect(cr, Color(0.22, 0.23, 0.26))
+	b.rect(Rect2(cr.position.x, cr.position.y, 12.0, cr.size.y), Color(0.56, 0.38, 0.24))
+	b.rect(Rect2(cr.position.x, cr.position.y, 3.0, cr.size.y), Color(0.72, 0.52, 0.34))
+	# pastry display case (south half of counter)
+	var case_r := Rect2(cr.position.x + 14.0, cr.end.y - 62.0, 32.0, 50.0)
+	b.rect(case_r, Color(0.76, 0.86, 0.92, 0.85))
+	b.rect(case_r.grow(-2.0), Color(0.28, 0.24, 0.22))
+	for py: float in [case_r.position.y + 12.0, case_r.position.y + 26.0, case_r.position.y + 40.0]:
+		b.circle(Vector2(case_r.get_center().x - 5.0, py), 4.0, Color(0.88, 0.64, 0.28))
+		b.circle(Vector2(case_r.get_center().x + 6.0, py), 3.6, Color(0.84, 0.56, 0.24))
+	# chrome espresso machine (north half of counter)
+	var esp := Rect2(cr.position.x + 16.0, cr.position.y + 18.0, 28.0, 42.0)
+	b.rect(esp, Color(0.74, 0.76, 0.80))
+	b.rect(Rect2(esp.position.x + 2.0, esp.position.y + 2.0, 24.0, 6.0), Color(0.92, 0.94, 0.96))
+	for hy: float in [esp.position.y + 16.0, esp.position.y + 30.0]:
+		b.line(Vector2(esp.position.x, hy), Vector2(esp.position.x - 8.0, hy), Color(0.14, 0.14, 0.16), 2.5)
+	b.circle(Vector2(esp.end.x - 6.0, esp.position.y + 14.0), 2.2, Color(0.92, 0.28, 0.24))
+	# stack of paper coffee cups
+	b.circle(Vector2(cr.position.x + 28.0, cr.position.y + 76.0), 5.0, Color(0.96, 0.94, 0.90))
+	b.circle(Vector2(cr.position.x + 28.0, cr.position.y + 76.0), 3.2, Color(0.38, 0.22, 0.14))
+	# menu board on the back edge
+	b.rect(Rect2(cr.end.x - 12.0, cr.position.y + 16.0, 10.0, cr.size.y - 32.0), Color(0.12, 0.13, 0.15))
+	b.draw_string(m.font, Vector2(cr.position.x + 56.0, cr.position.y + 22.0), "CAFÈ", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(0.96, 0.84, 0.44))
+	# barista behind counter
+	var bp := Vector2(cr.position.x + 68.0, cr.get_center().y)
+	b.circle(bp + Shade.light * 4.0, 8.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+	b.rect(Rect2(bp.x - 7.0, bp.y - 8.0, 14.0, 16.0), Color(0.16, 0.18, 0.22))
+	b.circle(bp, 5.2, Color(0.88, 0.72, 0.60))
+	b.circle(bp + Vector2(1.5, 0.0), 4.8, Color(0.24, 0.16, 0.12))
+	# 4 bar stools along the concourse side
+	for k in range(4):
+		var sp := Vector2(cr.position.x - 16.0, cr.position.y + 24.0 + float(k) * 36.0)
+		b.circle(sp + Shade.light * 3.0, 7.5, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+		b.circle(sp, 7.2, Color(0.58, 0.60, 0.64))
+		b.circle(sp, 5.8, Color(0.36, 0.24, 0.18))
+	var lit: float = Game.lamp_glow()
+	if lit > 0.0:
+		b.glow(cr.get_center(), 110.0, Color(1.0, 0.88, 0.62, 0.16 * lit), 0.25)
+
+
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y > m.GATE_Y:
+		var e: Vector2 = m.walk_edges(p.y)
+		if p.x >= e.x and p.x <= e.y:
+			return Surfaces.S.TILE
+	return -1
+
+
+static func tick(m: Node2D, delta: float) -> void:
+	if not m.started or m.paused or m.tutorial_mode or m.detour_active or m.estacio_crowd == null:
+		return
+	var out: Dictionary = m.estacio_crowd.tick(
+		delta,
+		m.human.global_position,
+		m.walk_edges,
+		m.LevelBuild.ESTACIO_WALKWAY,
+		m.LevelBuild.ESTACIO_CAFE_RECT,
+		m.LevelBuild.ESTACIO_TRAIN,
+		m.LevelBuild.ESTACIO_BARRIER_Y,
+		m.LevelBuild.ESTACIO_GAPS
+	)
+	if bool(out["warn"]):
+		Sfx.play("chime", 1.0, -5.0)
+		var d: Array = DEPARTURES[int(out["row"])]
+		var msg := "Train to %s — boarding Platform %s!" % [String(d[1]), String(d[2])] if bool(out["boarding"]) else "Train from %s — passengers arriving!" % String(d[1])
+		m.float_text(m.human.global_position + Vector2(0.0, -40.0), msg, Color(1.0, 0.92, 0.56), m.POP_SAY)
+	if bool(out["bump"]):
+		m.human.velocity += (out["bump_dir"] as Vector2) * 120.0
+		m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
+		Sfx.play("bump", 1.15, -6.0)
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Excuse me!", Color(1.0, 0.82, 0.68), m.POP_SAY)
+	if bool(out["dodge"]):
+		m.saves_done += 1
+		m.bones += 2
+		m.combo.add("DODGE", 2)
+		Sfx.play("star", 1.1, -6.0)
+		m.float_text(m.dog.global_position + Vector2(0.0, -20.0), "wave dodge! +2", Color(1.0, 0.92, 0.45))
+		m._update_hud()
+
+
+static func on_bark(m: Node2D, pos: Vector2) -> void:
+	if not m.started or m.paused or m.tutorial_mode or m.detour_active or m.estacio_crowd == null:
+		return
+	if m.estacio_crowd.on_bark(pos):
+		m.bones += 2
+		m.combo.add("BARK", 2)
+		Sfx.play("star", 1.15, -6.0)
+		m.float_text(m.dog.global_position + Vector2(0.0, -20.0), "commuter bark! +2", Color(1.0, 0.92, 0.45))
+		m._update_hud()
+
+
+# Overhead platform indicator boards (VIA 1 / VIA 2) and train-shed trusses
+# past the ticket barriers.
+static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
+	var cy: float = m.cam.position.y if m.cam != null else 0.0
+	var vt := cy - 540.0
+	var vb := cy + 540.0
+	var b := ShapeBatch.new(c)
+	# platform indicator boards just past the ticket barriers
+	var flash: bool = m.estacio_crowd != null and m.estacio_crowd.is_active() and ((AnimClock.msec() / 240) % 2) == 0
+	var active_row: int = m.estacio_crowd.called_row if (m.estacio_crowd != null and m.estacio_crowd.is_active()) else -1
+	for i in range(m.LevelBuild.ESTACIO_PLATFORM_BOARDS.size()):
+		var pb: Vector2 = m.LevelBuild.ESTACIO_PLATFORM_BOARDS[i]
+		if pb.y < vt - 80.0 or pb.y > vb + 80.0:
+			continue
+		var via := "VIA 1" if i == 0 else "VIA 2"
+		var dest := "SERRA BLAVA" if i == 0 else "ROCA ALTA"
+		var is_this := (i == 0 and active_row == 4) or (i == 1 and active_row == 2)
+		b.rect(Rect2(pb.x - 76.0, pb.y - 20.0, 152.0, 40.0), Color(0.36, 0.38, 0.42))
+		b.rect(Rect2(pb.x - 72.0, pb.y - 16.0, 144.0, 32.0), Color(0.08, 0.08, 0.10))
+		b.rect(Rect2(pb.x - 72.0, pb.y - 16.0, 46.0, 32.0), Color(0.16, 0.30, 0.56))
+		b.draw_string(m.font, Vector2(pb.x - 66.0, pb.y + 4.0), via, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.96, 0.97, 1.0))
+		var tcol := (Color(0.45, 0.98, 0.56) if flash else Color(1.0, 0.92, 0.50)) if is_this else Color(1.0, 0.72, 0.18)
+		b.draw_string(m.font, Vector2(pb.x - 20.0, pb.y - 2.0), dest, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, tcol)
+		b.draw_string(m.font, Vector2(pb.x - 20.0, pb.y + 11.0), "BOARDING" if is_this else "ON TIME", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, tcol)
+	# overhead train-shed steel cross-trusses spanning the platforms
+	for ty: float in [-3400.0, -3850.0, -4300.0]:
+		if ty < vt - 40.0 or ty > vb + 40.0:
+			continue
+		var e: Vector2 = m.walk_edges(ty)
+		b.rect(Rect2(e.x, ty - 4.0, e.y - e.x, 8.0), Color(0.28, 0.30, 0.34, 0.24))
+		b.line(Vector2(e.x, ty - 4.0), Vector2(e.y, ty - 4.0), Color(0.54, 0.56, 0.60, 0.32), 1.5)
+	b.flush(c)

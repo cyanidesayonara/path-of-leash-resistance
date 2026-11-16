@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Upgrade L'Estació (mainline station concourse)
+
+- Updated `systems/estacio.gd` and `world/level_build.gd` for `station` (`L'Estació`):
+  - Replaced real destinations with invented destinations (`VALLCLARA`, `PORT VELL NORD`, `ROCA ALTA`, `PUIGVERD`, `SERRA BLAVA`) with no operator branding, and added overhead `VIA 1` / `VIA 2` platform indicator boards (`ESTACIO_PLATFORM_BOARDS`) past the ticket barriers (`draw_overhead`, `OVERHEAD_FOLLOWS_CAMERA = true`).
+  - Added a solid station café counter (`ESTACIO_CAFE_RECT`) along the east concourse wall (`y = -2130..-1970`) with espresso machine, pastry display case, cups, menu strip, barista, bar stools, and nearby bin.
+  - Added mainline platform dressing past the barriers (`VIA 1` / `VIA 2` stencils, coach markers `1..4`, platform shelter benches, waiting passengers, and overhead train-shed trusses).
+  - Added `systems/estacio_crowd.gd` (`EstacioCrowd`): periodic train-call commuter waves alternating boarding and alighting through the barrier gaps, telegraphed `1.2 s` ahead by the PA chime (`Sfx.play("chime")`), announcement callout, and flashing departure boards, with bump/dodge/bark interactions.
+  - Implemented `Estacio.surface()` so the concourse and platforms handle as `Surfaces.S.TILE` while the outdoor goods yard stays `Surfaces.S.PAVEMENT`.
+- Updated `systems/sky.gd` (`STATION_NIGHT`, `GRADE_STATION_NIGHT`) so `station` remains a brightly lit indoor concourse at night rather than turning into a dark street.
+- Declared the new `station` hooks in `tests/test_walk_hooks.gd` and expanded `tests/test_estacio.gd` to cover tile surfaces, lit night tint/grade, solid café counter, and commuter wave telegraph/surge/bark.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.

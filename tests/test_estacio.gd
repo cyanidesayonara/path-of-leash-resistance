@@ -142,6 +142,33 @@ func _run() -> void:
 			handrails += 1
 	_check(handrails == 2, "the moving walkway balustrades have grindable handrails on both sides (%d)" % handrails)
 	_check(LevelBuild.ESTACIO_LUGGAGE.size() >= 3, "rolling suitcases placed on the concourse")
+	# surface map: concourse and platforms are tile; the outdoor goods yard is pavement
+	var Surfaces: GDScript = load("res://world/surfaces.gd")
+	_check(m.surface_at(Vector2(640.0, -1500.0)) == Surfaces.S.TILE, "concourse floor handles as tile")
+	_check(m.surface_at(Vector2(400.0, -3500.0)) == Surfaces.S.TILE, "platform floor handles as tile")
+	_check(m.surface_at(Vector2(640.0, m.GATE_Y - 120.0)) == Surfaces.S.PAVEMENT, "outdoor goods yard handles as pavement")
+	# night look: lit indoor concourse stays bright, not a dark street
+	var SkyLook: GDScript = load("res://systems/sky.gd")
+	var st_night: Color = SkyLook.tint("station", "clear", "night")
+	_check(st_night.r > 0.85 and st_night.g > 0.85 and st_night.b > 0.85, "station night tint stays brightly lit (%s)" % st_night)
+	var st_mod: Dictionary = SkyLook.grade_mod("station", "clear", "night")
+	_check(float(st_mod["add_vig"]) < 0.08, "station night grade avoids heavy street vignette (%.2f)" % float(st_mod["add_vig"]))
+	# cafe counter is solid
+	var cafe: Rect2 = LevelBuild.ESTACIO_CAFE_RECT
+	var cafe_stop := _push(dog, Vector2(cafe.position.x - 40.0, cafe.get_center().y), Vector2(400, 0), 40)
+	_check(cafe_stop.x < cafe.position.x, "the station cafe counter is solid")
+	# crowd wave: 1.2s telegraph before surging, barkable during surge
+	_check(m.estacio_crowd != null, "estacio_crowd instantiated for station walk")
+	var cw: EstacioCrowd = m.estacio_crowd
+	cw.reset()
+	var walk_fn := Callable(m, "walk_edges")
+	var h_mid := Vector2(420.0, -1800.0)
+	var warn_out: Dictionary = cw.tick(EstacioCrowd.COOLDOWN_FIRST + 0.1, h_mid, walk_fn, LevelBuild.ESTACIO_WALKWAY, cafe, tr, by, LevelBuild.ESTACIO_GAPS)
+	_check(bool(warn_out["warn"]) and cw.state == EstacioCrowd.State.TELEGRAPH, "train call enters 1.2s TELEGRAPH")
+	var surge_out: Dictionary = cw.tick(EstacioCrowd.WARN_DURATION + 0.05, h_mid, walk_fn, LevelBuild.ESTACIO_WALKWAY, cafe, tr, by, LevelBuild.ESTACIO_GAPS)
+	_check(bool(surge_out["surge"]) and cw.state == EstacioCrowd.State.SURGING and cw.commuters.size() >= 8, "crowd wave surges after telegraph")
+	var first_commuter: Vector2 = cw.commuters[0]["pos"]
+	_check(cw.on_bark(first_commuter + Vector2(20.0, 0.0)), "barking near surging commuters triggers trick")
 	m.queue_free()
 	await process_frame
 	game.persist = keep_persist

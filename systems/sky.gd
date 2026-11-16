@@ -9,6 +9,9 @@ extends RefCounted
 # wash, so a lamp pool reads as light against it; the lights themselves are
 # drawn through light() and stay warm.
 const NIGHT := Color(0.42, 0.47, 0.66)
+# L'Estacio is a lit mainline concourse: night keeps indoor lighting rather than
+# turning it into a dark street.
+const STATION_NIGHT := Color(0.92, 0.92, 0.95)
 # First light: the sun is barely up, so the street is still dim and blue, and
 # the gold comes only from the sun's side (the grade's sun, below).
 const DAWN := Color(0.86, 0.84, 0.94)
@@ -54,6 +57,11 @@ const GRADE_NIGHT := {
 	"k_tint": Vector3.ONE, "k_cool": Vector3(0.95, 0.98, 1.05), "k_warm": Vector3(1.08, 1.0, 0.90), "wet": 0.0,
 	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 0.0,
 }
+const GRADE_STATION_NIGHT := {
+	"k_sat": 0.96, "k_con": 1.02, "k_exp": 1.0, "add_vig": 0.03, "add_lift": 0.0,
+	"k_tint": Vector3.ONE, "k_cool": Vector3(0.98, 0.99, 1.02), "k_warm": Vector3(1.02, 1.0, 0.98), "wet": 0.0,
+	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 0.0,
+}
 # dawn: blue shadows, gold only where the low sun reaches (from the left,
 # the sea's side on the beach), the far side still in the night's shade, and a mist lying in
 # the street that the sun has not burned off yet
@@ -78,10 +86,10 @@ static func _hour(hour: Variant) -> String:
 	return String(hour)
 
 
-static func tint(_lvl: String, weather: String, hour: Variant) -> Color:
+static func tint(lvl: String, weather: String, hour: Variant) -> Color:
 	var c := Color.WHITE
 	match _hour(hour):
-		"night": c = NIGHT
+		"night": c = STATION_NIGHT if lvl == "station" else NIGHT
 		"dawn": c = DAWN
 		"dusk": c = DUSK
 	match weather:
@@ -93,14 +101,14 @@ static func tint(_lvl: String, weather: String, hour: Variant) -> Color:
 
 # the weather's and the hour's changes to the grade, combined. Under rain or
 # snow the low sun is behind the cloud: most of its side light goes.
-static func grade_mod(_lvl: String, weather: String, hour: Variant) -> Dictionary:
+static func grade_mod(lvl: String, weather: String, hour: Variant) -> Dictionary:
 	var out: Dictionary = NONE.duplicate()
 	match weather:
 		"rain": out = _stack(out, GRADE_RAIN)
 		"wind": out = _stack(out, GRADE_WIND)
 		"snow": out = _stack(out, GRADE_SNOW)
 	match _hour(hour):
-		"night": out = _stack(out, GRADE_NIGHT)
+		"night": out = _stack(out, GRADE_STATION_NIGHT if lvl == "station" else GRADE_NIGHT)
 		"dawn": out = _stack(out, GRADE_DAWN)
 		"dusk": out = _stack(out, GRADE_DUSK)
 	if weather == "rain" or weather == "snow":
