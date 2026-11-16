@@ -11,6 +11,10 @@ Append-only session history, newest first.
 - Inserted into `Game.LEVELS` and `CAROUSEL` right before El Bosc, with El Bosc's star gate (21) and chase gate (`vet`). No other walk is retuned, but every walk from El Bosc on moves one place down the carousel: La Cremada's chase is now walk 26 and the airport walk 35 (`tests/test_cremada.gd`, `tests/test_aeroport.gd`), until the 51-walk reorder. README, `store/listing.md` and `docs/itch-page.md` now count forty walks and list it.
 - Tests: `tests/test_sarria.gd` (registered in `tests/ci_tests.txt`); added to `tests/test_walk_hooks.gd`, `tests/test_npc_clear_of_solids.gd`, `tools/shot_sweep.sh`, `tools/surface_map.sh` and `tools/behaviour_snapshot.sh`. The test also runs the sweeper's beat and the jogger's run past a dog standing in his way and holds both clear of every solid, post and pilona and of the dog (the jogger picks a clear line ahead and jogs on the spot rather than run through her), and checks that a bark before the bells, a moving nose at a bakery and a far-off bark at the gardener count for nothing. Played through with `tools/playtest.gd` (no stuck walker, nobody inside a solid) and checked with the surface map.
 
+## 2026-11-16 - Plan the 51-walk campaign
+
+- `docs/ROADMAP.md`: the target is now exactly 51 walks (chases every fifth, a boss after every second chase), with the twelve walks still to build, a draft order, a proposed 1.75-1.78 grouping and the decision to reset progress once the campaign is locked. The 1.73 and 1.74 entries and the film list are brought up to date. No code change.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
