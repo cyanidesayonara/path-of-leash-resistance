@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - Upgrade El Barri (Walk 1) to 1.75 standard
+
+- Upgraded `systems/barri.gd` (`El Barri`, Walk 1) while keeping its gentle opening-walk balance and zero-hazard layout intact:
+  - Replaced the placeholder 18 px dot grid in `_panots()` with `Panot.flor()` (*flor de Barcelona* tiles) across both street pavements and all four desire-path crossings.
+  - Added four asphalt pedestrian zebra crossings along the west street aligned with `RAIL_GATES` (dropped granite kerbs, white zebra bars, flanking cast-iron `pilones`, and parked-motorbike clearance), plus a west side-street opening at `y = -2160`.
+  - Upgraded street furniture and shopfronts: street `papereres` along both pavements, a detailed *forn de pa* corner bakery (bread baskets with baguettes/loaves, slatted bench, A-board), an illuminated projecting pharmacy cross with white/mint fascia and bay pot, a *quiosc* newsstand with ribbed roof, magazine racks and postcard spinner, varied corner bars, hairdresser barber pole, detailed Bicing dock with totem and red basket bikes, scooter fairings/top-boxes, and varied rooftop terraces.
+  - Added `Barri.night_fronts()` (declared in `tests/test_walk_hooks.gd`) so shopfronts and residential entries spill warm light across the paving at dusk and night.
+  - Improved `Petanca` live-event readability in `_draw_square()` with a pulsing throwing-circle highlight and dotted aim line during the 0.8 s `"Watch the boule!"` wind-up, plus a sauló dust wake behind the rolling boule.
+- Verified with before/after `--shot --level=barri` captures, `tools/playtest.gd`, `tests/test_barri.gd`, `tests/test_walk_hooks.gd`, and `tests/test_night_fronts.gd`.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
