@@ -8,31 +8,83 @@ as issues.
 
 ## Where the game stands
 
-- 36 walks plus the tutorial, six chase walks (La Neteja, El Besòs, El
-  Veterinari, Els Senglars, Festa de Gràcia, La Cremada), two statue bosses (El
-  Mamut on La Ciutadella and El Gat finale on Rambla del Raval with victory
-  films), four artsy detours (El Somni, L'Estel, El Colom, El Drac).
+- 39 walks plus the tutorial (v1.74, 2026-11-16). Eight chase walks (La
+  Neteja, El Besòs, El Veterinari, Els Senglars, La Cremada, Festa de Gràcia,
+  L'Aeroport, Montserrat), four statue bosses (El Mamut on La Ciutadella, El
+  Drac in El Mosaic, Els Lleons in El Port, El Gat finale on Rambla del
+  Raval), each with its films, four artsy detours (El Somni, L'Estel, El
+  Colom, El Drac).
 - Five dogs, a wardrobe, a campaign with fixed skies, FREE WALK after a
   finished walk, four hours of day (dawn, day, dusk, night), weather.
 - A signature live event on every walk, true near-miss saves, a story film for
   every chase.
-- 1.71 and 1.72 shipped to itch.io and Microsoft Store.
+- Every tag through 1.74 shipped to itch.io and the Microsoft Store; Android
+  export groundwork is in, a static site on GitHub Pages is up.
 
-## The target: the 41-walk campaign
+## The target: the 51-walk campaign
 
-Decided 2026-11-02 (see PROJECT.md and the planner artifact for order):
+Decided 2026-11-16 with Santtu (replaces the 41-walk plan of 2026-11-02).
+Exactly 51 walks, no more, no less:
 
-- Chases at walks 5, 10, 15, 20, 25, 30, 35 and 40; bosses at 11, 21, 31 and
-  41. Statue animals, public-domain art only. El Gat is the final boss, a
-  boss arena rather than a chase. Dia de Partit is not a chase.
-- Still to build (ten walks): L'Eixample, Els Àngels (MACBA plaza), La Cremada
-  (Badalona's Nit del Dimoni, a chase), La Ciutadella (the mammoth as mid
-  boss), El Poble Espanyol, Montserrat (a chase, the goats), L'Aeroport (a
-  chase), and three more from the bench: Sarrià, Carrer de Blai, Sant Pau,
-  Sitges. El Delta is rejected.
-- Every new walk ships with an upgrade to an existing one, and its own
-  signature live event. A chase walk ships with its film (a story film is
-  part of the walk, not a later task).
+- Chases at 5, 10, 15 ... 50 (ten) and a statue boss after every second
+  chase, at 11, 21, 31, 41 and 51 (five). The other 36 are walks.
+- Variety over clusters: no runs of hill, indoor or water walks, and the
+  campaign skies spread over dawn, dusk, rain, wind, snow and fog rather than
+  mostly clear days.
+- Festa de Gràcia is the last chase (50); El Gat the final boss (51), a boss
+  arena rather than a chase. Dia de Partit is not a chase. No two chases share
+  a threat, and every boss fights differently (three are cats, which is fine:
+  she is a dog).
+- Bosses are statue animals, public-domain art only (Gaudí, the mammoth, the
+  1888 lions, the Romanesque lioness); El Gat stays a cartoon cat of our own.
+- Every new walk ships with an upgrade to an existing one and its own
+  signature live event. A chase walk ships with its film.
+
+### Still to build (twelve walks)
+
+| Walk | Kind | Sky | The idea |
+|---|---|---|---|
+| Sarrià | walk | dawn | the village inside the city, the morning walk |
+| El Metro | walk | rain | underground: platforms, escalators, one train ride; no operator branding |
+| Carrer de Blai | walk | night | Poble-sec's pintxos street, terraces and dropped food |
+| Sant Pau | walk | dusk | the modernista hospital's pavilions and gardens |
+| Sitges | walk | wind | the seafront and the church on the rock |
+| Els Encants | walk | rain | the flea market under the mirrored canopy at Glòries |
+| Camí de Ronda | walk | wind (tramuntana) | a Costa Brava cliff path, the first east-west scroller |
+| Tarragona | walk | dusk | the Roman amphitheatre over the sea |
+| Vic | walk | fog | the market square in winter fog; fog is a new weather |
+| La Molina | chase | snow | the first snow walk; a snow groomer chases her downhill |
+| A theme park | chase | day | an original Costa Daurada park, not a copy of a real one; the mascots chase her |
+| Girona | boss | rain, dusk | the Onyar houses and old-town steps; La Lleona de Girona pounces from her column |
+
+Dropped on 2026-11-16: La Revetlla, Els Terrats, Les Tortugues as a boss.
+Bench: Vallvidrera's funicular. El Delta stays rejected.
+
+### The order (draft, to be locked before the save reset)
+
+New walks in bold; (C) chase, (B) boss.
+
+- 1-5: El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja (C)
+- 6-11: El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs (C), La Ciutadella (B)
+- 12-15: Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari (C)
+- 16-21: **Sarrià**, El Bosc, Els Àngels, La Castanyada, Els Senglars (C), El Mosaic (B)
+- 22-25: La Superilla, **El Metro**, Els Búnquers, La Cremada (C)
+- 26-31: L'Estació, Plaça Reial, El Fòrum, La Carretera de les Aigües, L'Aeroport (C), El Port (B)
+- 32-35: La Diagonal, **Carrer de Blai**, El Laberint d'Horta, **La Molina** (C)
+- 36-41: Plaça d'Espanya, **Sant Pau**, El Poble Espanyol, **Sitges**, **the theme park** (C), **Girona** (B)
+- 42-45: Les Obres, **Camí de Ronda**, Dia de Partit, Montserrat (C)
+- 46-51: **Els Encants**, **Tarragona**, **Vic**, La Ferralla, Festa de Gràcia (C), Rambla del Raval (B)
+
+Proposed re-skies for existing walks, not
+yet confirmed: El Tibidabo in snow, La Carretera de les Aigües at dawn, El
+Bosc in rain, Les Obres at dawn, La Diagonal at dusk.
+
+### Saves
+
+Once the campaign content is locked, progress resets: one save-version bump
+that starts everyone fresh, instead of more gate grandfathering (Santtu,
+2026-11-16). Settings (controls, language) survive; whether the wardrobe does
+is Santtu's call at the time.
 
 ## Release train
 
@@ -69,23 +121,34 @@ Parc's bronze dog in his old place), and La Cremada as a chase with its
 Dimoni float and Correfoc film. Castellers de Gràcia and Castellers de
 Barcelona, Fur-goneta facelift across four walks, and illuminated night fronts.
 
-### 1.73 - Airport and mountain (in progress)
+### 1.73 - Airport and mountain (tagged)
 
-L'Aeroport (service dog, cabin havoc, security chase film) and Montserrat
-(goats chase her down, film).
+L'Aeroport and Montserrat as chases, each with its film.
 
-### 1.74 - Close the campaign
+### 1.74 - Polish and Android groundwork (tagged 2026-11-16)
 
-The last three walks, the remaining statue bosses, and the order, star
-gates and chase gates reset to the final 41 in `Game` (CAROUSEL, STAR_GATE,
-CHASE_GATE) through the planner.
+El Drac's serpentine bench, El Gat's awnings, the bespoke NPCs on
+`NpcFigure`, camera tricks for chases and bosses, El Gòtic's retractable
+bollards, late-campaign chase spacing, web performance work, and Android
+readiness.
+
+### 1.75 to 1.78 - The last twelve walks (proposed grouping)
+
+Three walks a release, each with its upgrade and live event:
+
+- 1.75: Sarrià, El Metro, Carrer de Blai.
+- 1.76: La Molina (chase and film, the snow), Sant Pau, Sitges.
+- 1.77: the theme park (chase and film), Girona with La Lleona (boss, wake and
+  victory films), Camí de Ronda.
+- 1.78: Els Encants, Tarragona, Vic (fog). Then the order is locked, CAROUSEL,
+  STAR_GATE and CHASE_GATE are set to the final 51, and saves reset.
 
 ### 1.8 - The finishing pass
 
 City-map walk select, postcards, full Catalan and Spanish translation,
 credits, a pass on the controls and accessibility (remapping exists; the
 Store accessibility declaration waits on a real pass), balance of stars and
-bones over 41 walks.
+bones over 51 walks.
 
 ### 2.0 - The product
 
@@ -95,10 +158,10 @@ ads, no in-app purchases.
 
 ## Videos
 
-The story films are part of each chase walk (sweeper, flood, vet, boars,
-Gràcia, La Cremada and the cat are done). Still owed: L'Aeroport and
-Montserrat each get a film with their walk, and each boss gets a short
-wake-up film. A trailer and devlog clips belong to the 2.0 Steam groundwork,
+The story films are part of each chase walk (every chase through
+Montserrat has one, and every boss has its wake and victory films). Still
+owed: La Molina and the theme park each get a chase film, Girona's La Lleona
+her wake and victory films. A trailer and devlog clips belong to the 2.0 Steam groundwork,
 cut from the playtest tool's captures.
 
 ## Standing rules

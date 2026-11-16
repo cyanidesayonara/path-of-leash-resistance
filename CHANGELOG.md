@@ -12,6 +12,10 @@ Append-only session history, newest first.
   - Improved `Petanca` live-event readability in `_draw_square()` with a pulsing throwing-circle highlight and dotted aim line during the 0.8 s `"Watch the boule!"` wind-up, plus a sauló dust wake behind the rolling boule.
 - Verified with before/after `--shot --level=barri` captures, `tools/playtest.gd`, `tests/test_barri.gd`, `tests/test_walk_hooks.gd`, and `tests/test_night_fronts.gd`.
 
+## 2026-11-16 - Plan the 51-walk campaign
+
+- `docs/ROADMAP.md`: the target is now exactly 51 walks (chases every fifth, a boss after every second chase), with the twelve walks still to build, a draft order, a proposed 1.75-1.78 grouping and the decision to reset progress once the campaign is locked. The 1.73 and 1.74 entries and the film list are brought up to date. No code change.
+
 ## 2026-11-16 - Website on GitHub Pages
 
 - Added `site/`: a plain HTML and CSS landing page (pitch, hero clip, PLAY IN BROWSER to `/play/`, itch.io and Microsoft Store links, features, screenshots) and a press kit at `site/press/` (description, facts, clips, screenshots, icon; the contact line is a placeholder). `site/.gdignore` keeps Godot from importing it.
