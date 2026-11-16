@@ -11,6 +11,7 @@ Append-only session history, newest first.
 - The light eases from the street's weather and hour to the station's own lamps down each staircase (tint, grade and the on-screen rain), so the hour grade and night fronts never darken the tunnel; the night fronts line the two streets only. Wet footprints and a drip film in the hall when it rains.
 - `systems/outdoors.gd`: `underground_busker` (any weather, not after dark), `umbrella_shakers` and `tracks_wet` (rain or snow), `underground_crowd` (thinned by the hour, never by the weather).
 - Music style `metro`, sounds `door_chime` and `train_rumble`, ground lettering of furled umbrellas (`brollies`), goals, clock and jamón spots, freedom props; added to the shot sweep, surface map and behaviour snapshot level lists and to `test_walk_hooks`, `test_npc_clear_of_solids` and `test_outdoors`.
+- Inserting the walk moves every later campaign walk down one: `test_aeroport` and `test_cremada` now expect 35 and 26. La Cremada's chase is on walk 26, not a multiple of five, until the 51-walk reorder.
 - Tests: new `tests/test_metro.gd` (registered in `tests/ci_tests.txt`); `metro --selftest`, `test_walk_hooks`, `test_walk_registry`, `test_outdoors`, `test_night_fronts`, `test_goals`, `test_npc_clear_of_solids`, `test_chase_milestone_gates`, `test_campaign_mastery`, `test_wrap`. Walk counts and lists updated in README, `store/listing.md` and `docs/itch-page.md`.
 
 ## 2026-11-16 - Website on GitHub Pages

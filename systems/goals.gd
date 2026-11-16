@@ -171,7 +171,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"tour": {"text": "Get photographed by a tour group", "target": 1, "fn": func() -> int: return 1 if m.eixample_tour != null and m.eixample_tour.photographed else 0},
 		"tram_dodge": {"text": "Dodge the tram %d times", "target": 3, "fn": func() -> int: return m.diagonal_tram_dodges},
 		"tram_clean": {"text": "Get home without the tram bumping you", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.diagonal_tram_hits == 0) else 0},
-		"turnstile": {"text": "Slip under a turnstile while your human finds their card", "target": 1, "fn": func() -> int: return 1 if m.metro_turnstile_slipped else 0},
+		"turnstile": {"text": "Slip under a turnstile", "target": 1, "fn": func() -> int: return 1 if m.metro_turnstile_slipped else 0},
 		"surge": {"text": "Dig in against the rush-hour crowd", "target": 1, "fn": func() -> int: return 1 if m.metro_surge_held else 0},
 		"doors_clean": {"text": "Get home without the doors catching the leash", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.metro_door_catches == 0) else 0},
 		"kiosk": {"text": "Bark at the newspaper kiosk", "target": 1, "fn": func() -> int: return 1 if m.diagonal_kiosk_barked else 0},
