@@ -497,6 +497,25 @@ memorable.
   river flood (El Besos, the authored water chase; the beach stays an
   ordinary walk), snowplough (winter), runaway parade float (festival). Own
   failure mode (caught = eaten, soft slapstick), not the usual soft-fail.
+- Co-op (Santtu, November 2026): POLR 2, not this game. Two players on
+  one walk is clearly fun, but this game assumes one pair everywhere:
+  about 1,900 references to main's one dog, human and leash, and 60 direct
+  input reads. Retrofitting it would be a redesign, so it waits for the
+  sequel. The flavours worth trying then: two dogs on one human (idea 7
+  under the trick list, a split leash), two pairs on one walk tangling on
+  purpose (the rope-vs-rope tangle already works for NPC pairs), and an
+  asymmetric pair (one player the dog, one your human glancing up from the
+  phone). Keeping the door open costs little, and only applies to new code:
+  - New entity and system code takes the dog, human or leash it acts on as
+    an argument where that is no extra work, rather than reaching for
+    `m.dog`. Never rewrite existing code just for this.
+  - New input reads go through the named actions (and `Prompts` for text),
+    never a raw key or device, so actions can later be split per player.
+  - Walks stay seeded and deterministic, and the rope stays one solver
+    that handles any number of ropes and their snags: that is what both
+    co-op and online play would stand on.
+  - Saved records stay versioned (`GATES_VERSION` style), so a second
+    player's profile can be added without breaking old saves.
 - Swimming (shipped v1.1 in the park pond, expandable): Millie loves
   water and paddles happily; the owner is dragged in to wade reluctantly
   with the phone held high; Tofu will not go near it. Beach sea and any
