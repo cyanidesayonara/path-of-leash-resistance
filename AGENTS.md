@@ -19,8 +19,16 @@ before proposing features.
 
 - Godot 4.7 (GDScript only, no C#)
 - Renderer: GL Compatibility (required for the web export)
-- All art is vectors drawn in `_draw()`. The one file asset is `icon.png`,
-  and even that is generated - see `tools/make_icon.gd`
+- All art is vectors drawn in `_draw()`. The only file assets are `icon.png`
+  (generated - see `tools/make_icon.gd`) and the two OFL fonts in `fonts/`
+  with their licences: Bricolage Grotesque (headings, `UiKit.display()`) and
+  Inter (body, `UiKit.body()`; `Game._ready` also makes it the default
+  theme's font, which every Control uses, and `ThemeDB.fallback_font`)
+- The look is "Trencadis" (November 2026): saffron, turquoise and magenta
+  on deep navy. Its colours are the constants at the top of `hud/ui_kit.gd`;
+  take them from there, never a new hard-coded gold. The website's colours
+  are generated from them (`tools/site_palette.gd` writes `site/palette.css`,
+  held to it by `tests/test_site_palette.gd`)
 - All music and sound is synthesized in code (`audio/music.gd`,
   `autoload/sfx.gd`). An export plays the soundtrack pre-rendered by
   `tools/bake_music.gd` from that same code (gitignored `music/baked/`,

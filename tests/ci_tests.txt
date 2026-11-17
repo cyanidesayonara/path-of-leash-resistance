@@ -408,6 +408,9 @@
 --headless --path . --script res://tests/test_diagonal.gd
 --headless --path . --script res://tests/test_diagonal_riders.gd
 
+# Sarrià: the bells of Sant Vicenç, the bakeries, the gardener, who is out
+--headless --path . --script res://tests/test_sarria.gd
+
 # Montserrat (the wild goat herd chase) test
 --headless --path . --script res://tests/test_montserrat.gd
 
@@ -772,3 +775,6 @@
 
 # Retractable lit bollards in El Gotic
 --headless --path . --script res://tests/test_pilones_retractils.gd
+
+# The website takes its colours from the game palette (site/palette.css from hud/ui_kit.gd)
+--headless --path . --script res://tests/test_site_palette.gd

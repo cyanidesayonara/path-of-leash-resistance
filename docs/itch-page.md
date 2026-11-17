@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-THIRTY-NINE WALKS IN AND AROUND BARCELONA
+FORTY WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -68,6 +68,7 @@ Platja de Llevant, the dog beach at the far end of the coast
 L'Eixample, the grid of cut corners round the basilica
 El Tibidabo, the mountain road
 El Veterinari, the clinic escape
+Sarrià, the old village the city swallowed, at first light
 El Bosc, the forest
 Els Àngels, the skate plaza
 La Castanyada, the chestnut festival

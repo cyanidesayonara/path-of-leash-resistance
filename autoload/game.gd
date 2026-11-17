@@ -2,13 +2,13 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "sarria", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
-	# are walking through, ASCII only (the web font has no accents, and the HUD
-	# upper-cases everything). The tutorial stays English on purpose - it
-	# names a mode, not a place.
+	# are walking through, spelled as in Catalan, accents and all (the game's
+	# fonts carry them, and the HUD upper-cases everything). The tutorial
+	# stays English on purpose - it names a mode, not a place.
 	#
 	# "La Rambla" is a real street, and naming a level after the street it
 	# depicts is DESCRIPTIVE use, not trademark use - the same category as the
@@ -55,6 +55,8 @@ const LEVEL_NAMES := {
 	"raval": "Rambla del Raval",
 	# Cerdà's grid round the basilica, named for the district
 	"eixample": "L'Eixample",
+	# the old village the city swallowed, named for itself
+	"sarria": "Sarrià",
 	"diagonal": "La Diagonal",
 }
 # The Catalan name carries the character; this carries the meaning. The game
@@ -102,12 +104,13 @@ const LEVEL_SUBTITLES := {
 	"montserrat": "The serrated mountain trail, and the wild goats are loose",
 	"raval": "The rambla where the big bronze cat sits",
 	"eixample": "The grid of cut corners round the basilica",
+	"sarria": "The village the city swallowed, as its shutters go up",
 	"diagonal": "The avenue that cuts the grid, and the tram that rides it",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "aigues": 39, "gracia": 40, "horta": 41, "port": 43, "espanya": 45, "poble": 46, "aeroport": 47, "site": 47, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "aigues": 39, "gracia": 40, "horta": 41, "port": 43, "espanya": 45, "poble": 46, "aeroport": 47, "site": 47, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -125,6 +128,7 @@ const CHASE_GATE := {
 	"tibidabo": "besos",
 	"vet": "besos",
 	# Tier 4 (Walks after El Veterinari)
+	"sarria": "vet",
 	"trail": "vet",
 	"angels": "vet",
 	"spook": "vet",
@@ -200,10 +204,12 @@ const CAMPAIGN_SKY := {
 	"port": ["clear", "day"], "espanya": ["clear", "night"], "poble": ["clear", "day"], "ciutadella": ["clear", "day"], "cremada": ["clear", "night"], "aeroport": ["clear", "day"], "montserrat": ["clear", "day"], "site": ["clear", "day"],
 	"partit": ["clear", "night"], "scrap": ["clear", "day"], "gracia": ["clear", "night"],
 	"raval": ["clear", "night"], "eixample": ["clear", "day"], "diagonal": ["clear", "day"],
+	# the morning dog walk: shutters going up, bread crates out, first light
+	"sarria": ["clear", "dawn"],
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "trail", "angels", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "cremada", "forum", "diagonal", "aigues", "gracia", "horta", "port", "espanya", "poble", "aeroport", "site", "partit", "scrap", "montserrat", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "station", "carmel", "reial", "cremada", "forum", "diagonal", "aigues", "gracia", "horta", "port", "espanya", "poble", "aeroport", "site", "partit", "scrap", "montserrat", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -454,6 +460,7 @@ const LEVEL_SUBTITLES_CA := {
 	"montserrat": "El camí de la muntanya serrada, i les cabres salvatges van soltes",
 	"raval": "La rambla on seu el gat gros de bronze",
 	"eixample": "La quadrícula dels xamfrans al voltant de la basílica",
+	"sarria": "El poble que es va empassar la ciutat, mentre s'aixequen les persianes",
 	"diagonal": "L'avinguda que talla la quadrícula, i el tramvia que hi passa",
 }
 const LEVEL_SUBTITLES_ES := {
@@ -496,6 +503,7 @@ const LEVEL_SUBTITLES_ES := {
 	"montserrat": "El sendero de la montaña dentada, y las cabras salvajes andan sueltas",
 	"raval": "La rambla donde se sienta el gato gordo de bronce",
 	"eixample": "La cuadrícula de chaflanes alrededor de la basílica",
+	"sarria": "El pueblo que se tragó la ciudad, mientras suben las persianas",
 	"diagonal": "La avenida que corta la cuadrícula, y el tranvía que la recorre",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
@@ -506,7 +514,7 @@ var agility_best := 0.0
 var gate_open: Array[String] = []
 # the walks that arrived with the chase gates: no save predates them, so
 # none is grandfathered past its gate
-const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal"]
+const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "sarria"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
@@ -1019,6 +1027,14 @@ const MAX_PHYSICS_STEPS := 4
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# The game's reading face, set before any Control exists. A Control looks
+	# its font up in the engine's default theme, whose own default font
+	# (Open Sans) comes before ThemeDB.fallback_font, so both are set: the
+	# theme's for every Label and Button, the fallback for draw_string calls
+	# that ask ThemeDB directly.
+	var body := preload("res://hud/ui_kit.gd").body()
+	ThemeDB.get_default_theme().default_font = body
+	ThemeDB.fallback_font = body
 	Engine.max_physics_steps_per_frame = MAX_PHYSICS_STEPS
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()

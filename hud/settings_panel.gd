@@ -87,7 +87,7 @@ func _draw() -> void:
 					Vector2(NAME_X - 24.0, y - 6.0), Vector2(NAME_X - 24.0, y + 6.0),
 					Vector2(NAME_X - 15.0, y)
 				]), Kit.accent("settings"))
-		var name_col := Color(0.98, 0.95, 0.88) if picked else Color(0.72, 0.72, 0.75)
+		var name_col := Kit.INK if picked else Kit.INK_DIM
 		draw_string(Kit.display(), Vector2(NAME_X, y + 6.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 18, name_col)
 		if String(row.kind) == "slider":
@@ -104,7 +104,7 @@ func _slider(f: Font, y: float, v: float, picked: bool) -> void:
 	draw_rect(track, Color(1, 1, 1, 0.08))
 	var fill := clampf(v, 0.0, 1.0) * BAR_W
 	if fill > 1.0:
-		var col := Color(0.98, 0.82, 0.42) if picked else Color(0.62, 0.6, 0.5)
+		var col := Kit.SAFFRON if picked else Kit.INK_MUTE
 		draw_rect(Rect2(track.position, Vector2(fill, BAR_H)), col)
 	draw_rect(track, Color(1, 1, 1, 0.22), false, 1.2)
 	# ten notches, so a step is a visible step rather than a guess
@@ -114,12 +114,12 @@ func _slider(f: Font, y: float, v: float, picked: bool) -> void:
 			Color(0, 0, 0, 0.28), 1.0)
 	var txt := "%d%%" % int(round(v * 100.0))
 	draw_string(f, Vector2(BAR_X + BAR_W + 16.0, y + 6.0), txt, HORIZONTAL_ALIGNMENT_LEFT,
-		-1, 18, Color(0.95, 0.93, 0.88) if picked else Color(0.7, 0.7, 0.72))
+		-1, 18, Kit.INK if picked else Kit.INK_DIM)
 
 
 # one of a list, stepped with left/right: the value between two arrows
 func _choice(f: Font, y: float, txt: String, picked: bool) -> void:
-	var col := Color(0.95, 0.93, 0.88) if picked else Color(0.7, 0.7, 0.72)
+	var col := Kit.INK if picked else Kit.INK_DIM
 	var arrow := Kit.accent("settings") if picked else Color(1, 1, 1, 0.22)
 	draw_colored_polygon(PackedVector2Array([Vector2(BAR_X + 8.0, y - 7.0), Vector2(BAR_X, y), Vector2(BAR_X + 8.0, y + 7.0)]), arrow)
 	draw_string(f, Vector2(BAR_X + 18.0, y + 6.0), txt, HORIZONTAL_ALIGNMENT_CENTER, BAR_W - 36.0, 18, col)
@@ -128,11 +128,11 @@ func _choice(f: Font, y: float, txt: String, picked: bool) -> void:
 
 func _toggle(f: Font, y: float, on: bool, picked: bool) -> void:
 	var box := Rect2(BAR_X, y - 11.0, 52.0, 22.0)
-	var track_col := Color(0.35, 0.55, 0.4, 0.85) if on else Color(1, 1, 1, 0.09)
+	var track_col := Color(Kit.TURQUOISE, 0.75) if on else Color(1, 1, 1, 0.09)
 	draw_rect(box, track_col)
 	draw_rect(box, Color(1, 1, 1, 0.22), false, 1.2)
 	var knob := Vector2(box.position.x + (38.0 if on else 14.0), y)
-	draw_circle(knob, 8.0, Color(0.98, 0.82, 0.42) if picked else Color(0.72, 0.7, 0.62))
+	draw_circle(knob, 8.0, Kit.SAFFRON if picked else Kit.INK_SOFT)
 	draw_string(f, Vector2(BAR_X + BAR_W + 16.0, y + 6.0), "ON" if on else "OFF",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 18,
-		Color(0.95, 0.93, 0.88) if picked else Color(0.7, 0.7, 0.72))
+		Kit.INK if picked else Kit.INK_DIM)
