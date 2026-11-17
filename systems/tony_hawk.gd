@@ -53,6 +53,7 @@ const CLOCK_TARGETS := {
 	"sarria": 175,
 	"angels": 180,
 	"poble": 180,
+	"sitges": 180,
 	"cremada": 185,     # the walk out and the run home ahead of the Dimoni
 	"aeroport": 180,    # concourse sprint and security squad chase
 	"montserrat": 185,  # mountain trail climb and goat herd sprint
@@ -100,6 +101,7 @@ const JAMON_POS := {
 	"sarria": Vector2(300.0, -3010.0),
 	"angels": Vector2(380.0, -2950.0),
 	"poble": Vector2(820.0, -2480.0),
+	"sitges": Vector2(560.0, -3960.0),
 	"cremada": Vector2(800.0, -4200.0),
 	"aeroport": Vector2(740.0, -2200.0),
 	"montserrat": Vector2(620.0, -2100.0),

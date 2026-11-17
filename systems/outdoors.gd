@@ -263,3 +263,29 @@ static func garden_sitters(weather: String, hour: String) -> float:
 # daylight and dusk, never in rain, snow, or after dark.
 static func sketchers_out(weather: String, hour: String) -> bool:
 	return (weather == "clear" or weather == "wind") and hour != "night"
+
+
+# How hard the sea wind blows along an open promenade (Sitges): full gale in
+# "wind", a light sea breeze on a clear day, gusts under rain.
+const WIND_STRENGTH := {"wind": 1.0, "rain": 0.5, "clear": 0.3, "snow": 0.2}
+
+
+static func wind_strength(weather: String) -> float:
+	return float(WIND_STRENGTH.get(weather, 0.3))
+
+
+# Seafront cafe and beach parasols stay open in fair calm weather, and are
+# furled in strong wind so they do not blow away, as well as in rain, snow,
+# at night, or at first light.
+static func beach_parasols_open(weather: String, hour: String) -> bool:
+	return weather == "clear" and (hour == "day" or hour == "dusk")
+
+
+# Cafe napkins and loose papers lift and skitter across the promenade in wind.
+static func blowing_napkins(weather: String, _hour: String) -> bool:
+	return weather == "wind"
+
+
+# Kitesurfing wings and wind banners are out on the sand in dry daylight.
+static func kites_out(weather: String, hour: String) -> bool:
+	return (weather == "wind" or weather == "clear") and hour != "night"

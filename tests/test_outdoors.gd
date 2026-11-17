@@ -161,6 +161,15 @@ func _run() -> void:
 	_check(dusk_sitters > 0 and dusk_sketchers > 0, "Sant Pau has sitters and sketchers at dusk (%d, %d)" % [dusk_sitters, dusk_sketchers])
 	m = await _load("santpau", "rain", "dusk")
 	_check(m.santpau_sitters.is_empty() and m.performers.is_empty(), "nobody sits or sketches in Sant Pau in the rain")
+	_check(Outdoors.beach_parasols_open("clear", "day") and not Outdoors.beach_parasols_open("wind", "day")
+		and not Outdoors.beach_parasols_open("rain", "day") and not Outdoors.beach_parasols_open("clear", "night"),
+		"Sitges parasols are open only on calm fair days")
+	_check(Outdoors.blowing_napkins("wind", "day") and Outdoors.blowing_napkins("wind", "dusk")
+		and not Outdoors.blowing_napkins("clear", "day") and not Outdoors.blowing_napkins("rain", "day"),
+		"napkins blow along Sitges promenade in wind")
+	_check(Outdoors.kites_out("wind", "day") and Outdoors.kites_out("clear", "day")
+		and not Outdoors.kites_out("rain", "day") and not Outdoors.kites_out("wind", "night"),
+		"kites and banners go out on dry daylight")
 
 	if _level != null:
 		_level.get_parent().remove_child(_level)

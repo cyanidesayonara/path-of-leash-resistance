@@ -46,6 +46,7 @@ const HOOKS := {
 	"espanya": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
 	"blai": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_performer", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
 	"santpau": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_performer", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
+	"sitges": ["draw_bin", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "takes_prints", "tick", "tree_kind"],
 	"metro": ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
 	"sarria": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_overhead", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
 	"diagonal": ["draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "grass_blocked", "idle_status", "is_lamp", "on_bark", "rider_lane", "surface", "tick", "tree_kind"],

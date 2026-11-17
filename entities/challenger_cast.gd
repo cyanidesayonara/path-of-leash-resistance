@@ -75,6 +75,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_cook(c, fd, t, s)
 		"sketcher":
 			_sketcher(c, fd, t, s)
+		"kitesurfer":
+			_kitesurfer(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -877,3 +879,50 @@ static func _sketcher(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var brush_hand := (pal - side * 2.0).lerp(easel + side * 2.0 - fd * 2.0, dab)
 	_arm(c, at + side * 8.0, brush_hand, shirt, skin)
 	c.draw_line(brush_hand, brush_hand + fd * 7.0 - side * 2.0, Color(0.36, 0.22, 0.12), 1.4)
+
+
+# Sitges: a kitesurfer at the sand's edge with his twin-tip board and curved
+# kite wing resting down on the sand beside him, the wingtip ruffling in the wind
+static func _kitesurfer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.78, 0.58, 0.42)
+	var teal := Color(0.10, 0.62, 0.64)
+	var navy := Color(0.12, 0.20, 0.34)
+	_shadow(c, Vector2.ZERO, 14.0, 14.0)
+	# his kite down on the sand behind him: curved leading-edge tube and bright panels
+	var flutter := sin(t * 3.2 + s) * 2.4
+	var kc := -fd * 24.0 + side * 6.0
+	var wing := PackedVector2Array()
+	for i in range(7):
+		var u := (float(i) / 6.0 - 0.5) * 2.0
+		var arch := kc + side * (u * 20.0) - fd * ((1.0 - u * u) * 11.0 + absf(u) * flutter * 0.4)
+		wing.append(arch)
+	var back_edge := PackedVector2Array()
+	for i in range(6, -1, -1):
+		var u := (float(i) / 6.0 - 0.5) * 2.0
+		var trail := kc + side * (u * 17.0) + fd * (4.0 - (1.0 - u * u) * 7.0 + flutter * 0.25 * u)
+		back_edge.append(trail)
+	var canopy := wing + back_edge
+	c.draw_colored_polygon(canopy, Color(0.92, 0.30, 0.46))
+	c.draw_colored_polygon(PackedVector2Array([wing[2], wing[3], wing[4], back_edge[2], back_edge[3], back_edge[4]]),
+		Color(0.96, 0.78, 0.22))
+	for i in range(wing.size() - 1):
+		c.draw_line(wing[i], wing[i + 1], Color(0.14, 0.16, 0.20), 2.8)
+	# twin-tip board propped beside him on the sand
+	var board := -side * 15.0 + fd * 2.0
+	c.draw_colored_polygon(_bar(board, fd, 26.0, 9.0), Color(0.22, 0.72, 0.74))
+	c.draw_colored_polygon(_bar(board, fd, 16.0, 5.0), Color(0.96, 0.80, 0.24))
+	# feet, wetsuit & harness, sun-bleached hair, sunglasses
+	_shoes(c, fd, side, skin, 6.0)
+	_person(c, Vector2.ZERO, fd, teal, skin, Color(0.76, 0.62, 0.34), "short", "none", Color.BLACK)
+	c.draw_colored_polygon(_bar(fd * 2.0, side, 16.0, 5.0), navy)
+	var head := fd * 5.0
+	for e: float in [-1.0, 1.0]:
+		c.draw_circle(head + fd * 5.0 + side * e * 3.0, 2.0, Color(0.08, 0.08, 0.12))
+	# control bar held in front, lines running back to the kite
+	var bar_p := fd * 13.0 + side * sin(t * 2.1 + s) * 1.8
+	c.draw_line(bar_p - side * 8.0, bar_p + side * 8.0, Color(0.24, 0.26, 0.30), 2.6)
+	c.draw_line(bar_p - side * 6.0, wing[0], Color(0.90, 0.92, 0.94, 0.65), 1.0)
+	c.draw_line(bar_p + side * 6.0, wing[6], Color(0.90, 0.92, 0.94, 0.65), 1.0)
+	for e: float in [-1.0, 1.0]:
+		_arm(c, side * e * 8.0, bar_p + side * e * 5.5, teal, skin)

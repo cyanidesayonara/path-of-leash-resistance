@@ -387,6 +387,7 @@ const WALK_MODULES := {
 	"diagonal": preload("res://systems/diagonal.gd"),
 	"blai": preload("res://systems/blai.gd"),
 	"santpau": preload("res://systems/santpau.gd"),
+	"sitges": preload("res://systems/sitges.gd"),
 	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
@@ -733,6 +734,14 @@ var metro_door_catches := 0
 var metro_busker_cheered := false
 # Sarrià: the bells, the bakeries, the shutters and the cast (systems/sarria.gd)
 var sarria: RefCounted = null
+# Sitges: breaking wave, blowing napkins, church bell, café tables (systems/sitges.gd)
+var sitges_wave: Dictionary = {}
+var sitges_napkins: Array = []
+var sitges_waves_dodged := 0
+var sitges_napkins_caught := 0
+var sitges_church_barked := false
+var sitges_diners: Array = []
+var sitges_tables_list: Array = []
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
 var montserrat_funicular: Dictionary = {"state": "waiting", "t": 0.0}
 var montserrat_funicular_dodged := false
@@ -5236,6 +5245,8 @@ func _draw_dog_beach(c: Object) -> void:
 	_draw_freedom_benches(c, r, Color(0.62, 0.5, 0.34))
 	if lvl == "cremada":
 		_freedom_sign(c, r, "PLATJA DEL DIMONI", "where the devil burns, off leash")
+	elif lvl == "sitges":
+		_freedom_sign(c, r, "PLATJA DE LA FRAGATA", "under Sant Bartomeu, off leash")
 	else:
 		_freedom_sign(c, r, "PLATJA DELS GOSSOS", "the dog beach, off leash")
 	_draw_espigo(c)
@@ -11201,6 +11212,8 @@ const FREEDOM_KINDS := {
 	"metro": "placa",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
+	# Platja de la Fragata below La Punta
+	"sitges": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
 	"aeroport": "yard",
 	# the monastery terrace lookout clearing overlooking the valleys

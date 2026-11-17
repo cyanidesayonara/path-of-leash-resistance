@@ -1442,7 +1442,7 @@ func _draw_shapes() -> void:
 	var dress: Dictionary = HumanLook.outfit(Game.weather, Game.level_id, Game.night, 3 if woman else 2, shirt,
 		"none", Color.BLACK, "none")
 	shirt = dress["shirt"]
-	if Game.level_id == "montjuic" and String(dress["headwear"]) == "none" and not hat_off:
+	if (Game.level_id == "montjuic" or (Game.level_id == "sitges" and not Game.night)) and String(dress["headwear"]) == "none" and not hat_off:
 		dress["headwear"] = "sunhat"
 		dress["headwear_col"] = Color(0.92, 0.84, 0.62)
 	# where the head is, for what is drawn over it below (a goal, the phone

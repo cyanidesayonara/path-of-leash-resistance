@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - New walk: Sitges
+
+- Added **Sitges** (`sitges`, 39th campaign walk, right after El Poble Espanyol in the carousel, star gate 47, chase tier `cremada`, campaign sky `["wind", "day"]`, Catalan gloss *"The town by the sea"*):
+  - Built in `systems/sitges.gd` along Passeig de la Ribera between the breaking Mediterranean surf and whitewashed houses with cobalt-blue shutters and magenta bougainvillea, past the kite bay and seafront palms, round the bend, up the stone steps onto La Punta's limestone headland beside the two-tone facade, cupola and bell tower of Sant Bartomeu i Santa Tecla (with xató by the steps and a ringable bell on bark), and down onto Platja de la Fragata off the leash.
+  - Promenade paving and La Punta cliff rock/steps handle as firm stone (`PAVEMENT`), Platja de la Ribera cove, the kite launch apron and Platja de la Fragata handle as `SAND`, and the sea and active wave wash handle as `WATER`; seafront railings, church walls and palms wrap and block the leash cleanly.
+  - Telegraphed breaking wave at the bend (`WAVE_WARN_S = 0.95` s spray plume and shout ahead of the wash): catches whoever stays seaward (`human_soak`, `dog.slick`, shove inland, sliding loose bottles/balls/napkins) while leaving an east dry strip so pulling your human clear scores a dodge.
+  - Sea wind rules in `systems/outdoors.gd` (`wind_strength`, `beach_parasols_open`, `blowing_napkins`, `kites_out`): flying café napkins along the promenade, sunhat gust, furled parasols in strong wind, and wind-bent palms.
+  - New dare-giver `"kitesurfer"` (`entities/challenger.gd`, `entities/challenger_cast.gd`, `audio/music.gd` `DARES["kitesurfer"]` and `STYLES["sitges"]`), 15 goals (`dry`, `wave_dodge`, `napkin`, `punta_bark`, ...), and regression tests in `tests/test_sitges.gd`.
+
 ## 2026-11-17 - Films: the pair acts, a dozing driver, a real foam crest
 
 - The pair in every chase film (`FilmKit.pair`), shared by all of them:
