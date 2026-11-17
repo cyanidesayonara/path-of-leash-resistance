@@ -2,7 +2,7 @@
 
 Append-only session history, newest first.
 
-## 2026-11-17 - Films: the pair acts, and the chase threats
+## 2026-11-17 - Films: the pair acts, a dozing driver, a real foam crest
 
 - The pair in every chase film (`FilmKit.pair`), shared by all of them:
   - Your human, oblivious: his thumb scrolls the whole film, and while the threat bears down he chuckles at something on the screen, mouth opening and head bobbing.
