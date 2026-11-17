@@ -386,6 +386,7 @@ const WALK_MODULES := {
 	"eixample": preload("res://systems/eixample.gd"),
 	"diagonal": preload("res://systems/diagonal.gd"),
 	"blai": preload("res://systems/blai.gd"),
+	"santpau": preload("res://systems/santpau.gd"),
 	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
@@ -714,6 +715,16 @@ var blai_open: Array = []
 var blai_diners: Array = []
 var blai_standers: Array = []
 var blai_delivery: Array = []
+# Sant Pau (systems/santpau.gd): the clock tower chimes, the school tour,
+# the garden beds visited and the outdoor visitors
+var santpau_tour: RefCounted = null
+var santpau_chime_t := 0.0
+var santpau_chime_out := false
+var santpau_chime_home := false
+var santpau_chime_howled := false
+var santpau_beds_visited: Dictionary = {}
+var santpau_sitters: Array = []
+var santpau_sketchers: Array = []
 # El Metro: the walk's state (systems/metro.gd), and its goals' tallies
 var metro: RefCounted = null
 var metro_turnstile_slipped := false
@@ -11184,6 +11195,8 @@ const FREEDOM_KINDS := {
 	"diagonal": "placa",
 	# Plaça del Sortidor, at the top of Carrer de Blai
 	"blai": "placa",
+	# Jardins de Sant Pau, the hospital's garden courtyard
+	"santpau": "yard",
 	# up the stairs at Sant Gos, into its little square
 	"metro": "placa",
 	# the beach where the Dimoni is burned

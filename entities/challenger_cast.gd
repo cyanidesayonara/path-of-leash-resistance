@@ -73,6 +73,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_rider(c, fd, t, s)
 		"cook":
 			_cook(c, fd, t, s)
+		"sketcher":
+			_sketcher(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -841,3 +843,37 @@ static func _instructor(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	if w < 0.5:
 		c.draw_circle(fd * 9.0, 1.8, Color(0.92, 0.92, 0.20))
 
+# Sant Pau: a watercolor painter seated at her easel in the dusk gardens,
+# painting the modernista brick domes from a tin palette and rinse jar
+static func _sketcher(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.88, 0.70, 0.56)
+	var shirt := Color(0.92, 0.88, 0.80)
+	var at := -fd * 7.0
+	_shadow(c, fd * 4.0, 16.0, 16.0)
+	# Wooden easel in front, holding a watercolor wash of brick & turquoise dome
+	var easel := fd * 14.0
+	var wood := Color(0.46, 0.30, 0.18)
+	c.draw_line(easel - side * 8.0 - fd * 2.0, easel + side * 8.0 - fd * 2.0, wood, 2.2)
+	c.draw_line(easel, easel + fd * 5.0, wood, 2.0)
+	c.draw_colored_polygon(_bar(easel, side, 20.0, 13.0), Color(0.96, 0.94, 0.88))
+	c.draw_circle(easel - side * 3.0, 3.2, Color(0.68, 0.30, 0.22, 0.85))
+	c.draw_circle(easel + side * 4.0 - fd * 1.0, 2.8, Color(0.14, 0.62, 0.58, 0.85))
+	c.draw_circle(easel + fd * 2.0, 2.2, Color(0.95, 0.68, 0.16, 0.80))
+	# Tin palette & water jar beside her
+	var pal := at + side * 15.0 + fd * 2.0
+	c.draw_colored_polygon(_bar(pal, side, 8.0, 12.0), Color(0.24, 0.26, 0.28))
+	c.draw_circle(pal - fd * 3.0, 1.6, Color(0.95, 0.68, 0.16))
+	c.draw_circle(pal, 1.6, Color(0.14, 0.62, 0.58))
+	c.draw_circle(pal + fd * 3.0, 1.6, Color(0.76, 0.25, 0.44))
+	var jar := at - side * 14.0 + fd * 5.0
+	c.draw_circle(jar, 3.6, Color(0.76, 0.84, 0.90, 0.85))
+	c.draw_circle(jar, 2.4, Color(0.28, 0.56, 0.62, 0.8))
+	# Painter on her stool, brush moving between palette and paper
+	_seat_legs(c, at, fd, side, Color(0.28, 0.34, 0.44), Color(0.36, 0.22, 0.14))
+	_person(c, at, fd, shirt, skin, Color(0.42, 0.24, 0.14), "bun", "beret", Color(0.76, 0.25, 0.44))
+	_arm(c, at - side * 8.0, at - side * 10.0 + fd * 6.0, shirt, skin)
+	var dab := 0.5 + 0.5 * sin(t * 2.2 + s)
+	var brush_hand := (pal - side * 2.0).lerp(easel + side * 2.0 - fd * 2.0, dab)
+	_arm(c, at + side * 8.0, brush_hand, shirt, skin)
+	c.draw_line(brush_hand, brush_hand + fd * 7.0 - side * 2.0, Color(0.36, 0.22, 0.12), 1.4)

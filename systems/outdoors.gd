@@ -246,3 +246,20 @@ static func gardener_on_balcony(weather: String, hour: String) -> bool:
 # never in the rain.
 static func watering_plants(weather: String, hour: String) -> bool:
 	return (weather == "clear" or weather == "wind") and (hour == "dawn" or hour == "dusk")
+
+
+# Hospital garden benches (Sant Pau): visitors sitting out in dry weather,
+# fullest at dusk and through the day; empty and wet in rain or snow.
+const GARDEN_BENCH_FILL := {"dawn": 0.15, "day": 0.65, "dusk": 0.85, "night": 0.25}
+
+
+static func garden_sitters(weather: String, hour: String) -> float:
+	if weather == "rain" or weather == "snow":
+		return 0.0
+	return float(GARDEN_BENCH_FILL.get(hour, 0.5))
+
+
+# Architecture sketchers and visitors admiring the pavilions: out in dry
+# daylight and dusk, never in rain, snow, or after dark.
+static func sketchers_out(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and hour != "night"

@@ -178,7 +178,8 @@ func _run() -> void:
 	_check(game.CAROUSEL.has("poble"), "poble in Game.CAROUSEL")
 	var esp_idx: int = game.CAROUSEL.find("espanya")
 	var pob_idx: int = game.CAROUSEL.find("poble")
-	_check(esp_idx >= 0 and pob_idx == esp_idx + 1, "poble is directly after espanya in CAROUSEL (%d -> %d)" % [esp_idx, pob_idx])
+	_check(esp_idx >= 0 and pob_idx > esp_idx and pob_idx == game.CAROUSEL.find("santpau") + 1,
+		"poble follows espanya and santpau in CAROUSEL (%d -> %d)" % [esp_idx, pob_idx])
 	_check(String(game.LEVEL_NAMES.get("poble", "")) == "El Poble Espanyol", "LEVEL_NAMES['poble'] is El Poble Espanyol")
 	_check(String(game.LEVEL_SUBTITLES.get("poble", "")) == "The walled village of copied towns", "EN subtitle matches")
 	_check(String(game.LEVEL_SUBTITLES_CA.get("poble", "")) == "El poble emmurallat de pobles copiats", "CA subtitle matches")
