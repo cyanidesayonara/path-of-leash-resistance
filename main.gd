@@ -349,7 +349,8 @@ var lvl := "street":
 # margin pines are forest trees with tree_kind, and sends its mountain bikes
 # down the middle of the track with rider_lane. El Laberint d'Horta draws its
 # gravel, hedges and Eros as draw_cross_section, the gardens round the maze
-# as draw_edge_layer, and the gardener's barrow as draw_live.
+# as draw_edge_layer, and the gardener's barrow as draw_live. Carrer de Blai
+# lays its own terrace tables with draw_table.
 # The tutorial is laid out on El Barri (lvl "barri"), so El Barri's hooks run
 # in it too. tests/test_walk_hooks.gd holds each walk's declared hooks: a new
 # hook in a module, or a helper named like one, fails there until declared.
@@ -378,6 +379,8 @@ const WALK_MODULES := {
 	"espanya": preload("res://systems/espanya.gd"),
 	"eixample": preload("res://systems/eixample.gd"),
 	"diagonal": preload("res://systems/diagonal.gd"),
+	"blai": preload("res://systems/blai.gd"),
+	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
 	"poble": preload("res://systems/poble.gd"),
@@ -685,6 +688,31 @@ var diagonal_tram: RefCounted = null
 var diagonal_tram_dodges := 0
 var diagonal_tram_hits := 0
 var diagonal_kiosk_barked := false
+# Carrer de Blai (systems/blai.gd): the waiters and their trays, pintxos in
+# the air, the "Leave it!" your human has going, the terraces and who is out
+var blai_waiters: Array = []
+var blai_pieces: Array = []
+var blai_spill_at := Vector2.INF
+var blai_spill_wait := 0.0
+var blai_leave: Dictionary = {}
+var blai_leave_cool := 0.0
+var blai_floor_seen := 0
+var blai_leaves := 0
+var blai_gobbled := 0
+var blai_tray_catches := 0
+var blai_trays_tipped := 0
+var blai_begged := 0
+var blai_beg_t := 0.0
+var blai_open: Array = []
+var blai_diners: Array = []
+var blai_standers: Array = []
+var blai_delivery: Array = []
+# El Metro: the walk's state (systems/metro.gd), and its goals' tallies
+var metro: RefCounted = null
+var metro_turnstile_slipped := false
+var metro_surge_held := false
+var metro_door_catches := 0
+var metro_busker_cheered := false
 # Sarrià: the bells, the bakeries, the shutters and the cast (systems/sarria.gd)
 var sarria: RefCounted = null
 # Montserrat: the funicular crossing, rolling boulders, and mel i mató stall
@@ -11088,6 +11116,10 @@ const FREEDOM_KINDS := {
 	"sarria": "placa",
 	# Plaça de les Glòries, where the avenue ends: a plaça with its pigeons
 	"diagonal": "placa",
+	# Plaça del Sortidor, at the top of Carrer de Blai
+	"blai": "placa",
+	# up the stairs at Sant Gos, into its little square
+	"metro": "placa",
 	# the beach where the Dimoni is burned
 	"cremada": "beach",
 	# the cabin of the jet at the end of the bridge (systems/aeroport_cabin.gd)
@@ -12298,6 +12330,9 @@ func _draw_furniture(vt: float, vb: float) -> void:
 	# cafe tables with a little service on them
 	for tb in tables:
 		if tb.y < vt - 40.0 or tb.y > vb + 40.0:
+			continue
+		if walk_mod != null and walk_mod.has_method("draw_table"):
+			walk_mod.draw_table(self, _wc, tb)
 			continue
 		contact_shadow(_wc, tb, 14.0, 9.0, 0.20)
 		# a bistro table: a pale marble top in a dark metal rim, its lit edge on

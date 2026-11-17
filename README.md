@@ -30,7 +30,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Forty walks in and around Barcelona**, each built as its own place, plus a
+- **Forty-two walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -88,12 +88,14 @@ you want to go; constant hauling wears their patience down until they say
 | Els Senglars | the wild boar trail |
 | El Mosaic | the tiled terraces |
 | La Superilla | the superblock play streets |
+| El Metro | down out of the rain and one stop on the metro, at rush hour |
 | L'Estació | the train station |
 | Els Búnquers | the overlook above the city |
 | Plaça Reial | the arcaded square |
 | La Cremada | Badalona's devil night and the Dimoni float |
 | El Fòrum | the seaside esplanade |
 | La Diagonal | the avenue that cuts the grid, and the tram that rides it |
+| Carrer de Blai | the pintxos street, where everything on the floor is food |
 | La Carretera de les Aigües | the hillside hike |
 | Festa de Gràcia | the decorated festival street |
 | El Laberint d'Horta | the cypress maze |
