@@ -3328,6 +3328,14 @@ const FREEDOM_PROPS := {
 		[Vector2(538.0, -536.0), "shrub"], [Vector2(792.0, -522.0), "rock"], [Vector2(842.0, -308.0), "shrub"],
 		[Vector2(942.0, -240.0), "post"], [Vector2(1082.0, -442.0), "rock"],
 	],
+	# the snowfield above the xalet: places to dig in the snow, a fallen log,
+	# rocks under their caps of snow, a piste marker
+	"molina": [
+		[Vector2(226.0, -506.0), "dig"], [Vector2(610.0, -300.0), "dig"], [Vector2(1046.0, -330.0), "dig"],
+		[Vector2(380.0, -540.0), "log"], [Vector2(870.0, -500.0), "log"],
+		[Vector2(160.0, -400.0), "rock"], [Vector2(300.0, -300.0), "rock"], [Vector2(790.0, -540.0), "rock"],
+		[Vector2(1090.0, -460.0), "rock"], [Vector2(950.0, -250.0), "post"],
+	],
 }
 
 
