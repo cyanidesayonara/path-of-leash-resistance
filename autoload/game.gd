@@ -1483,6 +1483,56 @@ func star_str(n: int) -> String:
 	return "*".repeat(n) + "-".repeat(maxi(0, 3 - n))
 
 
+# The campaign's chapters, for the walk select: the carousel cut after each
+# boss walk, so every chapter ends on a boss; a run longer than CHAPTER_MAX
+# between bosses is halved. Derived, so it follows the carousel's order.
+const BOSS_WALKS: Array[String] = ["ciutadella", "guell", "port", "raval"]
+const CHASE_WALKS: Array[String] = ["neteja", "besos", "vet", "boars", "gracia", "cremada", "aeroport", "molina",
+	"montserrat"]
+const CHAPTER_MAX := 12
+
+
+func chapters() -> Array:
+	var out: Array = []
+	var run: Array = []
+	for lv: String in CAROUSEL:
+		run.append(lv)
+		if lv in BOSS_WALKS:
+			out.append_array(_split_chapter(run))
+			run = []
+	if not run.is_empty():
+		out.append_array(_split_chapter(run))
+	return out
+
+
+func _split_chapter(run: Array) -> Array:
+	if run.size() <= CHAPTER_MAX:
+		return [run.duplicate()]
+	var half := ceili(float(run.size()) / 2.0)
+	return [run.slice(0, half), run.slice(half)]
+
+
+func chapter_index(lv: String) -> int:
+	var chs := chapters()
+	for i in range(chs.size()):
+		if lv in (chs[i] as Array):
+			return i
+	return 0
+
+
+# Jump the walk select to the next or previous chapter, landing on the
+# furthest walk the player has open in it (where they are headed), or its
+# first walk when none is open yet.
+func cycle_chapter(dir: int) -> void:
+	var chs := chapters()
+	var walks: Array = chs[wrapi(chapter_index(level_id) + dir, 0, chs.size())]
+	var pick: String = walks[0]
+	for lv: String in walks:
+		if is_unlocked(lv):
+			pick = lv
+	level_id = pick
+
+
 func cycle_level(dir: int) -> void:
 	# cycle the walk select; locked walks show but cannot be started
 	var i := CAROUSEL.find(level_id)

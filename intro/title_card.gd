@@ -2,16 +2,17 @@ class_name IntroTitle
 extends RefCounted
 
 # The title as the intros end on it: PATH OF / LEASH RESISTANCE in the heavy
-# face, cream with a dark outline and a soft drop shadow (the intro's look),
+# face, the theme's cream inked in navy with a magenta drop (the intro's look),
 # and nothing under it. `t` is seconds since the
 # card began; `drop` chooses the entrance: "swing" (hung on a leash from the
 # top and swinging to rest), "slam" (in from the right with a thump), "none"
 # (already there, for when a scene places the letters itself).
 
 const UI := preload("res://hud/ui_kit.gd")
-const CREAM := Color(0.99, 0.95, 0.84)
-const INK := Color(0.07, 0.05, 0.06)
-const SHADOW := Color(0.22, 0.12, 0.06, 0.5)
+# the theme's (hud/ui_kit.gd): cream letters inked in deep navy, a magenta drop
+const CREAM := UI.CREAM
+const INK := UI.NAVY_DEEP
+const SHADOW := Color(UI.MAGENTA.r, UI.MAGENTA.g, UI.MAGENTA.b, 0.85)
 const LEASH := Color(0.70, 0.16, 0.20)
 
 

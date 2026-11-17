@@ -152,6 +152,7 @@
 # Menu tree test
 # every screen reached from the main menu, and back with BACK alone
 --headless --path . --script res://tests/test_menu_tree.gd
+--headless --path . --script res://tests/test_chapters.gd
 
 # Menu layout, wardrobe and dog action animation polish test
 --headless --path . --script res://tests/test_menu_anim_polish.gd

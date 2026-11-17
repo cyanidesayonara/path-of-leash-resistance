@@ -244,8 +244,17 @@ func _run() -> void:
 	main.started = false
 	main.frozen = true
 
-	var progress: Array = main._progress_rows()
-	_check(progress.size() == game.LEVELS.size(), "the progress table lists every walk")
+	# YOUR WALKS is paged by chapter: the pages together list every walk, once
+	var progress: Array = []
+	for pc in range(game.chapters().size()):
+		main.progress_chapter = pc
+		progress.append_array(main._progress_rows())
+	main.progress_chapter = 0
+	var listed := {}
+	for row: Dictionary in progress:
+		listed[String(row.id)] = true
+	_check(progress.size() == game.LEVELS.size() and listed.size() == game.LEVELS.size(),
+		"the progress pages list every walk, once")
 	main.menu_step = 1
 	Flow.open_progress(main)
 	_dump(main, "progress")

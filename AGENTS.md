@@ -330,7 +330,9 @@ the bottom of the screen. A new screen is a new case in all three.
 
 The menus are a tree. The title screen is the MAIN MENU, a list picked with
 up/down: PLAY (the walk select, then GET READY, then the walk; a new player
-is asked the first-time question first), TUTORIAL, WARDROBE, YOUR WALKS,
+is asked the first-time question first; the walk select browses a walk with
+left/right and a chapter with up/down, the chapters being `Game.chapters()`,
+the carousel cut after each boss walk), TUTORIAL, WARDROBE, YOUR WALKS,
 SETTINGS and EXIT GAME. The walk select also opens the wardrobe (pee).
 Mid-walk, the pause grid. One rule everywhere: **confirm is the plant
 action; BACK is the bark action or the pause action**, shown in the prompt
