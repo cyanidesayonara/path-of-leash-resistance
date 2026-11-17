@@ -186,15 +186,19 @@ static func _plinth(c: CanvasItem, t: float) -> void:
 # `walking` swings the legs; `trunk` raises the trunk; `ear` twitches the
 # hair over his ear; `rage` is his charge: the body leaning in, the head down
 # and the tusks levelled, the hair along his back on end, the eye narrowed,
-# the mouth open when he trumpets. Shared with the card.
+# the mouth open when he trumpets; `sit` lowers him onto his haunches (the
+# win film's). Returns the trunk's tip. Shared with the card and the win film.
 static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, walking: bool,
-		trunk: float, ear := 0.0, rage := 0.0) -> void:
+		trunk: float, ear := 0.0, rage := 0.0, sit := 0.0) -> Vector2:
 	var p := func(v: Vector2) -> Vector2: return at + v * k
-	# the body and head lean into the charge; the legs stay planted
-	var lean := 0.05 * rage
-	var q := func(v: Vector2) -> Vector2: return at + v.rotated(lean) * k
+	# the body and head lean into the charge, or tip back onto the haunches to
+	# sit, turning about the front hips; the feet stay planted
+	var lean := 0.05 * rage - 0.2 * sit
+	var pivot := Vector2(120, -190)
+	var drop := Vector2(0, 30) * sit
+	var q := func(v: Vector2) -> Vector2: return at + (pivot + (v - pivot).rotated(lean) + drop) * k
 	var hd := Vector2(20, 40) * rage    # the head dropped to charge
-	var hq := func(v: Vector2) -> Vector2: return at + (v + hd).rotated(lean) * k
+	var hq := func(v: Vector2) -> Vector2: return at + (pivot + (v + hd - pivot).rotated(lean) + drop) * k
 	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(10, 4) * k, Vector2(210, 16) * k), Color(0, 0, 0, 0.35))
 	# the far tusk, behind everything
 	_mamut_tusk(c, hq, Vector2(206, -324), k, rage, 0.9, MAMUT_TUSK_DARK)
@@ -203,13 +207,17 @@ static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, 
 		var hip: Vector2 = [Vector2(-150, -190), Vector2(100, -190), Vector2(-112, -190), Vector2(136, -190)][i]
 		var swing := sin(t * 5.0 + float(i) * 1.6) * 0.14 if walking else 0.0
 		var foot: Vector2 = hip + Vector2.from_angle(PI * 0.5 + swing) * 186.0
+		if hip.x < 0.0:
+			# sitting, the hind legs fold forward under him
+			foot = foot.lerp(Vector2(hip.x + 90.0, -10.0), sit)
 		var col := MAMUT_DARK if i < 2 else MAMUT
-		c.draw_line(p.call(hip), p.call(foot), INK, 74.0 * k)
-		c.draw_line(p.call(hip), p.call(foot), col, 66.0 * k)
-		c.draw_line(p.call(hip + Vector2(-14, 0)), p.call(foot + Vector2(-14, -20)), col.lightened(0.08), 14.0 * k)
+		c.draw_line(q.call(hip), p.call(foot), INK, 74.0 * k)
+		c.draw_line(q.call(hip), p.call(foot), col, 66.0 * k)
+		c.draw_line(q.call(hip + Vector2(-14, 0)), p.call(foot + Vector2(-14, -20)), col.lightened(0.08), 14.0 * k)
 		for r in range(3):
 			var rx := -18.0 + float(r) * 18.0
-			c.draw_line(p.call(hip + Vector2(rx, 10)), p.call(hip.lerp(foot, 0.75) + Vector2(rx, 0)), MAMUT_RIB, 3.0 * k)
+			c.draw_line(q.call(hip + Vector2(rx, 10)), q.call(hip + Vector2(rx, 10)).lerp(p.call(foot + Vector2(rx, 0)), 0.72),
+				MAMUT_RIB, 3.0 * k)
 		c.draw_colored_polygon(MillieSide.ellipse(p.call(foot), Vector2(40, 12) * k), col.darkened(0.15))
 		for n in range(3):
 			c.draw_circle(p.call(foot + Vector2(-18.0 + float(n) * 18.0, -5.0)), 7.0 * k, MAMUT_TUSK.darkened(0.1))
@@ -308,6 +316,7 @@ static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, 
 			0.8 * (1.0 - sn) * o)
 	# the near tusk, over the trunk
 	_mamut_tusk(c, hq, Vector2(232, -312), k, rage, 1.0, MAMUT_TUSK)
+	return trunk_pts[11]
 
 
 # where his back is at x along him, for the hair ribs to start from

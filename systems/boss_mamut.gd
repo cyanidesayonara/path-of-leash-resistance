@@ -31,12 +31,12 @@ const Kit := preload("res://hud/ui_kit.gd")
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
 # --- Colors ------------------------------------------------------------------
-const STONE := Color(0.53, 0.49, 0.45)
-const STONE_DARK := Color(0.37, 0.34, 0.31)
-const STONE_LIT := Color(0.68, 0.64, 0.59)
-const FUR := Color(0.45, 0.41, 0.37)
-const TUSK := Color(0.93, 0.89, 0.79)
-const TUSK_DARK := Color(0.76, 0.71, 0.60)
+const STONE := Color(0.74, 0.53, 0.41)
+const STONE_DARK := Color(0.50, 0.34, 0.26)
+const STONE_LIT := Color(0.86, 0.67, 0.53)
+const FUR := Color(0.60, 0.41, 0.31)
+const TUSK := Color(0.90, 0.88, 0.83)
+const TUSK_DARK := Color(0.42, 0.38, 0.34)
 const MOSS := Color(0.40, 0.52, 0.30, 0.55)
 const EYE_AMBER := Color(0.98, 0.80, 0.30)
 const EYE_RED := Color(1.0, 0.30, 0.14)
@@ -1480,55 +1480,73 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 			for n in range(3):
 				var toe := lp + f * 14.0 + s * (float(n) - 1.0) * 7.0
 				b.circle(toe, 3.2, TUSK_DARK)
-	# the shaggy body: a fringe of tufts round a domed back
+	# the body from above: long, the hair's ragged edge all round it, the
+	# shoulders a hump behind the head, ribs of carved hair running out from
+	# the spine to the flanks
 	var body_c := c - f * 10.0
 	if sat:
 		body_c = c - f * 22.0
-	for i in range(18):
-		var a := float(i) * TAU / 18.0
-		var e := body_c + f * cos(a) * 62.0 + s * sin(a) * 52.0
-		b.circle(e, 15.0, FUR.darkened(0.15))
-	b.polygon(_ellipse(body_c, f, 64.0, 54.0, 22), stone)
-	b.polygon(_ellipse(body_c - Shade.light * 6.0 - f * 6.0, f, 48.0, 38.0, 18), STONE_LIT.lerp(stone, 0.4))
-	# fur strokes down his back
-	for i in range(7):
-		var off := (float(i) - 3.0) * 12.0
-		var p0 := body_c - f * 40.0 + s * off
-		b.line(p0, p0 + f * 50.0 + s * off * 0.15, FUR.darkened(0.25), 2.0)
-	b.circle(body_c + s * 24.0 - f * 20.0, 6.0, MOSS)
-	b.circle(body_c - s * 30.0 + f * 6.0, 4.0, MOSS)
-	# the domed head, small ears, eyes
+	var rim := PackedVector2Array()
+	var rim_in := PackedVector2Array()
+	for i in range(30):
+		var a := float(i) * TAU / 30.0
+		var rr := 1.0 + 0.07 * sin(float(i) * 2.7) + (0.08 if i % 2 == 0 else 0.0)
+		var e := f * cos(a) * 68.0 * rr + s * sin(a) * 56.0 * rr
+		rim.append(body_c + e)
+		rim_in.append(body_c + e * 0.93)
+	b.polygon(rim, STONE_DARK)
+	b.polygon(rim_in, stone)
+	# the hump over the shoulders, the light along the spine
+	b.polygon(_ellipse(body_c + f * 16.0 - Shade.light * 4.0, f, 40.0, 34.0, 18), STONE_LIT.lerp(stone, 0.45))
+	b.line(body_c - f * 56.0, body_c + f * 44.0, STONE_LIT, 5.0)
+	for j in range(9):
+		var along := -48.0 + float(j) * 11.5
+		for sd: float in [-1.0, 1.0]:
+			var p0 := body_c + f * along + s * sd * 5.0
+			var reach := 50.0 * sqrt(maxf(0.0, 1.0 - pow(along / 68.0, 2.0)))
+			b.line(p0, p0 + s * sd * reach * 0.9 - f * 8.0, FUR, 2.0)
+	# the domed head, its crown peak, the hair over where the ears are
 	var head := c + f * 50.0
 	if sat:
 		head = c + f * 34.0
 	var ear_w := sin(ear_t * 30.0) * 4.0 if ear_t > 0.0 else 0.0
 	for sd: float in [-1.0, 1.0]:
-		b.circle(head + s * sd * (32.0 + ear_w * sd) - f * 8.0, 13.0, FUR.darkened(0.2))
-	b.circle(head, 34.0, stone.darkened(0.05))
-	b.circle(head - f * 6.0 - Shade.light * 4.0, 22.0, STONE_LIT)
-	b.circle(head - f * 14.0, 10.0, STONE_LIT.lightened(0.1))
+		b.circle(head + s * sd * (30.0 + ear_w * sd) - f * 10.0, 12.0, STONE_DARK)
+		b.circle(head + s * sd * (29.0 + ear_w * sd) - f * 10.0, 9.0, FUR)
+	b.circle(head, 35.0, STONE_DARK)
+	b.circle(head, 32.0, stone.darkened(0.03))
+	b.circle(head - f * 8.0 - Shade.light * 4.0, 20.0, STONE_LIT.lerp(stone, 0.3))
+	b.circle(head - f * 12.0 - Shade.light * 5.0, 9.0, STONE_LIT.lightened(0.08))
+	for j in range(6):
+		var a := f.angle() + PI + (float(j) - 2.5) * 0.42
+		b.line(head + Vector2.from_angle(a) * 12.0, head + Vector2.from_angle(a) * 30.0, FUR, 1.8)
+	# the eyes, on the sides of the head; red when he is enraged
 	var eye_col := EYE_RED if enraged and hp > 0.0 else EYE_AMBER
 	for sd: float in [-1.0, 1.0]:
-		var ep := head + f * 14.0 + s * sd * 16.0
+		var ep := head - f * 2.0 + s * sd * 26.0
 		if awake and state != State.SAT:
-			b.circle(ep, 5.0, Color(0.12, 0.10, 0.08))
+			b.circle(ep, 5.0, Color(0.12, 0.08, 0.06))
 			b.circle(ep, 3.4, eye_col.lerp(Color.WHITE, 0.2 * sin(t * 6.0)))
 		else:
 			# closed: asleep as a statue, or content
-			b.line(ep - s * 4.0, ep + s * 4.0, Color(0.22, 0.20, 0.18), 2.0)
-	# the tusks: long, curving out and back in
+			b.line(ep - f * 4.0, ep + f * 4.0, Color(0.30, 0.20, 0.15), 2.0)
+	# the tusks: out of the face they sweep forward, then curl outward and back
+	# round into spirals that taper to points, the Ciutadella's great loops
 	for sd: float in [-1.0, 1.0]:
-		var p0 := head + f * 20.0 + s * sd * 14.0
-		var p1 := p0 + f * 26.0 + s * sd * 18.0
-		var p2 := p1 + f * 26.0 + s * sd * 2.0
-		var p3 := p2 + f * 10.0 - s * sd * 14.0
-		b.line(p0, p1, TUSK_DARK, 9.0)
-		b.line(p1, p2, TUSK_DARK, 7.5)
-		b.line(p2, p3, TUSK_DARK, 5.5)
-		b.line(p0, p1, TUSK, 6.0)
-		b.line(p1, p2, TUSK, 5.0)
-		b.line(p2, p3, TUSK, 3.5)
-		b.circle(p3, 2.2, TUSK)
+		var tp := head + f * 22.0 + s * sd * 12.0
+		# each curls outward, staying on its own side of the trunk
+		var ang := f.angle() - sd * 0.12
+		var pts := PackedVector2Array([tp])
+		for j in range(13):
+			tp += Vector2.from_angle(ang) * (10.5 - float(j) * 0.4)
+			ang -= sd * 0.30
+			pts.append(tp)
+		for j in range(pts.size() - 1):
+			var w := lerpf(8.0, 1.4, float(j) / float(pts.size() - 2))
+			b.capsule(pts[j], pts[j + 1], w + 1.8, TUSK_DARK)
+		for j in range(pts.size() - 1):
+			var w := lerpf(8.0, 1.4, float(j) / float(pts.size() - 2))
+			b.capsule(pts[j], pts[j + 1], w, TUSK)
 	# the trunk: a tapering chain from the face to the tip
 	var tip := trunk_tip() + lift
 	var root := head + f * 26.0
@@ -1537,8 +1555,12 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 		var u := float(i) / 8.0
 		var p := root.lerp(mid, u).lerp(mid.lerp(tip, u), u)
 		var r := lerpf(13.0, 6.0, u)
-		b.circle(p + Shade.light * 1.5, r, stone.darkened(0.22))
+		b.circle(p + Shade.light * 1.5, r, STONE_DARK)
 		b.circle(p, r - 1.5, stone.darkened(0.04))
+		if i % 2 == 1:
+			# the wrinkles ringing the trunk
+			var dn := (root.lerp(mid, u + 0.06).lerp(mid.lerp(tip, u + 0.06), u + 0.06) - p).normalized().orthogonal()
+			b.line(p - dn * (r - 2.0), p + dn * (r - 2.0), FUR, 1.6)
 	b.circle(tip, 6.5, stone.darkened(0.25))
 	b.circle(tip, 3.0, Color(0.22, 0.20, 0.18))
 	if state == State.STUNNED or state == State.SAT:
