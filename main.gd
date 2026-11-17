@@ -1458,7 +1458,7 @@ func _music_cue() -> String:
 		if challenge.phase == "offer" and not challenge.waiting:
 			return ""
 		if challenge.phase == "live":
-			return "dare_" + String(challenge_giver.who)
+			return challenge_giver.tune()
 	return Music.walk_style(lvl)
 
 
@@ -1485,7 +1485,7 @@ func _music_next() -> String:
 		return Music.walk_style(lvl)
 	# a dare on offer: its tune, ready for when she takes it
 	if challenge != null and challenge.phase == "offer" and is_instance_valid(challenge_giver):
-		return "dare_" + String(challenge_giver.who)
+		return challenge_giver.tune()
 	return "freedom" if phase != "home" else ""
 
 

@@ -3,6 +3,7 @@ extends Node2D
 const HumanLook := preload("res://entities/human_appearance.gd")
 const SpeechBubble := preload("res://world/speech_bubble.gd")
 const TutorialSteps := preload("res://systems/tutorial.gd")
+const Cast := preload("res://entities/challenger_cast.gd")
 
 # The dare-giver (Combo Phase B): somebody on the walk who dares you into a
 # bounded trick window as you pass. Who it is depends on the walk (WHO): a
@@ -35,22 +36,49 @@ const RETRY_WAIT := 5.0
 # trick count and seconds, easiest first
 const LADDER := [[6, 20.0], [8, 20.0], [10, 20.0]]
 
-# who gives the dare on each walk; anywhere not listed, the kid
+# who gives the dare on each walk; anywhere not listed (El Barri, the First
+# Walk), the kid from your street. Most of the walks' own cast is drawn in
+# entities/challenger_cast.gd.
 const WHO := {"beach": "monkey", "street": "statue", "port": "fisher", "site": "builder", "besos": "skater",
 	"oldtown": "busker", "market": "avia", "montjuic": "runner", "guell": "painter", "partit": "fan",
-	"station": "commuter", "metro": "breaker"}
+	"station": "commuter", "metro": "breaker",
+	"park": "kite", "rain": "umbrella", "sarria": "baker", "trail": "picker", "spook": "castanyera",
+	"scrap": "scrapper", "neteja": "nightowl", "reial": "flamenco", "vet": "catlady", "tibidabo": "balloons",
+	"aigues": "hiker", "horta": "gardener", "llevant": "surfer", "boars": "ranger", "gracia": "drummer",
+	"carmel": "photographer", "superilla": "chess", "forum": "drone", "espanya": "bubbles", "raval": "fortune",
+	"eixample": "guide", "angels": "skateboarder", "poble": "potter", "ciutadella": "juggler", "cremada": "devil",
+	"aeroport": "pilot", "montserrat": "monk", "diagonal": "rider", "blai": "cook"}
+
+# whose dare tune each of the cast plays (audio/music.gd DARES), the nearest
+# in mood among the tunes there are; a giver not listed has a tune of its own
+const TUNE := {"kite": "kid", "umbrella": "commuter", "baker": "avia", "picker": "fisher", "castanyera": "avia",
+	"scrapper": "builder", "nightowl": "breaker", "flamenco": "busker", "catlady": "statue", "balloons": "monkey",
+	"hiker": "runner", "gardener": "painter", "surfer": "skater", "ranger": "fisher", "drummer": "fan",
+	"photographer": "painter", "chess": "statue", "drone": "runner", "bubbles": "statue", "fortune": "statue",
+	"guide": "commuter", "skateboarder": "skater", "potter": "painter", "juggler": "monkey", "devil": "fan",
+	"pilot": "commuter", "monk": "statue", "rider": "builder", "cook": "busker"}
 
 # where they are on a walk whose spot main's rule (either side of the
-# corridor 1600 px in) would put on something: on El Metro that is the
-# escalator, so the breakdancer has the ticket hall's west wall instead
-const AT := {"metro": Vector2(445.0, -1430.0)}
+# corridor 1600 px in) would put on something or under it: El Metro's
+# escalator, a palm's crown on Plaça Reial, the solar pergola on El Fòrum
+const AT := {"metro": Vector2(445.0, -1430.0), "reial": Vector2(800.0, -1850.0), "forum": Vector2(820.0, -1150.0)}
 
 # what each of them sits or stands on, solid and wrapping the leash; the
 # monkey's marble block is the walk's own (LevelBuild.beach_block_stones)
 const FOOTPRINT := {"kid": Vector2(28.0, 62.0), "statue": Vector2(30.0, 30.0), "fisher": Vector2(26.0, 26.0),
 	"builder": Vector2(24.0, 24.0), "skater": Vector2(20.0, 20.0), "monkey": Vector2.ZERO,
 	"busker": Vector2(24.0, 24.0), "avia": Vector2(22.0, 22.0), "runner": Vector2(18.0, 18.0),
-	"painter": Vector2(26.0, 26.0), "fan": Vector2(20.0, 20.0), "commuter": Vector2(28.0, 22.0), "breaker": Vector2(24.0, 24.0)}
+	"painter": Vector2(26.0, 26.0), "fan": Vector2(20.0, 20.0), "commuter": Vector2(28.0, 22.0), "breaker": Vector2(24.0, 24.0),
+	"kite": Vector2(20.0, 20.0), "umbrella": Vector2(22.0, 22.0), "baker": Vector2(22.0, 22.0),
+	"picker": Vector2(24.0, 22.0), "castanyera": Vector2(28.0, 28.0), "scrapper": Vector2(26.0, 26.0),
+	"nightowl": Vector2(18.0, 18.0), "flamenco": Vector2(24.0, 24.0), "catlady": Vector2(24.0, 22.0),
+	"balloons": Vector2(20.0, 20.0), "hiker": Vector2(22.0, 22.0), "gardener": Vector2(20.0, 20.0),
+	"surfer": Vector2(22.0, 22.0), "ranger": Vector2(20.0, 20.0), "drummer": Vector2(22.0, 22.0),
+	"photographer": Vector2(22.0, 22.0), "chess": Vector2(30.0, 30.0), "drone": Vector2(20.0, 20.0),
+	"bubbles": Vector2(20.0, 20.0), "fortune": Vector2(28.0, 28.0), "guide": Vector2(20.0, 20.0),
+	"skateboarder": Vector2(20.0, 20.0), "potter": Vector2(28.0, 28.0), "juggler": Vector2(20.0, 20.0),
+	"devil": Vector2(20.0, 20.0), "pilot": Vector2(24.0, 22.0), "monk": Vector2(22.0, 22.0),
+	"rider": Vector2(24.0, 24.0), "cook": Vector2(20.0, 20.0)}
 
 # What each of them says, as people talk, each line starting with a capital. "dare" always names
 # the numbers as "N tricks in N seconds", and the bubble adds TAKE while the dare waits
@@ -101,13 +129,108 @@ const LINES := {
 	"breaker": {"idle": "Yo, dog! Want a dare?", "dare": "%d tricks in %d seconds! Show me your moves!",
 		"won": "Fresh! Come back for a harder one!", "lost": "Lost the beat! Come back and try again.",
 		"done": "You're in the crew now."},
+	"kite": {"idle": "Hey, dog! Want a dare?", "dare": "%d tricks in %d seconds, before the wind drops!",
+		"won": "Up and away! Come back for a harder one.", "lost": "Tangled! Come back and try again.",
+		"done": "You fly higher than my kite."},
+	"umbrella": {"idle": "Umbrella? No? A dare, then.", "dare": "%d tricks in %d seconds, before the rain stops!",
+		"won": "Dry as a bone! Come back for a harder one.", "lost": "Soaked! Come back and try again.",
+		"done": "Take an umbrella. On the house."},
+	"baker": {"idle": "Morning, dog! Want a dare?", "dare": "%d tricks in %d seconds, before the bread's out!",
+		"won": "Fresh out of the oven! Come back for a harder one.", "lost": "Half-baked! Come back and try again.",
+		"done": "You've earned a crust."},
+	"picker": {"idle": "Shh, mushrooms. Want a dare?", "dare": "%d tricks in %d seconds, while I fill my basket!",
+		"won": "A real find! Come back for a harder one.", "lost": "Wrong mushroom! Come back and try again.",
+		"done": "Best find of the season."},
+	"castanyera": {"idle": "Hot chestnuts! Or a dare?", "dare": "%d tricks in %d seconds, before they burn!",
+		"won": "Nicely roasted! Come back for a harder one.", "lost": "Gone cold! Come back and try again.",
+		"done": "A cone on the house, dog."},
+	"scrapper": {"idle": "Anything metal? No? A dare, then.", "dare": "%d tricks in %d seconds! Scrap or treasure?",
+		"won": "Treasure! Come back for a harder one.", "lost": "Scrap! Come back and try again.",
+		"done": "Worth your weight in copper."},
+	"nightowl": {"idle": "Still up? Me too. Want a dare?", "dare": "%d tricks in %d seconds, before the sun's up!",
+		"won": "What a night! Come back for a harder one.", "lost": "Lights out! Come back and try again.",
+		"done": "Best part of my night."},
+	"flamenco": {"idle": "Olé! Want a dare?", "dare": "%d tricks in %d seconds, in time with my heels!",
+		"won": "Olé, olé! Come back for a harder one!", "lost": "Missed the beat! Come back and try again.",
+		"done": "You've got duende, dog."},
+	"catlady": {"idle": "Mittens says hi. Want a dare?", "dare": "%d tricks in %d seconds! Mittens is watching.",
+		"won": "Even Mittens is impressed! Come back for a harder one.", "lost": "Mittens yawned. Come back and try again.",
+		"done": "Mittens wants your autograph."},
+	"balloons": {"idle": "Balloon, dog? Or a dare?", "dare": "%d tricks in %d seconds, before one floats off!",
+		"won": "Pop! Come back for a harder one!", "lost": "Floated off! Come back and try again.",
+		"done": "You get the big red one."},
+	"hiker": {"idle": "Long way up. Want a dare?", "dare": "%d tricks in %d seconds, while I catch my breath!",
+		"won": "Peak performance! Come back for a harder one.", "lost": "Uphill battle! Come back and try again.",
+		"done": "You should lead the hike."},
+	"gardener": {"idle": "Mind the hedges. Want a dare?", "dare": "%d tricks in %d seconds, while I trim!",
+		"won": "Neat work! Come back for a harder one.", "lost": "Overgrown! Come back and try again.",
+		"done": "Even the maze is impressed."},
+	"surfer": {"idle": "No waves today. Want a dare?", "dare": "%d tricks in %d seconds! Ride it out!",
+		"won": "Gnarly! Come back for a harder one!", "lost": "Wiped out! Come back and try again.",
+		"done": "You're shredding, dog."},
+	"ranger": {"idle": "Seen any boars? A dare, then.", "dare": "%d tricks in %d seconds, before the boars show up!",
+		"won": "Wild! Come back for a harder one.", "lost": "Lost the trail! Come back and try again.",
+		"done": "You're going in my report."},
+	"drummer": {"idle": "It's the festa! Want a dare?", "dare": "%d tricks in %d seconds, to my drum!",
+		"won": "Bang on! Come back for a harder one!", "lost": "Out of time! Come back and try again.",
+		"done": "Lead the parade, dog."},
+	"photographer": {"idle": "Golden hour! Want a dare?", "dare": "%d tricks in %d seconds! I'll shoot the lot.",
+		"won": "Got the shot! Come back for a harder one.", "lost": "Blurry! Come back and try again.",
+		"done": "Cover shot, right there."},
+	"chess": {"idle": "Your move. Want a dare?", "dare": "%d tricks in %d seconds. Check?",
+		"won": "Checkmate! Come back for a harder one.", "lost": "Stalemate! Come back and try again.",
+		"done": "Grandmaster dog."},
+	"drone": {"idle": "Look up! Want a dare?", "dare": "%d tricks in %d seconds! I'm filming.",
+		"won": "Great footage! Come back for a harder one.", "lost": "Battery low! Come back and try again.",
+		"done": "You're going viral."},
+	"bubbles": {"idle": "Pop one! Or take a dare?", "dare": "%d tricks in %d seconds, before this one pops!",
+		"won": "Magic! Come back for a harder one.", "lost": "Popped! Come back and try again.",
+		"done": "The fountains are jealous."},
+	"fortune": {"idle": "I see a dare in your future.", "dare": "%d tricks in %d seconds. The cards say so!",
+		"won": "Foreseen! Come back for a harder one.", "lost": "Not in the cards! Come back and try again.",
+		"done": "Your future is very bright, dog."},
+	"guide": {"idle": "This way, everyone! You too. A dare?", "dare": "%d tricks in %d seconds, then the basilica!",
+		"won": "Five stars! Come back for a harder one.", "lost": "Lost the group! Come back and try again.",
+		"done": "Best stop on the tour."},
+	"skateboarder": {"idle": "Sup, dog? Want a dare?", "dare": "%d tricks in %d seconds! Land them clean!",
+		"won": "Clean! Come back for a harder one!", "lost": "Slam! Come back and try again.",
+		"done": "You run this plaza."},
+	"potter": {"idle": "Careful, wet clay. Want a dare?", "dare": "%d tricks in %d seconds, while the wheel spins!",
+		"won": "Fired up! Come back for a harder one.", "lost": "Cracked! Come back and try again.",
+		"done": "I'll make you a bowl."},
+	"juggler": {"idle": "Catch! No? A dare, then.", "dare": "%d tricks in %d seconds! Don't drop any!",
+		"won": "Not one dropped! Come back for a harder one.", "lost": "Dropped it! Come back and try again.",
+		"done": "Join the circus, dog."},
+	"devil": {"idle": "Dare to play with fire, pup?", "dare": "%d tricks in %d seconds, before my sparks run out!",
+		"won": "Devilish! Come back for a harder one!", "lost": "Fizzled out! Come back and try again.",
+		"done": "You're a little devil."},
+	"pilot": {"idle": "Boarding soon. Want a dare?", "dare": "%d tricks in %d seconds, before takeoff!",
+		"won": "Smooth landing! Come back for a harder one.", "lost": "Grounded! Come back and try again.",
+		"done": "Cleared for takeoff, captain."},
+	"monk": {"idle": "Peace, dog. A dare, perhaps?", "dare": "%d tricks in %d seconds. I'll pray for you.",
+		"won": "A miracle! Come back for a harder one.", "lost": "Patience, my child. Come back and try again.",
+		"done": "Bless you, dog."},
+	"rider": {"idle": "My order's late anyway. Want a dare?", "dare": "%d tricks in %d seconds, before the next order!",
+		"won": "Delivered! Come back for a harder one.", "lost": "Wrong address! Come back and try again.",
+		"done": "Five stars, dog."},
+	"cook": {"idle": "Kitchen's hot. Want a dare?", "dare": "%d tricks in %d seconds, before the croquetas burn!",
+		"won": "Chef's kiss! Come back for a harder one.", "lost": "Overcooked! Come back and try again.",
+		"done": "Anything on the menu, dog. On me."},
 }
 
 # who they are, for the result card
 const NAMES := {"kid": "the kid", "monkey": "the monkey", "statue": "the statue", "fisher": "the fisherman",
 	"builder": "the builder", "skater": "the skater", "busker": "the busker", "avia": "the àvia",
 	"runner": "the runner", "painter": "the painter", "fan": "the fan", "commuter": "the commuter",
-	"breaker": "the breakdancer"}
+	"breaker": "the breakdancer", "kite": "the kite flyer", "umbrella": "the umbrella seller", "baker": "the baker",
+	"picker": "the mushroom picker", "castanyera": "the chestnut seller", "scrapper": "the scrap dealer",
+	"nightowl": "the night owl", "flamenco": "the flamenco dancer", "catlady": "the cat owner",
+	"balloons": "the balloon seller", "hiker": "the hiker", "gardener": "the gardener", "surfer": "the surfer",
+	"ranger": "the ranger", "drummer": "the drummer", "photographer": "the photographer",
+	"chess": "the chess player", "drone": "the drone pilot", "bubbles": "the bubble maker",
+	"fortune": "the fortune teller", "guide": "the tour guide", "skateboarder": "the skateboarder",
+	"potter": "the potter", "juggler": "the juggler", "devil": "the devil", "pilot": "the pilot",
+	"monk": "the monk", "rider": "the delivery rider", "cook": "the cook"}
 
 var main: Node2D
 var my_dog: Node2D
@@ -122,6 +245,8 @@ var left_since := false
 var _said := ""
 # whether the dare on offer is one she lost before (kept if the offer lapses)
 var _was_again := false
+# whether this giver's drawing moves (see _physics_process)
+var _moves := false
 
 
 func setup(m: Node2D, mine: Node2D, giver := "kid") -> void:
@@ -129,6 +254,7 @@ func setup(m: Node2D, mine: Node2D, giver := "kid") -> void:
 	main = m
 	my_dog = mine
 	who = giver if LINES.has(giver) else "kid"
+	_moves = who == "breaker" or (TUNE.has(who) and Cast.animates(who))
 	# derived from position, never the global RNG - spawning this must not
 	# desync the deterministic autowalk traversal
 	seed_o = fmod(absf(position.x) * 0.017, TAU)
@@ -152,6 +278,15 @@ static func giver_for(lvl: String) -> String:
 	return String(WHO.get(lvl, "kid"))
 
 
+# The music cue for a giver's dare (audio/music.gd DARES).
+static func tune_of(giver: String) -> String:
+	return "dare_" + String(TUNE.get(giver, giver))
+
+
+func tune() -> String:
+	return tune_of(who)
+
+
 # How close she has to come before they notice her. The monkey sits up on
 # the pier's steps, off the promenade, so he calls to her from further off.
 func notice_r() -> float:
@@ -166,9 +301,10 @@ func _physics_process(delta: float) -> void:
 	if said != _said:
 		_said = said
 		Redraw.later(self)
-	# the breakdancer's routine is the act itself, so he redraws while she is
-	# near enough to see it (the others hold their pose between lines)
-	if who == "breaker" and my_dog.global_position.distance_squared_to(global_position) < 640000.0:
+	# a giver whose act moves (the breakdancer's routine, the juggler's clubs,
+	# the devil's sparks) redraws while she is near enough to see it; the
+	# rest hold their pose between lines
+	if _moves and my_dog.global_position.distance_squared_to(global_position) < 640000.0:
 		Redraw.later(self)
 	# only offer while walking out - not mid off-leash romp or the way home
 	if main.phase != "out":
@@ -288,7 +424,8 @@ func _draw() -> void:
 		"breaker":
 			_draw_breaker(fd)
 		_:
-			_draw_kid(fd)
+			if not Cast.draw(self, who, fd, AnimClock.msec() / 1000.0, seed_o):
+				_draw_kid(fd)
 
 
 # What they are saying, for the world's speech layer (world/pops_layer.gd),
