@@ -11,20 +11,24 @@ enum HState { WALK, STOPPED, DRIFT, DASH, SELFIE, FILM, SIGNAL, CALL, WHIRL, GO_
 const WALK_SPEED := 92.0
 # the whirl's orbit radius, and how fast it tightens onto it from wherever
 # the owner was when it began (px/s)
-const WHIRL_R := 30.0
+const WHIRL_R := 38.0
 const WHIRL_TIGHTEN := 200.0
 var whirl_r := WHIRL_R
 # The whirl, tuned. Spin-up is rad/s^2: a base rate plus whatever the dog is
 # pulling with (main.gd feeds whirl_pull the leash tension, so the pole works
 # as a pulley), and the pull fades over the frames after it stops.
-const WHIRL_SPIN_BASE := 8.0
-const WHIRL_SPIN_PER_PULL := 0.016
-const WHIRL_OMEGA_MAX := 24.0
+const WHIRL_SPIN_BASE := 7.0
+const WHIRL_SPIN_PER_PULL := 0.009
+const WHIRL_OMEGA_MAX := 20.0
 const WHIRL_PULL_DECAY := 0.9
 # how much faster than the orbit she spins on the spot, for the look of it
-const WHIRL_SPIN_LOOK := 1.4
+# the omega an orbit starts at, whatever she came in with: slow enough that
+# the lift-off reads before it whips round
+const WHIRL_OMEGA_START := Vector2(5.0, 9.0)
+# a whoosh every time she comes round, higher the faster she goes
+const WHIRL_SWISH_PITCH := Vector2(0.75, 1.5)
 # the fling: px/s per rad/s of orbit, floored and capped
-const WHIRL_FLING_PER_OMEGA := 54.0
+const WHIRL_FLING_PER_OMEGA := 64.0
 const WHIRL_FLING_MIN := 360.0
 const WHIRL_FLING_MAX := 950.0
 # Release. The launch is the tangent, once it points within this cone of the
@@ -46,6 +50,8 @@ const WHIRL_BAIL_SPEED := 260.0
 const WHIRL_BAIL_STUMBLE := 0.7
 # how long she reads as stretched out along a fling after one. Cosmetic.
 const WHIRL_STRETCH_T := 0.35
+# where her hand is on the leash, as entities/leash.gd clips the rope to it
+const WHIRL_HAND := Vector2(9.0, -16.0)
 const PANIC_SPEED := 230.0
 
 # how far before and after an island the owner is already on its side
@@ -100,6 +106,8 @@ var whirl_flung_t := 0.0
 # set when an orbit was abandoned rather than flung, so main.gd can keep the
 # rope slipping while she staggers clear without paying her for a fling
 var whirl_bailed := false
+# where the last whoosh of the orbit was, as an angle round the pole
+var _swish_at := 0.0
 var face_dir := Vector2.UP
 var hgait := 0.0
 # Draw-only motion for terminal beats; gameplay state remains at the caught
@@ -435,7 +443,15 @@ func tick(delta: float) -> void:
 				whirl_r = move_toward(whirl_r, WHIRL_R, WHIRL_TIGHTEN * delta)
 				global_position = whirl_pole + Vector2.from_angle(whirl_angle) * whirl_r
 				velocity = Vector2.from_angle(whirl_angle + whirl_dir * PI / 2.0) * whirl_omega * whirl_r
-				rotation += whirl_dir * whirl_omega * WHIRL_SPIN_LOOK * delta
+				# held out flat at the end of the leash: the hand, where the rope
+				# is clipped (leash.hand_offset), always toward the pole, so the
+				# rope runs straight from her grip and her body flies out
+				# behind it (_draw_whirl_body)
+				rotation = (whirl_pole - global_position).angle() - WHIRL_HAND.angle()
+				if absf(whirl_angle - _swish_at) >= PI:
+					_swish_at = whirl_angle
+					var f := clampf(whirl_omega / WHIRL_OMEGA_MAX, 0.0, 1.0)
+					Sfx.play("fling", lerpf(WHIRL_SWISH_PITCH.x, WHIRL_SWISH_PITCH.y, f), -14.0 + 6.0 * f)
 				# Orbit EXACTLY the wound amount (over-orbiting re-wraps the
 				# rope the other way and the fling gets arrested), then hold
 				# for the tangent to sweep toward the dog - at most
@@ -1084,7 +1100,8 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	# the orbit starts where they are and tightens in, rather than snapping
 	# them onto the 30 px circle on the first frame
 	whirl_r = global_position.distance_to(pole)
-	whirl_omega = clampf(velocity.length() / maxf(whirl_r, 30.0), 8.0, 14.0)
+	whirl_omega = clampf(velocity.length() / maxf(whirl_r, 30.0), WHIRL_OMEGA_START.x, WHIRL_OMEGA_START.y)
+	_swish_at = whirl_angle
 	telegraph_t = 0.0
 	_show_bubble("Wheee!")
 
@@ -1382,8 +1399,16 @@ func _draw_shapes() -> void:
 	# owner's shadow spreads out under them.
 	if not wading:
 		var spread := 1.45 if state == HState.FALLEN else 1.0
-		_draw_xf(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
-		_b.draw_circle(Vector2.ZERO, 16.0, Color(0.06, 0.05, 0.08, 0.28))
+		if state == HState.WHIRL:
+			# off the ground: the shadow falls further off, smaller and fainter,
+			# and stretched out along her body
+			var lift := clampf(whirl_omega / WHIRL_OMEGA_MAX, 0.3, 1.0)
+			var out := -WHIRL_HAND.normalized()
+			_draw_xf(Vector2(9.0, 16.0).rotated(-rotation) * lift + out * 14.0, out.angle(), Vector2(1.9, 0.62))
+			_b.draw_circle(Vector2.ZERO, 14.0, Color(0.06, 0.05, 0.08, 0.2))
+		else:
+			_draw_xf(Vector2(5.0, 9.0), 0.0, Vector2(1.2 * spread, 0.52))
+			_b.draw_circle(Vector2.ZERO, 16.0, Color(0.06, 0.05, 0.08, 0.28))
 		_draw_xf()
 	# your human's look (Game.human_look), the same person the films draw
 	var look: Dictionary = Game.human_look
@@ -1420,78 +1445,84 @@ func _draw_shapes() -> void:
 	if Game.level_id == "montjuic" and String(dress["headwear"]) == "none" and not hat_off:
 		dress["headwear"] = "sunhat"
 		dress["headwear_col"] = Color(0.92, 0.84, 0.62)
-	# shoes, toes out in front
-	var shoe: Color = look.get("shoe", pants.darkened(0.4))
-	for fp: Vector2 in [brace + fd * sa, brace2 - fd * sa]:
-		_b.draw_colored_polygon(HumanLook._disc_points(fp + fd * 1.5, Vector2(6.2, 4.4), fd), shoe)
-	# body with a slight walking sway; dragged, leaning back against the pull
-	var sway := side * (sin(hgait * 0.5) * 1.2) if stepping else Vector2.ZERO
-	sway -= fd * 5.0 * drag_amt
-	HumanLook.draw_torso(_b, sway, fd, Vector2(13.5, 17.0), shirt, bool(dress["coat"]), dress["scarf"])
-	if drag_amt > 0.05:
-		# the leash hand, stretched out along the pull
-		# out to the side, clear of the phone
-		var hand := sway + side * 17.0 + fd * (12.0 + 12.0 * drag_amt)
-		_b.draw_line(sway + side * 11.0, hand, skin, 5.0)
-		_b.draw_circle(hand, 3.4, skin)
-	# arms reaching forward to the phone, sleeves then hands
-	var sleeve := shirt.darkened(0.08)
-	for sg: float in [-1.0, 1.0]:
-		_b.draw_line(side * 10.0 * sg, side * 7.0 * sg + fd * 9.0, sleeve, 6.0)
-		_b.draw_line(side * 7.0 * sg + fd * 9.0, side * 4.0 * sg + fd * 17.0, skin, 4.6)
-		_b.draw_circle(side * 4.0 * sg + fd * 17.5, 3.0, skin)
-	# head: seen from above, a proper head of hair in their style
-	var head := fd * 5.0 - fd * 6.0 * drag_amt
-	var hood: bool = String(dress["headwear"]) == "hood"
-	if hair_style == "ponytail" and not hood:
-		_b.draw_colored_polygon(HumanLook._disc_points(head - fd * 12.0, Vector2(6.5, 3.8), fd), hair_col.darkened(0.12))
-		_b.draw_circle(head - fd * 8.0, 2.4, Color(0.86, 0.30, 0.42))
-	elif hair_style == "long" and not hood:
-		_b.draw_colored_polygon(HumanLook._disc_points(head - fd * 8.0, Vector2(8.0, 9.5), fd), hair_col.darkened(0.1))
-	var top_style: String = {"ponytail": "long", "bob": "long", "long": "long"}.get(hair_style, hair_style)
-	HumanLook.draw_head(_b, head, fd, 9.0, skin, hair_col, top_style, String(dress["headwear"]),
-		dress["headwear_col"])
-	if Game.night and phone_away < 0.7:
-		var face_glow := Color(0.68, 0.84, 1.0, 0.20 * (0.55 + 0.2 * sin(t * 7.3)) * (1.0 - phone_away))
-		_b.draw_circle(head + fd * 4.6, 4.2, face_glow)
-	if String(dress["eyewear"]) == "sunglasses":
-		for sg2: float in [-1.0, 1.0]:
-			_b.draw_circle(head + fd * 5.9 + side * 3.2 * sg2, 2.4, Color(0.08, 0.08, 0.10))
-		_b.draw_line(head + fd * 5.9 + side * 1.0, head + fd * 5.9 - side * 1.0, Color(0.08, 0.08, 0.10), 1.0)
-	# the phone, held out front until an arrival puts it in the pocket
-	var away := clampf(phone_away, 0.0, 1.0)
-	var glow := (0.55 + 0.2 * sin(t * 7.3)) * (1.0 - away)
-	var phone_at := fd * lerpf(24.0, -4.0, away) + side * 16.0 * away
-	var phone_sc := lerpf(1.0, 0.42, away)
-	_draw_xf(phone_at, fd.angle() + PI / 2.0, Vector2(phone_sc, phone_sc))
-	_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
-	var screen := Color(0.42, 0.74, 0.34, glow) if match_on else Color(0.7, 0.85, 1.0, glow)
-	_b.draw_rect(Rect2(-4.5, -7, 9, 14), screen)
-	if away < 0.7:
-		if match_on:
-			# match day: miniature football pitch markings on screen
-			var line_col := Color(1.0, 1.0, 1.0, 0.45 * glow)
-			_b.draw_line(Vector2(-4.0, 0.0), Vector2(4.0, 0.0), line_col, 0.8)
-			_b.draw_arc(Vector2.ZERO, 2.2, 0, TAU, 12, line_col, 0.8)
-			_b.draw_circle(Vector2(sin(t * 4.0) * 2.2, cos(t * 3.1) * 3.5), 0.9, Color(1, 1, 1, 0.8 * glow))
-		else:
-			# doomscrolling: micro-posts and card outlines scrolling up the feed
-			var post_col := screen.lightened(0.24)
-			post_col.a = 0.55 * glow
-			var bar_col := screen.darkened(0.22)
-			bar_col.a = 0.45 * glow
-			var scroll := fmod(t * 7.5, 5.5)
-			for pi in range(3):
-				var py := -5.5 + float(pi) * 5.5 - scroll
-				if py > -6.2 and py < 5.0:
-					_b.draw_rect(Rect2(-3.6, py, 7.2, 1.2), post_col)
-					if py + 2.2 < 5.4:
-						_b.draw_rect(Rect2(-3.6, py + 1.8, 4.5, 0.8), bar_col)
-		# periodic thumb swipe flick along the bottom-right corner
-		var swipe_ph := fmod(t * 0.45, 1.0)
-		var flick := sin(clampf(swipe_ph / 0.14, 0.0, 1.0) * PI) * 2.2 if swipe_ph < 0.14 else 0.0
-		_b.draw_circle(Vector2(2.8, 4.5 - flick), 1.3, skin)
-	_draw_xf()
+	# where the head is, for what is drawn over it below (a goal, the phone
+	# held up for a signal, the stars of a fall)
+	var head := WHIRL_HAND.normalized() * 4.0
+	if state == HState.WHIRL:
+		_draw_whirl_body(t, skin, shirt, pants, hair_col, top_style_of(hair_style), dress)
+	else:
+		# shoes, toes out in front
+		var shoe: Color = look.get("shoe", pants.darkened(0.4))
+		for fp: Vector2 in [brace + fd * sa, brace2 - fd * sa]:
+			_b.draw_colored_polygon(HumanLook._disc_points(fp + fd * 1.5, Vector2(6.2, 4.4), fd), shoe)
+		# body with a slight walking sway; dragged, leaning back against the pull
+		var sway := side * (sin(hgait * 0.5) * 1.2) if stepping else Vector2.ZERO
+		sway -= fd * 5.0 * drag_amt
+		HumanLook.draw_torso(_b, sway, fd, Vector2(13.5, 17.0), shirt, bool(dress["coat"]), dress["scarf"])
+		if drag_amt > 0.05:
+			# the leash hand, stretched out along the pull
+			# out to the side, clear of the phone
+			var hand := sway + side * 17.0 + fd * (12.0 + 12.0 * drag_amt)
+			_b.draw_line(sway + side * 11.0, hand, skin, 5.0)
+			_b.draw_circle(hand, 3.4, skin)
+		# arms reaching forward to the phone, sleeves then hands
+		var sleeve := shirt.darkened(0.08)
+		for sg: float in [-1.0, 1.0]:
+			_b.draw_line(side * 10.0 * sg, side * 7.0 * sg + fd * 9.0, sleeve, 6.0)
+			_b.draw_line(side * 7.0 * sg + fd * 9.0, side * 4.0 * sg + fd * 17.0, skin, 4.6)
+			_b.draw_circle(side * 4.0 * sg + fd * 17.5, 3.0, skin)
+		# head: seen from above, a proper head of hair in their style
+		head = fd * 5.0 - fd * 6.0 * drag_amt
+		var hood: bool = String(dress["headwear"]) == "hood"
+		if hair_style == "ponytail" and not hood:
+			_b.draw_colored_polygon(HumanLook._disc_points(head - fd * 12.0, Vector2(6.5, 3.8), fd), hair_col.darkened(0.12))
+			_b.draw_circle(head - fd * 8.0, 2.4, Color(0.86, 0.30, 0.42))
+		elif hair_style == "long" and not hood:
+			_b.draw_colored_polygon(HumanLook._disc_points(head - fd * 8.0, Vector2(8.0, 9.5), fd), hair_col.darkened(0.1))
+		var top_style: String = top_style_of(hair_style)
+		HumanLook.draw_head(_b, head, fd, 9.0, skin, hair_col, top_style, String(dress["headwear"]),
+			dress["headwear_col"])
+		if Game.night and phone_away < 0.7:
+			var face_glow := Color(0.68, 0.84, 1.0, 0.20 * (0.55 + 0.2 * sin(t * 7.3)) * (1.0 - phone_away))
+			_b.draw_circle(head + fd * 4.6, 4.2, face_glow)
+		if String(dress["eyewear"]) == "sunglasses":
+			for sg2: float in [-1.0, 1.0]:
+				_b.draw_circle(head + fd * 5.9 + side * 3.2 * sg2, 2.4, Color(0.08, 0.08, 0.10))
+			_b.draw_line(head + fd * 5.9 + side * 1.0, head + fd * 5.9 - side * 1.0, Color(0.08, 0.08, 0.10), 1.0)
+		# the phone, held out front until an arrival puts it in the pocket
+		var away := clampf(phone_away, 0.0, 1.0)
+		var glow := (0.55 + 0.2 * sin(t * 7.3)) * (1.0 - away)
+		var phone_at := fd * lerpf(24.0, -4.0, away) + side * 16.0 * away
+		var phone_sc := lerpf(1.0, 0.42, away)
+		_draw_xf(phone_at, fd.angle() + PI / 2.0, Vector2(phone_sc, phone_sc))
+		_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
+		var screen := Color(0.42, 0.74, 0.34, glow) if match_on else Color(0.7, 0.85, 1.0, glow)
+		_b.draw_rect(Rect2(-4.5, -7, 9, 14), screen)
+		if away < 0.7:
+			if match_on:
+				# match day: miniature football pitch markings on screen
+				var line_col := Color(1.0, 1.0, 1.0, 0.45 * glow)
+				_b.draw_line(Vector2(-4.0, 0.0), Vector2(4.0, 0.0), line_col, 0.8)
+				_b.draw_arc(Vector2.ZERO, 2.2, 0, TAU, 12, line_col, 0.8)
+				_b.draw_circle(Vector2(sin(t * 4.0) * 2.2, cos(t * 3.1) * 3.5), 0.9, Color(1, 1, 1, 0.8 * glow))
+			else:
+				# doomscrolling: micro-posts and card outlines scrolling up the feed
+				var post_col := screen.lightened(0.24)
+				post_col.a = 0.55 * glow
+				var bar_col := screen.darkened(0.22)
+				bar_col.a = 0.45 * glow
+				var scroll := fmod(t * 7.5, 5.5)
+				for pi in range(3):
+					var py := -5.5 + float(pi) * 5.5 - scroll
+					if py > -6.2 and py < 5.0:
+						_b.draw_rect(Rect2(-3.6, py, 7.2, 1.2), post_col)
+						if py + 2.2 < 5.4:
+							_b.draw_rect(Rect2(-3.6, py + 1.8, 4.5, 0.8), bar_col)
+			# periodic thumb swipe flick along the bottom-right corner
+			var swipe_ph := fmod(t * 0.45, 1.0)
+			var flick := sin(clampf(swipe_ph / 0.14, 0.0, 1.0) * PI) * 2.2 if swipe_ph < 0.14 else 0.0
+			_b.draw_circle(Vector2(2.8, 4.5 - flick), 1.3, skin)
+		_draw_xf()
 	if wading:
 		# waist-deep, phone held higher, ripples of shame around the middle
 		_b.draw_circle(Vector2(0, 4), 17.0, Color(0.42, 0.56, 0.66, 0.55))
@@ -1590,3 +1621,51 @@ func _draw_shapes() -> void:
 			var o := side * (6.0 - 6.0 * float(k))
 			_b.draw_line(o, o + trail * (26.0 + 14.0 * float(k)) * amt,
 				Color(1.0, 0.97, 0.88, 0.40 * amt), 3.0 - 0.6 * float(k))
+
+
+# how the top of the head is drawn for a hair style seen from above
+static func top_style_of(hair_style: String) -> String:
+	return String({"ponytail": "long", "bob": "long", "long": "long"}.get(hair_style, hair_style))
+
+
+# Whirling: swung round the pole on her own leash like a tetherball, held
+# out flat. Both hands on the leash where it is clipped (toward the pole),
+# head between her arms, body and legs flying out behind, the legs kicking,
+# the phone still clutched in one hand. The node is turned so that hand
+# faces the pole (the WHIRL tick), so all of this is in its own frame.
+# Batched like the rest of her: no draw call of its own.
+func _draw_whirl_body(t: float, skin: Color, shirt: Color, pants: Color, hair_col: Color, top_style: String,
+		dress: Dictionary) -> void:
+	var fd := WHIRL_HAND.normalized()
+	var side := fd.orthogonal()
+	var grip := WHIRL_HAND
+	var spin := clampf(whirl_omega / WHIRL_OMEGA_MAX, 0.0, 1.0)
+	var shoe: Color = Game.human_look.get("shoe", pants.darkened(0.4))
+	# legs out behind, longer as she flies flatter, kicking
+	var reach := 26.0 + 8.0 * spin
+	for sg: float in [-1.0, 1.0]:
+		var kick := sin(t * 19.0 + sg * 1.7) * (2.0 + 2.5 * spin)
+		var hip := -fd * 9.0 + side * 5.0 * sg
+		var foot := -fd * reach + side * (8.0 * sg + kick)
+		_b.draw_line(hip, foot, pants, 7.0)
+		_b.draw_colored_polygon(HumanLook._disc_points(foot - fd * 2.0, Vector2(5.4, 4.0), -fd), shoe)
+	HumanLook.draw_torso(_b, -fd * 3.0, fd, Vector2(13.0, 16.0), shirt, bool(dress["coat"]), dress["scarf"])
+	# both arms up the leash to her grip
+	var sleeve := shirt.darkened(0.08)
+	for sg: float in [-1.0, 1.0]:
+		var sh := side * 10.0 * sg
+		var hand := grip + side * 2.5 * sg
+		_b.draw_line(sh, sh.lerp(hand, 0.5), sleeve, 6.0)
+		_b.draw_line(sh.lerp(hand, 0.5), hand, skin, 4.6)
+		_b.draw_circle(hand, 3.2, skin)
+	# the phone, still in her fist: she is not letting go of that
+	_draw_xf(grip - side * 7.0, fd.angle() + PI / 2.0 + 0.5, Vector2(0.7, 0.7))
+	_b.draw_rect(Rect2(-6, -9, 12, 18), Color(0.1, 0.1, 0.12))
+	_b.draw_rect(Rect2(-4.5, -7, 9, 14), Color(0.7, 0.85, 1.0, 0.6))
+	_draw_xf()
+	# head between her arms, hair blown back
+	var head := fd * 4.0
+	HumanLook.draw_head(_b, head, fd, 9.0, skin, hair_col, top_style, String(dress["headwear"]), dress["headwear_col"])
+	for k in range(3):
+		var streak := head - fd * (11.0 + float(k) * 3.0) + side * (float(k) - 1.0) * 4.0
+		_b.draw_line(streak, streak - fd * (5.0 + 5.0 * spin), Color(hair_col.r, hair_col.g, hair_col.b, 0.55), 2.0)

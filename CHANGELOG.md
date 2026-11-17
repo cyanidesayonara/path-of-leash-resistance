@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - The whirl, upgraded
+
+- Your human used to spin like a top on a 30 px circle for 0.3 to 0.6 s, mostly under the tree crown, and could whirl a second time 0.07 s after landing, which read as a glitch. Now she is swung like a tetherball: the node is turned so her leash hand faces the pole, the rope runs straight from her grip, and `_draw_whirl_body` draws her flying out flat behind it. Both hands are on the leash, the phone is still in one fist, her head is between her arms with her hair streaming, and her legs trail out and kick. Her shadow lifts off and falls further away. Nothing about the pose is a new draw call.
+- The orbit is wider (38 px), starts slower (5 to 9 rad/s, from 8 to 14) and is spun up less hard by the pull, so a whirl of the minimum 0.6 turns now lasts about 0.4 to 0.75 s and a bigger coil about 0.9 s. The rope still decides how far she goes round. The fling's speed per spin is up, so the launch flies as far as before (830 to 930 px/s in the captures).
+- A whoosh every half turn, rising in pitch as she speeds up. The release shouts FLING!  30 and slows the moment like a pole swing does.
+- `WHIRL_REARM`: for 0.9 s after an orbit ends, by a fling or a bail, no orbit arms.
+- `tools/whirl_capture.gd`: a whirl played with real input beside an open pole, with the camera held on it. It prints the arming, the commit, the turns and the fling, and saves frames with `--out`.
+- Tests: `test_whirl_guided` checks the cooldown, and its arming cases start from a clean cooldown.
+
 ## 2026-11-17 - Every dare-giver moves and has a tune of their own
 
 - Every dare-giver now moves while she is near (they redraw through `Redraw.later` within 800 px of the dog, as the breakdancer did). Most of the original givers already had motion in their drawing (the kid's wave, the statue's head turn, the busker's strum) but were only redrawn when their line changed, so they looked frozen. Three got motion of their own: the builder takes a bite of his bocadillo, the àvia jiggles her trolley and shakes her head at you, and the commuter taps his foot and looks up the line for his train. The eleven new givers that held one pose now have an idle too:

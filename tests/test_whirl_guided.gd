@@ -612,6 +612,7 @@ func _run() -> void:
 	_a_fling_off_the_leash_is_still_paid_for(m)
 	_main_abandons_an_orbit_round_a_non_pole(m)
 	_a_nowhere_pole_is_refused(m)
+	_no_orbit_arms_straight_after_one(m)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
@@ -679,6 +680,8 @@ func _arming_is_wired_to_the_probe(m: Node2D) -> void:
 	var frames := 0
 	var want := 0.0
 	var wavered := false
+	# a fresh window: no cooldown left over from the case before
+	m.whirl_rearm_t = 0.0
 	while not h.is_whirling() and frames < 40:
 		var s := signf(_bias_at(leash, pole))
 		if s != 0.0:
@@ -771,6 +774,8 @@ func _the_budget_is_her_coil_too(m: Node2D) -> void:
 		# a dozen frames of solving a hand-built rope makes of it. main's own
 		# arming runs for real on it.
 		var frames := 0
+		# a fresh window: no cooldown left over from the case before
+		m.whirl_rearm_t = 0.0
 		while not h.is_whirling() and frames < 40:
 			_two_coil_rope(m, hers, sense)
 			m._apply_leash(DT)
@@ -814,6 +819,8 @@ func _the_budget_is_the_whole_window(m: Node2D) -> void:
 		seen = []
 		var arm_was := 0.0
 		var frames := 0
+		# a fresh window: no cooldown left over from the case before
+		m.whirl_rearm_t = 0.0
 		while not h.is_whirling() and frames < 40:
 			_two_coil_rope(m, hers, 1.0, 1.0 - 0.02 * float(frames))
 			m._apply_leash(DT)
@@ -862,6 +869,8 @@ func _arm_through(m: Node2D, hers: Vector2, senses: Array[float]) -> Array[float
 	var seen: Array[float] = []
 	var arm_was := 0.0
 	var frames := 0
+	# a fresh window: no cooldown left over from the case before
+	m.whirl_rearm_t = 0.0
 	while not h.is_whirling() and frames < 60:
 		_two_coil_rope(m, hers, senses[frames % senses.size()])
 		m._apply_leash(DT)
@@ -1030,6 +1039,7 @@ func _a_window_that_dies_leaves_nothing_behind(m: Node2D) -> void:
 		h.velocity = Vector2.ZERO
 		_two_coil_rope(m, hers, 1.0)
 		m.leash_len = maxf(float(leash.used_length()) - 60.0, 40.0)
+		m.whirl_rearm_t = 0.0
 		for i in range(6):
 			_two_coil_rope(m, hers, 1.0)
 			m._apply_leash(DT)
@@ -1654,3 +1664,41 @@ func _a_nowhere_pole_is_refused(m: Node2D) -> void:
 	_check(is_finite(h.global_position.x) and is_finite(h.global_position.y),
 		"and the owner stays somewhere real")
 	_check(before.distance_to(h.global_position) < 20.0, "roughly where she was")
+
+
+# An orbit just ended (a fling or a bail) leaves WHIRL_REARM before another
+# can arm, even on a rope still wound and hauled: a second orbit straight off
+# the first read as a glitch. Once it has run out, the same rope arms.
+func _no_orbit_arms_straight_after_one(m: Node2D) -> void:
+	var h: CharacterBody2D = m.human
+	var d: Node2D = m.dog
+	var leash: Node2D = m.leash
+	var pole: Vector2 = h.global_position + Vector2(300.0, 0.0)
+	_one_pole(m, pole)
+	h.global_position = pole + Vector2(-46.0, 0.0)
+	d.global_position = pole + Vector2(-40.0, 0.0)
+	leash.resnap()
+	for i in range(540):
+		var a := deg_to_rad(float(i))
+		d.global_position = pole + Vector2(-40.0, 0.0).rotated(-a)
+		leash.tick(DT)
+	var was_len: float = m.leash_len
+	m.leash_len = float(leash.used_length()) - 20.0
+	h.whirl_bailed = true
+	m.whirl_rearm_t = 0.0
+	m._apply_leash(DT)
+	_check(float(m.whirl_rearm_t) > 0.0, "an orbit ending starts the cooldown")
+	var frames := 0
+	while not h.is_whirling() and frames < 30:
+		m._apply_leash(DT)
+		frames += 1
+	_check(not h.is_whirling(), "no orbit arms during the cooldown (%d frames)" % frames)
+	m.whirl_rearm_t = 0.0
+	frames = 0
+	while not h.is_whirling() and frames < 40:
+		m._apply_leash(DT)
+		frames += 1
+	_check(h.is_whirling(), "once it has run out the same rope arms (%d frames)" % frames)
+	m.leash_len = was_len
+	h.bail_whirl()
+	m._apply_leash(DT)
