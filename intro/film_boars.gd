@@ -70,9 +70,9 @@ static func camera(t: float) -> Array:
 		var cx: float = Anim.k(t, [[BOLT_AT, 900.0], [TITLE_AT, 1500.0, "in"]])
 		return [Vector2(cx, 470.0), 1.0]
 	var x: float = Anim.k(t, [[0.0, 600.0], [1.6, 660.0, "io"], [2.2, 240.0, "io"], [3.9, 360.0, "io"],
-		[4.2, 760.0, "io"]])
+		[4.2, 470.0, "io"], [BOLT_AT, 520.0]])
 	var y: float = Anim.k(t, [[0.0, 470.0], [2.2, 440.0, "io"], [3.9, 450.0], [4.2, 520.0, "io"]])
-	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.2, 0.9, "io"], [3.9, 0.98, "io"], [4.2, 1.7, "io"]])
+	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.2, 0.9, "io"], [3.9, 0.98, "io"], [4.2, 1.32, "io"], [BOLT_AT, 1.42]])
 	return [Vector2(x, y), z]
 
 
@@ -187,6 +187,9 @@ static func _sounder(c: CanvasItem, t: float, t_real: float) -> void:
 # tail up; a piglet is the same shape, striped, no tusks, no scowl. Shared
 # with the card.
 static func boar(c: CanvasItem, at: Vector2, k: float, t: float, piglet: bool) -> void:
+	if not piglet:
+		_sow(c, at, k, t)
+		return
 	var fur := PIG_BASE if piglet else FUR_DARK
 	var bob := absf(sin(t * 9.0)) * 8.0 * k
 	var o := at - Vector2(0.0, bob)
@@ -253,6 +256,142 @@ static func boar(c: CanvasItem, at: Vector2, k: float, t: float, piglet: bool) -
 	var sn := fposmod(t * 2.0, 1.0)
 	if sn < 0.5:
 		IntroKit.puff(c, p.call(Vector2(170 + sn * 60.0, -60 - sn * 30.0)), (8.0 + sn * 20.0) * k, 1.0 - sn * 2.0)
+
+
+# The sow, the one that charges: a hump of shoulder carried high and the head
+# slung low to hook, the crest along her spine standing up as she runs, two
+# tusks curving up past the snout, a small eye burning under a heavy brow, a
+# snarl with froth flying back off it, cloven hooves throwing dirt. Grizzled
+# dark brown, close to the walk's FUR_DARK so film and walk are one animal.
+const SOW_FUR := Color(0.23, 0.18, 0.15)
+const SOW_GRIZZLE := Color(0.44, 0.37, 0.31)
+const SOW_BELLY := Color(0.13, 0.10, 0.09)
+const SOW_CREST := Color(0.33, 0.27, 0.22)
+const SOW_GUMS := Color(0.42, 0.14, 0.14)
+const EYE_GLOW := Color(1.0, 0.36, 0.12)
+const SOW_BACK := [Vector2(-112, -70), Vector2(-104, -100), Vector2(-70, -118), Vector2(-20, -130), Vector2(30, -148),
+	Vector2(64, -142), Vector2(92, -118), Vector2(124, -96), Vector2(156, -70), Vector2(178, -58), Vector2(184, -42),
+	Vector2(176, -30), Vector2(146, -26), Vector2(112, -34), Vector2(82, -42), Vector2(40, -36), Vector2(-20, -32),
+	Vector2(-70, -36), Vector2(-102, -48)]
+const SOW_CREST_BASE := [Vector2(-66, -119), Vector2(-46, -124), Vector2(-26, -129), Vector2(-6, -136), Vector2(14, -142),
+	Vector2(32, -148), Vector2(50, -146), Vector2(68, -139), Vector2(84, -126), Vector2(98, -114)]
+const SOW_STROKES := [Vector2(-80, -84), Vector2(-56, -98), Vector2(-30, -80), Vector2(-6, -104), Vector2(18, -84),
+	Vector2(40, -112), Vector2(60, -90), Vector2(-50, -62), Vector2(6, -60), Vector2(84, -70)]
+
+
+static func _q(o: Vector2, k: float, v: Vector2) -> Vector2:
+	return o + v * k
+
+
+static func _sow(c: CanvasItem, at: Vector2, k: float, t: float) -> void:
+	var gait := t * 18.0
+	var bob := absf(sin(t * 9.0)) * 9.0 * k
+	var o := at - Vector2(0.0, bob)
+	# the head dips into each stride, a hooking toss
+	var toss := sin(gait) * 4.0
+	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(20, 2) * k, Vector2(130, 11) * k), Color(0.05, 0.04, 0.03, 0.4))
+	# the far tusk, behind the head
+	_tusk(c, o + Vector2(-9.0, 3.0 + toss) * k, k, TUSK_WHITE.darkened(0.3))
+	# legs, the far pair first: thick forelegs under the hump, cloven hooves
+	for i in range(4):
+		var hip: Vector2 = [Vector2(-74, -46), Vector2(60, -50), Vector2(-54, -44), Vector2(80, -48)][i]
+		var swing := sin(gait + float(i) * 1.6) * 0.7
+		var knee: Vector2 = hip + Vector2.from_angle(PI * 0.5 + swing * 0.6) * 26.0
+		var foot: Vector2 = knee + Vector2.from_angle(PI * 0.5 + swing) * 26.0
+		var col := SOW_BELLY if i < 2 else SOW_FUR
+		var w := 22.0 if hip.x > 0.0 else 18.0
+		c.draw_polyline(PackedVector2Array([_q(o, k, hip), _q(o, k, knee), _q(o, k, foot)]), INK, (w + 5.0) * k)
+		c.draw_polyline(PackedVector2Array([_q(o, k, hip), _q(o, k, knee), _q(o, k, foot)]), col, w * k)
+		var hf := _q(o, k, foot)
+		c.draw_colored_polygon(PackedVector2Array([hf + Vector2(-9, -3) * k, hf + Vector2(9, -3) * k, hf + Vector2(11, 6) * k,
+			hf + Vector2(-11, 6) * k]), HOOF_DARK)
+		c.draw_line(hf + Vector2(0, -2) * k, hf + Vector2(0, 6) * k, SOW_FUR, 2.0 * k)
+	# the body: one silhouette, hump high, head low
+	var body := PackedVector2Array()
+	for i in range(SOW_BACK.size()):
+		var v: Vector2 = SOW_BACK[i]
+		if v.x > 90.0:
+			v.y += toss
+		body.append(_q(o, k, v))
+	c.draw_colored_polygon(body, SOW_FUR)
+	# the belly in shadow, the grizzle catching light along the back
+	c.draw_colored_polygon(MillieSide.ellipse(_q(o, k, Vector2(-10, -42)), Vector2(96, 12) * k), SOW_BELLY)
+	c.draw_polyline(PackedVector2Array([_q(o, k, Vector2(-96, -96)), _q(o, k, Vector2(-60, -110)),
+		_q(o, k, Vector2(-14, -120)), _q(o, k, Vector2(30, -136)), _q(o, k, Vector2(60, -132))]), SOW_GRIZZLE, 7.0 * k)
+	for s: Vector2 in SOW_STROKES:
+		c.draw_line(_q(o, k, s), _q(o, k, s + Vector2(-12, 5)), SOW_GRIZZLE, 2.5 * k)
+	var outline := body.duplicate()
+	outline.append(body[0])
+	c.draw_polyline(outline, INK, 5.0 * k)
+	# the crest, hackles up: higher the harder she runs
+	var crest := PackedVector2Array()
+	for i in range(SOW_CREST_BASE.size()):
+		var b: Vector2 = SOW_CREST_BASE[i]
+		var ln := 24.0 + float((i * 7) % 5) * 4.0 + sin(gait + float(i)) * 3.0
+		var tip := b + Vector2(-0.45, -1.0).normalized() * ln
+		crest.append(_q(o, k, b))
+		crest.append(_q(o, k, tip))
+	# close the last tooth on its own base, or its edge crosses the one before
+	crest.append(_q(o, k, SOW_CREST_BASE[SOW_CREST_BASE.size() - 1] + Vector2(4, 2)))
+	for i in range(SOW_CREST_BASE.size() - 1, -1, -1):
+		crest.append(_q(o, k, SOW_CREST_BASE[i] + Vector2(0, 10)))
+	c.draw_colored_polygon(crest, SOW_CREST)
+	var cl := crest.duplicate()
+	cl.append(crest[0])
+	c.draw_polyline(cl, INK, 3.0 * k)
+	# the ear laid flat back
+	var ear := PackedVector2Array([_q(o, k, Vector2(98, -112 + toss)), _q(o, k, Vector2(64, -134 + toss)),
+		_q(o, k, Vector2(84, -104 + toss))])
+	c.draw_colored_polygon(ear, SOW_BELLY)
+	ear.append(ear[0])
+	c.draw_polyline(ear, INK, 3.0 * k)
+	# the tail up and lashing
+	var flick := sin(t * 14.0) * 8.0
+	c.draw_line(_q(o, k, Vector2(-108, -90)), _q(o, k, Vector2(-132, -114 + flick)), INK, 6.0 * k)
+	c.draw_circle(_q(o, k, Vector2(-134, -116 + flick)), 6.0 * k, SOW_CREST)
+	var h := o + Vector2(0.0, toss) * k
+	# the snarl: the jaw dropped open, red gums, froth flying back
+	c.draw_colored_polygon(PackedVector2Array([_q(h, k, Vector2(174, -36)), _q(h, k, Vector2(132, -32)),
+		_q(h, k, Vector2(150, -22)), _q(h, k, Vector2(172, -24))]), SOW_GUMS)
+	c.draw_polyline(PackedVector2Array([_q(h, k, Vector2(132, -32)), _q(h, k, Vector2(150, -20)),
+		_q(h, k, Vector2(174, -22))]), INK, 4.0 * k)
+	for f in range(3):
+		var ff := fposmod(t * 3.0 + float(f) * 0.33, 1.0)
+		c.draw_circle(_q(h, k, Vector2(130 - ff * 70.0, -30 - ff * 20.0 + float(f) * 6.0)), (4.5 - ff * 3.0) * k,
+			Color(1, 1, 1, 0.9 * (1.0 - ff)))
+	# the near tusk
+	_tusk(c, h, k, TUSK_WHITE)
+	# the snout disc, wet and flared
+	c.draw_colored_polygon(MillieSide.ellipse(_q(h, k, Vector2(184, -48)), Vector2(10, 17) * k), INK)
+	c.draw_colored_polygon(MillieSide.ellipse(_q(h, k, Vector2(184, -48)), Vector2(8, 15) * k), SNOUT_PINK)
+	c.draw_colored_polygon(MillieSide.ellipse(_q(h, k, Vector2(186, -55)), Vector2(2.5, 4) * k), INK)
+	c.draw_colored_polygon(MillieSide.ellipse(_q(h, k, Vector2(186, -41)), Vector2(2.5, 4) * k), INK)
+	# the eye: small, burning, under a brow like a ledge
+	var eye := _q(h, k, Vector2(132, -80))
+	c.draw_circle(eye, 14.0 * k, Color(EYE_GLOW, 0.25))
+	c.draw_circle(eye, 8.0 * k, INK)
+	c.draw_circle(eye, 6.0 * k, EYE_RED)
+	c.draw_circle(eye, 3.0 * k, EYE_GLOW)
+	c.draw_circle(eye + Vector2(-2, -2) * k, 1.6 * k, Color.WHITE)
+	c.draw_colored_polygon(PackedVector2Array([_q(h, k, Vector2(108, -100)), _q(h, k, Vector2(152, -84)),
+		_q(h, k, Vector2(150, -76)), _q(h, k, Vector2(112, -88))]), INK)
+	# snorting steam, both nostrils, on the stride
+	var sn := fposmod(t * 2.2, 1.0)
+	if sn < 0.6:
+		var g := sn / 0.6
+		IntroKit.puff(c, _q(h, k, Vector2(198 + g * 70.0, -56 - g * 34.0)), (9.0 + g * 24.0) * k, 0.9 * (1.0 - g))
+		IntroKit.puff(c, _q(h, k, Vector2(196 + g * 60.0, -38 + g * 6.0)), (7.0 + g * 18.0) * k, 0.7 * (1.0 - g))
+
+
+# a tusk: a crescent of ivory hooking up out of the lower jaw past the snout
+static func _tusk(c: CanvasItem, h: Vector2, k: float, col: Color) -> void:
+	var pts := PackedVector2Array()
+	for v: Vector2 in [Vector2(134, -28), Vector2(148, -30), Vector2(162, -42), Vector2(170, -62), Vector2(169, -88),
+			Vector2(163, -66), Vector2(155, -48), Vector2(142, -37)]:
+		pts.append(_q(h, k, v))
+	c.draw_colored_polygon(pts, col)
+	pts.append(pts[0])
+	c.draw_polyline(pts, INK, 3.0 * k)
 
 
 # the card: the wood gone white-hot behind RUN!, the mama charging in from

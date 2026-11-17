@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Films: the threat in the stare, and a boar that charges
+
+- Every chase and boss film's stare beat (4.2 s to the bolt) is now a two-shot that pushes in (zoom 1.32 to 1.42, centred at x 470 to 520) instead of a 1.7 close-up on her alone: she stares with the threat looming in the same frame, where before only a sliver of it showed at the edge.
+- Els Senglars' film: the sow is redrawn (`FilmBoars._sow`): one silhouette with the shoulders carried high and the head slung low and tossing on the stride, the crest standing up along her spine, grizzled dark-brown fur, a snarl with red gums and froth flying back, two tusks hooking up past the snout, a small eye burning orange under a heavy brow, cloven hooves, snorting from both nostrils. The piglets are unchanged. The title card shares her.
+
 ## 2026-11-17 - Sant Pau's test allows later walks
 
 - `tests/test_santpau.gd` no longer requires Sant Pau to be the last entry in `Game.LEVELS`; it checks it is present and after La Molina, so Sitges and Camí de Ronda can be appended.

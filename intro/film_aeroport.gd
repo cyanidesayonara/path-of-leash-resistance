@@ -84,9 +84,9 @@ static func camera(t: float) -> Array:
 		var cx: float = Anim.k(t, [[BOLT_AT, 900.0], [TITLE_AT, 1500.0, "in"]])
 		return [Vector2(cx, 470.0), 1.0]
 	var x: float = Anim.k(t, [[0.0, 600.0], [1.6, 640.0, "io"], [2.15, 120.0, "io"], [3.0, 240.0, "io"],
-		[3.9, 420.0, "io"], [4.2, 760.0, "io"]])
+		[3.9, 420.0, "io"], [4.2, 470.0, "io"], [BOLT_AT, 520.0]])
 	var y: float = Anim.k(t, [[0.0, 470.0], [2.15, 370.0, "io"], [3.9, 400.0, "io"], [4.2, 520.0, "io"]])
-	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.15, 0.86, "io"], [3.9, 0.92, "io"], [4.2, 1.7, "io"]])
+	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.15, 0.86, "io"], [3.9, 0.92, "io"], [4.2, 1.32, "io"], [BOLT_AT, 1.42]])
 	# it shakes the hall as it comes
 	var rum := Anim.span(t, OUT_AT, OUT_AT + 0.2) * (1.0 - Anim.span(t, 3.9, 4.2))
 	return [Vector2(x, y) + Vector2(sin(t * 83.0), sin(t * 61.0)) * 5.0 * rum, z]
