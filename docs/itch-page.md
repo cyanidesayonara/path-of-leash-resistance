@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-FORTY WALKS IN AND AROUND BARCELONA
+FORTY-ONE WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -75,6 +75,7 @@ La Castanyada, the chestnut festival
 Els Senglars, the wild boar trail
 El Mosaic, the tiled terraces
 La Superilla, the superblock play streets
+El Metro, down out of the rain and one stop on the metro
 L'Estació, the train station
 Els Búnquers, the overlook above the city
 Plaça Reial, the arcaded square

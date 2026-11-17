@@ -362,6 +362,9 @@ func _build_library() -> void:
 	lib["mamut_trumpet"] = _mamut_trumpet()
 	lib["van_horn"] = _van_horn()
 	lib["chime"] = _chime()
+	# El Metro: the doors' three falling notes, and a train in the tunnel
+	lib["door_chime"] = _arp([784.0, 659.0, 523.0], 0.17)
+	lib["train_rumble"] = _noiseburst(1.4, 1.8)
 	lib["bleat"] = _bleat()
 	lib["crossing_bell"] = _crossing_bell()
 	# Sant Vicenç de Sarrià striking the hour (systems/sarria.gd)

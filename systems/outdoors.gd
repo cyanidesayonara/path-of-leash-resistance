@@ -88,6 +88,29 @@ static func busking(weather: String, _hour: String) -> bool:
 	return weather == "clear" or weather == "wind"
 
 
+# Underground (El Metro) the weather stops at the stairs. The busker in the
+# passage plays in any weather, under cover, but has gone home after dark.
+static func underground_busker(_weather: String, hour: String) -> bool:
+	return hour != "night"
+
+
+# People shaking out their umbrellas as they come down out of it, and the
+# wet footprints they track in: only when it is raining or snowing.
+static func umbrella_shakers(weather: String, _hour: String) -> bool:
+	return weather == "rain" or weather == "snow"
+
+
+static func tracks_wet(weather: String) -> bool:
+	return weather == "rain" or weather == "snow"
+
+
+# The metro's commuters: thinned by the hour like any crowd, but never by
+# the weather, because rain drives people down into it. `n` is a day's
+# crowd; at least two are always about.
+static func underground_crowd(n: int, _weather: String, hour: String) -> int:
+	return maxi(2, roundi(float(n) * float(CROWD_HOUR.get(hour, 1.0))))
+
+
 # A traca or any other string of fireworks is hung out only when it is dry:
 # nobody lights wet fuses.
 static func fireworks(weather: String, _hour: String) -> bool:

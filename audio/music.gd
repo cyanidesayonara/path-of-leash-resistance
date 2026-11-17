@@ -180,6 +180,10 @@ const STYLES := {
 	# comp, a little brighter and quicker than the grid it cuts across
 	"diagonal": {"bpm": 120, "key": 9, "lead": "vibes", "lead2": ["whistle", 12], "comp": "bossa",
 		"bass": "walk", "drums": "rim", "swing": 0.05, "verb": 0.28},
+	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
+	# over a skank and a walking bass, minor, with the tiles' long echo
+	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
+		"bass": "walk", "drums": "kickrim", "swing": 0.05, "verb": 0.36},
 	# Els Àngels: dusk skate plaza groove with marimba, vibes, skank chords, walking bass, and kick-rim drums
 	"angels": {"bpm": 118, "key": 2, "lead": "marimba", "lead2": ["vibes", 0], "comp": "skank",
 		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.24},

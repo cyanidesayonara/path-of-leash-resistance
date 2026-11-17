@@ -2,6 +2,19 @@
 
 Append-only session history, newest first.
 
+## 2026-11-16 - New walk: El Metro
+
+- Added `systems/metro.gd` (layout, hooks, logic) and `systems/metro_art.gd` (drawing): the game's third indoor walk, after La Superilla in the campaign, at L'Estació's star gate and in La Superilla's chase tier, under a rainy day sky. Down the wet stairs from the street, through the ticket hall, the escalator, a tiled passage with a busker, the Paraigües platform, one stop on the car and up the stairs at Sant Gos to Plaça de Sant Gos, which is the off-leash plaça. Line roundels and station names are the walk's own; no operator branding.
+- The turnstiles: your human says "Where's my card?" 0.8 s before stopping at the gate to look for it; a dog over the line meanwhile slipped under the bar (`turnstile` goal). The cabinets, the stair handrail, the escalator balustrades, the car's end walls and seats are rope wrap rects; the hall columns, platform pillars and car poles are poles.
+- The car: a three-note chime 0.8 s before its doors move; a leash across a closing door is caught ("THE DOORS CAUGHT THE LEASH!"), costs patience and the doors reopen (`doors_clean` goal). The ride lurches and sways, a planted dog stands it better, and the train opens at the far end. A train always waits at whichever end the pair arrives.
+- The signature event, the rush-hour surge: on the platform a train comes in on the other track, chimes, and 0.8 s later its crowd pours off toward the passage, against her on the way out and with her on the way home. Planted in it long enough is ROCK SOLID (`surge` goal); a taut leash across their way makes them hop it.
+- The light eases from the street's weather and hour to the station's own lamps down each staircase (tint, grade and the on-screen rain), so the hour grade and night fronts never darken the tunnel; the night fronts line the two streets only. Wet footprints and a drip film in the hall when it rains.
+- `systems/outdoors.gd`: `underground_busker` (any weather, not after dark), `umbrella_shakers` and `tracks_wet` (rain or snow), `underground_crowd` (thinned by the hour, never by the weather).
+- Music style `metro`, sounds `door_chime` and `train_rumble`, ground lettering of furled umbrellas (`brollies`), goals, clock and jamón spots, freedom props; added to the shot sweep, surface map and behaviour snapshot level lists and to `test_walk_hooks`, `test_npc_clear_of_solids` and `test_outdoors`.
+- Inserting the walk moves every later campaign walk down one; with Sarrià as well, `test_aeroport` and `test_cremada` expect 36 and 27, and La Cremada's chase is on walk 27 until the 51-walk reorder. Walk counts say forty-one with Sarrià.
+- Review fixes: an arriving car waits DWELL_T and leaves only from the end the pair boards by (south out, north home), so a lingering dog no longer rides back and getting off never catches the leash; the doors never close on anyone in a doorway, and door bodies are set only when they change. A caught leash is pinched: the leaves become two rope rects in `main.rope_rects` with a slot where it crosses, drawn closed on it. A dog left outside a riding car is put back aboard. The busker is a body only while he plays; `test_metro.gd` covers all of it (54 checks).
+- Tests: new `tests/test_metro.gd` (registered in `tests/ci_tests.txt`); `metro --selftest`, `test_walk_hooks`, `test_walk_registry`, `test_outdoors`, `test_night_fronts`, `test_goals`, `test_npc_clear_of_solids`, `test_chase_milestone_gates`, `test_campaign_mastery`, `test_wrap`. Walk counts and lists updated in README, `store/listing.md` and `docs/itch-page.md`.
+
 ## 2026-11-16 - Upgrade El Barri (Walk 1) to 1.75 standard
 
 - Upgraded `systems/barri.gd` (`El Barri`, Walk 1) while keeping its gentle opening-walk balance and zero-hazard layout intact:

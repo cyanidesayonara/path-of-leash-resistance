@@ -29,7 +29,7 @@ const Letters := preload("res://world/sign_letters.gd")
 
 # the material per walk; a walk not listed keeps main.gd's drawn styles
 const MATERIALS := {
-	"barri": "leaves", "diagonal": "papers", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
+	"barri": "leaves", "diagonal": "papers", "metro": "brollies", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
@@ -69,6 +69,7 @@ const FEEL := {
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
 	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
 	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
+	"brollies": {"spacing": 0.17, "r": 0.075, "drag": 4.6, "take": 1.2, "spin": 3.0, "align": true},
 	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
@@ -528,6 +529,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_tickets(c, sign, h)
 		"papers":
 			_papers(c, sign, h)
+		"brollies":
+			_brollies(c, sign, h)
 		"pastries":
 			_pastries(c, sign, h)
 		"pebbles":
@@ -965,6 +968,29 @@ static func _tickets(c: Object, sign: Dictionary, h: float) -> void:
 		c.draw_colored_polygon(_box(p + ax * r * 0.55, rot, r * 0.2, r * 0.72), Color(0.12, 0.10, 0.10))
 		if float(pc["var"]) > 0.6:
 			c.draw_circle(p - ax * r * 0.5, r * 0.18, Color(0.22, 0.14, 0.10))
+
+
+static func _brollies(c: Object, sign: Dictionary, _h: float) -> void:
+	# umbrellas left behind at the top of the metro's stairs: furled, a
+	# canopy in its colour round the shaft, the hooked handle, the tip
+	const COLS: Array[Color] = [Color(0.16, 0.18, 0.24), Color(0.74, 0.16, 0.18), Color(0.18, 0.38, 0.62),
+		Color(0.92, 0.70, 0.16), Color(0.30, 0.52, 0.34)]
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.rot), r * 1.4, r * 0.42), Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var ay := ax.orthogonal()
+		var col: Color = COLS[int(float(pc["var"]) * 97.0) % COLS.size()]
+		c.draw_colored_polygon(PackedVector2Array([p - ax * r * 1.2, p + ax * r * 0.7 - ay * r * 0.4,
+			p + ax * r * 0.95, p + ax * r * 0.7 + ay * r * 0.4]), col)
+		c.draw_line(p - ax * r * 0.9, p + ax * r * 0.6, col.lightened(0.3), maxf(1.0, r * 0.12))
+		c.draw_line(p + ax * r * 0.95, p + ax * r * 1.3, Color(0.20, 0.16, 0.12), maxf(1.2, r * 0.18))
+		c.draw_circle(p + ax * r * 1.3 + ay * r * 0.16, r * 0.17, Color(0.20, 0.16, 0.12))
+		c.draw_circle(p - ax * r * 1.24, r * 0.08, Color(0.70, 0.70, 0.72))
 
 
 static func _papers(c: Object, sign: Dictionary, _h: float) -> void:
