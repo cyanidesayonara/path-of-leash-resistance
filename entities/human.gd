@@ -1002,6 +1002,14 @@ func notice(text: String, secs: float) -> void:
 			bubble.visible = false)
 
 
+# Patience lost to something the dog did (a walk's own rule, not the leash):
+# none in the grace after a correction, as the leash's own drain.
+func lose_patience(amount: float) -> void:
+	if grace_t > 0.0:
+		return
+	patience = maxf(0.0, patience - amount)
+
+
 func can_warn_external() -> bool:
 	return state == HState.WALK and telegraph_t <= 0.0 and correct_t <= 0.0 \
 		and reel_pending_t <= 0.0 and external_warning_t <= 0.0 and not bubble.visible

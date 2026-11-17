@@ -47,6 +47,7 @@ const CLOCK_TARGETS := {
 	"espanya": 180,
 	"eixample": 180,
 	"diagonal": 180,
+	"blai": 185,        # a narrow street, people everywhere
 	"metro": 185,    # the turnstiles, the surge and one stop on the train
 	"sarria": 175,
 	"angels": 180,
@@ -91,6 +92,7 @@ const JAMON_POS := {
 	"espanya": Vector2(860.0, -3200.0),
 	"eixample": Vector2(470.0, -2900.0),
 	"diagonal": Vector2(760.0, -1720.0),
+	"blai": Vector2(640.0, -3560.0),
 	"metro": Vector2(846.0, -4330.0),   # by the platform edge at Sant Gos, past the last pillar
 	"sarria": Vector2(300.0, -3010.0),
 	"angels": Vector2(380.0, -2950.0),

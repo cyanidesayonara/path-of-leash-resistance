@@ -113,6 +113,33 @@ func _run() -> void:
 	m = await _load("street", "rain", "day")
 	_check(m.parasols_up(), "and up in the rain")
 
+	# Carrer de Blai: terraces full at night, a few by day, empty in the rain;
+	# standers out in the evening and in the doorways when it rains; shutters
+	# and deliveries by day
+	_check(Outdoors.terrace_diners("clear", "night") > Outdoors.terrace_diners("clear", "day"),
+		"Blai's terraces fill at night")
+	_check(Outdoors.terrace_diners("rain", "night") == 0.0 and Outdoors.terrace_diners("snow", "day") == 0.0,
+		"and empty in rain and snow")
+	_check(Outdoors.standers_out("clear", "night") and not Outdoors.standers_out("clear", "day"),
+		"groups stand out with a drink after dark, not by day")
+	_check(Outdoors.standers_out("rain", "day") and Outdoors.standers_in_doorways("rain", "day"),
+		"and in the rain they stand in the doorways")
+	_check(Outdoors.bar_shutters("clear", "night") == 0.0 and Outdoors.bar_shutters("clear", "day") > 0.0,
+		"shutters are down by day and up at night")
+	_check(Outdoors.deliveries("rain", "day") and not Outdoors.deliveries("clear", "night"),
+		"deliveries by day in any weather, never at night")
+	m = await _load("blai", "clear", "night")
+	var night_diners: int = m.blai_diners.size()
+	var night_standers: int = m.performers.size()
+	m = await _load("blai", "clear", "day")
+	_check(m.blai_diners.size() < night_diners and night_diners > 0,
+		"Blai has fewer diners by day than at night (%d, %d)" % [m.blai_diners.size(), night_diners])
+	_check(m.performers.size() == 0 and night_standers > 0, "and nobody standing out with a drink by day")
+	_check(m.blai_delivery.size() > 0, "and a delivery by a bar door")
+	m = await _load("blai", "rain", "night")
+	_check(m.blai_diners.is_empty(), "nobody sits out on Blai in the rain")
+	_check(m.performers.size() > 0, "they stand in the doorways instead")
+
 	if _level != null:
 		_level.get_parent().remove_child(_level)
 		_level.free()

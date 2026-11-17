@@ -180,6 +180,10 @@ const STYLES := {
 	# comp, a little brighter and quicker than the grid it cuts across
 	"diagonal": {"bpm": 120, "key": 9, "lead": "vibes", "lead2": ["whistle", 12], "comp": "bossa",
 		"bass": "walk", "drums": "rim", "swing": 0.05, "verb": 0.28},
+	# Carrer de Blai: a late rumba out of a bar door, guitar over an accordion
+	# an octave down, minor and swung, the street's own Saturday night
+	"blai": {"bpm": 116, "key": 4, "minor": true, "lead": "guitar", "lead2": ["accordion", -12], "comp": "rumba",
+		"bass": "walk", "drums": "kickrim", "swing": 0.10, "verb": 0.30},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",

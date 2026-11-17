@@ -80,6 +80,9 @@ const LEVEL_GOAL_IDS := {
 	# El Metro: the turnstiles, the rush-hour surge, the car's doors
 	"metro": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "turnstile", "surge", "doors_clean", "combo", "prize", "spell", "jamon", "clock"],
 	"diagonal": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "tram_dodge", "tram_clean", "kiosk", "combo", "prize", "spell", "jamon", "clock"],
+	# Carrer de Blai: leaving the floor food, the waiters' trays, the terraces
+	# (no "snack": eating off the floor is what your human tells her not to do)
+	"blai": ["mark", "sniff", "phone", "paws", "bag", "fetch", "drink", "leave_it", "tray", "beg", "combo", "prize", "spell", "jamon", "clock"],
 	# Sarrià: the bells of Sant Vicenç, the two bakeries, the balcony gardener
 	"sarria": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bells", "bread", "gardener", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
@@ -178,6 +181,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"surge": {"text": "Dig in against the rush-hour crowd", "target": 1, "fn": func() -> int: return 1 if m.metro_surge_held else 0},
 		"doors_clean": {"text": "Get home without the doors catching the leash", "target": 1, "fn": func() -> int: return 1 if (bool(m.finished) and m.metro_door_catches == 0) else 0},
 		"kiosk": {"text": "Bark at the newspaper kiosk", "target": 1, "fn": func() -> int: return 1 if m.diagonal_kiosk_barked else 0},
+		"leave_it": {"text": "Leave it %d times when told", "target": 3, "fn": func() -> int: return m.blai_leaves},
+		"tray": {"text": "Catch a pintxo off a tipping tray", "target": 1, "fn": func() -> int: return m.blai_tray_catches},
+		"beg": {"text": "Wait by a terrace or a group until someone shares", "target": 1, "fn": func() -> int: return m.blai_begged},
 		"bells": {"text": "Howl along with the church bells", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.howled else 0},
 		"bread": {"text": "Sniff the bread at %d bakeries", "target": 2, "fn": func() -> int: return Sarria.bread_sniffed(m)},
 		"gardener": {"text": "Bark good morning to the balcony gardener", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.greeted else 0},
