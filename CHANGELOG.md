@@ -2,6 +2,17 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - El Metro: the art pass
+
+- Art only, all in `systems/metro_art.gd`. No solid, pole, surface, NPC path or goal moves, and the walk's behaviour snapshot is byte-identical.
+- The streets at both stair mouths: the roofs are real buildings now, one against the street and one behind on each 150 px plot, with pantiles, terrats and light wells (`Gotic.draw_block`), party walls between them and a cornice along the front. Before, they were flat coloured slabs. The shops' awnings get a scalloped valance, a roller bar, their shade and a door between them. The road has a gutter with grates and a zebra crossing near each stair. In the rain the paving and road shine in soft feathered streaks (`ShapeBatch.band`), with puddles by the kerb where there used to be flat bars.
+- Where the street gives way to the dig, the slab is drawn cut through, with concrete, rebar and a lit edge and the dark falling away under it. Before, the asphalt just stopped at black. The ground past the walls has beds and stones.
+- The tiled walls are laid in staggered courses on a concrete lining. Each has a frieze in its section's colour (line A orange in the hall, teal along the passage to line C, blue at Paraigües and amber at Sant Gos), strip lamps with their fittings, and a dark skirting. The splayed corners carry the frieze and skirting round, so they no longer read as bare floor. The strip lamps wash the floor beside them.
+- The hall's terrazzo has a darker border and a brass strip along the walls. The passage and platforms have drain grilles, and the platforms a drain channel inside the station's colour band.
+- On the platform walls, the line's map sits between the name panels: six stops, this one ringed, and the change to line C. Eight framed posters (a concert, the beach, a gallery's show, a dog groomer's), all invented, line the escalator walls and the passage. The old poster loop never drew any.
+- The escalators have ribbed landing plates, comb teeth where the treads go under, newels and a sheen on the handrails. The car's end doorways have ribbed sill plates. The other line's train has roof seams, air-conditioning units and gangway bellows.
+- Tests: `test_metro.gd`, `test_walk_hooks.gd`, `test_soft_light.gd`, `test_shape_batch.gd`, `test_panot.gd`, `metro --selftest` and a `tools/playtest.gd` walk (0 problems). `tools/behaviour_snapshot.sh` (metro) is identical before and after, and `SURF_DUMP=1 tools/surface_map.sh metro` matches main. The web perf figures are in the pull request.
+
 ## 2026-11-16 - Upgrade L'Estació (mainline station concourse)
 
 - Updated `systems/estacio.gd` and `world/level_build.gd` for `station` (`L'Estació`):
