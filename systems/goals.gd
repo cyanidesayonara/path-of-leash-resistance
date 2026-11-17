@@ -83,6 +83,8 @@ const LEVEL_GOAL_IDS := {
 	# Carrer de Blai: leaving the floor food, the waiters' trays, the terraces
 	# (no "snack": eating off the floor is what your human tells her not to do)
 	"blai": ["mark", "sniff", "phone", "paws", "bag", "fetch", "drink", "leave_it", "tray", "beg", "combo", "prize", "spell", "jamon", "clock"],
+	# Sant Pau: the clock tower chimes, the school tour group, the lavender garden beds
+	"santpau": ["mark", "sniff", "phone", "paws", "bag", "fetch", "drink", "santpau_tour", "santpau_chime", "santpau_lavender", "combo", "prize", "spell", "jamon", "clock"],
 	# Sarrià: the bells of Sant Vicenç, the two bakeries, the balcony gardener
 	"sarria": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bells", "bread", "gardener", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
@@ -185,6 +187,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"leave_it": {"text": "Leave it %d times when told", "target": 3, "fn": func() -> int: return m.blai_leaves},
 		"tray": {"text": "Catch a pintxo off a tipping tray", "target": 1, "fn": func() -> int: return m.blai_tray_catches},
 		"beg": {"text": "Wait by a terrace or a group until someone shares", "target": 1, "fn": func() -> int: return m.blai_begged},
+		"santpau_tour": {"text": "Cheer the school tour group with a bark", "target": 1, "fn": func() -> int: return 1 if m.santpau_tour != null and m.santpau_tour.cheered else 0},
+		"santpau_chime": {"text": "Howl along with the clock tower's chime", "target": 1, "fn": func() -> int: return 1 if m.santpau_chime_howled else 0},
+		"santpau_lavender": {"text": "Dash through %d lavender beds", "target": 3, "fn": func() -> int: return m.santpau_beds_visited.size()},
 		"bells": {"text": "Howl along with the church bells", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.howled else 0},
 		"bread": {"text": "Sniff the bread at %d bakeries", "target": 2, "fn": func() -> int: return Sarria.bread_sniffed(m)},
 		"gardener": {"text": "Bark good morning to the balcony gardener", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.greeted else 0},

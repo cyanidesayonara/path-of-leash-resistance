@@ -184,6 +184,10 @@ const STYLES := {
 	# an octave down, minor and swung, the street's own Saturday night
 	"blai": {"bpm": 116, "key": 4, "minor": true, "lead": "guitar", "lead2": ["accordion", -12], "comp": "rumba",
 		"bass": "walk", "drums": "kickrim", "swing": 0.10, "verb": 0.30},
+	# Sant Pau: unhurried classical guitar and high vibes over a gentle arpeggio
+	# through the orange-tree gardens at dusk
+	"santpau": {"bpm": 108, "key": 2, "lead": "guitar", "lead2": ["vibes", 12], "comp": "arp",
+		"bass": "walk", "drums": "brushsoft", "swing": 0.04, "verb": 0.34},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
@@ -541,6 +545,13 @@ const DARES := {
 			[4, 0.5, 71], [4.5, 0.5, 71], [5, 0.5, 74], [5.5, 0.5, 78], [6, 0.5, 74], [6.5, 0.5, 71], [7, 1, 74],
 			[8, 0.5, 71], [8.5, 0.5, 74], [9, 0.5, 79], [9.5, 0.5, 83], [10, 0.5, 79], [10.5, 0.5, 74], [11, 1, 79],
 			[12, 0.5, 76], [12.5, 0.5, 79], [13, 0.5, 81], [13.5, 0.5, 85], [14, 2, 81]]},
+	# the watercolorist: bright washes on vibes and glockenspiel over a garden arpeggio
+	"sketcher": {"bpm": 128, "lead": "vibes", "lead2": ["glock", 12], "comp": "arp", "bass": "walk",
+		"drums": "rim", "verb": 0.30, "chords": [[62, "maj7"], [67, "maj7"], [64, "min7"], [57, "maj"]],
+		"mel": [[0, 1, 74], [1, 0.5, 78], [1.5, 0.5, 81], [2, 1, 86], [3, 1, 81],
+			[4, 1, 79], [5, 0.5, 83], [5.5, 0.5, 86], [6, 2, 83],
+			[8, 1, 76], [9, 0.5, 79], [9.5, 0.5, 83], [10, 1, 84], [11, 1, 81],
+			[12, 0.5, 79], [12.5, 0.5, 78], [13, 0.5, 76], [13.5, 0.5, 74], [14, 2, 73]]},
 }
 
 # --- the score: what plays when ---------------------------------------------

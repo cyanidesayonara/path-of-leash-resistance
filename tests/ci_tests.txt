@@ -411,6 +411,9 @@
 # Carrer de Blai: leave it, the waiters' trays, the terraces and the sky
 --headless --path . --script res://tests/test_blai.gd
 
+# Sant Pau: pavilions, gardens, clock chimes, school tour and dare-giver
+--headless --path . --script res://tests/test_santpau.gd
+
 # El Metro: the turnstile fumble, the doors, the ride and the surge
 --headless --path . --script res://tests/test_metro.gd
 

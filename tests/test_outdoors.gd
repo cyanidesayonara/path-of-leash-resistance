@@ -148,6 +148,20 @@ func _run() -> void:
 	_check(m.blai_diners.is_empty(), "nobody sits out on Blai in the rain")
 	_check(m.performers.size() > 0, "they stand in the doorways instead")
 
+	# Sant Pau: bench sitters and sketchers out in dry dusk/day, empty in rain/snow
+	_check(Outdoors.garden_sitters("clear", "dusk") > Outdoors.garden_sitters("clear", "dawn"),
+		"Sant Pau benches fuller at dusk than dawn")
+	_check(Outdoors.garden_sitters("rain", "dusk") == 0.0 and Outdoors.garden_sitters("snow", "day") == 0.0,
+		"and empty in rain and snow")
+	_check(Outdoors.sketchers_out("clear", "dusk") and not Outdoors.sketchers_out("rain", "day") and not Outdoors.sketchers_out("clear", "night"),
+		"sketchers out in dry light/dusk, not in rain or at night")
+	m = await _load("santpau", "clear", "dusk")
+	var dusk_sitters: int = m.santpau_sitters.size()
+	var dusk_sketchers: int = m.performers.size()
+	_check(dusk_sitters > 0 and dusk_sketchers > 0, "Sant Pau has sitters and sketchers at dusk (%d, %d)" % [dusk_sitters, dusk_sketchers])
+	m = await _load("santpau", "rain", "dusk")
+	_check(m.santpau_sitters.is_empty() and m.performers.is_empty(), "nobody sits or sketches in Sant Pau in the rain")
+
 	if _level != null:
 		_level.get_parent().remove_child(_level)
 		_level.free()

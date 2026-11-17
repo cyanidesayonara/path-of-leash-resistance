@@ -51,12 +51,12 @@ const WHO := {"beach": "monkey", "street": "statue", "port": "fisher", "site": "
 	"aigues": "hiker", "horta": "gardener", "llevant": "surfer", "boars": "ranger", "gracia": "drummer",
 	"carmel": "photographer", "superilla": "chess", "forum": "drone", "espanya": "bubbles", "raval": "fortune",
 	"eixample": "guide", "angels": "skateboarder", "poble": "potter", "ciutadella": "juggler", "cremada": "devil",
-	"aeroport": "pilot", "montserrat": "monk", "diagonal": "rider", "blai": "cook", "molina": "instructor"}
+	"aeroport": "pilot", "montserrat": "monk", "diagonal": "rider", "blai": "cook", "santpau": "sketcher", "molina": "instructor"}
 
 # where they are on a walk whose spot main's rule (either side of the
 # corridor 1600 px in) would put on something or under it: El Metro's
 # escalator, a palm's crown on Plaça Reial, the solar pergola on El Fòrum
-const AT := {"metro": Vector2(445.0, -1430.0), "reial": Vector2(800.0, -1850.0), "forum": Vector2(820.0, -1150.0)}
+const AT := {"metro": Vector2(445.0, -1430.0), "reial": Vector2(800.0, -1850.0), "forum": Vector2(820.0, -1150.0), "santpau": Vector2(780.0, -1580.0)}
 
 # what each of them sits or stands on, solid and wrapping the leash; the
 # monkey's marble block is the walk's own (LevelBuild.beach_block_stones)
@@ -73,7 +73,7 @@ const FOOTPRINT := {"kid": Vector2(28.0, 62.0), "statue": Vector2(30.0, 30.0), "
 	"bubbles": Vector2(20.0, 20.0), "fortune": Vector2(28.0, 28.0), "guide": Vector2(20.0, 20.0),
 	"skateboarder": Vector2(20.0, 20.0), "potter": Vector2(28.0, 28.0), "juggler": Vector2(20.0, 20.0),
 	"devil": Vector2(20.0, 20.0), "pilot": Vector2(24.0, 22.0), "monk": Vector2(22.0, 22.0),
-	"rider": Vector2(24.0, 24.0), "cook": Vector2(20.0, 20.0), "instructor": Vector2(22.0, 22.0)}
+	"rider": Vector2(24.0, 24.0), "cook": Vector2(20.0, 20.0), "sketcher": Vector2(24.0, 26.0), "instructor": Vector2(22.0, 22.0)}
 
 # What each of them says, as people talk, each line starting with a capital. "dare" always names
 # the numbers as "N tricks in N seconds", and the bubble adds TAKE while the dare waits
@@ -214,6 +214,9 @@ const LINES := {
 	"cook": {"idle": "Kitchen's hot. Want a dare?", "dare": "%d tricks in %d seconds, before the croquetas burn!",
 		"won": "Chef's kiss! Come back for a harder one.", "lost": "Overcooked! Come back and try again.",
 		"done": "Anything on the menu, dog. On me."},
+	"sketcher": {"idle": "The light's just right on the domes. Want a dare?", "dare": "%d tricks in %d seconds, before the dusk light goes!",
+		"won": "Lovely color! Come back for a harder one.", "lost": "Washed out! Come back and try again.",
+		"done": "You're going straight into my sketchbook."},
 }
 
 # who they are, for the result card
@@ -229,7 +232,7 @@ const NAMES := {"kid": "the kid", "monkey": "the monkey", "statue": "the statue"
 	"fortune": "the fortune teller", "guide": "the tour guide", "skateboarder": "the skateboarder",
 	"potter": "the potter", "juggler": "the juggler", "devil": "the devil", "pilot": "the pilot",
 	"monk": "the monk", "rider": "the delivery rider", "cook": "the cook",
-	"instructor": "the ski instructor"}
+	"instructor": "the ski instructor", "sketcher": "the watercolor painter"}
 
 var main: Node2D
 var my_dog: Node2D

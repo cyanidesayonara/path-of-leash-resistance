@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - New walk: Sant Pau
+
+- Added Sant Pau (`santpau`, `systems/santpau.gd`), the 37th walk of the campaign: Domènech i Montaner's modernista hospital grounds at dusk (`clear`, `dusk`), entered from Avinguda de Gaudí's end over Gaudí hexagonal panots, up the central stone axis past the gate lodges and symmetrical red-brick pavilions to the Administration building's clock tower, and out off the leash into the Jardins de Sant Pau. A calm walk with no chase and no boss, placed right after Plaça d'Espanya in the carousel (`STAR_GATE` 46, `CHASE_GATE` `"boars"`), with its name laid in bitter oranges and the gloss "The modernista hospital".
+- Architecture and gardens: ten solid brick-and-limestone pavilions with glazed turquoise, saffron and magenta domes, corner turrets, and the Administration clock tower batched into `ShapeBatch` overhead; limestone-kerbed lavender and grass garden beds along the central axis and four courtyard quadrants round an octagonal tiled fountain; bitter-orange trees in pits (`TREE_PIT`), grindable kerbs, and wrought-iron garden lamps lit through `night_fronts` and `Game.lamp_glow()`.
+- Signature live event: the clock tower chimes the hour (`>= 1.0 s` warning with bell ring and golden chime ripples) before a school tour group streams across the axis behind a guide's raised umbrella, with bump, dodge, brioche snatch, and bark-to-cheer / bark-to-howl interactions.
+- Dare-giver and outdoors: a watercolorist at her easel (`"watercolor"` in `entities/challenger_cast.gd`, five lines in `challenger.LINES`, result card `"the watercolorist"`, tune `dare_sketcher` in `audio/music.gd`), walk tune `santpau`, bench sitters (`Outdoors.garden_sitters`), and architecture sketchers (`Outdoors.sketchers_out`), plus goals `santpau_tour`, `santpau_chime`, and `santpau_lavender`.
+- Tests and tooling: added `tests/test_santpau.gd` in `tests/ci_tests.txt` and registered `santpau` in `test_walk_hooks`, `test_npc_clear_of_solids`, `test_outdoors`, `test_poble`, and `tools/{behaviour_snapshot,shot_sweep,surface_map}.sh`.
 ## 2026-11-17 - New walk: La Molina, and the runaway groomer
 
 - La Molina (`molina`), the first snow walk and the chase after L'Aeroport: up a groomed piste at the ski station in the Cerdanya, in snow (`CAMPAIGN_SKY` `["snow", "day"]`), from the bottom of the lifts to the xalet's terrace. Opens at 42 stars, straight after El Laberint d'Horta in the carousel. `systems/molina.gd`.

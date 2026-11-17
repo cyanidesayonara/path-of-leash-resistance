@@ -29,7 +29,7 @@ const Letters := preload("res://world/sign_letters.gd")
 
 # the material per walk; a walk not listed keeps main.gd's drawn styles
 const MATERIALS := {
-	"barri": "leaves", "diagonal": "papers", "metro": "brollies", "blai": "pintxos", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
+	"barri": "leaves", "diagonal": "papers", "metro": "brollies", "blai": "pintxos", "santpau": "oranges", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
@@ -72,6 +72,7 @@ const FEEL := {
 	"brollies": {"spacing": 0.17, "r": 0.075, "drag": 4.6, "take": 1.2, "spin": 3.0, "align": true},
 	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
 	"pintxos": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
+	"oranges": {"spacing": 0.14, "r": 0.075, "drag": 1.1, "take": 1.1, "roll": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
@@ -533,6 +534,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_papers(c, sign, h)
 		"pintxos":
 			_pintxos(c, sign, h)
+		"oranges":
+			_oranges(c, sign, h)
 		"brollies":
 			_brollies(c, sign, h)
 		"pastries":
@@ -1042,6 +1045,23 @@ static func _pintxos(c: Object, sign: Dictionary, _h: float) -> void:
 		c.draw_colored_polygon(_box(p - ay * r * 0.1, rot, r * 0.8, r * 0.5), top)
 		c.draw_colored_polygon(_box(p - ay * r * 0.22 - ax * r * 0.25, rot, r * 0.25, r * 0.16), top.lightened(0.3))
 		c.draw_line(p + ay * r * 0.6 - ax * r * 0.2, p - ay * r * 1.25 + ax * r * 0.35, Color(0.86, 0.74, 0.52), maxf(1.0, r * 0.12))
+
+
+static func _oranges(c: Object, sign: Dictionary, _h: float) -> void:
+	# bitter oranges dropped from the hospital's garden trees, with a leaf or two
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.r) * 1.05, Color(0, 0, 0, 0.26))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var v := float(pc["var"])
+		c.draw_circle(p, r, Color(0.84, 0.42, 0.10))
+		c.draw_circle(p - Vector2(r * 0.18, r * 0.18), r * 0.76, Color(0.96, 0.56, 0.16))
+		c.draw_circle(p - Vector2(r * 0.35, r * 0.35), r * 0.26, Color(1.0, 0.78, 0.36))
+		if v > 0.4:
+			c.draw_line(p, p + ax * (r * 1.3), Color(0.24, 0.46, 0.20), maxf(1.4, r * 0.32))
 
 
 # a croissant's three lobes along its curve, and their bake from the
