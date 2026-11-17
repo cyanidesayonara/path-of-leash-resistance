@@ -12762,6 +12762,11 @@ func _draw_world() -> void:
 		# muddy bank, then the water inside it, from one outline
 		_draw_pinned_patch(bank, pc, Color(0.40, 0.36, 0.28), 1.08)
 		_draw_pinned_patch(bank, pc, Color(0.31, 0.44, 0.52), 0.94)
+		# deeper toward the middle, so it reads as a lake and not a flat fill
+		var deep := ShapeBatch.new()
+		for oy: float in [-0.22, 0.22]:
+			deep.glow(pc + Vector2(0.0, pond.size.y * 0.5 * oy), pond.size.x * 0.31, Color(0.13, 0.25, 0.35, 0.42), 0.2)
+		deep.flush(_wc)
 		var wt := AnimClock.msec() / 1000.0
 		for i in range(4):
 			var wy := pond.position.y + 70.0 + i * 105.0

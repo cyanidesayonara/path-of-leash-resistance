@@ -10,6 +10,7 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 # EL PARC's own furniture, on the lawns beside the path: box-hedged
 # flowerbeds (their edging is a grind rail), the bandstand, the bronze dog on
@@ -489,6 +490,33 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_lawns(m, maxf(vt, m.GATE_Y - 30.0), vb)
 
 
+# the dog park's trees are the lawn's broadleaves, standing in grass: no
+# forest roots, which the shared grove runs toward the walk's edge lines and
+# which read here as sticks poking out of the crowns
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m._broadleaf_ground(c, p, 0.85)
+	var b := ShapeBatch.new()
+	m._broadleaf_trunk(b, p, 0.85)
+	b.flush(c)
+
+
+# past the gate the dog park is lawn all the way across: the path's fill
+# stops 40 past the gate, so its handling must stop there too
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y < m.GATE_Y - 40.0:
+		return Surfaces.S.GRASS
+	return -1
+
+
+# after dark the light comes from the park's own green lamps, not from the
+# street's wall lamps, which have no wall to hang on here
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for p: Vector2 in LevelBuild.PARK_LAMPS:
+		out.append(Vector3(p.x, p.y + 6.0, m.NIGHT_LAMP_R))
+	return out
+
+
 # --- the park round the path (2026-11-08) --------------------------------------
 # What made El Parc read as El Barri: the path was one flat fill with a seam,
 # the lawns empty grass. The path now has a granite edging and the park's low
@@ -602,14 +630,13 @@ static func draw_over_walkway(m: Node2D, wc: Object, vt: float, vb: float) -> vo
 
 
 # the city's park lamp: a green cast-iron post on a fluted base, a lantern
-# with four glass panes and a cap; a pool of light on the gravel when lit
+# with four glass panes and a cap, lit warm after dark (their pools are the
+# light layer's, from night_lights)
 static func _lamps(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var glow := Game.lamp_glow()
 	for p: Vector2 in LevelBuild.PARK_LAMPS:
 		if p.y < vt - 120.0 or p.y > vb + 120.0:
 			continue
-		if glow > 0.0:
-			b.glow(p + Vector2(0.0, 6.0), 110.0, Color(1.0, 0.86, 0.52, 0.30 * glow), 0.15)
 		# the post's long shadow, and the lantern's at its end
 		var sh: Color = Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
 		b.capsule(p, p + Shade.light * 62.0, 2.6, sh)

@@ -86,6 +86,29 @@ func _run() -> void:
 	var sp: Vector2 = LevelBuild.PARK_PLAYGROUND.get_center() + Vector2(-28.0, 40.0)
 	_check(m._takes_prints(sp), "the sandpit takes prints")
 	_check(not m._takes_prints(Vector2(m.walk_cx, -1200.0)), "the gravel path does not")
+
+	# past the gate the dog park is lawn across its whole width, the path's
+	# line included; the gravel path below the gate is still gravel
+	_check(m.surface_at(Vector2(640.0, m.GATE_Y - 300.0)) == m.Surfaces.S.GRASS, "the dog park's middle handles as grass")
+	_check(m.surface_at(Vector2(640.0, m.GATE_Y + 200.0)) == m.Surfaces.S.PAVEMENT, "the path below the gate handles as gravel")
+
+	# after dark the park's own lamps give the light, and nothing else does
+	var lights: Array[Vector3] = m.night_lights()
+	_check(lights.size() == LevelBuild.PARK_LAMPS.size(), "one light per park lamp (%d)" % lights.size())
+	var at_lamps := true
+	for l: Vector3 in lights:
+		var near := false
+		for lp: Vector2 in LevelBuild.PARK_LAMPS:
+			near = near or Vector2(l.x, l.y).distance_to(lp) < 12.0
+		at_lamps = at_lamps and near
+	_check(at_lamps, "every light stands at a park lamp")
+
+	# the papereras are emptied: no bin bags heaped on the gravel
+	var sacks := 0
+	for ch: Node in m.get_children():
+		if "kind" in ch and ch.get_script() == load("res://entities/cone.gd") and String(ch.kind) == "sack":
+			sacks += 1
+	_check(sacks == 0, "no bin bags lie about the park (%d)" % sacks)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
