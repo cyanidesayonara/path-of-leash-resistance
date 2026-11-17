@@ -166,111 +166,190 @@ static func _plinth(c: CanvasItem, t: float) -> void:
 					+ Vector2(0, f * f * 140.0), Vector2(10, 8)), STONE_DARK)
 
 
-# The Raval's bronze cat side on, facing right, his feet at `at`: a great round bronze
-# body on stubby legs, the small head with its ears and whiskers, the tail up
-# in a curl. `awake` opens his amber eyes; `walking` swings the legs and the
-# tail; `stretch` arches him; `swat` lifts a front paw, claws out; `hiss` is
-# his threat display: ears pinned back, hackles up along his spine, the tail
-# bottle-brushed, the mouth open on his fangs. Shared with the card.
+# The Raval's bronze cat side on, facing right, his feet at `at`: a heavy old
+# tomcat of our own, not anyone's sculpture. A deep chest, the belly hanging,
+# a big round haunch with the hind foot tucked forward under it, chunky
+# forelegs, a thick tail; a broad head with a tom's jowls, whisker pads, a
+# nose, ears with their dark insides; all of it cast bronze with the sheen
+# rubbed bright where people touch him. `awake` opens his almond eyes;
+# `walking` swings the legs and the tail; `stretch` arches him; `swat` lifts
+# a front paw, claws out; `hiss` is his threat display: ears pinned back,
+# hackles up along his spine, the tail bottle-brushed, the mouth open on his
+# fangs. Shared with the card.
 static func cat(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, walking: bool, stretch: float,
 		swat := 0.0, hiss := 0.0) -> void:
-	var arch := sin(stretch * PI) * 30.0 + 14.0 * hiss
+	var arch := sin(stretch * PI) * 30.0 + 16.0 * hiss
 	var p := func(v: Vector2) -> Vector2: return at + v * k
-	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(0, 4) * k, Vector2(180, 14) * k), Color(0, 0, 0, 0.35))
-	# the tail up in a curl, swishing once he is awake
-	var sw := sin(t * 3.0) * 30.0 * awake
+	# the upper body rises as he arches; the feet stay down
+	var up := func(v: Vector2) -> Vector2: return at + (v + Vector2(0, -arch * clampf(-v.y / 160.0, 0.0, 1.0))) * k
+	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(10, 4) * k, Vector2(190, 14) * k), Color(0, 0, 0, 0.35))
+	# the tail: thick, up and curling over at its tip; swishing awake, a
+	# bottle-brush hissing
+	var sw := sin(t * 3.0) * 26.0 * awake
 	var tail := PackedVector2Array()
-	for i in range(9):
-		var f := float(i) / 8.0
-		tail.append(p.call(Vector2(-150.0 - f * 50.0 + sin(f * PI) * sw * 0.3, -150.0 - f * 160.0 - arch * f)
-			+ Vector2(sin(f * 4.0) * 20.0 * f + sw * f, 0)))
+	for i in range(10):
+		var f := float(i) / 9.0
+		tail.append(up.call(Vector2(-150.0 - f * 70.0 + sin(f * PI) * sw * 0.3 + f * f * 40.0 + sw * f * 0.6,
+			-150.0 - f * 170.0 + f * f * 40.0)))
+	var tw := 34.0 + 16.0 * hiss
+	# hissing, the fur along it puffs out: tufts either side, inked and filled
+	var tufts: Array[Vector2] = []
+	var tuft_r: Array[float] = []
 	if hiss > 0.0:
-		# bottle-brushed: the fur along it stands straight out
-		for i in range(1, 9):
+		for i in range(1, 10):
 			var dv := (tail[i] - tail[i - 1]).normalized().orthogonal()
-			var base := tail[i].lerp(tail[i - 1], 0.5)
 			for sgn: float in [-1.0, 1.0]:
-				c.draw_line(base, base + dv * sgn * (22.0 + float(i % 3) * 6.0) * k * hiss, INK, 9.0 * k)
-				c.draw_line(base, base + dv * sgn * (18.0 + float(i % 3) * 6.0) * k * hiss, BRONZE_BASE, 5.0 * k)
-	c.draw_polyline(tail, INK, (34.0 + 10.0 * hiss) * k)
-	c.draw_polyline(tail, BRONZE_BASE, (26.0 + 10.0 * hiss) * k)
-	# legs, the far pair darker, stubby, swinging as he walks
-	for i in range(4):
-		var hip: Vector2 = [Vector2(-100, -50), Vector2(70, -50), Vector2(-80, -50), Vector2(90, -50)][i]
-		var swing := sin(t * 7.0 + float(i) * 1.6) * 0.4 if walking else 0.0
-		var foot: Vector2 = hip + Vector2.from_angle(PI * 0.5 + swing) * 52.0
-		if i == 3 and swat > 0.0:
-			foot = hip + Vector2(70.0, -40.0) * swat + Vector2(0, 52) * (1.0 - swat)
-		var col := BRONZE_DARK if i < 2 else BRONZE_BASE
-		c.draw_line(p.call(hip), p.call(foot), INK, 40.0 * k)
-		c.draw_line(p.call(hip), p.call(foot), col, 32.0 * k)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(foot), Vector2(22, 12) * k), col)
-		if i == 3 and swat > 0.3:
-			# the claws out
-			for cl in range(3):
-				var cb: Vector2 = p.call(foot + Vector2(14.0, -8.0 + float(cl) * 8.0))
-				var ct: Vector2 = cb + Vector2(18.0, -4.0 + float(cl) * 4.0) * k * swat
-				c.draw_line(cb, ct, INK, 6.0 * k)
-				c.draw_line(cb, ct, Color(0.96, 0.94, 0.86), 3.0 * k)
-	# the body, round as a cat who is never refused a second breakfast, its bronze sheen
-	var bc := Vector2(0, -140 - arch)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(176, 118) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(170, 112) * k), BRONZE_BASE)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(-30, -40)), Vector2(110, 50) * k), BRONZE_LIT)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(-60, -64)), Vector2(40, 14) * k), BRONZE_SPEC)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(10, 60)), Vector2(140, 40) * k), BRONZE_DARK)
+				tufts.append(tail[i] + dv * sgn * (tw * 0.42 + float((i * 3) % 4) * 2.0) * k * hiss)
+				tuft_r.append((10.0 + float((i + int(sgn)) % 3) * 3.0) * k * hiss)
+	for i in range(tufts.size()):
+		c.draw_circle(tufts[i], tuft_r[i] + 4.0 * k, INK)
+	for i in range(9):
+		var w := lerpf(tw, tw * 0.7, float(i) / 8.0)
+		c.draw_line(tail[i], tail[i + 1], INK, (w + 8.0) * k)
+		c.draw_circle(tail[i + 1], (w + 8.0) * 0.5 * k, INK)
+	for i in range(9):
+		var w := lerpf(tw, tw * 0.7, float(i) / 8.0)
+		c.draw_line(tail[i], tail[i + 1], BRONZE_BASE, w * k)
+		c.draw_circle(tail[i + 1], w * 0.5 * k, BRONZE_BASE)
+	for i in range(tufts.size()):
+		c.draw_circle(tufts[i], tuft_r[i], BRONZE_BASE)
+	c.draw_line(tail[2], tail[7], BRONZE_LIT, 6.0 * k)
+	# the far legs, darker
+	var stride := sin(t * 7.0) * 14.0 if walking else 0.0
+	_cat_leg(c, p, up, Vector2(70, -90), Vector2(70 - stride, 0), k, BRONZE_DARK, 0.0)
+	_cat_paw(c, p, Vector2(-40 + stride, -4), k, BRONZE_DARK, 46.0)
+	# the body, inked as one mass and then filled: rump, barrel, chest, the
+	# belly hanging under them
+	var parts := [[Vector2(-100, -128), Vector2(78, 76)], [Vector2(-10, -150), Vector2(150, 96)],
+		[Vector2(96, -150), Vector2(74, 80)], [Vector2(0, -80), Vector2(124, 40)]]
+	for pt: Array in parts:
+		c.draw_colored_polygon(MillieSide.ellipse(up.call(pt[0]), (pt[1] + Vector2(6, 6)) * k), INK)
+	for pt: Array in parts:
+		c.draw_colored_polygon(MillieSide.ellipse(up.call(pt[0]), pt[1] * k), BRONZE_BASE)
+	# the belly in shade, the back catching the light, the sheen rubbed bright
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(0, -84)), Vector2(112, 30) * k), BRONZE_DARK)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(-20, -206)), Vector2(110, 32) * k), BRONZE_LIT)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(-50, -222)), Vector2(46, 10) * k), BRONZE_SPEC)
+	# the haunch: a great round thigh, the hind foot tucked forward under it
+	# (no outline of its own: it is part of him, shaped by a crease along its front)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(-110, -134)), Vector2(40, 24) * k), BRONZE_LIT)
+	var crease := PackedVector2Array()
+	for i in range(8):
+		var a := PI * (-0.35 + 0.75 * float(i) / 7.0)
+		crease.append(up.call(Vector2(-96, -110) + Vector2(cos(a) * 60.0, sin(a) * 56.0)))
+	c.draw_polyline(crease, BRONZE_DARK, 6.0 * k)
+	_cat_paw(c, p, Vector2(-62 - stride, -4), k, BRONZE_BASE, 50.0)
 	if hiss > 0.0:
-		# hackles: a ridge of spiked fur along the top of his back
+		# hackles: a ridge of spiked fur along his back
 		for h in range(12):
 			var a := PI * (1.12 + 0.07 * float(h))
-			var rim := bc + Vector2(cos(a) * 166.0, sin(a) * 108.0)
+			var rim := Vector2(-10, -150) + Vector2(cos(a) * 146.0, sin(a) * 92.0)
 			var out := Vector2(cos(a) * 0.5, sin(a)).normalized()
 			var ln := (20.0 + float(h % 3) * 8.0) * hiss
 			var sd := out.orthogonal() * 9.0
-			var tri := PackedVector2Array([p.call(rim - sd - out * 6.0), p.call(rim + out * ln), p.call(rim + sd - out * 6.0)])
-			var rim_ink := PackedVector2Array([p.call(rim - sd * 1.4 - out * 6.0), p.call(rim + out * (ln + 5.0)),
-				p.call(rim + sd * 1.4 - out * 6.0)])
-			c.draw_colored_polygon(rim_ink, INK)
-			c.draw_colored_polygon(tri, BRONZE_BASE)
-	# the head, small on that body
-	var hc := Vector2(150, -230 - arch * 0.5)
+			c.draw_colored_polygon(PackedVector2Array([up.call(rim - sd * 1.4 - out * 6.0), up.call(rim + out * (ln + 5.0)),
+				up.call(rim + sd * 1.4 - out * 6.0)]), INK)
+			c.draw_colored_polygon(PackedVector2Array([up.call(rim - sd - out * 6.0), up.call(rim + out * ln),
+				up.call(rim + sd - out * 6.0)]), BRONZE_BASE)
+	# the near foreleg; swatting, it comes up and forward with the claws out
+	var paw := Vector2(110 + stride, 0)
+	if swat > 0.0:
+		paw = paw.lerp(Vector2(210, -120), swat)
+	_cat_leg(c, p, up, Vector2(104, -96), paw, k, BRONZE_BASE, swat)
+	# the head: broad, a tom's jowls, set forward on the chest
+	var hc := Vector2(168, -246)
 	for s: float in [-1.0, 1.0]:
-		# the ears; hissing, pinned flat back
-		var et := hc + Vector2(-16 + s * 14, -96).lerp(Vector2(-70 + s * 10, -60), hiss)
-		c.draw_colored_polygon(PackedVector2Array([p.call(hc + Vector2(-30 + s * 14, -50)), p.call(et),
-			p.call(hc + Vector2(0 + s * 14, -56))]), BRONZE_DARK if s < 0.0 else BRONZE_BASE)
-	c.draw_circle(p.call(hc), 72.0 * k, INK)
-	c.draw_circle(p.call(hc), 67.0 * k, BRONZE_BASE)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(-14, -26)), Vector2(40, 22) * k), BRONZE_LIT)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(44, 22)), Vector2(30, 22) * k), BRONZE_LIT)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(68, 10)), Vector2(10, 7) * k), NOSE_DARK)
+		# the ears: up, with their dark insides; hissing, pinned flat back
+		var bx := 140.0 if s < 0.0 else 182.0
+		var tip := Vector2(bx - 14.0, -350.0).lerp(Vector2(bx - 74.0, -298.0), hiss)
+		var ear := PackedVector2Array([up.call(Vector2(bx - 34.0, -290.0)), up.call(tip), up.call(Vector2(bx + 12.0, -300.0))])
+		var col := BRONZE_DARK if s < 0.0 else BRONZE_BASE
+		var ear_ink := PackedVector2Array([up.call(Vector2(bx - 40.0, -286.0)), up.call(tip + Vector2(-2, -7)),
+			up.call(Vector2(bx + 18.0, -298.0))])
+		c.draw_colored_polygon(ear_ink, INK)
+		c.draw_colored_polygon(ear, col)
+		c.draw_colored_polygon(PackedVector2Array([up.call(Vector2(bx - 24.0, -294.0)), up.call(tip.lerp(Vector2(bx - 10.0, -300.0), 0.25)),
+			up.call(Vector2(bx + 2.0, -300.0))]), BRONZE_DARK.darkened(0.25))
+	c.draw_circle(up.call(hc), 72.0 * k, INK)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(hc + Vector2(10, 30)), Vector2(84, 52) * k), INK)
+	c.draw_circle(up.call(hc), 66.0 * k, BRONZE_BASE)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(hc + Vector2(10, 30)), Vector2(78, 46) * k), BRONZE_BASE)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(hc + Vector2(-12, -36)), Vector2(40, 20) * k), BRONZE_LIT)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(hc + Vector2(-20, -44)), Vector2(16, 6) * k), BRONZE_SPEC)
+	# the muzzle: whisker pads, the nose, the chin
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(hc + Vector2(58, 26)), Vector2(34, 26) * k), INK)
+	c.draw_colored_polygon(MillieSide.ellipse(up.call(hc + Vector2(58, 26)), Vector2(30, 22) * k), BRONZE_LIT)
+	c.draw_circle(up.call(hc + Vector2(52, 30)), 13.0 * k, BRONZE_LIT.lightened(0.06))
+	c.draw_circle(up.call(hc + Vector2(72, 28)), 11.0 * k, BRONZE_LIT.lightened(0.06))
+	for wp in range(3):
+		c.draw_circle(up.call(hc + Vector2(50.0 + float(wp) * 8.0, 28.0 + float(wp % 2) * 6.0)), 1.8 * k, BRONZE_DARK)
+	c.draw_colored_polygon(PackedVector2Array([up.call(hc + Vector2(76, 6)), up.call(hc + Vector2(92, 8)),
+		up.call(hc + Vector2(86, 18))]), NOSE_DARK)
 	if hiss > 0.0:
 		# the hiss: the jaw dropped open under the muzzle, fangs top and bottom
-		var gape := 26.0 * hiss
-		var mouth := PackedVector2Array([p.call(hc + Vector2(26, 34)), p.call(hc + Vector2(66, 26)),
-			p.call(hc + Vector2(62, 34 + gape)), p.call(hc + Vector2(34, 40 + gape * 0.7))])
+		var gape := 28.0 * hiss
+		var mouth := PackedVector2Array([up.call(hc + Vector2(38, 44)), up.call(hc + Vector2(84, 36)),
+			up.call(hc + Vector2(78, 46 + gape)), up.call(hc + Vector2(44, 52 + gape * 0.7))])
 		c.draw_colored_polygon(mouth, Color(0.36, 0.10, 0.12))
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(46, 36 + gape * 0.8)), Vector2(16, 6) * k), Color(0.86, 0.42, 0.48))
+		c.draw_colored_polygon(MillieSide.ellipse(up.call(hc + Vector2(60, 48 + gape * 0.8)), Vector2(16, 6) * k), Color(0.86, 0.42, 0.48))
 		mouth.append(mouth[0])
 		c.draw_polyline(mouth, INK, 4.0 * k)
-		for fx: float in [40.0, 58.0]:
-			c.draw_colored_polygon(PackedVector2Array([p.call(hc + Vector2(fx - 4, 30)), p.call(hc + Vector2(fx, 30 + 14.0 * hiss)),
-				p.call(hc + Vector2(fx + 4, 29))]), Color(0.97, 0.95, 0.88))
-			c.draw_colored_polygon(PackedVector2Array([p.call(hc + Vector2(fx - 6, 36 + gape)), p.call(hc + Vector2(fx - 2, 24 + gape)),
-				p.call(hc + Vector2(fx + 2, 36 + gape))]), Color(0.97, 0.95, 0.88))
-	for w in range(3):
-		var wy := 18.0 + float(w) * 9.0
-		c.draw_line(p.call(hc + Vector2(56, wy)), p.call(hc + Vector2(120, wy - 10.0 + float(w) * 10.0)), WHISKER_WIRE, 2.5 * k)
-	# the eye: shut, a bronze lid; awake, amber with a slit, under a frown
-	var eye := hc + Vector2(30, -8)
-	if awake <= 0.0:
-		c.draw_line(p.call(eye + Vector2(-14, 0)), p.call(eye + Vector2(14, 2)), INK, 5.0 * k)
+		for fx: float in [52.0, 74.0]:
+			c.draw_colored_polygon(PackedVector2Array([up.call(hc + Vector2(fx - 4, 40)), up.call(hc + Vector2(fx, 40 + 15.0 * hiss)),
+				up.call(hc + Vector2(fx + 4, 39))]), Color(0.97, 0.95, 0.88))
+			c.draw_colored_polygon(PackedVector2Array([up.call(hc + Vector2(fx - 6, 48 + gape)), up.call(hc + Vector2(fx - 2, 36 + gape)),
+				up.call(hc + Vector2(fx + 2, 48 + gape))]), Color(0.97, 0.95, 0.88))
 	else:
-		c.draw_circle(p.call(eye), (26.0 + 14.0 * hiss) * k * awake, Color(1.0, 0.70, 0.2, 0.25 + 0.2 * hiss))
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye), Vector2(15, 13 * awake) * k), INK)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye), Vector2(12, 10 * awake) * k), EYE_AMBER)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye + Vector2(3, 0)), Vector2(3.0 - 1.4 * hiss, 9 * awake) * k), EYE_PUPIL)
-		c.draw_line(p.call(eye + Vector2(-18, -22 + 4.0 * hiss)), p.call(eye + Vector2(16, -12 + 4.0 * hiss)), INK, (6.0 + 3.0 * hiss) * k)
+		c.draw_polyline(PackedVector2Array([up.call(hc + Vector2(84, 20)), up.call(hc + Vector2(80, 36)),
+			up.call(hc + Vector2(64, 44))]), INK, 3.0 * k)
+	for w in range(3):
+		var wy := 26.0 + float(w) * 8.0
+		c.draw_line(up.call(hc + Vector2(70, wy)), up.call(hc + Vector2(140, wy - 14.0 + float(w) * 12.0)), WHISKER_WIRE, 2.5 * k)
+	# the eye: shut, a bronze lid; awake, an almond of amber with a slit,
+	# under a frown that hardens when he hisses
+	var eye := hc + Vector2(30, -12)
+	if awake <= 0.0:
+		c.draw_line(up.call(eye + Vector2(-16, 2)), up.call(eye + Vector2(16, 0)), INK, 5.0 * k)
+	else:
+		var almond := PackedVector2Array()
+		var almond_in := PackedVector2Array()
+		for i in range(16):
+			var a := float(i) / 16.0 * TAU
+			var v := Vector2(cos(a) * 17.0, sin(a) * 11.0 * awake * (1.0 - 0.3 * hiss))
+			almond.append(up.call(eye + v.rotated(-0.18)))
+			almond_in.append(up.call(eye + (v * 0.78).rotated(-0.18)))
+		c.draw_colored_polygon(almond, INK)
+		c.draw_colored_polygon(almond_in, EYE_AMBER)
+		c.draw_colored_polygon(MillieSide.ellipse(up.call(eye + Vector2(4, 0)), Vector2(2.8 - 1.2 * hiss, 8.0 * awake) * k), EYE_PUPIL)
+		c.draw_circle(up.call(eye + Vector2(-4, -3)), 2.0 * k, Color(1, 1, 0.92))
+		c.draw_line(up.call(eye + Vector2(-20, -18 + 4.0 * hiss)), up.call(eye + Vector2(18, -12 + 5.0 * hiss)), INK, (5.0 + 3.0 * hiss) * k)
+
+
+# a foreleg: a thick column from the shoulder down to a round paw; `claws`
+# out when it swats
+static func _cat_leg(c: CanvasItem, p: Callable, up: Callable, hip: Vector2, paw: Vector2, k: float, col: Color,
+		claws: float) -> void:
+	var a: Vector2 = up.call(hip)
+	var b: Vector2 = p.call(paw + Vector2(0, -14))
+	c.draw_line(a, b, INK, 50.0 * k)
+	c.draw_line(a, b, col, 42.0 * k)
+	c.draw_line(a + Vector2(-10, 0) * k, b + Vector2(-10, -10) * k, col.lightened(0.08), 8.0 * k)
+	_cat_paw(c, p, paw + Vector2(0, -4), k, col, 44.0)
+	if claws > 0.3:
+		for cl in range(3):
+			var cb: Vector2 = p.call(paw + Vector2(18.0, -12.0 + float(cl) * 7.0))
+			var ct: Vector2 = cb + Vector2(18.0, -4.0 + float(cl) * 4.0) * k * claws
+			c.draw_line(cb, ct, INK, 6.0 * k)
+			c.draw_line(cb, ct, Color(0.96, 0.94, 0.86), 3.0 * k)
+
+
+# a paw, toes forward, the creases between them
+static func _cat_paw(c: CanvasItem, p: Callable, at: Vector2, k: float, col: Color, w: float) -> void:
+	c.draw_colored_polygon(MillieSide.ellipse(p.call(at + Vector2(6, -8)), Vector2(w * 0.5 + 4.0, 17) * k), INK)
+	c.draw_colored_polygon(MillieSide.ellipse(p.call(at + Vector2(6, -8)), Vector2(w * 0.5, 13) * k), col)
+	for n in range(2):
+		var tx := 6.0 + float(n) * 11.0
+		c.draw_line(p.call(at + Vector2(tx, -16)), p.call(at + Vector2(tx + 2, -2)), INK, 2.5 * k)
 
 
 # the card: the rambla gone white-hot behind EL GAT!, his face filling the
