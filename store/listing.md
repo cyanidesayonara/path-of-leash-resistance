@@ -86,12 +86,12 @@ dog walking
 ### What's new in this version
 
 ```
-- Three new walks, forty-two in all. Sarrià, the old village at first light, where the bells of Sant Vicenç ring the hour. El Metro, down out of the rain for one stop at rush hour with turnstiles, closing doors and a surge off the incoming train. And Carrer de Blai, Poble-sec's pintxos street at night, with dropped pintxos on the floor, terraces that share and flying waiter trays.
-- Boss arena additions: El Drac's trencadís serpentine bench in El Mosaic (herd him along the curve for a grind and daze), El Gat's striped café awnings on Rambla del Raval (bait his pounce onto the canvas to bounce him back), and harbour wakes, lake ripples and feathered beach surf.
-- El Gòtic's retractable lit bollards (pilones retràctils) with amber warning lights, plus new riverside lampposts, benches and a drinking fountain on El Besòs.
-- Camera tricks for bosses and close shaves: boss arena zoom-out, reveal letterbox, enrage tilt, and near-miss slow-motion.
-- Late-campaign chases spaced evenly across all thirty-nine walks, plus Montserrat goat-herd respite checkpoints and boulder targeting fixes.
-- Remaining passers-by upgraded to the full character rig, faster La Rambla and La Diagonal rendering, and Android safe-area and back-button readiness.
+- Three new walks, forty-two in all. Sarrià, the old village at first light, where the bells of Sant Vicenç ring the hour. El Metro, down out of the rain for one stop at rush hour. And Carrer de Blai, Poble-sec's pintxos street at night, where your human says "Leave it!" to every dropped pintxo.
+- A new look, Trencadís: saffron, turquoise and magenta on deep navy, with new fonts on every screen.
+- El Barri, Plaça Reial and L'Estació rebuilt: flower-tile pavements and zebra crossings, arcades lit at night, and a station café with commuters surging at every train call.
+- A dare-giver on every walk, each moving and with a tune of their own. Dares now show what counts: the zoomies are free while a dare runs, and the poles and trees to swing round are ringed.
+- The whirl, upgraded: wind your human round a pole and they fly out flat like a tetherball, whooshing round faster and faster, then FLING!
+- The leash, upgraded: coils loop round the trunk, the leash takes your collar's color, clips to her harness and runs into a reel in your human's hand.
 ```
 
 ### Notes for certification
@@ -222,6 +222,40 @@ changed since the icon was last generated, so the icon is as it was.
 ## Past What's new
 
 As submitted, newest first. The current one is in "Current listing".
+
+### What's new in 1.74 (tagged 2026-11-16)
+
+```
+- Boss arena additions: El Drac's trencadís serpentine bench in El Mosaic (herd him along the curve for a grind and daze), El Gat's striped café awnings on Rambla del Raval (bait his pounce onto the canvas to bounce him back), and harbour wakes, lake ripples and feathered beach surf.
+- El Gòtic's retractable lit bollards (pilones retràctils) with amber warning lights, plus new riverside lampposts, benches and a drinking fountain on El Besòs.
+- Camera tricks for bosses and close shaves: boss arena zoom-out, reveal letterbox, enrage tilt, and near-miss slow-motion.
+- Late-campaign chases spaced evenly across all thirty-nine walks, plus Montserrat goat-herd respite checkpoints and boulder targeting fixes.
+- Remaining passers-by upgraded to the full character rig, faster La Rambla and La Diagonal rendering, and Android safe-area and back-button readiness.
+```
+
+### What's new in 1.73 (tagged 2026-11-15)
+
+```
+- Three new walks, thirty-nine in all: L'Aeroport (Terminal 1's pier and security chase), Montserrat (funicular trail and wild goats), and La Diagonal (seen at a 45-degree angle, with its tram and two-way bike lanes).
+- Two new statue bosses: Els Lleons (twin bronze lions at El Port) and El Drac (El Mosaic's salamander), each with story films, plus boss arenas for all four statues (El Mamut's jetty and chairs, El Drac's jets and riding tiles, Els Lleons' crane net, mooring bollards and boat horn, El Gat's yarn stalls).
+- Chases rebuilt (cartoon sweeper and Dimoni vehicles; vet, boar, devil and airport squads on foot) and tug of war reworked with a bending rope, wind-up tells and meter.
+- Off the leash: El Barri's agility chalk line, pause table and medals; frisbee leap catches and streaks; fetch on the bounce; pigeons in every plaça; waves at the dog beaches; and squirrels in the woodland clearings.
+- Barcelona streets and polish: pilona bollards instead of hydrants, panot flower and Gaudí hex tiles, riders in eight styles with painted bike crossings, passers-by redrawn like dog walkers, place-fitting props, home walk-in steps, and gentle night lighting.
+```
+
+### What's new in 1.72 (tagged 2026-11-11)
+
+```
+- Two new walks, thirty-six in all:
+  - La Ciutadella: the grand park avenue to the waterfall cascade, rowboats on the lake, and El Mamut, a full-size stone mammoth who climbs off his plinth as the first statue boss (with his own victory payoff film).
+  - La Cremada: Badalona's devil night down Carrer del Mar to the beach, the Dimoni's rolling float chase, and a hot churro cart live event on the Rambla.
+- Castellers in Gràcia and El Gòtic: living dynamic human towers with l'aleta crowning, traditional musicians, and equilibri and cheering tricks.
+- The Fur-goneta: a shaggy Mutt Cutts dog van homage with floppy ears, wagging tail and tongue, touring four walks with a mobile groomer style dare.
+- The street after dark comes alive: doorways ajar, lit shopfronts, amber bars, and television blue spill soft fans of light onto paving and wet rain reflections.
+- El Gat pounces: below half health, the Raval's bronze cat wiggles his rear and leaps through the air with a landing ring. Catch him mid-leap or steer him into obstacles.
+- Who is out follows the weather and the hour: sunbathers, picnics and ice-cream carts stay in when it rains or after dark, and crowds thin in foul weather.
+- Badalona seafront kite flyer live event, clearer boss health bars, and fair patience costs for live-event bumps.
+```
 
 ### What's new in 1.71 (tagged 2026-11-10)
 

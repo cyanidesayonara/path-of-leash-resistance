@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Release notes for 1.75
+
+- The Store's "What's new in this version" still carried 1.74's bullets after their own submission. It now says only what is new since: the three walks, the Trencadís look, El Barri, Plaça Reial and L'Estació rebuilt, a dare-giver on every walk with a tune each, readable dares, the whirl and the leash. 1,056 of the Store's 1,500 characters.
+- "Past What's new" in `store/listing.md` gained 1.72, 1.73 and 1.74 as they were submitted (read from each tag's listing); the record had stopped at 1.71.
+- `docs/itch-page.md`'s 1.75 notes cover everything since v1.74, not only the walks, and `tools/site_copy.py` refilled the website's What's new from the listing.
+
 ## 2026-11-17 - The leash, upgraded
 
 - Coils are round. A span of the drawn rope with both ends resting on the same pole puts its midpoint on the arc round that pole, at the ends' own distance from it, rather than on the chord, so a leash wound round a tree reads as loops round the trunk instead of a jagged polygon. On the arc the rope clears the pole by more than the chord did. `test_leash_render_path` pins it.
