@@ -54,6 +54,20 @@ const MAMUT_LIT := Color(0.86, 0.67, 0.53)
 const MAMUT_RIB := Color(0.60, 0.41, 0.31)
 const MAMUT_TUSK := Color(0.88, 0.86, 0.81)
 const MAMUT_TUSK_DARK := Color(0.68, 0.66, 0.62)
+# the sound cues: [time, sound, pitch, volume dB]
+const CUES := [
+	[1.30, "crack", 1.2, -10.0],
+	[EAR_AT, "crack", 1.6, -14.0],
+	[TRUNK_AT + 0.05, "mamut_trumpet", 1.0, -2.0],
+	[STEP_AT + 0.1, "drum", 0.5, -4.0],
+	[DROP_AT, "drum", 0.35, 0.0],
+	[DROP_AT + 0.05, "ooooh", 0.9, -9.0],
+	[DROP_AT + 0.1, "splash", 0.7, -10.0],
+	[BOLT_AT, "bark", 1.0, -3.0],
+	[BOLT_AT + 0.4, "bark", 1.1, -4.0],
+	[BOLT_AT + 0.75, "bark", 1.0, -4.0],
+	[TITLE_AT, "mamut_trumpet", 0.85, -2.0],
+]
 
 
 # the camera: on the pair; a pan back to the plinth when she looks round,
