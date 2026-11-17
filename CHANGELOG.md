@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Sarrià: the art pass
+
+- Art only, all in `systems/sarria.gd`: no solid, pole, surface, NPC path or goal moves, and the walk's behaviour snapshot is byte-identical.
+- The village houses have depth: each front has a stone socle with rising damp, windows in stone surrounds, a street door on its step, a cornice and gutter with the eave's shade under it; the east fronts, which face the low sun, are warm and the west fronts cool. Roofs show the Arab tiles' channels running down from the ridge, replaced tiles, chimneys with caps and thrown shadows, rooflights and television aerials; a taller house shades its neighbour's roof. Terrats get fired tiles, a parapet with its shade, a stair hut, washing with shadows and pots. Behind each house is a pati (a lemon tree, a table, a wash house or a kitchen garden) and the back of the next street's row, where there used to be one flat slab of tile.
+- The houses' shade lies on the paving along the west fronts (a soft `ShapeBatch.band`, scaled by the weather and `Shade.throw`), with a contact line at the east fronts.
+- Sant Vicenç reads as the landmark: the nave stands over two lean-to aisles with buttresses between the chapels; the stone front has pilasters, a gable with its cross, a door in an arch with the rose window over it (they used to overlap) and lancets; the steps have lit treads and shade. The bell tower's square shaft ends in a balustraded terrace with pyramid pinnacles and an eight-sided belfry open to the bell; its clock has a dial and shows the hour the bells are about to strike. The rectory has a walled garden with a cypress, and the sacristy a proper roof.
+- The houses either end of the church and the market are now built up to them: the grey gaps of bare backdrop are gone.
+- El Mercat has a pitched roof with purlins, a glazed iron lantern with lit and shaded panes, stone-capped brick gables, and stone-ringed arches between brick piers on the street.
+- Paving: the plaça's flags each take one of four quarried tones (the old pattern changed tone halfway down a flag), with hairline cracks and chipped corners; the setts have odd darker and paler stones and a dished channel; sewer covers, gutter grates, iron tree grates under the planes, pigeon droppings, damp under the bins and benches, flour trodden out of the bakery doors, and the fountain's and the gardener's wet as soft glows instead of flat discs.
+- Props: balconies are a slab with a light railing and pots that spill over it, some with a green persiana hung over the rail or washing out; the fruit shop and the café get awnings, the bookshop and pharmacy signboards, and every awning a valance and its shade; shop windows have depth, a doorway and goods with a highlight; the second bakery's top crate holds croissants; the fountain and the saint's column are relit, the column throwing a long shadow.
+- Tests: `tests/test_sarria.gd`, `tests/test_walk_hooks.gd`, `tests/test_world_sign.gd`, `tests/test_soft_light.gd` and `sarria --selftest`; `tools/behaviour_snapshot.sh` (sarria) before and after identical. Web draw calls are in the pull request.
+
 ## 2026-11-16 - Carrer de Blai: the pintxos street, and "Leave it!"
 
 - A new walk, Carrer de Blai (`systems/blai.gd`), the 42nd with Sarrià and El Metro: Poble-sec's pedestrian pintxos street at the foot of Montjuïc, up to Plaça del Sortidor. Open at 39 stars, right after La Diagonal in the campaign and in its chase tier; its campaign sky is a clear night. Its name is laid in pintxos.
@@ -35,7 +47,6 @@ Append-only session history, newest first.
   - Added `Barri.night_fronts()` (declared in `tests/test_walk_hooks.gd`) so shopfronts and residential entries spill warm light across the paving at dusk and night; the entries' fronts sit on the doors' 232 px grid, which `tests/test_barri.gd` now checks.
   - Improved `Petanca` live-event readability in `_draw_square()` with a pulsing throwing-circle highlight and dotted aim line during the 0.8 s `"Watch the boule!"` wind-up, plus a sauló dust wake behind the rolling boule.
 - Verified with before/after `--shot --level=barri` captures, `tools/playtest.gd`, `tests/test_barri.gd`, `tests/test_walk_hooks.gd`, and `tests/test_night_fronts.gd`.
-
 ## 2026-11-16 - Trencadis: one art style for the game and the website
 
 - Settled the look: Trencadis, Gaudi's broken-tile mosaic. Deep navy panels (`#14203D`), saffron (`#FFB020`) as the primary colour, turquoise (`#1FC9B7`) for the screens beside the walk, magenta (`#E5487A`) for questions and warnings, leaf green (`#8BCB3C`) for done. The constants live at the top of `hud/ui_kit.gd`; the per-screen pastels are gone (two accents plus magenta), and every HUD panel, gauge, feed chip, goal card, results panel, settings row and word-strip coin takes its colour from the palette.
