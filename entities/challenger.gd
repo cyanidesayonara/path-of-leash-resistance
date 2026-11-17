@@ -38,14 +38,19 @@ const LADDER := [[6, 20.0], [8, 20.0], [10, 20.0]]
 # who gives the dare on each walk; anywhere not listed, the kid
 const WHO := {"beach": "monkey", "street": "statue", "port": "fisher", "site": "builder", "besos": "skater",
 	"oldtown": "busker", "market": "avia", "montjuic": "runner", "guell": "painter", "partit": "fan",
-	"station": "commuter"}
+	"station": "commuter", "metro": "breaker"}
+
+# where they are on a walk whose spot main's rule (either side of the
+# corridor 1600 px in) would put on something: on El Metro that is the
+# escalator, so the breakdancer has the ticket hall's west wall instead
+const AT := {"metro": Vector2(445.0, -1430.0)}
 
 # what each of them sits or stands on, solid and wrapping the leash; the
 # monkey's marble block is the walk's own (LevelBuild.beach_block_stones)
 const FOOTPRINT := {"kid": Vector2(28.0, 62.0), "statue": Vector2(30.0, 30.0), "fisher": Vector2(26.0, 26.0),
 	"builder": Vector2(24.0, 24.0), "skater": Vector2(20.0, 20.0), "monkey": Vector2.ZERO,
 	"busker": Vector2(24.0, 24.0), "avia": Vector2(22.0, 22.0), "runner": Vector2(18.0, 18.0),
-	"painter": Vector2(26.0, 26.0), "fan": Vector2(20.0, 20.0), "commuter": Vector2(28.0, 22.0)}
+	"painter": Vector2(26.0, 26.0), "fan": Vector2(20.0, 20.0), "commuter": Vector2(28.0, 22.0), "breaker": Vector2(24.0, 24.0)}
 
 # What each of them says, as people talk, each line starting with a capital. "dare" always names
 # the numbers as "N tricks in N seconds", and the bubble adds TAKE while the dare waits
@@ -93,12 +98,16 @@ const LINES := {
 	"commuter": {"idle": "Train's delayed again. Want a dare?", "dare": "%d tricks in %d seconds, before my train comes!",
 		"won": "Right on time! Come back for a harder one.", "lost": "Missed it! Come back and try again.",
 		"done": "Best part of my commute."},
+	"breaker": {"idle": "Yo, dog! Want a dare?", "dare": "%d tricks in %d seconds! Show me your moves!",
+		"won": "Fresh! Come back for a harder one!", "lost": "Lost the beat! Come back and try again.",
+		"done": "You're in the crew now."},
 }
 
 # who they are, for the result card
 const NAMES := {"kid": "the kid", "monkey": "the monkey", "statue": "the statue", "fisher": "the fisherman",
 	"builder": "the builder", "skater": "the skater", "busker": "the busker", "avia": "the àvia",
-	"runner": "the runner", "painter": "the painter", "fan": "the fan", "commuter": "the commuter"}
+	"runner": "the runner", "painter": "the painter", "fan": "the fan", "commuter": "the commuter",
+	"breaker": "the breakdancer"}
 
 var main: Node2D
 var my_dog: Node2D
@@ -157,6 +166,10 @@ func _physics_process(delta: float) -> void:
 	if said != _said:
 		_said = said
 		Redraw.later(self)
+	# the breakdancer's routine is the act itself, so he redraws while she is
+	# near enough to see it (the others hold their pose between lines)
+	if who == "breaker" and my_dog.global_position.distance_squared_to(global_position) < 640000.0:
+		queue_redraw()
 	# only offer while walking out - not mid off-leash romp or the way home
 	if main.phase != "out":
 		return
@@ -272,6 +285,8 @@ func _draw() -> void:
 			_draw_fan(fd)
 		"commuter":
 			_draw_commuter(fd)
+		"breaker":
+			_draw_breaker(fd)
 		_:
 			_draw_kid(fd)
 
@@ -646,6 +661,78 @@ func _draw_commuter(fd: Vector2) -> void:
 	draw_line(at - side * 8.0, ph - side * 3.0, Color(0.84, 0.66, 0.52), 3.2)
 	draw_colored_polygon(_bar(ph, side, 6.0, 9.0), Color(0.10, 0.10, 0.12))
 	draw_colored_polygon(_bar(ph, side, 4.4, 7.0), Color(0.60, 0.82, 0.96))
+
+
+# A breakdancer practising in the ticket hall: a sheet of flattened cardboard
+# taped down for a floor, a boombox against the wall behind, and the b-boy on
+# it, toprocking in his tracksuit and backwards cap, then dropping into a
+# headspin, legs out in a V and turning.
+func _draw_breaker(fd: Vector2) -> void:
+	var t := AnimClock.msec() / 1000.0
+	var side := fd.orthogonal()
+	var skin := Color(0.62, 0.44, 0.32)
+	var hoodie := Color(0.94, 0.50, 0.16)
+	var pants := Color(0.14, 0.16, 0.22)
+	var stripe := Color(0.92, 0.92, 0.90)
+	var shoe := Color(0.96, 0.96, 0.94)
+	if main != null:
+		main.cast_shadow(self, -fd * 4.0, 16.0, 16.0, 0.18)
+	# the cardboard: two flattened boxes side by side, their fold, the tape
+	var mat := fd * 12.0
+	draw_colored_polygon(_bar(mat, side, 44.0, 36.0), Color(0.60, 0.46, 0.28))
+	draw_colored_polygon(_bar(mat, side, 42.0, 34.0), Color(0.72, 0.58, 0.38))
+	draw_line(mat - side * 21.0, mat + side * 21.0, Color(0.58, 0.44, 0.26), 1.2)
+	for e: float in [-1.0, 1.0]:
+		draw_colored_polygon(_bar(mat + side * e * 19.0 + fd * 14.0, side, 6.0, 4.0), Color(0.86, 0.80, 0.62, 0.9))
+		draw_colored_polygon(_bar(mat + side * e * 19.0 - fd * 14.0, side, 6.0, 4.0), Color(0.86, 0.80, 0.62, 0.9))
+	# the boombox against the wall, its two speakers thumping
+	var box := -fd * 14.0
+	draw_colored_polygon(_bar(box + Vector2(1.5, 2.0), side, 28.0, 13.0), Color(0.0, 0.0, 0.0, 0.25))
+	draw_colored_polygon(_bar(box, side, 28.0, 13.0), Color(0.16, 0.16, 0.18))
+	draw_colored_polygon(_bar(box - fd * 4.5, side, 18.0, 2.0), Color(0.62, 0.64, 0.68))
+	var thump := 0.6 if fmod(t * 2.1 + seed_o, 1.0) < 0.2 else 0.0
+	for e: float in [-1.0, 1.0]:
+		var sp := box + side * e * 8.0
+		draw_circle(sp, 5.0, Color(0.30, 0.30, 0.33))
+		draw_circle(sp, 3.4 + thump, Color(0.08, 0.08, 0.09))
+		draw_circle(sp, 1.2, Color(0.50, 0.50, 0.54))
+	draw_circle(box, 1.6, Color(0.96, 0.40, 0.20))
+	var u := fmod(t + seed_o * 0.6, 4.4)
+	if u < 3.0:
+		# toprock: stepping across and back, arms swinging in front
+		var step := sin(t * 6.2 + seed_o)
+		var at := mat - fd * 2.0
+		for e: float in [-1.0, 1.0]:
+			var foot := at + side * e * (9.0 - step * e * 4.0) + fd * (9.0 + step * e * 5.0)
+			draw_line(at + side * e * 4.0, foot, pants, 5.5)
+			draw_line(at + side * e * 6.5, foot + side * e * 1.5, stripe, 1.0)
+			draw_circle(foot + fd * 2.0, 3.4, shoe)
+		HumanLook.draw_torso(self, at, fd, Vector2(10.0, 12.0), hoodie)
+		for e: float in [-1.0, 1.0]:
+			var hand := at + fd * (6.0 + e * step * 5.0) + side * e * (15.0 - step * e * 6.0)
+			draw_line(at + side * e * 8.0, hand, hoodie.darkened(0.08), 4.0)
+			draw_circle(hand, 2.8, skin)
+		var head := at + fd * 4.0
+		HumanLook.draw_head(self, head, fd, 8.0, skin, Color(0.10, 0.08, 0.08), "short", "none", Color.BLACK)
+		# the cap on backwards, its peak over the back of his neck
+		draw_circle(head, 7.4, Color(0.12, 0.42, 0.56))
+		draw_colored_polygon(_bar(head - fd * 7.0, side, 9.0, 4.0), Color(0.08, 0.30, 0.42))
+	else:
+		# the headspin: on his head in the middle of the mat, hands planted
+		# either side, legs out in a V and turning
+		var at := mat
+		var spin := (u - 3.0) * 11.0 + seed_o
+		for e: float in [-1.0, 1.0]:
+			draw_circle(at + side * e * 11.0 + fd * 3.0, 2.8, skin)
+		HumanLook.draw_torso(self, at, Vector2.from_angle(spin), Vector2(9.0, 9.0), hoodie)
+		for k in range(2):
+			var leg := Vector2.from_angle(spin + (0.0 if k == 0 else 2.3))
+			var tip := at + leg * 26.0
+			draw_line(at + leg * 5.0, tip, pants, 5.5)
+			draw_line(at + leg * 6.0 + leg.orthogonal() * 2.2, tip + leg.orthogonal() * 2.2, stripe, 1.0)
+			draw_circle(tip, 3.6, shoe)
+		draw_circle(at, 6.6, Color(0.12, 0.42, 0.56))
+		draw_circle(at - Vector2(1.5, 1.5), 2.6, Color(0.20, 0.56, 0.70))
 
 
 # What they are saying, as people talk: the dare spelled out while it is on
