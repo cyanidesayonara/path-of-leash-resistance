@@ -194,6 +194,8 @@ static func build(m: Node2D) -> Array:
 		m.poles.append(sp)
 	for pn: Vector2 in PINES:
 		m.poles.append(pn)
+	# their feet are drawn on the ground (draw_column)
+	m.deco_pole_count = m.poles.size()
 
 	# Mark / Hydrant spots (at least 6 for sniff goals)
 	var marks: Array[Vector2] = [
@@ -943,6 +945,11 @@ static func _draw_arcades(wc: ShapeBatch, lo: float, hi: float) -> void:
 
 
 # --- what stands on the path: needles, pines, the fountain -------------------
+
+# no street lamps on the mountain: its posts are drawn as what they are
+static func is_lamp(_m: Node2D, _p: Vector2) -> bool:
+	return false
+
 
 static func tree_kind(m: Node2D, _p: Vector2) -> int:
 	return m.TREE_NONE

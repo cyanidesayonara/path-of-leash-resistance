@@ -419,6 +419,8 @@
 
 # Montserrat (the wild goat herd chase) test
 --headless --path . --script res://tests/test_montserrat.gd
+# La Molina (the runaway groomer chase, the snow cannons) test
+--headless --path . --script res://tests/test_molina.gd
 
 # Els Lleons (the twin bronze lions boss) test
 --headless --path . --script res://tests/test_lleons.gd

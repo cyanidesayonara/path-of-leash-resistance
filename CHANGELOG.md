@@ -2,6 +2,18 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - New walk: La Molina, and the runaway groomer
+
+- La Molina (`molina`), the first snow walk and the chase after L'Aeroport: up a groomed piste at the ski station in the Cerdanya, in snow (`CAMPAIGN_SKY` `["snow", "day"]`), from the bottom of the lifts to the xalet's terrace. Opens at 42 stars, straight after El Laberint d'Horta in the carousel. `systems/molina.gd`.
+  - Corduroy snow down the middle with ski tracks and icy patches; deep powder banked either side, which handles as sand and drags at her paws; orange piste markers she marks; firs with snow on their boughs and the ski school's slalom poles, each with its flag, to wind the leash on; the chairlift's cable and chairs going over, its queue barriers across the piste; the ski-hire rack; the terrace's picnic tables and the grill with the botifarra on it (the prize).
+  - The live event: three snow cannons at the piste's edge. Each whirs and flashes its lamp for 1 s (the telegraph), then blows a cone of snow across the piste for 2 s. The dog caught in it is knocked; your human is bumped and loses patience. A blast that comes by the pair and catches neither pays a dodge. The banner says SNOW CANNON! KEEP OUT OF ITS WAY while one near her spins up.
+  - Bark at the snowman and his carrot nose drops off.
+  - Goals: keep clear of 2 cannon blasts, dodge 3 rolling snowballs, get home without a snowball hitting, bark the snowman's nose off, plus the usual.
+- The chase home: the piste basher (`entities/groomer_threat.gd`). Its brake lets go and it comes down the piste after them with nobody in the cab: lamps for eyes under a scowling visor, the beacon going round, the blade down pushing a berm of snow, the tiller combing corduroy behind. It rolls snowballs: one packs on top of the blade for 1 s while a track of dashes shows the lane it will take (aimed at the dog and your human in turn), then it rolls down that lane, growing, faster than your human walks and slower than she runs. In its way is a knock; close by is a dodge and a bone. It wedges in the ski-hire rack, then at the chairlift's barriers (both checkpoints).
+- Its film, `intro/film_molina.gd` ("The brake"): the groomer parked on the crest above them, a clunk, its lamps blink on, the engine coughs black and it tips over and comes down the slope, a snowball bounding ahead.
+- Its dare-giver: the ski school's instructor on her skis, leaning on her poles, whistle up now and then, with an alpine oompah of her own (`dare_instructor`). Its own walk music (`molina`), and three new sounds: a snowball's poof, the groomer's diesel and a cannon's whir.
+- Montserrat: its needles and pines never drew their feet (their long shadows, the rubble, the trunks) because the walk left `deco_pole_count` at 0, and every one of them had a street lamp's head drawn over it. Both fixed, and La Molina does the same (`is_lamp` returns false on both).
+- `tests/test_molina.gd` (147 checks) in CI: registration, goals, the chase profile and respites, the cannons' telegraph, dodge and single hit, the snowballs' telegraph, knock, dodge and the autowalk's immunity, the catch line, the snowman, solids clear of the poles, an open middle lane, the surfaces and the film.
 ## 2026-11-17 - Release notes for 1.75
 
 - The Store's "What's new in this version" still carried 1.74's bullets after their own submission. It now says only what is new since: the three walks, the Trencadís look, El Barri, Plaça Reial and L'Estació rebuilt, a dare-giver on every walk with a tune each, readable dares, the whirl and the leash. 1,056 of the Store's 1,500 characters.

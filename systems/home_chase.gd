@@ -84,6 +84,7 @@ const GRACIA_FILM := "res://intro/film_gracia.gd"
 const CREMADA_FILM := "res://intro/film_cremada.gd"
 const AEROPORT_FILM := "res://intro/film_aeroport.gd"
 const MONTSERRAT_FILM := "res://intro/film_montserrat.gd"
+const MOLINA_FILM := "res://intro/film_molina.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
@@ -125,6 +126,13 @@ const CREMADA_BANDS := [
 # then tangles in the gate queue's belts
 const AEROPORT_BANDS := [
 	{"id": "perfume", "kind": "respite", "jam_y": -3400.0, "checkpoint": true},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
+# La Molina: the groomer wedges in the ski-hire rack, then on the chairlift's
+# queue barriers (systems/molina.gd RACK_POS, LIFT_POSTS)
+const MOLINA_BANDS := [
+	{"id": "rack", "kind": "respite", "jam_y": -3300.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
 ]
 
@@ -226,6 +234,18 @@ You will smell of fireworks for a week.",
 				"caught_human": "HEADBUTTED!\n\nThe big mountain goat sent your human tumbling into the brambles.\nThe phone went flying down the crag.",
 				"caught_dog": "PINNED BY THE HORNS!\n\nThe alpha goat cornered you against the cliff face.\nYou surrendered your dried sausages.",
 			}
+		"groomer":
+			return {
+				"kind": "groomer", "speed": 128.0, "flee": false,
+				"warning": "THE GROOMER'S BRAKE IS OFF! RUN!",
+				"freed": "VROOM", "freed_sfx": "diesel", "caught_shout": "GROOMED!",
+				"jammed": "CLONK", "jammed_sfx": "crack", "jammed_shout": "THE GROOMER'S STUCK!",
+				"jammed_banner": "THE GROOMER'S STUCK! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR ROLLING SNOWBALLS",
+				"warning_banner": "THE GROOMER'S LOOSE! HEAD DOWN THE PISTE", "hold_banner": "STILL STUCK! GO  %d",
+				"snowball_banner": "SNOWBALL! STEP OUT OF ITS TRACK",
+				"caught_human": "GROOMED!\n\nYour human is now part of the piste.\nVery smooth. Corduroy finish.",
+				"caught_dog": "PACKED IN SNOW!\n\nThe blade scooped you up with the berm.\nYou came out at the bottom as a snowdog.",
+			}
 		"vet":
 			return {
 				"kind": "vet", "speed": CHASE_SPEED, "flee": false,
@@ -309,6 +329,13 @@ static func profile_for(level: String) -> Dictionary:
 		a["bands"] = AEROPORT_BANDS.duplicate(true)
 		a["film"] = AEROPORT_FILM
 		return a
+	if level == "molina":
+		var gr := kind_behavior("groomer")
+		gr["id"] = "molina"
+		gr["script"] = "res://entities/groomer_threat.gd"
+		gr["bands"] = MOLINA_BANDS.duplicate(true)
+		gr["film"] = MOLINA_FILM
+		return gr
 	if level == "montserrat":
 		var g := kind_behavior("goat")
 		g["id"] = "montserrat"
@@ -592,6 +619,8 @@ static func banner(m: Node2D) -> String:
 		return String(_behavior(m, held_profile(m)).get("rocket_banner", "OUT OF THE RING"))
 	if sweeper.has_method("suitcase_warning") and bool(sweeper.call("suitcase_warning")):
 		return String(_behavior(m, held_profile(m)).get("suitcase_banner", "SUITCASE! STEP CLEAR"))
+	if sweeper.has_method("snowball_warning") and bool(sweeper.call("snowball_warning")):
+		return String(_behavior(m, held_profile(m)).get("snowball_banner", "SNOWBALL! STEP CLEAR"))
 	if sweeper.has_method("boulder_warning") and bool(sweeper.call("boulder_warning")):
 		return String(_behavior(m, held_profile(m)).get("boulder_banner", "BOULDER! STEP CLEAR"))
 	return String(_behavior(m, held_profile(m)).get("run_banner", "RUN! DON'T LET IT CATCH YOU"))
