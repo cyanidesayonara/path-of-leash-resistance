@@ -77,6 +77,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_sketcher(c, fd, t, s)
 		"kitesurfer":
 			_kitesurfer(c, fd, t, s)
+		"snorkeler":
+			_snorkeler(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -926,3 +928,35 @@ static func _kitesurfer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	c.draw_line(bar_p + side * 6.0, wing[6], Color(0.90, 0.92, 0.94, 0.65), 1.0)
 	for e: float in [-1.0, 1.0]:
 		_arm(c, side * e * 8.0, bar_p + side * e * 5.5, teal, skin)
+
+
+# Camí de Ronda: a snorkeler seated on a coastal boulder overlooking the cove,
+# wetsuit on, mask pushed up on his forehead, bright yellow fins wiggling
+static func _snorkeler(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.84, 0.64, 0.50)
+	var suit := Color(0.10, 0.20, 0.30)
+	var trim := Color(0.14, 0.66, 0.64)
+	var fin := Color(0.95, 0.74, 0.14)
+	_shadow(c, Vector2(0.0, 2.0), 17.0, 17.0)
+	# Warm limestone boulder they are perched on
+	c.draw_circle(Vector2.ZERO, 13.5, Color(0.56, 0.50, 0.43))
+	c.draw_circle(Vector2(-3.0, -3.0), 8.5, Color(0.68, 0.62, 0.54))
+	# Two yellow swim fins sticking out front, gently kicking in the breeze
+	for k: float in [-1.0, 1.0]:
+		var wig := sin(t * 3.0 + s + k * 0.9) * 2.2
+		var fpos := fd * (11.5 + wig * 0.4) + side * (k * 4.5 + wig * 0.3)
+		c.draw_colored_polygon(_bar(fpos, side, 6.2, 11.0), fin)
+		c.draw_colored_polygon(_bar(fpos - fd * 3.5, side, 5.2, 3.0), trim)
+	# Wetsuit torso & head seated near the centre
+	var at := -fd * 2.0
+	_person(c, at, fd, suit, skin, Color(0.22, 0.15, 0.10), "crop", "", Color.BLACK)
+	# Turquoise stripe across shoulders
+	c.draw_colored_polygon(_bar(at, side, 13.0, 3.2), trim)
+	# Diving mask pushed up on forehead + snorkel tube curved beside one ear
+	c.draw_colored_polygon(_bar(at + fd * 2.0, side, 8.6, 3.4), Color(0.18, 0.22, 0.26))
+	c.draw_colored_polygon(_bar(at + fd * 2.2, side, 6.8, 2.2), Color(0.58, 0.88, 0.92, 0.85))
+	c.draw_line(at + side * 6.5 - fd * 2.0, at + side * 8.5 - fd * 9.0, Color(0.94, 0.46, 0.18), 2.2)
+	c.draw_circle(at + side * 8.5 - fd * 9.0, 1.6, fin)
+	_arm(c, at - side * 7.5, at - side * 9.0 + fd * 5.0, suit, skin)
+	_arm(c, at + side * 7.5, at + side * 9.0 + fd * 5.0, suit, skin)

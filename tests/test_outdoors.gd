@@ -171,6 +171,18 @@ func _run() -> void:
 		and not Outdoors.kites_out("rain", "day") and not Outdoors.kites_out("wind", "night"),
 		"kites and banners go out on dry daylight")
 
+	# Camí de Ronda: coastal bathers & hikers follow dry-weather / hour rules
+	_check(Outdoors.coastal_bathers("wind", "day") and not Outdoors.coastal_bathers("rain", "day") and not Outdoors.coastal_bathers("clear", "night"),
+		"coastal bathers only in dry day/dusk, never rain or night")
+	_check(Outdoors.coastal_hikers("clear", "day") > Outdoors.coastal_hikers("wind", "day"),
+		"coastal hikers fewer in tramuntana wind than clear day")
+	_check(Outdoors.coastal_hikers("rain", "day") == 0.0 and Outdoors.coastal_hikers("snow", "day") == 0.0,
+		"coastal hikers empty in rain and snow")
+	m = await _load("ronda", "wind", "day")
+	_check(m.ronda_sitters.size() > 0, "Ronda has bench sitters in dry day wind (%d)" % m.ronda_sitters.size())
+	m = await _load("ronda", "rain", "day")
+	_check(m.ronda_sitters.is_empty(), "nobody sits on Ronda benches in the rain")
+
 	if _level != null:
 		_level.get_parent().remove_child(_level)
 		_level.free()

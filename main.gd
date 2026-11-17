@@ -388,6 +388,7 @@ const WALK_MODULES := {
 	"blai": preload("res://systems/blai.gd"),
 	"santpau": preload("res://systems/santpau.gd"),
 	"sitges": preload("res://systems/sitges.gd"),
+	"ronda": preload("res://systems/ronda.gd"),
 	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
@@ -726,6 +727,15 @@ var santpau_chime_howled := false
 var santpau_beds_visited: Dictionary = {}
 var santpau_sitters: Array = []
 var santpau_sketchers: Array = []
+# Camí de Ronda: tramuntana gusts, coves, boats, flying hats/maps and cliff sitters
+var ronda_gust: Dictionary = {}
+var ronda_gust_held := 0
+var ronda_coves_seen: Dictionary = {}
+var ronda_boats_barked: Dictionary = {}
+var ronda_wind_props: Array = []
+var ronda_wind_caught := 0
+var ronda_wind_next := 3.0
+var ronda_sitters: Array = []
 # El Metro: the walk's state (systems/metro.gd), and its goals' tallies
 var metro: RefCounted = null
 var metro_turnstile_slipped := false
@@ -11208,6 +11218,8 @@ const FREEDOM_KINDS := {
 	"blai": "placa",
 	# Jardins de Sant Pau, the hospital's garden courtyard
 	"santpau": "yard",
+	# Cala del Pinar, the small shingle cove at the end of Camí de Ronda
+	"ronda": "yard",
 	# up the stairs at Sant Gos, into its little square
 	"metro": "placa",
 	# the beach where the Dimoni is burned
