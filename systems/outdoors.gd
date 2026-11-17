@@ -88,6 +88,29 @@ static func busking(weather: String, _hour: String) -> bool:
 	return weather == "clear" or weather == "wind"
 
 
+# Underground (El Metro) the weather stops at the stairs. The busker in the
+# passage plays in any weather, under cover, but has gone home after dark.
+static func underground_busker(_weather: String, hour: String) -> bool:
+	return hour != "night"
+
+
+# People shaking out their umbrellas as they come down out of it, and the
+# wet footprints they track in: only when it is raining or snowing.
+static func umbrella_shakers(weather: String, _hour: String) -> bool:
+	return weather == "rain" or weather == "snow"
+
+
+static func tracks_wet(weather: String) -> bool:
+	return weather == "rain" or weather == "snow"
+
+
+# The metro's commuters: thinned by the hour like any crowd, but never by
+# the weather, because rain drives people down into it. `n` is a day's
+# crowd; at least two are always about.
+static func underground_crowd(n: int, _weather: String, hour: String) -> int:
+	return maxi(2, roundi(float(n) * float(CROWD_HOUR.get(hour, 1.0))))
+
+
 # A traca or any other string of fireworks is hung out only when it is dry:
 # nobody lights wet fuses.
 static func fireworks(weather: String, _hour: String) -> bool:
@@ -98,6 +121,47 @@ static func fireworks(weather: String, _hour: String) -> bool:
 # furled at night and under snow.
 static func terrace_parasols(weather: String, hour: String) -> bool:
 	return hour != "night" and weather != "snow"
+
+
+# A pintxos street's terraces (Carrer de Blai): the share of the chairs out
+# on the paving with someone in them. Full after dark, which is when the
+# street lives; a lunchtime vermut by day; an early coffee or two at first
+# light. Nobody sits out in rain or snow: the chairs stay, empty and wet.
+const TERRACE_FILL := {"dawn": 0.15, "day": 0.45, "dusk": 0.8, "night": 1.0}
+
+
+static func terrace_diners(weather: String, hour: String) -> float:
+	if weather == "rain" or weather == "snow":
+		return 0.0
+	return float(TERRACE_FILL.get(hour, 0.5))
+
+
+# The groups standing in the street with a drink: an evening thing, out
+# from dusk in the dry. In rain or snow they stand it out in the bar
+# doorways instead, at any hour (standers_in_doorways).
+static func standers_out(weather: String, hour: String) -> bool:
+	if weather == "rain" or weather == "snow":
+		return true
+	return hour == "dusk" or hour == "night"
+
+
+static func standers_in_doorways(weather: String, _hour: String) -> bool:
+	return weather == "rain" or weather == "snow"
+
+
+# The share of a bar street's fronts with the shutter down: most of them
+# first thing, about half through the day, none once the evening starts.
+const SHUTTER_SHARE := {"dawn": 0.85, "day": 0.45, "dusk": 0.1, "night": 0.0}
+
+
+static func bar_shutters(_weather: String, hour: String) -> float:
+	return float(SHUTTER_SHARE.get(hour, 0.0))
+
+
+# Kegs and crates stacked by a bar's door on a hand truck: the morning
+# deliveries, rain or shine, and never after dark.
+static func deliveries(_weather: String, hour: String) -> bool:
+	return hour == "dawn" or hour == "day"
 
 
 # The share of a walk's usual crowd (tourists, people browsing at a stall)
