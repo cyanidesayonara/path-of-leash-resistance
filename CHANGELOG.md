@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - The leash, upgraded
+
+- Coils are round. A span of the drawn rope with both ends resting on the same pole puts its midpoint on the arc round that pole, at the ends' own distance from it, rather than on the chord, so a leash wound round a tree reads as loops round the trunk instead of a jagged polygon. On the arc the rope clears the pole by more than the chord did. `test_leash_render_path` pins it.
+- Your leash is the colour of the collar you have on (Game.COLLARS, toned toward leather, the rainbow cycling with the dog's), warming as it comes taut. Other people's leashes stay brown.
+- It clips onto her harness: the dog draws the last of the rope from her harness ring to where it comes out from under her, and a steel clasp on the ring (`dog._leash_clip`). It used to look as if it came out from under her tail.
+- Your human holds a retractable reel, a dark housing with a button in the leash's colour, where a plain loop used to be. Other owners keep the loop.
+- The rope's shadow falls further from it toward the hand, which is high, than at the collar, which is low.
+- The solver is untouched: `tools/bench_leash.gd`'s three hashes are as they were. Draw preparation is 22.3, 27.2 and 46.3 us against 21.9, 25.4 and 44.4 on the same machine (free, pole, tangle); most of the difference is the coil arcs. Still four rope polylines; the clip, clasp and reel are batched with the circles already there.
+
 ## 2026-11-17 - The whirl, upgraded
 
 - Your human used to spin like a top on a 30 px circle for 0.3 to 0.6 s, mostly under the tree crown, and could whirl a second time 0.07 s after landing, which read as a glitch. Now she is swung like a tetherball: the node is turned so her leash hand faces the pole, the rope runs straight from her grip, and `_draw_whirl_body` draws her flying out flat behind it. Both hands are on the leash, the phone is still in one fist, her head is between her arms with her hair streaming, and her legs trail out and kick. Her shadow lifts off and falls further away. Nothing about the pose is a new draw call.

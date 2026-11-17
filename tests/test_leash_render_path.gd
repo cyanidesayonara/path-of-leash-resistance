@@ -139,6 +139,21 @@ func _run() -> void:
 			_check(closest.distance_to(pole) + 0.01 >= leash.POLE_PAD,
 				"visible segment %d clears POLE_PAD (closest point %s)" % [i, closest])
 
+		# Two neighbouring controls resting on the same pole are part of a
+		# coil: the drawn point between them sits on the arc round the pole,
+		# at their own distance from it, not on the chord across it.
+		leash._touch[mid - 1] = 0
+		leash._touch[mid] = 0
+		var coil_path: Array = Array(leash.visible_path())
+		var arc_mid: Vector2 = coil_path[2 * (mid - 1) + 1]
+		var want_r: float = (leash.pts[mid - 1].distance_to(pole) + leash.pts[mid].distance_to(pole)) * 0.5
+		_check(absf(arc_mid.distance_to(pole) - want_r) < 0.05,
+			"a span along a coil bends round the pole (%.2f from it, want %.2f)" % [arc_mid.distance_to(pole), want_r])
+		var chord_mid: Vector2 = (leash.pts[mid - 1] + leash.pts[mid]) * 0.5
+		_check(arc_mid.distance_to(pole) > chord_mid.distance_to(pole) + 0.1,
+			"and clears the pole by more than the chord does")
+		leash._touch[mid - 1] = -1
+
 	# Script-level spies make draw integration behavioural without source
 	# inspection or pixels: the real _draw_shapes must request the public path
 	# and use the continuous taut amount to interpolate its primary width.
