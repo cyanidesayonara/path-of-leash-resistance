@@ -169,7 +169,7 @@ func _physics_process(delta: float) -> void:
 	# the breakdancer's routine is the act itself, so he redraws while she is
 	# near enough to see it (the others hold their pose between lines)
 	if who == "breaker" and my_dog.global_position.distance_squared_to(global_position) < 640000.0:
-		queue_redraw()
+		Redraw.later(self)
 	# only offer while walking out - not mid off-leash romp or the way home
 	if main.phase != "out":
 		return
