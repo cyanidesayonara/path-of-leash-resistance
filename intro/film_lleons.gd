@@ -142,6 +142,16 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		"tilt": 0.10 * each, "swish": Anim.span(t, BLINK_AT, HER_AT),
 	}
 	var b_face := -1.0 if t < HER_AT + 0.16 else 1.0
+	# down off the plinths they stalk her: heads low, lips off the fangs, a
+	# growl rippling the jaw, eyes drawn to slits
+	var stalk := Anim.span(t, DROP_AT + 0.15, DROP_AT + 0.45)
+	if stalk > 0.0:
+		for o: Dictionary in [a, b]:
+			o["snarl"] = stalk
+			var low := stalk * (1.0 - Anim.span(t, BOLT_AT + 0.2, BOLT_AT + 0.35))
+			o["dip"] = 0.5 * low
+			o["tilt"] = float(o["tilt"]) + 0.2 * low
+			o["jaw"] = maxf(float(o["jaw"]), stalk * (0.42 + 0.05 * sin(t_real * 31.0)))
 	lion(c, lion_at(t, true), LION_K, 1.0, t_real, a)
 	lion(c, lion_at(t, false), LION_K, b_face, t_real + 1.3, b)
 	if t >= DROP_AT and t < DROP_AT + 0.6:
@@ -346,7 +356,8 @@ static func nose_at(at: Vector2, k: float, face: float, o: Dictionary) -> Vector
 # his haunches, `dip` his head lowered to her, `jaw` open, `eye` open, `look`
 # where the pupil sits, `brow` raised (+) or drawn down (-), `happy` eyes
 # shut in a smile, `walking`, `tilt` the head thrown back (-), `swish` how
-# much the tail is alive.
+# much the tail is alive, `snarl` lips curled off the fangs, the muzzle creased
+# and the eyes narrowed to slits.
 static func lion(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o: Dictionary) -> void:
 	var up: float = o.get("up", 0.0)
 	var sit: float = o.get("sit", 0.0)
@@ -358,6 +369,7 @@ static func lion(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o:
 	var walking: bool = o.get("walking", false)
 	var tilt: float = o.get("tilt", 0.0)
 	var swish: float = o.get("swish", 0.0)
+	var snarl: float = o.get("snarl", 0.0)
 	var p := func(v: Vector2) -> Vector2: return at + Vector2(v.x * face, v.y) * k
 	var pose := func(lie: Vector2, stand: Vector2, sat: Vector2) -> Vector2: return lie.lerp(stand, up).lerp(sat, sit)
 	var down := 1.0 - up * (1.0 - sit)      # 1 lying or sat, 0 on his feet
@@ -441,7 +453,7 @@ static func lion(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o:
 		if near:
 			c.draw_colored_polygon(MillieSide.ellipse(p.call(paw + Vector2(12.0, -6.0)), Vector2(12.0, 4.0) * k), BRONZE_SHINE)
 
-	_head(c, p, hc, k, face, t, jaw, eye, look, brow, happy, tilt)
+	_head(c, p, hc, k, face, t, jaw, eye, look, brow, happy, tilt, snarl)
 
 
 # the trunk of him: rump, barrel and chest as one outline, verdigris run
@@ -475,7 +487,7 @@ static func _body(c: CanvasItem, p: Callable, rump: Vector2, rump_r: float, ches
 
 # the mane and the face in it
 static func _head(c: CanvasItem, p: Callable, hc_in: Vector2, k: float, face: float, t: float, jaw: float, eye: float,
-		look: Vector2, brow: float, happy: bool, tilt: float) -> void:
+		look: Vector2, brow: float, happy: bool, tilt: float, snarl := 0.0) -> void:
 	# the head thrown back or nodded: everything turns about the neck
 	var neck := hc_in + Vector2(-40.0, 30.0)
 	var hp := func(v: Vector2) -> Vector2: return p.call(neck + (hc_in + v - neck).rotated(tilt))
@@ -543,6 +555,14 @@ static func _head(c: CanvasItem, p: Callable, hc_in: Vector2, k: float, face: fl
 	c.draw_colored_polygon(MillieSide.ellipse(hp.call(mz), Vector2(37.0, 24.0) * k), BRONZE_LIT)
 	c.draw_colored_polygon(MillieSide.ellipse(hp.call(mz + Vector2(-4.0, -9.0)), Vector2(24.0, 9.0) * k), BRONZE_SHINE.lerp(BRONZE_LIT, 0.45))
 	c.draw_line(hp.call(Vector2(66.0, -14.0)), hp.call(Vector2(88.0, -4.0)), Color(SUNSET, 0.7), 3.0 * k)
+	if snarl > 0.0:
+		# the snarl wrinkles the muzzle back toward the eye
+		for w in range(3):
+			var wx := 34.0 + float(w) * 12.0
+			c.draw_polyline(PackedVector2Array([hp.call(Vector2(wx - 5.0, -16.0)), hp.call(Vector2(wx, -21.0 - 2.0 * snarl)),
+				hp.call(Vector2(wx + 5.0, -16.0))]), Color(INK, snarl), 4.0 * k)
+		# the upper lip drawn back off the gums
+		c.draw_line(hp.call(Vector2(40.0, 26.0)), hp.call(Vector2(80.0, 22.0)), Color(MOUTH.lightened(0.15), snarl), 6.0 * k)
 	if jaw > 0.15:
 		c.draw_colored_polygon(PackedVector2Array([hp.call(Vector2(66.0, 24.0)), hp.call(Vector2(72.0, 24.0 + 22.0 * jaw + 6.0)), hp.call(Vector2(79.0, 22.0))]), FANG)
 	# the nose, rubbed bright; the lip; the whisker pits
@@ -565,13 +585,19 @@ static func _head(c: CanvasItem, p: Callable, hc_in: Vector2, k: float, face: fl
 		var gb := ShapeBatch.new(c)
 		gb.glow(hp.call(ep), 46.0 * k * eye, Color(1.0, 0.76, 0.26, 0.6))
 		gb.flush()
-		c.draw_colored_polygon(MillieSide.ellipse(hp.call(ep), Vector2(15.0, 13.0 * eye) * k), INK)
-		c.draw_colored_polygon(MillieSide.ellipse(hp.call(ep), Vector2(11.5, 9.5 * eye) * k), EYE_AMBER)
-		c.draw_circle(hp.call(ep + Vector2(look.x * 5.0, look.y * 4.0 * eye)), 4.6 * k * minf(1.0, eye + 0.3), INK)
-		c.draw_circle(hp.call(ep + Vector2(look.x * 5.0 - 2.0, look.y * 4.0 * eye - 2.0)), 1.6 * k, Color(1.0, 0.98, 0.9))
+		var sq := 1.0 - 0.35 * snarl
+		c.draw_colored_polygon(MillieSide.ellipse(hp.call(ep), Vector2(15.0, 13.0 * eye * sq) * k), INK)
+		c.draw_colored_polygon(MillieSide.ellipse(hp.call(ep), Vector2(11.5, 9.5 * eye * sq) * k), EYE_AMBER)
+		var pc: Vector2 = hp.call(ep + Vector2(look.x * 5.0, look.y * 4.0 * eye * sq))
+		if snarl > 0.5:
+			# a cat's pupil drawn to a slit
+			c.draw_colored_polygon(MillieSide.ellipse(pc, Vector2(2.2, 8.0 * sq) * k), INK)
+		else:
+			c.draw_circle(pc, 4.6 * k * minf(1.0, eye + 0.3), INK)
+		c.draw_circle(hp.call(ep + Vector2(look.x * 5.0 - 2.0, look.y * 4.0 * eye * sq - 2.0)), 1.6 * k, Color(1.0, 0.98, 0.9))
 	if not happy:
 		var lift := brow * 9.0
-		c.draw_line(hp.call(ep + Vector2(-20.0, -18.0 - lift)), hp.call(ep + Vector2(18.0, -10.0 - lift * 1.4 + minf(brow, 0.0) * -6.0)), INK, 7.0 * k)
+		c.draw_line(hp.call(ep + Vector2(-20.0, -18.0 - lift)), hp.call(ep + Vector2(18.0, -10.0 - lift * 1.4 + minf(brow, 0.0) * -6.0)), INK, (7.0 + 3.0 * snarl) * k)
 
 
 # the card: the last of the sunset behind ELS LLEONS!, a lion coming in from

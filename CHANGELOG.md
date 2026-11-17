@@ -7,6 +7,7 @@ Append-only session history, newest first.
 - Every chase and boss film's stare beat (4.2 s to the bolt) is now a two-shot that pushes in (zoom 1.32 to 1.42, centred at x 470 to 520) instead of a 1.7 close-up on her alone: she stares with the threat looming in the same frame, where before only a sliver of it showed at the edge. La Cremada, whose Dimoni float stands tall, frames it wider and higher (zoom 1.02 to 1.1).
 - Els Senglars' film: the sow is redrawn (`FilmBoars._sow`): one silhouette with the shoulders carried high and the head slung low and tossing on the stride, the crest standing up along her spine, grizzled dark-brown fur, a snarl with red gums and froth flying back, two tusks hooking up past the snout, a small eye burning orange under a heavy brow, cloven hooves, snorting from both nostrils. The piglets are unchanged. The title card shares her.
 - El Drac's film: off the fountain his crest stands up in orange tile spikes, and at the stare he stops, rears, lifts his head and hisses, jaws open on a row of tile teeth (`FilmDrac._teeth`), tongue flicking, eye burning brighter (`side()`'s new `bristle`). He comes on further (to x 110), so he halts in front of the column and in the two-shot instead of behind it, off the frame's edge.
+- Els Lleons' film: off their plinths the lions stalk her instead of strolling: heads dipped and nodded forward, lips drawn back off the fangs in a rippling growl, the muzzle creased, the eyes narrowed to slit pupils under a heavier brow (`lion()`'s new `snarl`).
 
 ## 2026-11-17 - Sant Pau's test allows later walks
 
