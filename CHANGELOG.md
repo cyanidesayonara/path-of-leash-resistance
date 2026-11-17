@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Films: the pair acts, a dozing driver, a real foam crest
+
+- The pair in every chase film (`FilmKit.pair`), shared by all of them:
+  - Your human, oblivious: his thumb scrolls the whole film, and while the threat bears down he chuckles at something on the screen, mouth opening and head bobbing.
+  - The yank is a sequence, not one held dive: the leash snaps and he lurches, eyes wide; then he is hauled along in great bounding hops, legs running in the air, mouth open, still holding the phone up.
+  - Her bolt is a gallop: the forelegs reach as the hind legs push, and her body stretches and bunches and bounds off the ground.
+- La Neteja's film: the sweeper's driver (`FilmSweeper._driver`) was a blank disc under a cap; he is now a municipal driver dozing at the wheel, in a jacket with its hi-vis band, hands on the wheel, head sagging under his work cap, eye shut, mouth open under a bushy moustache, z's drifting up.
+- El Besòs's film: the surge's foam was a row of identical white beads (read as a pearl necklace); it is now one rough band riding the crest with a boil of uneven bubbles on top, a shaded heap of whitewater churning round the lip, and lace streaming down the face.
+
 ## 2026-11-17 - Films: the threat in the stare, and a boar that charges
 
 - Every chase and boss film's stare beat (4.2 s to the bolt) is now a two-shot that pushes in (zoom 1.32 to 1.42, centred at x 470 to 520) instead of a 1.7 close-up on her alone: she stares with the threat looming in the same frame, where before only a sliver of it showed at the edge. La Cremada, whose Dimoni float stands tall, frames it wider and higher (zoom 1.02 to 1.1).

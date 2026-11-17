@@ -174,16 +174,49 @@ static func _surge(c: CanvasItem, x: float, t: float, level: float, crest := CRE
 	for k in range(6):
 		var sx := x - 150.0 * l + float(k) * 34.0 * l
 		c.draw_line(Vector2(sx, level - crest * 0.1 - float(k) * 24.0 * l), Vector2(sx + 40.0 * l, level + 10.0), PALE.darkened(0.1), 3.0)
-	# foam along the crest and a heap of it round the lip
-	for i in range(24):
-		var fx := x - 520.0 * sqrt(l) + float(i) / 23.0 * 560.0 * sqrt(l)
+	# foam along the crest: one rough band riding the surface, thickest at the
+	# lip, its top a boil of uneven bubbles; whitewater heaped round the lip;
+	# lace streaming down the face. One band and clumps, never a row of beads
+	var band := PackedVector2Array()
+	var under := PackedVector2Array()
+	var span := 560.0 * sqrt(l)
+	var x0 := x - 520.0 * sqrt(l)
+	for i in range(41):
+		var fx := x0 + float(i) / 40.0 * span
 		var near := clampf(1.0 - (x - fx) / (320.0 * sqrt(l)), 0.0, 1.0)
-		c.draw_circle(Vector2(fx, _surface(fx, x, t, level, crest)), 7.0 + 10.0 * near + sin(t * 9.0 + float(i)) * 2.0,
-			Color(FOAM, 0.5 + 0.45 * near))
-	for k in range(11):
-		var a := -2.0 + float(k) * 0.36
-		c.draw_circle(Vector2(x + 62.0 * l, top + 18.0 * l) + Vector2.from_angle(a) * 42.0 * l,
-			(13.0 + sin(t * 11.0 + float(k)) * 3.0) * sqrt(l), FOAM)
+		var sy := _surface(fx, x, t, level, crest)
+		band.append(Vector2(fx, sy - 4.0 - 6.0 * near))
+		under.append(Vector2(fx, sy + 6.0 + 14.0 * near + sin(fx * 0.09 + t * 7.0) * 3.0))
+	under.reverse()
+	var foam_poly := band.duplicate()
+	foam_poly.append_array(under)
+	c.draw_colored_polygon(foam_poly, Color(FOAM, 0.9))
+	for i in range(40):
+		var h := fposmod(sin(float(i) * 12.9898) * 43758.5453, 1.0)
+		var fx := x0 + (float(i) + h) / 40.0 * span
+		var near := clampf(1.0 - (x - fx) / (320.0 * sqrt(l)), 0.0, 1.0)
+		var sy := _surface(fx, x, t, level, crest)
+		var r := (5.0 + 9.0 * near) * (0.6 + 0.8 * h) + sin(t * 9.0 + float(i) * 1.7) * 1.5
+		c.draw_circle(Vector2(fx, sy - 4.0 - r * 0.4), r, FOAM)
+		if h > 0.6:
+			c.draw_circle(Vector2(fx + r * 0.6, sy - 6.0 - r * 0.9), r * 0.55, FOAM)
+	# the whitewater round the lip: a churning heap, shaded underneath
+	var lc := Vector2(x + 62.0 * l, top + 18.0 * l)
+	for k in range(18):
+		var h := fposmod(sin(float(k) * 78.233) * 12543.53, 1.0)
+		var a := -2.3 + float(k) / 17.0 * 2.9
+		var rr := (34.0 + 18.0 * h) * l
+		var bp := lc + Vector2.from_angle(a + sin(t * 3.0 + float(k)) * 0.05) * rr
+		var br := (9.0 + 10.0 * h + sin(t * 11.0 + float(k)) * 2.0) * sqrt(l)
+		c.draw_circle(bp + Vector2(0, br * 0.3), br, PALE)
+		c.draw_circle(bp, br, FOAM)
+	# lace: white streaks pulled down the face as the water rises up it
+	for k in range(5):
+		var f := fposmod(t * 0.9 + float(k) * 0.2, 1.0)
+		var lx := x - (40.0 + float(k) * 34.0) * l
+		var ly := _surface(lx, x, t, level, crest)
+		c.draw_polyline(PackedVector2Array([Vector2(lx, ly + 12.0), Vector2(lx - 10.0 * l, ly + (40.0 + 60.0 * f) * l),
+			Vector2(lx - 4.0 * l, ly + (80.0 + 90.0 * f) * l)]), Color(FOAM, 0.55 * (1.0 - f * 0.5)), 3.0)
 	# spray thrown off the lip, and the water pouring off it
 	for p in range(16):
 		var f := fposmod(t * 2.2 + float(p) / 16.0, 1.0)

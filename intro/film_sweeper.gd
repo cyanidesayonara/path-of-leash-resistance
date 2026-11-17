@@ -152,10 +152,7 @@ static func _sweeper(c: CanvasItem, x: float, t: float) -> void:
 	c.draw_colored_polygon(IntroKit.rrect(Rect2(x - 140.0, g - 262.0, 112.0, 90.0), 10.0), GLASS)
 	c.draw_colored_polygon(PackedVector2Array([Vector2(x - 120.0, g - 262.0), Vector2(x - 92.0, g - 262.0),
 		Vector2(x - 128.0, g - 172.0), Vector2(x - 140.0, g - 172.0), Vector2(x - 140.0, g - 220.0)]), Color(0.60, 0.70, 0.86, 0.35))
-	var nod := maxf(0.0, sin(t * 2.2)) * 10.0
-	c.draw_circle(Vector2(x - 86.0, g - 210.0 + nod), 20.0, Color(0.78, 0.58, 0.44))
-	c.draw_rect(Rect2(x - 108.0, g - 236.0 + nod, 46.0, 12.0), Color(0.20, 0.36, 0.30))
-	c.draw_line(Vector2(x - 76.0, g - 206.0 + nod), Vector2(x - 66.0, g - 206.0 + nod), INK, 2.5)
+	_driver(c, Vector2(x - 86.0, g - 206.0), t)
 	c.draw_rect(Rect2(x - 160.0, g - 150.0, 150.0, 22.0), TRIM)
 	# the strobe bar on the roof, its two ambers alternating, as in the walk
 	c.draw_rect(Rect2(x - 128.0, g - 288.0, 92.0, 10.0), INK)
@@ -219,6 +216,52 @@ static func _sweeper(c: CanvasItem, x: float, t: float) -> void:
 		var f := fposmod(t * 3.1 + float(p) * 0.1, 1.0)
 		c.draw_circle(bc + Vector2(30.0 + f * 120.0, -f * 90.0 + f * f * 120.0) + Vector2(0, sin(float(p) * 3.3) * 8.0),
 			3.0 * (1.0 - f) + 1.0, Color(0.42, 0.38, 0.30, 1.0 - f))
+
+
+# The driver, nodding off at the wheel: a municipal jacket with its hi-vis
+# band, his hands on the wheel, a heavy head in profile under a work cap,
+# eye shut, mouth hanging open under a bushy moustache, and the z's going up
+static func _driver(c: CanvasItem, hc: Vector2, t: float) -> void:
+	var nod := maxf(0.0, sin(t * 2.2))
+	var skin := Color(0.80, 0.60, 0.46)
+	var jacket := Color(0.20, 0.36, 0.30)
+	# shoulders and arms out to the wheel
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(hc.x - 34.0, hc.y + 16.0, 58.0, 46.0), 14.0), INK)
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(hc.x - 31.0, hc.y + 19.0, 52.0, 43.0), 12.0), jacket)
+	c.draw_line(hc + Vector2(-30, 40), hc + Vector2(20, 40), Color(0.96, 0.84, 0.22), 6.0)
+	var wheel := hc + Vector2(42, 38)
+	c.draw_line(hc + Vector2(10, 30), wheel + Vector2(-6, -4), INK, 13.0)
+	c.draw_line(hc + Vector2(10, 30), wheel + Vector2(-6, -4), jacket, 9.0)
+	c.draw_line(wheel + Vector2(-2, -22), wheel + Vector2(10, 18), INK, 7.0)
+	c.draw_circle(wheel + Vector2(-4, -6), 6.0, skin)
+	# the head, sagging forward as he nods
+	var h := hc + Vector2(4.0 * nod, 8.0 * nod)
+	var tilt := 0.35 * nod
+	var r := func(v: Vector2) -> Vector2: return h + v.rotated(tilt)
+	c.draw_circle(h, 22.0, INK)
+	c.draw_circle(h, 19.5, skin)
+	c.draw_circle(r.call(Vector2(19, 2)), 7.0, INK)
+	c.draw_circle(r.call(Vector2(19, 2)), 5.0, skin)
+	c.draw_circle(r.call(Vector2(-8, 2)), 5.0, skin.darkened(0.15))
+	# the eye shut, the moustache, the mouth hanging open
+	c.draw_line(r.call(Vector2(6, -3)), r.call(Vector2(14, -2)), INK, 2.5)
+	c.draw_colored_polygon(PackedVector2Array([r.call(Vector2(6, 8)), r.call(Vector2(22, 7)), r.call(Vector2(20, 13)),
+		r.call(Vector2(12, 12)), r.call(Vector2(5, 14))]), Color(0.30, 0.20, 0.14))
+	c.draw_colored_polygon(MillieSide.ellipse(r.call(Vector2(13, 17)), Vector2(4, 2.5 + 2.5 * nod)), Color(0.30, 0.08, 0.08))
+	# the cap: crown, brim out over the brow, the city's badge
+	c.draw_colored_polygon(PackedVector2Array([r.call(Vector2(-20, -8)), r.call(Vector2(-16, -24)), r.call(Vector2(10, -25)),
+		r.call(Vector2(18, -12)), r.call(Vector2(30, -10)), r.call(Vector2(28, -6)), r.call(Vector2(-20, -5))]), INK)
+	c.draw_colored_polygon(PackedVector2Array([r.call(Vector2(-18, -9)), r.call(Vector2(-14, -22)), r.call(Vector2(9, -22)),
+		r.call(Vector2(16, -11)), r.call(Vector2(27, -9)), r.call(Vector2(-18, -7))]), jacket)
+	c.draw_circle(r.call(Vector2(0, -15)), 3.0, Color(0.96, 0.84, 0.22))
+	# the z's
+	for z in range(3):
+		var f := fposmod(t * 0.7 + float(z) / 3.0, 1.0)
+		var zp := h + Vector2(20.0 + f * 40.0, -34.0 - f * 50.0)
+		var zs := 5.0 + f * 5.0
+		var col := Color(1, 1, 1, 0.85 * (1.0 - f))
+		c.draw_polyline(PackedVector2Array([zp + Vector2(-zs, -zs), zp + Vector2(zs, -zs), zp + Vector2(-zs, zs),
+			zp + Vector2(zs, zs)]), col, 2.5)
 
 
 # the card: the street gone white-hot behind RUN!, the brushes looming in
