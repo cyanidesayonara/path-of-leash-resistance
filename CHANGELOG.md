@@ -11,6 +11,16 @@ Append-only session history, newest first.
   - **Telegraphed night-time street sellers**: three street sellers on the plaza flagstones (`SELLER_SPECS`) with wares on white sheets and corner cords who get a `0.8 s` `"Pack up!"` telegraph on the lookout whistle or a nearby bark before bundling their sheets and running, alternately up and down the square, to the nearest arch of the arcade; they are out only on a dry night (`Outdoors.street_sellers`).
 - Verified with before/after `--shot --level=reial` captures, `tools/playtest.gd` (`0` problems), `reial --selftest`, `test_reial.gd`, `test_reial_waiter.gd`, `test_walk_hooks.gd`, and all 246 tests in `tests/ci_tests.txt` (`246 passed, 0 failed`).
 
+## 2026-11-16 - Upgrade El Barri (Walk 1) to 1.75 standard
+
+- Upgraded `systems/barri.gd` (`El Barri`, Walk 1) while keeping its gentle opening-walk balance and zero-hazard layout intact:
+  - Replaced the placeholder 18 px dot grid in `_panots()` with `Panot.flor()` (*flor de Barcelona* tiles) across both street pavements and all four desire-path crossings.
+  - Added asphalt pedestrian zebra crossings on the west street at the two west-railing gates in `RAIL_GATES` (`y = -1420` and `-3380`; the east-railing gates face the block, not the street), with dropped granite kerbs, five-bar zebras, flanking cast-iron `pilones` and parked-motorbike clearance, plus a side street that opens across the west roofs to meet the `-3380` crossing, asphalt and kerbs across its whole mouth and its own five-bar zebra.
+  - Upgraded street furniture and shopfronts: street `papereres` along both pavements, a detailed *forn de pa* corner bakery (bread baskets with baguettes/loaves, slatted bench, A-board), an illuminated projecting pharmacy cross with white/mint fascia and bay pot, a *quiosc* newsstand with ribbed roof, magazine racks and postcard spinner, varied corner bars, hairdresser barber pole, detailed Bicing dock with totem and red basket bikes, scooter fairings/top-boxes, and varied rooftop terraces.
+  - Added `Barri.night_fronts()` (declared in `tests/test_walk_hooks.gd`) so shopfronts and residential entries spill warm light across the paving at dusk and night; the entries' fronts sit on the doors' 232 px grid, which `tests/test_barri.gd` now checks.
+  - Improved `Petanca` live-event readability in `_draw_square()` with a pulsing throwing-circle highlight and dotted aim line during the 0.8 s `"Watch the boule!"` wind-up, plus a sauló dust wake behind the rolling boule.
+- Verified with before/after `--shot --level=barri` captures, `tools/playtest.gd`, `tests/test_barri.gd`, `tests/test_walk_hooks.gd`, and `tests/test_night_fronts.gd`.
+
 ## 2026-11-16 - Trencadis: one art style for the game and the website
 
 - Settled the look: Trencadis, Gaudi's broken-tile mosaic. Deep navy panels (`#14203D`), saffron (`#FFB020`) as the primary colour, turquoise (`#1FC9B7`) for the screens beside the walk, magenta (`#E5487A`) for questions and warnings, leaf green (`#8BCB3C`) for done. The constants live at the top of `hud/ui_kit.gd`; the per-screen pastels are gone (two accents plus magenta), and every HUD panel, gauge, feed chip, goal card, results panel, settings row and word-strip coin takes its colour from the palette.
