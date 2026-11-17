@@ -182,7 +182,7 @@ const VAULT_POST_AHEAD := 110.0
 const LEDGE_X := 760.0
 const LEDGE_HALF := 150.0
 # the kid's dares in the yard: easier than a walk's (entities/challenger.gd)
-const YARD_LADDER := [[3, 20.0], [5, 20.0], [8, 20.0]]
+const YARD_LADDER := [[2, 20.0], [3, 20.0], [5, 25.0]]
 
 
 static func index_of(id: String) -> int:

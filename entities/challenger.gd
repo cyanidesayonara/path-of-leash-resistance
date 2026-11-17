@@ -4,6 +4,7 @@ const HumanLook := preload("res://entities/human_appearance.gd")
 const SpeechBubble := preload("res://world/speech_bubble.gd")
 const TutorialSteps := preload("res://systems/tutorial.gd")
 const Cast := preload("res://entities/challenger_cast.gd")
+const DareMarks := preload("res://entities/dare_marks.gd")
 
 # The dare-giver (Combo Phase B): somebody on the walk who dares you into a
 # bounded trick window as you pass. Who it is depends on the walk (WHO): a
@@ -34,7 +35,10 @@ const NOTICE_R := 240.0
 const NEAR_R := 420.0
 const RETRY_WAIT := 5.0
 # trick count and seconds, easiest first
-const LADDER := [[6, 20.0], [8, 20.0], [10, 20.0]]
+# (measured with tools/dare_bot.gd: a bot that only swings round poles lands
+# about one trick in four seconds; a player who mixes in flings and grinds,
+# with the dare's free zoomies, does better)
+const LADDER := [[4, 20.0], [6, 25.0], [8, 30.0]]
 
 # who gives the dare on each walk; anywhere not listed (El Barri, the First
 # Walk), the kid from your street. Most of the walks' own cast is drawn in
@@ -258,6 +262,11 @@ func setup(m: Node2D, mine: Node2D, giver := "kid") -> void:
 	# derived from position, never the global RNG - spawning this must not
 	# desync the deterministic autowalk traversal
 	seed_o = fmod(absf(position.x) * 0.017, TAU)
+	# the trick spots near her, marked while this giver's dare is up
+	var marks := Node2D.new()
+	marks.set_script(DareMarks)
+	add_child(marks)
+	marks.setup(m)
 	var size: Vector2 = FOOTPRINT[who]
 	if size == Vector2.ZERO:
 		return

@@ -34,6 +34,9 @@ var auto_move := Vector2.ZERO
 # the zoomies: a reserve of energy the dog is dying to burn. Turbo spends
 # it for a burst of speed; a walk should always shed some, like pee/poop.
 var energy := 1.0
+# while a dare's clock runs the zoomies are free (main sets it): every swing
+# needs them, and a dare is 20-odd seconds of nothing but swings
+var free_turbo := false
 # set by main each tick from mood.gd: a mood changes how she handles, not just
 # how the screen looks, and the handling is meant to land first. 1.0 is an
 # ordinary unbothered dog; wobble is a veer in radians the zoomies add on top
@@ -290,7 +293,7 @@ func tick(delta: float) -> void:
 	var answering_nature := Input.is_action_pressed("pee") and not auto
 	# turbo: burn the zoomies for a burst of speed while energy lasts
 	turbo_active = energy > 0.0 and input_active and (auto or Input.is_action_pressed("turbo"))
-	if turbo_active:
+	if turbo_active and not free_turbo:
 		energy = maxf(0.0, energy - 0.28 * delta)
 	var b_spd := base_speed()
 	var b_acc := base_accel()

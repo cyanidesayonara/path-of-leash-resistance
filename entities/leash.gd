@@ -733,6 +733,14 @@ func unwind_bias_of(local_winding: float, step := WHIRL_PROBE_STEP) -> float:
 # Furniture unwinds nothing (La Rambla's terrace once held an owner in a
 # whirl-stumble loop for two minutes) and neither does a point that is in no
 # list at all.
+# What each of `poles` is (K_POLE, K_FURNITURE), brought up to date first:
+# trees and late props are appended after setup, so the cached kinds can be
+# short of the list until something asks.
+func kinds() -> PackedInt32Array:
+	_ensure_pole_kinds()
+	return pole_kinds
+
+
 func is_real_pole(p: Vector2) -> bool:
 	if not (is_finite(p.x) and is_finite(p.y)):
 		return false

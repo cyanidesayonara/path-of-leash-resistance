@@ -715,6 +715,7 @@
 
 # Dare offer and retry test
 --headless --path . --script res://tests/test_dare_retry.gd
+--headless --path . --script res://tests/test_dare_help.gd
 
 # El Gotic wall cat regression test
 --headless --path . --script res://tests/test_wallcat.gd
