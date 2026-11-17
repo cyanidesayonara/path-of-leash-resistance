@@ -71,7 +71,7 @@ const Kit := preload("res://hud/ui_kit.gd")
 # what counts for the kid's dare, for a player who has not met the word yet
 # the dare card's width: it sits between the vitals and the goals card
 const DARE_W := 400.0
-const DARE_HOW := "Tricks: swing around a pole, grind a ledge, fling your human. Hold {turbo} for speed."
+const DARE_HOW := "Tricks: hold {turbo} and run round a ringed pole, grind a marked ledge, or fling your human. Zoomies are free while it runs."
 # how to take a dare on offer: it waits for her bark
 # the offer's prompt: the bark button itself, glowing, then these words; a
 # line under it says how to turn it down
@@ -396,7 +396,7 @@ func _dare_card(vs: Vector2, y: float) -> void:
 				lines.append("Get ready...")
 		"live":
 			title = "DARE: %d TRICKS" % int(ch.target)
-			lines = ["%d seconds left" % int(ceil(float(ch.timer)))]
+			lines = ["%d seconds left" % int(ceil(float(ch.timer))), String(main.dare_hint())]
 		_:
 			var who: String = g.display_name() if g != null else "them"
 			var more: bool = g != null and g.has_another_go()

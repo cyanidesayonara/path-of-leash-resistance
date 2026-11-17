@@ -151,6 +151,9 @@ func _draw_shapes() -> void:
 	var ecol := ZOOM_COL
 	if float(main.golden_t) > 0.0:
 		ecol = Kit.SAFFRON.lerp(Kit.SAFFRON_PALE, 0.5 + 0.5 * sin(t / 90.0))
+	elif bool(main.dog.free_turbo):
+		# a dare's free zoomies shimmer in turquoise
+		ecol = Kit.TURQUOISE.lerp(Kit.TURQUOISE_PALE, 0.5 + 0.5 * sin(t / 110.0))
 	elif main.dog.turbo_active and fmod(t / 120.0, 2.0) < 1.0:
 		ecol = Kit.LEAF_SOFT
 	Icons.draw_bolt(_b, Vector2(PAD + 7.0, ROW_ZOOM + 7.5), 13.0, ecol)

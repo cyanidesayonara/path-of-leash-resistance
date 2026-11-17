@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Dares you can read and win
+
+- A dare asked for 6, 8 and then 10 tricks in 20 seconds, and the trick nearly every walk offers, the pole swing, only fires while the zoomies are held. The zoomies only come back by landing tricks, and one swing used most of a full bar. So a dare was out of reach, and with an empty bar it could not even be started. Now the dare's clock starting fills the zoomies, and they cost nothing until it ends: the bar shimmers turquoise while they are free.
+- The ladder is 4 tricks in 20 seconds, then 6 in 25, then 8 in 30, and it pays what it did: 38, 44 and 50 bones. The First Walk's yard dares are 2, 3, and 5 in 25. `tools/dare_bot.gd` measures it: a bot that only swings round poles and flings, beside each walk's giver, lands 9 to 22 tricks in 20 seconds where the ground is open. It is a poor driver among kiosks and stalls, which a player is not.
+- While a dare is up, the trick spots near her are marked (`entities/dare_marks.gd`, two draw calls, over the tree crowns): a turning ring of dashes round every pole and tree she can swing round, and dashes marching along every ledge and rail she can grind. A pole she has just swung round loses its ring until she leaves it, which is the rule for swinging there again.
+- The live dare card says what just counted ("Pole Swing counts!"), and otherwise what to try from what is near her: run round a ringed pole or tree holding the zoomies, grind the marked ledge, or keep pulling while your human whirls. A wrap at a run without the zoomies held shouts HOLD SHIFT TO SWING! (whatever the zoomies button is), at most every four seconds. The offer card says the same in a sentence.
+- `leash.kinds()` returns the pole kinds brought up to date: trees are appended after the rope is set up, so the cached list could be short of them.
+- Test: `tests/test_dare_help.gd`.
+
 ## 2026-11-17 - Every walk its own dare-giver
 
 - Thirty walks still had the default dare-giver, the kid on his wooden bench. Now 29 of them have their own, drawn in a new `entities/challenger_cast.gd`. Each has five lines in the giver's voice (`challenger.LINES`, each saying the dare in so many words) and a name for the result card. The kid stays as El Barri's and the First Walk's, the kid from your street:

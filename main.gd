@@ -1174,10 +1174,18 @@ var challenge_l: Label
 # what a dare pays (start_challenge): a base and a bit a trick, so the
 # harder dares up the giver's ladder pay more, and a dare tried again pays
 # what it paid the first time
-const DARE_BASE := 20
+const DARE_BASE := 26
 const DARE_PER_TRICK := 3
 var challenge_giver: Node2D
 var challenge_offered := false
+# the live dare's card says what just counted, for DARE_SAID_S, and otherwise
+# what to try (dare_hint); a wrap at a run without the zoomies held is told
+# to hold them, at most every DARE_NAG_S
+const DARE_SAID_S := 2.2
+const DARE_NAG_S := 4.0
+var dare_last := ""
+var dare_last_t := 0.0
+var dare_nag_t := 0.0
 var dog_carrying := false
 var paused := false
 var grade_rect: ColorRect
@@ -6349,6 +6357,9 @@ func on_scored(label: String, pts: int, trick: bool) -> int:
 		call_haul += 1
 	if not trick:
 		return pts
+	if challenge.active:
+		dare_last = label
+		dare_last_t = DARE_SAID_S
 	challenge.add_trick()
 	if fresh_coat_t > 0.0:
 		pts += 1
@@ -6369,6 +6380,29 @@ func _refill_zoomies(pts: int) -> void:
 		Sfx.play("star", 1.4)
 		feed.say("GOLDEN ZOOMIES!", EventFeed.Tone.LOUD)
 		_update_hud()
+
+
+# The live dare card's second line: what just counted, or what to try next,
+# from what is near her (the same spots entities/dare_marks.gd rings).
+func dare_hint() -> String:
+	if dare_last_t > 0.0 and dare_last != "":
+		return "%s counts!" % dare_last.capitalize()
+	if human.is_whirling() or whirl_arm > 0.0:
+		return "Keep pulling: your human swings round and flies."
+	var at: Vector2 = dog.global_position
+	var rail := INF
+	for r: Dictionary in rails:
+		rail = minf(rail, float(Rails.nearest(r, at)["d"]))
+	var pole := INF
+	var kinds: PackedInt32Array = leash.kinds()
+	for i in range(mini(leash.poles.size(), kinds.size())):
+		if kinds[i] == leash.K_POLE:
+			pole = minf(pole, leash.poles[i].distance_to(at))
+	if rail < 160.0 and rail < pole:
+		return Prompts.fill("Hold {turbo} and run along the marked ledge to grind it.")
+	if pole < INF:
+		return Prompts.fill("Hold {turbo} and run round a ringed pole or tree.")
+	return Prompts.fill("Hold {turbo} and find a pole to run round.")
 
 
 # What a dare pays.
@@ -6404,6 +6438,10 @@ var dare_counts := 0
 
 
 func on_challenge_live() -> void:
+	# the dare tops her zoomies up, and they stay free until it is over
+	dog.energy = 1.0
+	dare_last = ""
+	dare_last_t = 0.0
 	Sfx.play("go", 1.0, -3.0)
 	shake_t = maxf(shake_t, 0.2)
 	feed.say("GO! %d TRICKS!" % challenge.target, EventFeed.Tone.LOUD)
@@ -6521,6 +6559,7 @@ func _physics_process(delta: float) -> void:
 	_tick_banderer(delta)
 	if march != null:
 		march.tick(self, delta)
+	dog.free_turbo = challenge.active
 	dog.tick(delta)
 	human.tick(delta)
 	_part_bodies()
@@ -6594,6 +6633,8 @@ func _physics_process(delta: float) -> void:
 	_prof("progress")
 	combo.tick(delta)
 	challenge.tick(delta)
+	dare_last_t = maxf(0.0, dare_last_t - delta)
+	dare_nag_t = maxf(0.0, dare_nag_t - delta)
 	Tips.tick(self, delta)
 	FurgonetaMod.tick(self, delta)
 	_prof("combo, challenge")
@@ -10192,6 +10233,10 @@ func _tick_vault(delta: float) -> void:
 	if not dog.turbo_active:
 		if leash.taut and dog.velocity.length() >= VAULT_TRIGGER_SPEED:
 			tip("swing")
+			# mid-dare, say so out loud: this is the swing she is after
+			if challenge.active and dare_nag_t <= 0.0:
+				dare_nag_t = DARE_NAG_S
+				feed.say(Prompts.fill("HOLD {turbo} TO SWING!"), EventFeed.Tone.LOUD)
 		return
 	# THE FLING HAS RIGHT OF WAY.
 	#
