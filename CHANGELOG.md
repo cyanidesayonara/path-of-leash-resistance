@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - v1.75 tagged
+
+- Tagged v1.75 on 0424ab0. AGENTS.md now says v1.75 is the last tag and shows v1.76 as the next; `docs/ROADMAP.md` records what went into 1.75.
+
 ## 2026-11-17 - New walk: Sant Pau
 
 - Added Sant Pau (`santpau`, `systems/santpau.gd`), the 37th walk of the campaign: Domènech i Montaner's modernista hospital grounds at dusk (`clear`, `dusk`), entered from Avinguda de Gaudí's end over Gaudí hexagonal panots, up the central stone axis past the gate lodges and symmetrical red-brick pavilions to the Administration building's clock tower, and out off the leash into the Jardins de Sant Pau. A calm walk with no chase and no boss, placed right after Plaça d'Espanya in the carousel (`STAR_GATE` 46, `CHASE_GATE` `"boars"`), with its name laid in bitter oranges and the gloss "The modernista hospital".

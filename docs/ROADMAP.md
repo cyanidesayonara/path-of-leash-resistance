@@ -132,6 +132,12 @@ El Drac's serpentine bench, El Gat's awnings, the bespoke NPCs on
 bollards, late-campaign chase spacing, web performance work, and Android
 readiness.
 
+### 1.75 - Three walks and the core upgrades (tagged 2026-11-17)
+
+Sarrià, El Metro, Carrer de Blai; the Trencadís look; El Barri, Plaça Reial
+and L'Estació rebuilt; a dare-giver with a tune on every walk; readable
+dares; the whirl and the leash upgraded.
+
 ### 1.75 to 1.78 - The last twelve walks (proposed grouping)
 
 Three walks a release, each with its upgrade and live event:
