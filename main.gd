@@ -3130,6 +3130,9 @@ func night_lights() -> Array[Vector3]:
 		return _night_lights
 	_night_built = true
 	_night_lights.clear()
+	if walk_mod != null and walk_mod.has_method("night_lights"):
+		_night_lights.append_array(walk_mod.night_lights(self))
+		return _night_lights
 	for i in range(deco_pole_count):
 		if is_lamppost(i):
 			_night_lights.append(Vector3(poles[i].x, poles[i].y + 16.0, NIGHT_LAMP_R))

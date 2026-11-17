@@ -69,6 +69,14 @@ func _run() -> void:
 		"no busking in rain or snow")
 	_check(Outdoors.terrace_parasols("rain", "day") and not Outdoors.terrace_parasols("clear", "night")
 		and not Outdoors.terrace_parasols("snow", "day"), "a terrace parasol is up in the rain, furled at night and in snow")
+	_check(Outdoors.street_sellers("clear", "night") and Outdoors.street_sellers("wind", "night")
+		and not Outdoors.street_sellers("clear", "day") and not Outdoors.street_sellers("clear", "dusk")
+		and not Outdoors.street_sellers("rain", "night"), "street sellers lay out their sheets only on a dry night")
+	_check(Outdoors.terrace_patrons("clear", "night") and Outdoors.terrace_patrons("wind", "day")
+		and not Outdoors.terrace_patrons("rain", "night") and not Outdoors.terrace_patrons("snow", "day"),
+		"terrace tables are taken when it is dry, empty in rain or snow")
+	_check(Outdoors.busker_onlookers("clear", "night") and not Outdoors.busker_onlookers("clear", "dawn")
+		and not Outdoors.busker_onlookers("rain", "day"), "a busker draws onlookers only while busking, not at dawn")
 	# El Metro: underground the weather stops at the stairs
 	_check(Outdoors.underground_busker("rain", "day") and Outdoors.underground_busker("snow", "dusk")
 		and not Outdoors.underground_busker("clear", "night"), "the metro's busker plays in any weather, not after dark")

@@ -3,38 +3,45 @@ extends RefCounted
 
 # WALK 19: PLAÇA REIAL (The Arcaded Royal Square)
 # Set in the heart of Barcelona's Gothic Quarter: an elegant 19th-century
-# neoclassical royal plaza bounded by continuous arched colonnades (porxos),
-# towering Washingtonia royal palm trees, Antoni Gaudí's six-armed dragon-helmet
-# streetlamps (Fanals de Gaudí), the ornate Font de les Tres Gràcies central
-# fountain, outdoor tapas terraces, and a Spanish guitar busker.
+# neoclassical royal plaza bounded by continuous arched colonnades (porxos)
+# all round, towering Washingtonia royal palm trees, Antoni Gaudí's six-armed
+# dragon-helmet streetlamps (Fanals de Gaudí), the ornate Font de les Tres
+# Gràcies central fountain, late-night arcade bar terraces, buskers, and
+# street sellers with goods on a blanket who fold up and run at the whistle.
 
 const NightFronts := preload("res://world/night_fronts.gd")
-const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Detour := preload("res://systems/detour.gd")
+const Outdoors := preload("res://systems/outdoors.gd")
 
-const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
+const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
 # --- colors ------------------------------------------------------------------
-const STONE_PLAZA := Color(0.74, 0.72, 0.68)
-const STONE_DARK := Color(0.58, 0.56, 0.52)
-const BAND_CREAM := Color(0.85, 0.83, 0.77)
-const ARCADE_TILE := Color(0.68, 0.36, 0.26)
-const ARCADE_PILLAR := Color(0.82, 0.78, 0.70)
-const ARCADE_SHADOW := Color(0.12, 0.10, 0.10, 0.75)
+const STONE_PLAZA := Color(0.72, 0.70, 0.66)
+const STONE_JOINT := Color(0.62, 0.60, 0.56, 0.55)
+const STONE_DARK := Color(0.56, 0.54, 0.50)
+const BAND_CREAM := Color(0.84, 0.81, 0.74)
+const PANOT_BORDER := Color(0.60, 0.57, 0.52)
+const ARCADE_TILE := Color(0.64, 0.34, 0.24)
+const ARCADE_TILE_JOINT := Color(0.50, 0.25, 0.17, 0.55)
+const ARCADE_PILLAR := Color(0.84, 0.79, 0.70)
+const ARCADE_FACADE := Color(0.76, 0.66, 0.52)
+const ARCADE_ROOF := Color(0.46, 0.34, 0.26)
+const ARCADE_PARAPET := Color(0.80, 0.72, 0.58)
+const PILONA_IRON := Color(0.16, 0.18, 0.20)
 const PALM_TRUNK := Color(0.46, 0.35, 0.25)
 const PALM_BARK := Color(0.36, 0.26, 0.18)
 const PALM_LEAF := Color(0.22, 0.50, 0.26)
 const PALM_LEAF_LIGHT := Color(0.36, 0.66, 0.32)
 const GAUDI_BRONZE := Color(0.20, 0.24, 0.22)
 const GAUDI_MARBLE := Color(0.54, 0.26, 0.24)
-const GAUDI_GOLD := Color(0.86, 0.72, 0.24)
-const GAUDI_GLOBE := Color(1.0, 0.92, 0.65)
+const GAUDI_GOLD := Color(0.88, 0.74, 0.26)
+const GAUDI_GLOBE := Color(1.0, 0.94, 0.72)
 const FOUNTAIN_IRON := Color(0.18, 0.20, 0.22)
-const FOUNTAIN_WATER := Color(0.35, 0.68, 0.84, 0.75)
-const FOUNTAIN_STONE := Color(0.70, 0.68, 0.64)
+const FOUNTAIN_WATER := Color(0.34, 0.68, 0.84, 0.78)
+const FOUNTAIN_STONE := Color(0.72, 0.70, 0.66)
 const CHURRO_GOLD := Color(0.88, 0.68, 0.28)
 const CHOCOLATE_DARK := Color(0.22, 0.12, 0.08)
 const GUITAR_WOOD := Color(0.78, 0.46, 0.22)
@@ -44,6 +51,9 @@ const WEST_ARCADE_X := 350.0
 const EAST_ARCADE_X := 930.0
 const CORRIDOR_L := 350.0
 const CORRIDOR_R := 930.0
+const ARCADE_BACK_W := 240.0
+const ARCADE_BACK_E := 1040.0
+const PILLAR_STEP := 200.0
 
 # Antoni Gaudí's 6-armed dragon-helmet lampposts (Fanals de Gaudí)
 const GAUDI_POSTS: Array[Vector2] = [
@@ -75,7 +85,28 @@ const PALMS: Array[Vector2] = [
 	Vector2(820.0, -4150.0),
 ]
 
-# Dining terraces with bistro tables under the portico arcades
+# The arcade end-wings framing the square's archways: tiled blocks with a row
+# of pillars along their outer face. The south pair stands past the start
+# line; the north pair is solid (walls, rope and the owner's keep-outs), and
+# the archway between them is the way on.
+const WING_SOUTH_Y := 290.0
+const WING_NORTH_Y := -4580.0
+const WING_PILLARS_X: Array[float] = [405.0, 460.0, 515.0, 765.0, 820.0, 875.0]
+const NORTH_WINGS: Array[Rect2] = [
+	Rect2(CORRIDOR_L, WING_NORTH_Y - 10.0, 175.0, 70.0),
+	Rect2(755.0, WING_NORTH_Y - 10.0, CORRIDOR_R - 755.0, 70.0),
+]
+
+# Cast-iron Barcelona pilones at the south entrance and flanking the north
+# archway, just clear of the wings so they are seen where they wrap the leash
+const PILONES: Array[Vector2] = [
+	Vector2(506.0, 220.0),
+	Vector2(774.0, 220.0),
+	Vector2(542.0, -4494.0),
+	Vector2(738.0, -4494.0),
+]
+
+# Late-night bar terraces with marble bistro tables under the portico arcades
 const TERRACES: Array[Rect2] = [
 	Rect2(352.0, -1250.0, 78.0, 160.0),
 	Rect2(850.0, -1250.0, 78.0, 160.0),
@@ -85,10 +116,11 @@ const TERRACES: Array[Rect2] = [
 	Rect2(850.0, -3850.0, 78.0, 160.0),
 ]
 
-# Spanish guitar busker under the west arcade
+# Spanish guitar busker under the west arcade + sax/cajon busker under the east arcade
 const BUSKER_POS := Vector2(385.0, -1950.0)
+const BUSKER2_POS := Vector2(895.0, -3550.0)
 
-# Hot churros and chocolate prize on an outdoor terrace table
+# Hot churros and chocolate prize by the east terrace
 const PRIZE := Vector2(890.0, -2700.0)
 const PRIZE_TEXT := "snatch the hot churros from the terrace table"
 
@@ -99,6 +131,38 @@ const PIGEON_SPOTS: Array[Vector2] = [
 	Vector2(760.0, -2300.0),
 	Vector2(580.0, -3100.0),
 	Vector2(700.0, -3700.0),
+]
+
+# Night-time street sellers with goods on a white sheet (fold up & run at the whistle)
+# to the nearest arch of the arcade, just inside the colonnade
+const SELLER_SPECS: Array = [
+	[Rect2(495.0, -1490.0, 72.0, 50.0), "glow"],
+	[Rect2(715.0, -2250.0, 72.0, 50.0), "shades"],
+	[Rect2(495.0, -3050.0, 72.0, 50.0), "bags"],
+]
+const SELLER_WARN_DURATION := 0.8
+const SELLER_WHISTLE_FIRST := 16.0
+const SELLER_WHISTLE_EVERY := 28.0
+const SELLER_RUN_SPEED := 155.0
+const SELLER_AWAY_TIME := 6.0
+const SELLER_RUN_DY := 160.0
+const SELLER_ARCH_INSET := 14.0
+const GLOW_COLS: Array[Color] = [Color(0.35, 0.95, 0.90), Color(0.98, 0.45, 0.75), Color(0.98, 0.92, 0.32)]
+const BAG_COLS: Array[Color] = [Color(0.76, 0.28, 0.24), Color(0.24, 0.46, 0.68), Color(0.82, 0.66, 0.26)]
+const CHAIR_DY: Array[float] = [-13.0, 13.0]
+
+const PATRON_COATS: Array[Color] = [
+	Color(0.24, 0.28, 0.38),
+	Color(0.56, 0.26, 0.26),
+	Color(0.24, 0.40, 0.30),
+	Color(0.46, 0.36, 0.24),
+	Color(0.36, 0.26, 0.42),
+]
+const PATRON_HAIR: Array[Color] = [
+	Color(0.18, 0.14, 0.12),
+	Color(0.38, 0.24, 0.16),
+	Color(0.68, 0.56, 0.36),
+	Color(0.54, 0.52, 0.50),
 ]
 
 
@@ -119,6 +183,8 @@ static func wrap_rects() -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	for t: Rect2 in TERRACES:
 		out.append(t)
+	for w: Rect2 in NORTH_WINGS:
+		out.append(w)
 	return out
 
 
@@ -129,6 +195,8 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	# Central fountain collision footprint
 	out.append(Rect2(FOUNTAIN_POS.x - FOUNTAIN_RADIUS, FOUNTAIN_POS.y - FOUNTAIN_RADIUS,
 		FOUNTAIN_RADIUS * 2.0, FOUNTAIN_RADIUS * 2.0))
+	for w: Rect2 in NORTH_WINGS:
+		out.append(w)
 	return out
 
 
@@ -144,6 +212,36 @@ static func setup_poles(m: Node2D) -> void:
 	# Palm tree trunks
 	for p: Vector2 in PALMS:
 		m.poles.append(p)
+	# Entrance pilones
+	for p: Vector2 in PILONES:
+		m.poles.append(p)
+
+
+static func _seller_home(r: Rect2) -> Vector2:
+	var inward := 1.0 if r.get_center().x < 640.0 else -1.0
+	return Vector2(r.get_center().x + inward * (r.size.x * 0.5 + 15.0), r.get_center().y)
+
+
+static func _init_sellers(m: Node2D) -> void:
+	var list: Array[Dictionary] = []
+	for si in range(SELLER_SPECS.size()):
+		var sp_item: Array = SELLER_SPECS[si]
+		var r: Rect2 = sp_item[0]
+		var home := _seller_home(r)
+		list.append({
+			"rect": r,
+			"goods": String(sp_item[1]),
+			"run_dy": -SELLER_RUN_DY if si % 2 == 0 else SELLER_RUN_DY,
+			"home": home,
+			"pos": home,
+			"to": Vector2.ZERO,
+			"state": "laid",
+			"t": 0.0,
+			"cd": 0.0,
+			"bump_cd": 0.0,
+		})
+	m.set_meta("reial_sellers", list)
+	m.set_meta("reial_whistle_t", SELLER_WHISTLE_FIRST)
 
 
 static func build(m: Node2D) -> Array:
@@ -166,6 +264,10 @@ static func build(m: Node2D) -> Array:
 	m.islands = Array([{"rect": Rect2(FOUNTAIN_POS - Vector2(FOUNTAIN_RADIUS + 24.0, FOUNTAIN_RADIUS + 24.0), Vector2((FOUNTAIN_RADIUS + 24.0) * 2.0, (FOUNTAIN_RADIUS + 24.0) * 2.0)), "side": 1.0, "lead": 180.0}], TYPE_DICTIONARY, &"", null)
 
 	setup_poles(m)
+	# the owner aims through the north archway, not into a wing's end
+	for w: Rect2 in NORTH_WINGS:
+		m.owner_keepouts.append(w)
+	_init_sellers(m)
 
 	# Sniffable landmarks (hydrants)
 	var marks: Array[Vector2] = [
@@ -187,108 +289,212 @@ static func build(m: Node2D) -> Array:
 	return [marks, snacks]
 
 
+static func _draw_pilona(b: ShapeBatch, p: Vector2) -> void:
+	b.circle(p + Shade.light * 3.0, 7.5, SHADOW)
+	b.circle(p, 7.0, PILONA_IRON)
+	b.circle(p, 4.5, Color(0.28, 0.30, 0.33))
+	b.circle(p, 2.2, GAUDI_GOLD)
+
+
+static func _draw_terrace(b: ShapeBatch, tr: Rect2, ti: int, patrons: bool) -> void:
+	var on_west := tr.get_center().x < 640.0
+	b.rect(Rect2(tr.position + Shade.light * 4.0, tr.size), SHADOW)
+	# Warm slate-wood terrace deck and brass rail border
+	b.rect(tr, Color(0.20, 0.17, 0.16, 0.72))
+	b.rect(Rect2(tr.position + Vector2(3.0, 3.0), tr.size - Vector2(6.0, 6.0)), Color(0.28, 0.22, 0.19, 0.82))
+	# Striped bar awning strip hugging the arcade side
+	var ax := tr.position.x if on_west else tr.end.x - 14.0
+	for s in range(8):
+		var sy := tr.position.y + float(s) * (tr.size.y / 8.0)
+		var acol := Color(0.58, 0.20, 0.18) if s % 2 == 0 else Color(0.88, 0.82, 0.68)
+		b.rect(Rect2(ax, sy, 14.0, tr.size.y / 8.0 - 1.0), acol)
+	# Bistro tables, tucked chairs, candle lanterns and late-night patrons
+	var cols := 2
+	var rows := int(tr.size.y / 48.0)
+	for r in range(rows):
+		for c in range(cols):
+			var tp := tr.position + Vector2(18.0 + float(c) * 42.0, 26.0 + float(r) * 48.0)
+			# Bistro chairs north & south
+			for dy: float in CHAIR_DY:
+				b.circle(tp + Vector2(0.0, dy), 5.0, Color(0.18, 0.16, 0.16))
+			b.circle(tp + Shade.light * 3.0, 11.5, SHADOW)
+			b.circle(tp, 10.5, Color(0.92, 0.90, 0.86)) # marble top
+			# Small table candle & drinks (never food-crawl trays)
+			b.circle(tp + Vector2(0.0, -1.0), 2.5, Color(1.0, 0.86, 0.45))
+			b.circle(tp + Vector2(4.0, 3.0), 2.2, Color(0.84, 0.56, 0.22))
+			b.circle(tp + Vector2(-4.0, 2.5), 2.0, Color(0.75, 0.88, 0.94))
+			# Seated late-night patron at alternate chairs
+			var idx := ti * 7 + r * 2 + c
+			if patrons and idx % 3 != 0:
+				var side_y := -14.0 if idx % 2 == 0 else 14.0
+				var sp := tp + Vector2(0.0, side_y)
+				b.circle(sp + Vector2(1.5, 2.5), 8.5, SHADOW)
+				b.circle(sp, 8.0, PATRON_COATS[idx % PATRON_COATS.size()])
+				b.circle(sp + Vector2(0.0, -1.5), 4.8, PATRON_HAIR[idx % PATRON_HAIR.size()])
+
+
+static func _draw_busker_scene(b: ShapeBatch, pos: Vector2, is_guitar: bool, t: float) -> void:
+	# Stool / performer shadow
+	b.circle(pos + Shade.light * 4.0, 14.0, SHADOW)
+	b.circle(pos, 12.0, Color(0.24, 0.28, 0.36) if is_guitar else Color(0.32, 0.22, 0.26))
+	b.circle(pos + Vector2(0.0, -3.0), 6.5, Color(0.22, 0.16, 0.12))
+	var strum := sin(t * 7.0) * 1.6
+	if is_guitar:
+		var gp := pos + Vector2(12.0, -4.0 + strum * 0.4)
+		b.circle(gp + Vector2(0, 4), 6.0, GUITAR_WOOD)
+		b.circle(gp + Vector2(0, -3), 4.5, GUITAR_WOOD)
+		b.line(gp + Vector2(0, -3), gp + Vector2(0, -13), Color(0.2, 0.15, 0.1), 2.0)
+	else:
+		# Brass saxophone glint
+		var sx := pos + Vector2(-11.0, -3.0 + strum * 0.4)
+		b.line(sx, sx + Vector2(-4.0, 10.0), GAUDI_GOLD, 3.0)
+		b.circle(sx + Vector2(-5.0, 11.0), 3.5, GAUDI_GOLD)
+	# Open instrument case with tossed coins
+	var cp := pos + (Vector2(24.0, 10.0) if is_guitar else Vector2(-24.0, 10.0))
+	b.rect(Rect2(cp.x - 6.0, cp.y - 12.0, 12.0, 24.0), Color(0.12, 0.10, 0.14))
+	b.circle(cp + Vector2(0, -4), 2.0, Color(0.94, 0.82, 0.25))
+	b.circle(cp + Vector2(2, 4), 1.8, Color(0.90, 0.80, 0.30))
+	# Two onlookers listening
+	if not Outdoors.busker_onlookers(Game.weather, Game.hour):
+		return
+	var dir := 1.0 if is_guitar else -1.0
+	for k in range(2):
+		var lp := pos + Vector2(dir * (38.0 + float(k) * 10.0), -14.0 + float(k) * 28.0)
+		b.circle(lp + Vector2(2, 3), 9.0, SHADOW)
+		b.circle(lp, 8.5, PATRON_COATS[(k + (0 if is_guitar else 2)) % PATRON_COATS.size()])
+		b.circle(lp + Vector2(0.0, -2.0), 5.0, PATRON_HAIR[(k + 1) % PATRON_HAIR.size()])
+
+
 static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: float = 0.0) -> void:
 	if m.lvl != "reial":
 		return
 	# Arcade portico flooring on the flanks (terracotta tiles)
-	b.rect(Rect2(200.0, -4800.0, 150.0, 5200.0), ARCADE_TILE)
-	b.rect(Rect2(930.0, -4800.0, 150.0, 5200.0), ARCADE_TILE)
+	b.rect(Rect2(ARCADE_BACK_W, -4800.0, WEST_ARCADE_X - ARCADE_BACK_W, 5200.0), ARCADE_TILE)
+	b.rect(Rect2(EAST_ARCADE_X, -4800.0, ARCADE_BACK_E - EAST_ARCADE_X, 5200.0), ARCADE_TILE)
+	# Subtle arcade bay floor joints
+	var ty := -4700.0
+	while ty < 380.0:
+		b.line(Vector2(ARCADE_BACK_W, ty), Vector2(WEST_ARCADE_X, ty), ARCADE_TILE_JOINT, 1.5)
+		b.line(Vector2(EAST_ARCADE_X, ty), Vector2(ARCADE_BACK_E, ty), ARCADE_TILE_JOINT, 1.5)
+		ty += PILLAR_STEP
 
 	# Main plaza flagstones (polished granite)
 	b.rect(Rect2(CORRIDOR_L, -4800.0, CORRIDOR_R - CORRIDOR_L, 5200.0), STONE_PLAZA)
 
-	# Decorative radial stone bands across the plaza
+	# Panot threshold strips along west and east arcade colonnades
+	b.rect(Rect2(CORRIDOR_L - 4.0, -4700.0, 16.0, 5080.0), PANOT_BORDER)
+	b.rect(Rect2(CORRIDOR_R - 12.0, -4700.0, 16.0, 5080.0), PANOT_BORDER)
+
+	# Square flagstone ashlar grid across the royal plaza
+	for gx: float in [430.0, 510.0, 590.0, 690.0, 770.0, 850.0]:
+		b.line(Vector2(gx, -4680.0), Vector2(gx, 340.0), STONE_JOINT, 1.2)
+	var gy := -4600.0
+	while gy < 340.0:
+		b.line(Vector2(CORRIDOR_L + 12.0, gy), Vector2(CORRIDOR_R - 12.0, gy), STONE_JOINT, 1.2)
+		gy += 120.0
+
+	# Decorative limestone bands framing the square's bays
 	for y: float in [-1300.0, -2100.0, -2900.0, -3700.0]:
-		b.rect(Rect2(CORRIDOR_L, y, CORRIDOR_R - CORRIDOR_L, 8.0), BAND_CREAM)
-		b.rect(Rect2(CORRIDOR_L, y + 2.0, CORRIDOR_R - CORRIDOR_L, 4.0), STONE_DARK)
+		b.rect(Rect2(CORRIDOR_L + 12.0, y, CORRIDOR_R - CORRIDOR_L - 24.0, 8.0), BAND_CREAM)
+		b.rect(Rect2(CORRIDOR_L + 12.0, y + 2.0, CORRIDOR_R - CORRIDOR_L - 24.0, 4.0), STONE_DARK)
 
 	# Radial starburst paving around the central Three Graces fountain
 	for i in range(12):
 		var a := float(i) * (TAU / 12.0)
 		var dir := Vector2(cos(a), sin(a))
-		b.line(FOUNTAIN_POS + dir * (FOUNTAIN_RADIUS + 4.0), FOUNTAIN_POS + dir * 110.0, BAND_CREAM, 3.5)
+		b.line(FOUNTAIN_POS + dir * (FOUNTAIN_RADIUS + 4.0), FOUNTAIN_POS + dir * 116.0, BAND_CREAM, 3.5)
 
-	# Fountain base and water
-	b.circle(FOUNTAIN_POS + Shade.light * 8.0, FOUNTAIN_RADIUS + 4.0, SHADOW)
-	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS, FOUNTAIN_STONE)
-	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS - 6.0, FOUNTAIN_IRON)
+	# Fountain base, basin, and central Three Graces pedestal
+	b.circle(FOUNTAIN_POS + Shade.light * 8.0, FOUNTAIN_RADIUS + 5.0, SHADOW)
+	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS + 2.0, BAND_CREAM)
+	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS - 1.0, FOUNTAIN_STONE)
+	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS - 7.0, FOUNTAIN_IRON)
 	b.circle(FOUNTAIN_POS, FOUNTAIN_RADIUS - 10.0, FOUNTAIN_WATER)
-	# Inner pedestal and Three Graces column
-	b.circle(FOUNTAIN_POS, 18.0, FOUNTAIN_STONE)
-	b.circle(FOUNTAIN_POS, 12.0, FOUNTAIN_IRON)
+	# Three Graces pedestal lobes and upper bowl
+	for g in range(3):
+		var ga := float(g) * (TAU / 3.0) - PI * 0.5
+		b.circle(FOUNTAIN_POS + Vector2(cos(ga), sin(ga)) * 11.0, 6.0, FOUNTAIN_STONE)
+	b.circle(FOUNTAIN_POS, 16.0, FOUNTAIN_STONE)
+	b.circle(FOUNTAIN_POS, 10.0, FOUNTAIN_IRON)
+	b.circle(FOUNTAIN_POS, 4.5, GAUDI_GOLD)
 
-	# Gaudí 6-armed lampposts
+	# Gaudí 6-armed lampposts (Fanals de Gaudí)
 	for gp: Vector2 in GAUDI_POSTS:
-		# Marble plinth and shadow
+		b.circle(gp, 48.0, BAND_CREAM)
+		b.circle(gp, 42.0, STONE_PLAZA)
 		b.circle(gp + Shade.light * 6.0, 24.0, SHADOW)
 		b.circle(gp, 20.0, GAUDI_MARBLE)
 		b.circle(gp, 14.0, GAUDI_BRONZE)
-		# Six arms with glass globes
 		for i in range(6):
 			var a := float(i) * (TAU / 6.0)
 			var arm := gp + Vector2(cos(a), sin(a)) * 26.0
-			b.line(gp, arm, GAUDI_BRONZE, 3.0)
-			b.circle(arm + Shade.light * 2.0, 5.0, SHADOW)
-			b.circle(arm, 4.5, GAUDI_GLOBE)
-		# Central winged dragon-helmet finial
-		b.circle(gp, 6.0, GAUDI_GOLD)
+			b.line(gp, arm, GAUDI_BRONZE, 3.2)
+			b.circle(arm + Shade.light * 2.0, 5.2, SHADOW)
+			b.circle(arm, 4.8, GAUDI_GLOBE)
+		b.circle(gp, 6.5, GAUDI_GOLD)
 
-	# Palm tree trunks and base grates
+	# Palm tree trunks and iron grates
 	for p: Vector2 in PALMS:
 		b.circle(p + Shade.light * 5.0, 16.0, SHADOW)
 		b.circle(p, 16.0, STONE_DARK)
 		b.circle(p, 12.0, PALM_TRUNK)
 		b.circle(p, 7.0, PALM_BARK)
 
-	# Dining terraces under the arcades
-	for tr: Rect2 in TERRACES:
-		b.rect(Rect2(tr.position + Shade.light * 4.0, tr.size), SHADOW)
-		b.rect(tr, Color(0.15, 0.16, 0.18, 0.45))
-		# Bistro tables
-		var cols := 2
-		var rows := int(tr.size.y / 48.0)
-		for r in range(rows):
-			for c in range(cols):
-				var tp := tr.position + Vector2(16.0 + float(c) * 44.0, 24.0 + float(r) * 48.0)
-				b.circle(tp + Shade.light * 3.0, 12.0, SHADOW)
-				b.circle(tp, 11.0, Color(0.92, 0.90, 0.86)) # white marble top
-				b.circle(tp, 3.0, Color(0.20, 0.18, 0.16))   # plate
+	# Cast-iron Barcelona pilones at the south and north archways
+	for pl: Vector2 in PILONES:
+		_draw_pilona(b, pl)
 
-	# Spanish guitar busker
-	b.circle(BUSKER_POS + Shade.light * 4.0, 14.0, SHADOW)
-	b.circle(BUSKER_POS, 12.0, Color(0.25, 0.28, 0.35)) # blue shirt
-	# Wooden guitar
-	var gp := BUSKER_POS + Vector2(12.0, -4.0)
-	b.circle(gp + Vector2(0, 4), 6.0, GUITAR_WOOD)
-	b.circle(gp + Vector2(0, -3), 4.5, GUITAR_WOOD)
-	b.line(gp + Vector2(0, -3), gp + Vector2(0, -12), Color(0.2, 0.15, 0.1), 2.0)
-	# Open guitar case with tossed coins
-	var cp := BUSKER_POS + Vector2(24.0, 10.0)
-	b.rect(Rect2(cp.x - 6.0, cp.y - 12.0, 12.0, 24.0), Color(0.12, 0.10, 0.14))
-	b.circle(cp + Vector2(0, -4), 2.0, Color(0.94, 0.82, 0.25)) # gold coin
-	b.circle(cp + Vector2(2, 4), 1.8, Color(0.90, 0.80, 0.30))  # gold coin
+	# Dining terraces under the arcades, their tables empty when it is wet
+	var patrons := Outdoors.terrace_patrons(Game.weather, Game.hour)
+	for ti in range(TERRACES.size()):
+		_draw_terrace(b, TERRACES[ti], ti, patrons)
 
 	# Hot churros and chocolate prize
 	b.circle(PRIZE + Shade.light * 3.0, 10.0, SHADOW)
-	b.circle(PRIZE, 9.0, Color(0.95, 0.94, 0.90)) # ceramic plate
-	b.circle(PRIZE + Vector2(-3, -2), 3.5, CHOCOLATE_DARK) # chocolate cup
-	b.line(PRIZE + Vector2(0, 2), PRIZE + Vector2(6, -4), CHURRO_GOLD, 3.0) # churro
-	b.line(PRIZE + Vector2(2, 4), PRIZE + Vector2(7, 0), CHURRO_GOLD, 3.0)  # churro
+	b.circle(PRIZE, 9.0, Color(0.95, 0.94, 0.90))
+	b.circle(PRIZE + Vector2(-3, -2), 3.5, CHOCOLATE_DARK)
+	b.line(PRIZE + Vector2(0, 2), PRIZE + Vector2(6, -4), CHURRO_GOLD, 3.0)
+	b.line(PRIZE + Vector2(2, 4), PRIZE + Vector2(7, 0), CHURRO_GOLD, 3.0)
 
-	# Arcade colonnade stone pillars
-	for y: float in [-1000.0, -1600.0, -2200.0, -2800.0, -3400.0, -4000.0]:
-		b.rect(Rect2(WEST_ARCADE_X - 12.0, y - 12.0, 24.0, 24.0), STONE_DARK)
-		b.rect(Rect2(WEST_ARCADE_X - 10.0, y - 10.0, 20.0, 20.0), ARCADE_PILLAR)
-		b.rect(Rect2(EAST_ARCADE_X - 12.0, y - 12.0, 24.0, 24.0), STONE_DARK)
-		b.rect(Rect2(EAST_ARCADE_X - 10.0, y - 10.0, 20.0, 20.0), ARCADE_PILLAR)
+	# Continuous neoclassical arcade colonnade pillars (every 200 px) & end wings
+	var py := -4600.0
+	while py <= 300.0:
+		# Cast shadow from pillar into the arcade
+		b.rect(Rect2(WEST_ARCADE_X - 18.0, py - 10.0, 12.0, 20.0), Color(0.10, 0.08, 0.08, 0.35))
+		b.rect(Rect2(EAST_ARCADE_X + 6.0, py - 10.0, 12.0, 20.0), Color(0.10, 0.08, 0.08, 0.35))
+		b.rect(Rect2(WEST_ARCADE_X - 12.0, py - 12.0, 24.0, 24.0), STONE_DARK)
+		b.rect(Rect2(WEST_ARCADE_X - 10.0, py - 10.0, 20.0, 20.0), ARCADE_PILLAR)
+		b.rect(Rect2(EAST_ARCADE_X - 12.0, py - 12.0, 24.0, 24.0), STONE_DARK)
+		b.rect(Rect2(EAST_ARCADE_X - 10.0, py - 10.0, 20.0, 20.0), ARCADE_PILLAR)
+		py += PILLAR_STEP
+
+	# South and north arcade end-wings framing the square's grand archways
+	for ey: float in [WING_SOUTH_Y, WING_NORTH_Y]:
+		b.rect(Rect2(CORRIDOR_L, ey, 165.0, 60.0), ARCADE_TILE)
+		b.rect(Rect2(765.0, ey, 165.0, 60.0), ARCADE_TILE)
+		for ex: float in WING_PILLARS_X:
+			b.rect(Rect2(ex - 10.0, ey - 10.0, 20.0, 20.0), STONE_DARK)
+			b.rect(Rect2(ex - 8.0, ey - 8.0, 16.0, 16.0), ARCADE_PILLAR)
 
 
 static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	if m.lvl != "reial":
 		return
-	# Towering palm fronds overhead, one batch: forty lines a palm
 	var b := ShapeBatch.new(ci)
 	var t: float = AnimClock.msec() / 1000.0
+	# Arcade roof cornice & ochre parapet framing west and east sides of the square
+	b.rect(Rect2(60.0, -4800.0, 180.0, 5200.0), ARCADE_ROOF)
+	b.rect(Rect2(232.0, -4800.0, 8.0, 5200.0), ARCADE_PARAPET)
+	b.rect(Rect2(1040.0, -4800.0, 180.0, 5200.0), ARCADE_ROOF)
+	b.rect(Rect2(1040.0, -4800.0, 8.0, 5200.0), ARCADE_PARAPET)
+	# Facade window bays along the arcade roof
+	var wy := -4600.0
+	while wy < 300.0:
+		b.rect(Rect2(150.0, wy - 14.0, 32.0, 28.0), ARCADE_FACADE)
+		b.rect(Rect2(1098.0, wy - 14.0, 32.0, 28.0), ARCADE_FACADE)
+		wy += 200.0
+
+	# Towering palm fronds overhead
 	for p: Vector2 in PALMS:
 		for i in range(10):
 			var a := float(i) * (TAU / 10.0) + sin(t * 1.5 + p.y * 0.01) * 0.05
@@ -296,24 +502,174 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 			var dir := Vector2(cos(a), sin(a))
 			var end_p := p + dir * leaf_len
 			b.line(p, end_p, PALM_LEAF, 4.0)
-			# the lit midrib runs the inner seven tenths of the frond
 			b.line(p, p + dir * leaf_len * 0.7, PALM_LEAF_LIGHT, 2.5)
-			# Frond tip leaflet feathers
 			var norm := Vector2(-sin(a), cos(a)) * 5.0
 			b.line(end_p, end_p - norm, PALM_LEAF_LIGHT, 1.5)
 			b.line(end_p, end_p + norm, PALM_LEAF_LIGHT, 1.5)
 	b.flush()
 
 
-# The waiter moves, so he is drawn on the world pass. The edge canvas redraws
-# only after the camera has scrolled, and a figure drawn there stays put.
+static func _draw_seller_good(b: ShapeBatch, goods: String, gp: Vector2, k: int) -> void:
+	match goods:
+		"glow":
+			b.circle(gp, 3.8, GLOW_COLS[k % GLOW_COLS.size()])
+			b.circle(gp, 1.6, Color(1.0, 1.0, 0.95))
+		"shades":
+			b.rect(Rect2(gp.x - 5.0, gp.y - 2.0, 4.0, 3.0), Color(0.14, 0.14, 0.18))
+			b.rect(Rect2(gp.x + 1.0, gp.y - 2.0, 4.0, 3.0), Color(0.14, 0.14, 0.18))
+			b.line(gp + Vector2(-1.0, -1.0), gp + Vector2(1.0, -1.0), Color(0.86, 0.72, 0.28), 1.2)
+		_:
+			b.rect(Rect2(gp.x - 4.0, gp.y - 3.5, 8.0, 7.0), BAG_COLS[k % BAG_COLS.size()])
+
+
+static func _draw_sellers(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	if not Outdoors.street_sellers(Game.weather, Game.hour):
+		return
+	if not m.has_meta("reial_sellers"):
+		return
+	var sellers: Array = m.get_meta("reial_sellers")
+	for si in range(sellers.size()):
+		var sl: Dictionary = sellers[si]
+		var r: Rect2 = sl["rect"]
+		if r.end.y < vt - 220.0 or r.position.y > vb + 220.0:
+			continue
+		var st := String(sl["state"])
+		var sp: Vector2 = sl["pos"]
+		if st == "laid" or st == "warn":
+			b.rect(Rect2(r.position + Vector2(2.0, 3.0), r.size), SHADOW)
+			var shrink := 0.0 if st == "laid" else clampf(float(sl["t"]) / SELLER_WARN_DURATION, 0.0, 0.65)
+			var sr := r.grow(-shrink * 16.0)
+			b.rect(sr, Color(0.92, 0.91, 0.88))
+			b.line(Vector2(sr.get_center().x, sr.position.y + 2.0), Vector2(sr.get_center().x, sr.end.y - 2.0), Color(0.82, 0.80, 0.76), 1.4)
+			# Corner cords gathered toward seller's hand
+			_sheet_cord(b, sr.position, sp)
+			_sheet_cord(b, Vector2(sr.end.x, sr.position.y), sp)
+			_sheet_cord(b, Vector2(sr.position.x, sr.end.y), sp)
+			_sheet_cord(b, sr.end, sp)
+			var goods := String(sl["goods"])
+			for gi in range(6):
+				var gp := sr.position + Vector2(14.0 + float(gi % 3) * 21.0, 14.0 + float(gi / 3) * 20.0)
+				_draw_seller_good(b, goods, gp, gi + si)
+		elif st == "unpack":
+			b.rect(Rect2(r.get_center() - Vector2(18.0, 12.0), Vector2(36.0, 24.0)), Color(0.88, 0.86, 0.82))
+		# Seller figure
+		b.circle(sp + Vector2(2.0, 3.0), 10.5, SHADOW)
+		b.circle(sp, 10.0, Color(0.20, 0.24, 0.32))
+		b.circle(sp + Vector2(0.0, -3.0), 6.0, Color(0.36, 0.24, 0.17))
+		if st == "carry" or st == "away" or st == "back":
+			# Bundled sheet slung over shoulder
+			b.circle(sp + Vector2(11.0, 3.0), 12.0, Color(0.88, 0.86, 0.82))
+			b.circle(sp + Vector2(9.0, 1.0), 8.0, Color(0.94, 0.93, 0.90))
+
+
+static func _sheet_cord(b: ShapeBatch, corner: Vector2, sp: Vector2) -> void:
+	b.line(corner, corner.lerp(sp, 0.42), Color(0.28, 0.28, 0.32, 0.8), 1.2)
+
+
+# The waiter, buskers, water ripples and street sellers draw on the live world pass.
+# A busker is out only in busking weather (Outdoors.busking); in the wet the
+# arches stand empty.
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var t: float = AnimClock.msec() / 1000.0
+	if FOUNTAIN_POS.y > vt - 120.0 and FOUNTAIN_POS.y < vb + 120.0:
+		var rip := 20.0 + fposmod(t * 14.0, 12.0)
+		wc.circle(FOUNTAIN_POS, rip, Color(0.75, 0.92, 0.98, 0.22 * (1.0 - (rip - 20.0) / 12.0)))
+	if Outdoors.busking(Game.weather, Game.hour):
+		if BUSKER_POS.y > vt - 120.0 and BUSKER_POS.y < vb + 120.0:
+			_draw_busker_scene(wc, BUSKER_POS, true, t)
+		if BUSKER2_POS.y > vt - 120.0 and BUSKER2_POS.y < vb + 120.0:
+			_draw_busker_scene(wc, BUSKER2_POS, false, t)
+	_draw_sellers(m, wc, vt, vb)
 	if m.waiter != null:
 		m.waiter.draw(m, wc, vt, vb)
 
 
 static func build_layer(m: Node2D) -> void:
 	Detour.build_layer(m)
+
+
+static func _tick_sellers(m: Node2D, delta: float) -> void:
+	if not Outdoors.street_sellers(Game.weather, Game.hour):
+		return
+	if not m.has_meta("reial_sellers"):
+		return
+	var sellers: Array = m.get_meta("reial_sellers")
+	var dp: Vector2 = m.dog.global_position
+	var hp: Vector2 = m.human.global_position
+	var cam_y: float = m.cam.position.y if m.cam != null else hp.y
+
+	# Whistle timer: telegraphs 0.8s before sellers fold up and run
+	var wt := float(m.get_meta("reial_whistle_t", SELLER_WHISTLE_FIRST)) - delta
+	if wt <= 0.0:
+		var near_laid: Array[Dictionary] = []
+		for sl: Dictionary in sellers:
+			if String(sl["state"]) == "laid" and absf((sl["rect"] as Rect2).get_center().y - cam_y) < 460.0:
+				near_laid.append(sl)
+		if near_laid.is_empty():
+			wt = 5.0
+		else:
+			wt = SELLER_WHISTLE_EVERY
+			m.float_text(Vector2(640.0, cam_y - 200.0), "PHWEET!", Color(0.9, 0.95, 1.0))
+			m.feed.say("PHWEET! SELLERS PACK UP!", EventFeed.Tone.LOUD)
+			for sl: Dictionary in near_laid:
+				sl["state"] = "warn"
+				sl["t"] = 0.0
+				m.float_text(Vector2(sl["pos"]) + Vector2(0, -24), "Pack up!", Color(1.0, 0.88, 0.65), m.POP_SAY)
+	m.set_meta("reial_whistle_t", wt)
+
+	for sl: Dictionary in sellers:
+		sl["cd"] = maxf(0.0, float(sl["cd"]) - delta)
+		sl["bump_cd"] = maxf(0.0, float(sl["bump_cd"]) - delta)
+		var r: Rect2 = sl["rect"]
+		var st := String(sl["state"])
+		if st == "laid":
+			if m.dog.bark_anim > 0.0 and dp.distance_to(r.get_center()) < 90.0:
+				sl["state"] = "warn"
+				sl["t"] = 0.0
+				m.float_text(Vector2(sl["pos"]) + Vector2(0, -24), "Pack up!", Color(1.0, 0.88, 0.65), m.POP_SAY)
+			elif r.grow(4.0).has_point(dp) and float(sl["cd"]) <= 0.0:
+				sl["cd"] = 3.0
+				m.float_text(Vector2(sl["pos"]) + Vector2(0, -22), "Hey! Careful!", Color(1.0, 0.9, 0.75), m.POP_SAY)
+			continue
+
+		sl["t"] = float(sl["t"]) + delta
+		var sp: Vector2 = sl["pos"]
+		var home: Vector2 = sl["home"]
+		match st:
+			"warn":
+				if float(sl["t"]) >= SELLER_WARN_DURATION:
+					# into the nearest arch: a bay's middle, between two pillars
+					var to_west := r.get_center().x < 640.0
+					var ax := CORRIDOR_L + SELLER_ARCH_INSET if to_west else CORRIDOR_R - SELLER_ARCH_INSET
+					var ay := clampf(r.get_center().y + float(sl["run_dy"]), float(m.GATE_Y) + 120.0, float(m.START_Y) - 120.0)
+					ay = roundf((ay + 4500.0) / PILLAR_STEP) * PILLAR_STEP - 4500.0
+					sl["to"] = Vector2(ax, ay)
+					sl["state"] = "carry"
+					sl["t"] = 0.0
+			"carry":
+				sp = sp.move_toward(sl["to"], SELLER_RUN_SPEED * delta)
+				sl["pos"] = sp
+				if float(sl["bump_cd"]) <= 0.0 and sp.distance_to(hp) < 24.0:
+					sl["bump_cd"] = 2.0
+					m.human.patience = maxf(0.0, m.human.patience - 0.08)
+					m.float_text(hp + Vector2(0, -32), "Watch out!", Color(1.0, 0.78, 0.55), m.POP_SAY)
+				if sp.distance_to(sl["to"]) < 2.0:
+					sl["state"] = "away"
+					sl["t"] = 0.0
+			"away":
+				if float(sl["t"]) >= SELLER_AWAY_TIME:
+					sl["state"] = "back"
+					sl["t"] = 0.0
+			"back":
+				sp = sp.move_toward(home, SELLER_RUN_SPEED * 0.7 * delta)
+				sl["pos"] = sp
+				if sp.distance_to(home) < 2.0:
+					sl["state"] = "unpack"
+					sl["t"] = 0.0
+			"unpack":
+				if float(sl["t"]) >= 0.6:
+					sl["state"] = "laid"
+					sl["t"] = 0.0
 
 
 static func tick(m: Node2D, delta: float) -> void:
@@ -326,14 +682,16 @@ static func tick(m: Node2D, delta: float) -> void:
 		if m.dog.global_position.distance_to(FOUNTAIN_POS) < FOUNTAIN_DRINK_R:
 			m.reial_fountain_drank = true
 
-	# Check barking at busker
-	if not bool(m.get("reial_busker_barked")):
-		if m.dog.global_position.distance_to(BUSKER_POS) < 110.0:
-			if m.dog.bark_anim > 0.0:
-				m.set("reial_busker_barked", true)
-				m.float_text(m.dog.global_position + Vector2(0, -28), "¡Olé!", Color(0.96, 0.88, 0.35))
-				m.feed.say("A DUET WITH THE BUSKER!", EventFeed.Tone.GOOD)
+	# Check barking at either busker
+	if not bool(m.get("reial_busker_barked")) and m.dog.bark_anim > 0.0 and Outdoors.busking(Game.weather, Game.hour):
+		if m.dog.global_position.distance_to(BUSKER_POS) < 110.0 or m.dog.global_position.distance_to(BUSKER2_POS) < 110.0:
+			m.set("reial_busker_barked", true)
+			m.float_text(m.dog.global_position + Vector2(0, -28), "¡Olé!", Color(0.96, 0.88, 0.35))
+			m.feed.say("A DUET WITH THE BUSKER!", EventFeed.Tone.GOOD)
+
+	_tick_sellers(m, delta)
 	Detour.tick(m, delta)
+
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:
@@ -342,7 +700,36 @@ static func surface(m: Node2D, p: Vector2) -> int:
 	return -1
 
 
-# The street after dark (world/night_fronts.gd): this walk draws its own
-# edges, so it says where its lit doorways and shopfronts are.
+# The street after dark (world/night_fronts.gd): warm bar and cafe openings
+# along the back walls of both portico arcades, spilling out through the arches.
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
-	return NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 170.0, 0.0, 2)
+	var out: Array[Dictionary] = []
+	var y := float(m.GATE_Y) + 120.0
+	var i := 0
+	while y < float(m.START_Y) - 60.0:
+		# West arcade back wall (skip El Colom gallery doorway around y = -2050)
+		if absf(y - Detour.COLOM_DOOR_Y) > 90.0:
+			var wkind := "bar" if i % 2 == 0 else "shop"
+			out.append(NightFronts.front(Vector2(ARCADE_BACK_W, y), 1.0, wkind, i * 2 + 201))
+		# East arcade back wall
+		var ekind := "bar" if (i + 1) % 2 == 0 else "shop"
+		out.append(NightFronts.front(Vector2(ARCADE_BACK_E, y), -1.0, ekind, i * 2 + 202))
+		y += 260.0
+		i += 1
+	return out
+
+
+# Warm pools drawn by world/light_layer.gd in its one batch: Gaudí's
+# six-armed lampposts, the central fountain uplight, and arcade bar lanterns.
+static func night_lights(_m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for gp: Vector2 in GAUDI_POSTS:
+		out.append(Vector3(gp.x, gp.y, 250.0))
+	out.append(Vector3(FOUNTAIN_POS.x, FOUNTAIN_POS.y, 195.0))
+	for tr: Rect2 in TERRACES:
+		var lx := 275.0 if tr.get_center().x < 640.0 else 1005.0
+		out.append(Vector3(lx, tr.get_center().y, 200.0))
+	if Outdoors.busking(Game.weather, Game.hour):
+		out.append(Vector3(BUSKER_POS.x, BUSKER_POS.y, 190.0))
+		out.append(Vector3(BUSKER2_POS.x, BUSKER2_POS.y, 190.0))
+	return out
