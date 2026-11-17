@@ -4,6 +4,7 @@ Append-only session history, newest first.
 
 ## 2026-11-17 - v1.75 tagged
 
+- README: links the website as a place to play, says eight chases (L'Aeroport and Montserrat were missing), names v1.75 as the last tag, and drops the line about Millie from the credits; the itch page's credit line loses it too. The Store description and the press kit say eight chases as well, for the next submission.
 - Tagged v1.75 on 0424ab0. AGENTS.md now says v1.75 is the last tag and shows v1.76 as the next; `docs/ROADMAP.md` records what went into 1.75.
 
 ## 2026-11-17 - New walk: Sant Pau

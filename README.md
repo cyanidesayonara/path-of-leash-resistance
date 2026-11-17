@@ -6,9 +6,10 @@ them and the bike lane is you, on the other end of a leash. Get them home
 with the phone in one piece, and sneak in as much dog business on the way as
 you can get away with.
 
-Play it in the browser or download it for Windows on
-[itch.io](https://cyanidesayonara.itch.io/path-of-leash-resistance), or get
-it from the [Microsoft Store](https://apps.microsoft.com/detail/9p5d14v8rbqx).
+Play it in the browser on [its website](https://cyanidesayonara.github.io/path-of-leash-resistance/)
+or on [itch.io](https://cyanidesayonara.itch.io/path-of-leash-resistance),
+where there is also a download for Windows, or get it from the
+[Microsoft Store](https://apps.microsoft.com/detail/9p5d14v8rbqx).
 
 ## What you do
 
@@ -41,12 +42,13 @@ you want to go; constant hauling wears their patience down until they say
   near misses.
 - **Dares**: a dare-giver on every walk, each with their own tune. Bark to
   take a dare, then land the tricks before the music runs out.
-- **Six chases.** A street sweeper careens down a back street at dawn, and
+- **Eight chases.** A street sweeper careens down a back street at dawn, and
   you drag your oblivious human home ahead of it. On El Besòs the river
   comes home with you, in El Veterinari you bolt from the vet's, wild boars
   come down Els Senglars after you, the correfoc's fire devils chase
-  you through Gràcia, and the Dimoni's rolling firework float pursues you in
-  La Cremada.
+  you through Gràcia, the Dimoni's rolling firework float pursues you in
+  La Cremada, airport security runs you out of L'Aeroport, and the wild
+  goats come down Montserrat after you.
 - **Five dogs**, each with a knack of their own, opened with stars, and bones
   to train them.
 - **Four statue bosses**: El Mamut the stone mammoth in La Ciutadella, Els Lleons the twin bronze lions at El Port, El Drac the mosaic salamander in El Mosaic, and on the Rambla del Raval, El Gat, a fat bronze cat who climbs off his plinth.
@@ -151,7 +153,7 @@ Web export (needs the web export templates, see AGENTS.md):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
-Releasing is a tag. v1.71 is the last one. The next tag builds web and
+Releasing is a tag. v1.75 is the last one. The next tag builds web and
 Windows and pushes each to its own itch channel. AGENTS.md has the rest:
 tests, screenshots and benchmarks.
 
@@ -163,8 +165,7 @@ tests, screenshots and benchmarks.
 
 ## Credits
 
-Made by Santtu Nykänen. The default dog is Millie, a distinguished
-salt-and-pepper mutt who squats like a lady.
+Made by Santtu Nykänen.
 
 All rights reserved. The source is public for reading and learning; the game
 itself is a commercial work.
