@@ -35,6 +35,7 @@ const Espanya := preload("res://systems/espanya.gd")
 const Eixample := preload("res://systems/eixample.gd")
 const Diagonal := preload("res://systems/diagonal.gd")
 const Blai := preload("res://systems/blai.gd")
+const Metro := preload("res://systems/metro.gd")
 const Sarria := preload("res://systems/sarria.gd")
 # walks whose camera is turned: degrees clockwise of screen-up their north runs
 const CAM_ROT := {"diagonal": 45.0}
@@ -128,6 +129,7 @@ const CROSS_SECTIONS := {
 	"gracia": ["none", 0.0, "none", 0.0],          # a narrow street: the houses at the paving
 	"carmel": ["none", 0.0, "none", 0.0],          # sunset panorama and hillside slopes in systems/carmel.gd
 	"forum": ["none", 0.0, "none", 0.0],           # coastal concrete plaza and bathing esplanade in systems/forum.gd
+	"metro": ["none", 0.0, "none", 0.0],           # underground: tiled walls and tunnels in systems/metro.gd
 	"diagonal": ["none", 0.0, "none", 0.0],        # the promenade, the track and the turned grid in systems/diagonal.gd
 	"blai": ["none", 0.0, "none", 0.0],            # the bar street, its placeta and the roofs in systems/blai.gd
 	"sarria": ["none", 0.0, "none", 0.0],          # the village houses at the paving, in systems/sarria.gd
@@ -1374,6 +1376,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"superilla": half = Superilla.HALF
 		"forum": half = Forum.HALF
 		"espanya": half = Espanya.HALF
+		"metro": half = Metro.HALF         # the ticket hall, wall to wall (Metro.edge_nodes)
 		"diagonal": half = Diagonal.HALF   # the central promenade and the tram track
 		"blai": half = Blai.HALF           # facade to facade; the placeta opens it (Blai.edge_nodes)
 		"sarria": half = Sarria.HALF       # the plaça, wall to wall (Sarria.edge_nodes)
@@ -1539,6 +1542,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Reial.edge_nodes(m)
 	elif m.lvl == "vet":
 		m.edge_nodes = Vet.edge_nodes(m)
+	elif m.lvl == "metro":
+		m.edge_nodes = Metro.edge_nodes(m)
 	elif m.lvl == "tibidabo":
 		m.edge_nodes = Tibidabo.edge_nodes(m)
 	elif m.lvl == "aigues":
@@ -1591,7 +1596,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "blai" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "metro" or m.lvl == "blai" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1702,6 +1707,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_carmel: Array = Carmel.build(m)
 			hyd_list.assign(pl_carmel[0])
 			keb_list.assign(pl_carmel[1])
+		"metro":
+			var pl_metro: Array = Metro.build(m)
+			hyd_list.assign(pl_metro[0])
+			keb_list.assign(pl_metro[1])
 		"diagonal":
 			var pl_diagonal: Array = Diagonal.build(m)
 			hyd_list.assign(pl_diagonal[0])
@@ -2528,6 +2537,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "blai":
 		for r: Rect2 in Blai.wrap_rects(m):
 			add_rope_rect(m, r)
+	if m.lvl == "metro":
+		for r: Rect2 in Metro.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "sarria":
 		for r: Rect2 in Sarria.wrap_rects():
 			add_rope_rect(m, r)
@@ -2633,6 +2645,9 @@ static func build_level_data(m: Node2D) -> void:
 		"carmel":
 			m.prize_pos = Carmel.PRIZE
 			m.prize_text = Carmel.PRIZE_TEXT
+		"metro":
+			m.prize_pos = Metro.PRIZE
+			m.prize_text = Metro.PRIZE_TEXT
 		"diagonal":
 			m.prize_pos = Diagonal.PRIZE
 			m.prize_text = Diagonal.PRIZE_TEXT
@@ -3084,6 +3099,13 @@ const FREEDOM_PROPS := {
 		[Vector2(330.0, -470.0), "planter"], [Vector2(950.0, -470.0), "planter"],
 		[Vector2(200.0, -330.0), "post"], [Vector2(480.0, -440.0), "post"], [Vector2(800.0, -440.0), "post"],
 		[Vector2(1080.0, -330.0), "post"], [Vector2(240.0, -210.0), "shrub"], [Vector2(1100.0, -260.0), "shrub"],
+	],
+	# Plaça de Sant Gos, at the top of the metro's stairs
+	"metro": [
+		[Vector2(260.0, -460.0), "dig"], [Vector2(1000.0, -320.0), "dig"], [Vector2(620.0, -300.0), "dig"],
+		[Vector2(360.0, -470.0), "planter"], [Vector2(1030.0, -470.0), "planter"],
+		[Vector2(220.0, -340.0), "post"], [Vector2(490.0, -455.0), "post"], [Vector2(760.0, -445.0), "post"],
+		[Vector2(1060.0, -360.0), "post"], [Vector2(240.0, -235.0), "shrub"], [Vector2(1080.0, -245.0), "shrub"],
 	],
 	"sarria": [
 		[Vector2(290.0, -440.0), "dig"], [Vector2(660.0, -300.0), "dig"], [Vector2(1050.0, -430.0), "dig"],
@@ -3573,6 +3595,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_carmel: Array[Rect2] = Carmel.solids(m)
 			for i in range(ps_carmel.size()):
 				out.append(["carmel_bunker_%d" % i, ps_carmel[i]])
+		"metro":
+			var ps_metro: Array[Rect2] = Metro.solids(m)
+			for i in range(ps_metro.size()):
+				out.append(["metro_solid_%d" % i, ps_metro[i]])
 		"diagonal":
 			var ps_diagonal: Array[Rect2] = Diagonal.solids(m)
 			for i in range(ps_diagonal.size()):
@@ -4172,6 +4198,10 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "blai":
 		for r: Rect2 in Blai.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "metro":
+		for r: Rect2 in Metro.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+		Metro.add_doors(m)
 	if m.lvl == "sarria":
 		for r: Rect2 in Sarria.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
@@ -4434,6 +4464,7 @@ const CONE_KINDS := {
 	"neteja": ["crate"],                 # the delivery crates by its dumpsters
 	"aeroport": ["wetfloor"],
 	"vet": ["wetfloor"],                 # beside the mopped spills
+	"metro": ["wetfloor"],               # at the foot of the stairs, where the rain comes in
 	"park": ["ball"],                    # a lost kids' ball
 	"horta": ["ball"],
 	"tibidabo": ["ball"],
@@ -4515,7 +4546,7 @@ static func spawn_cones(m: Node2D) -> void:
 			"horta": kinds = ["can", "bottle", "ball"]      # picnics on the lawns
 			"market", "spook": kinds = ["crate", "bottle", "can"]
 			"neteja": kinds = ["crate", "crate", "sack", "bottle"]
-			"station", "aeroport": kinds = ["can", "bottle", "bottle"]
+			"station", "aeroport", "metro": kinds = ["can", "bottle", "bottle"]
 			"montserrat": kinds = ["bottle", "can", "sack"]
 			"oldtown": kinds = ["sack", "bottle", "can"]
 		# Litter accumulates around whatever produced it, so junk is placed by

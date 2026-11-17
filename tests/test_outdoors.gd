@@ -69,6 +69,14 @@ func _run() -> void:
 		"no busking in rain or snow")
 	_check(Outdoors.terrace_parasols("rain", "day") and not Outdoors.terrace_parasols("clear", "night")
 		and not Outdoors.terrace_parasols("snow", "day"), "a terrace parasol is up in the rain, furled at night and in snow")
+	# El Metro: underground the weather stops at the stairs
+	_check(Outdoors.underground_busker("rain", "day") and Outdoors.underground_busker("snow", "dusk")
+		and not Outdoors.underground_busker("clear", "night"), "the metro's busker plays in any weather, not after dark")
+	_check(Outdoors.umbrella_shakers("rain", "day") and Outdoors.umbrella_shakers("snow", "night")
+		and not Outdoors.umbrella_shakers("clear", "day"), "umbrellas are shaken out only in rain or snow")
+	_check(Outdoors.underground_crowd(26, "rain", "day") == 26, "rain never thins the metro's rush hour")
+	_check(Outdoors.underground_crowd(26, "clear", "dawn") < 26 and Outdoors.underground_crowd(1, "clear", "dawn") >= 2,
+		"first light thins it, never below two")
 	# every campaign walk in its own sky keeps its built crowd
 	for lv: String in game.CAMPAIGN_SKY:
 		var sky: Array = game.CAMPAIGN_SKY[lv]

@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-FORTY-ONE WALKS IN AND AROUND BARCELONA
+FORTY-TWO WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -75,6 +75,7 @@ La Castanyada, the chestnut festival
 Els Senglars, the wild boar trail
 El Mosaic, the tiled terraces
 La Superilla, the superblock play streets
+El Metro, down out of the rain and one stop on the metro
 L'Estació, the train station
 Els Búnquers, the overlook above the city
 Plaça Reial, the arcaded square
@@ -137,8 +138,9 @@ For a devlog post or the top of the body. Everything since v1.74, from
 CHANGELOG.md. The Store's What's new is the short form of this.
 
 ```
-- Two new walks, forty-one in all:
+- Three new walks, forty-two in all:
   - Sarrià, open at 21 stars, before El Bosc: the old village the city swallowed, at first light, shutters going up and bread crates out. The bells of Sant Vicenç ring the hour, telegraphed by the tower clock's whir; howl along with them.
+  - El Metro, open at 31 stars, after La Superilla: down out of the rain, through the turnstiles ("Where's my card?"), past the busker in the tiled passage and one stop on the train, dodging the rush-hour surge and keeping the leash out of the closing doors.
   - Carrer de Blai, open at 39 stars, after La Diagonal: Poble-sec's pedestrian pintxos street at the foot of Montjuïc, at night, bar after bar, terraces on the paving, strings of bulbs overhead, and a little square half way up. The floor is a dog's paradise of dropped pintxos, and your human does not want her eating off it: head for one and they say "Leave it!". Leave it and they relax; eat it anyway and their patience takes a real knock. Sit pretty by a terrace and someone shares, which is fine. Waiters cross with full trays: bump or bark at one and the tray rocks, then goes, six pintxos flying. Catch one before it lands. By day the shutters are down, the deliveries are in, and the terraces are quieter; in the rain everyone stands in the doorways.
 ```
 

@@ -410,6 +410,10 @@
 
 # Carrer de Blai: leave it, the waiters' trays, the terraces and the sky
 --headless --path . --script res://tests/test_blai.gd
+
+# El Metro: the turnstile fumble, the doors, the ride and the surge
+--headless --path . --script res://tests/test_metro.gd
+
 # Sarrià: the bells of Sant Vicenç, the bakeries, the gardener, who is out
 --headless --path . --script res://tests/test_sarria.gd
 
