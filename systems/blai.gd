@@ -843,6 +843,23 @@ static func _ground(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
 		while sx < gr - 2.0:
 			wc.line(Vector2(sx, sy), Vector2(sx, sy + 90.0), SLAB_JOINT, 1.0)
 			sx += 90.0
+		# worn slabs: one darkened by years of spilt drink, a crack across another
+		var wx0 := gl + (0.0 if row % 2 == 0 else 45.0) - 90.0
+		var col := 0
+		while wx0 < gr:
+			var key := row * 17 + col
+			var a := maxf(wx0, gl)
+			var z := minf(wx0 + 90.0, gr)
+			if z - a > 20.0:
+				if _h(key) < 0.16:
+					wc.rect(Rect2(a + 1.0, sy + 1.0, z - a - 2.0, 88.0), Color(0.30, 0.26, 0.22, 0.07))
+				elif _h(key) > 0.93:
+					var c0 := Vector2(a + 8.0 + _h(key + 3) * 20.0, sy + 6.0)
+					var c1 := c0 + Vector2(18.0 + _h(key + 4) * 30.0, 30.0 + _h(key + 5) * 40.0)
+					wc.line(c0, c1, SLAB_JOINT, 1.0)
+					wc.line(c1, c1 + Vector2(-10.0, 18.0), SLAB_JOINT, 0.8)
+			wx0 += 90.0
+			col += 1
 		row += 1
 		sy += 90.0
 	wc.rect(Rect2(gl - 2.0, lo, 4.0, hi - lo), SLAB_JOINT)
@@ -863,6 +880,35 @@ static func _ground(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
 		for s: float in [-1.0, 1.0]:
 			var wx := wall_x(xi, s)
 			wc.rect(Rect2(minf(wx, wx - s * 26.0), xi - XHALF, 26.0, XHALF * 2.0), Color(0.58, 0.56, 0.53))
+	# the facades' shade on the paving at their feet, and the cellar grates
+	# along them, damp round the edges
+	var cy := floorf(lo / 60.0) * 60.0
+	while cy < hi:
+		var mid := cy + 30.0
+		for s: float in [-1.0, 1.0]:
+			if in_xing(mid, 4.0) or (s < 0.0 and mid < PL_Y0 + PL_RAMP + 30.0 and mid > PL_Y1 - PL_RAMP - 30.0):
+				continue
+			var wx := WALL_L if s < 0.0 else WALL_R
+			_wall_shade(wc, wx, -s * 34.0, cy, cy + 60.0, 0.22)
+		cy += 60.0
+	var gy := floorf(lo / 230.0) * 230.0
+	while gy < hi + 230.0:
+		for s: float in [-1.0, 1.0]:
+			var y := gy + (40.0 if s < 0.0 else 150.0)
+			if y < lo - 40.0 or y > hi + 40.0 or in_xing(y, 40.0) or not _clear_of_doors(s, y):
+				continue
+			if s < 0.0 and y < PL_Y0 + PL_RAMP + 40.0 and y > PL_Y1 - PL_RAMP - 40.0:
+				continue
+			var wx := WALL_L if s < 0.0 else WALL_R
+			var r := Rect2(minf(wx - s * 4.0, wx - s * 16.0), y - 17.0, 12.0, 34.0)
+			wc.glow(r.get_center(), 30.0, Color(0.10, 0.10, 0.12, 0.16), 0.3)
+			wc.rect(r.grow(1.5), Color(0.40, 0.38, 0.36))
+			wc.rect(r, Color(0.12, 0.12, 0.13))
+			var gq := r.position.y + 3.0
+			while gq < r.end.y - 2.0:
+				wc.rect(Rect2(r.position.x + 1.5, gq, r.size.x - 3.0, 1.6), IRON.lightened(0.15))
+				gq += 4.5
+		gy += 230.0
 	# each bar's threshold and its window counter, or its shutter down
 	var hour: String = Game.hour
 	for i in range(BARS.size()):
@@ -873,6 +919,27 @@ static func _ground(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
 			continue
 		_bar_front(wc, i, side, y, half, bar_open(i, hour))
 	_litter(m, wc, lo, hi)
+
+
+static func _clear_of_doors(side: float, y: float) -> bool:
+	for i in range(BARS.size()):
+		if float(BARS[i][0]) == side and absf(float(BARS[i][1]) - y) < float(BARS[i][2]) + 24.0:
+			return false
+	return true
+
+
+# a soft shade along a facade's foot: `a` at the wall, nothing `reach` px out
+static var _sp := PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO])
+static var _ones2 := PackedFloat32Array([1.0, 1.0])
+static var _fade2 := PackedFloat32Array([1.0, 0.0])
+
+
+static func _wall_shade(wc: ShapeBatch, x: float, reach: float, y0: float, y1: float, a: float) -> void:
+	_sp[0] = Vector2(x, y0)
+	_sp[1] = Vector2(x + reach, y0)
+	_sp[2] = Vector2(x, y1)
+	_sp[3] = Vector2(x + reach, y1)
+	wc.band(_sp, 2, Color(SHADOW.r, SHADOW.g, SHADOW.b, a), _ones2, _fade2)
 
 
 # A bar at street level, seen from above: a stone step at the door, and the
@@ -890,10 +957,23 @@ static func _bar_front(wc: ShapeBatch, i: int, side: float, y: float, half: floa
 		while ry < y + half - 2.0:
 			wc.rect(Rect2(r.position.x, ry, r.size.x, 1.6), SHUTTER_RIB)
 			ry += 5.0
+		# the tags sprayed over it: a fat letter or two and a scrawl
 		for k in range(3):
 			var ty := y - half + 10.0 + _h(i * 9 + k) * (half * 2.0 - 20.0)
-			wc.rect(Rect2(r.position.x + 1.0, ty, r.size.x - 2.0, 6.0 + _h(i + k) * 10.0),
-				Color(TAG_COLS[(i + k) % TAG_COLS.size()], 0.75))
+			var tc := Color(TAG_COLS[(i + k) % TAG_COLS.size()], 0.75)
+			wc.rect(Rect2(r.position.x + 1.0, ty, r.size.x - 2.0, 6.0 + _h(i + k) * 10.0), tc)
+			var zy := ty + 4.0
+			var zx := r.position.x + 2.0
+			for q in range(4):
+				var nzx := r.end.x - 2.0 if q % 2 == 0 else r.position.x + 2.0
+				wc.line(Vector2(zx, zy), Vector2(nzx, zy + 5.0), tc.darkened(0.3), 1.2)
+				zx = nzx
+				zy += 5.0
+		# the bottom rail along the street side, and its two padlocks
+		var rail_x := r.position.x + (r.size.x - 3.0 if s_in > 0.0 else 0.0)
+		wc.rect(Rect2(rail_x, r.position.y, 3.0, r.size.y), SHUTTER_RIB.darkened(0.3))
+		for ly: float in [y - half + 8.0, y + half - 8.0]:
+			wc.circle(Vector2(rail_x + 1.5 + s_in * 3.0, ly), 2.4, Color(0.70, 0.58, 0.24))
 		return
 	# the step at the door
 	wc.rect(Rect2(minf(wx, wx + s_in * 12.0), y - 16.0, 12.0, 32.0), Color(0.78, 0.76, 0.72))
@@ -975,11 +1055,11 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 	var lo := maxf(vt - 300.0, float(m.GATE_Y) - 40.0)
 	var hi := minf(vb + 300.0, float(m.START_Y) + 600.0)
 	if hi > lo:
-		_roofs(b, lo, hi)
+		_roofs(m, b, lo, hi)
 	b.lod = keep_lod
 
 
-static func _roofs(b: ShapeBatch, lo: float, hi: float) -> void:
+static func _roofs(m: Node2D, b: ShapeBatch, lo: float, hi: float) -> void:
 	b.rect(Rect2(-440.0, lo, 2160.0, hi - lo), BACK_TONES[0])
 	for side: float in [-1.0, 1.0]:
 		# the plots lie on fixed marks from the start, so they hold still
@@ -989,7 +1069,7 @@ static func _roofs(b: ShapeBatch, lo: float, hi: float) -> void:
 			var y1: float = plots[pi + 1]
 			if y1 > hi + 10.0 or y0 < lo - 10.0:
 				continue
-			_plot(b, side, y0, y1, int(absf(y0)) + (0 if side < 0.0 else 9000))
+			_plot(m, b, side, y0, y1, int(absf(y0)) + (0 if side < 0.0 else 9000))
 	for xi: float in XINGS:
 		if xi + XHALF < lo or xi - XHALF > hi:
 			continue
@@ -1020,7 +1100,7 @@ static func _plot_marks(side: float, lo: float, hi: float) -> Array:
 	return out
 
 
-static func _plot(b: ShapeBatch, side: float, y0: float, y1: float, salt: int) -> void:
+static func _plot(m: Node2D, b: ShapeBatch, side: float, y0: float, y1: float, salt: int) -> void:
 	if in_xing((y0 + y1) * 0.5):
 		return
 	var far := -440.0 if side < 0.0 else 1720.0
@@ -1039,11 +1119,42 @@ static func _plot(b: ShapeBatch, side: float, y0: float, y1: float, salt: int) -
 	pts.append(Vector2(back1, y1))
 	pts.append(Vector2(back0, y0))
 	b.polygon(pts, tone)
+	var straight := absf(f0 - f1) < 0.5
+	var ylo := minf(y0, y1)
+	var yhi := maxf(y0, y1)
+	if straight:
+		# the terrat's fired tiles, laid in a grid from the parapet back
+		var joint := tone.darkened(0.10)
+		var tx := f0 + side * 16.0
+		while (tx - back0) * side < 0.0:
+			b.rect(Rect2(tx - 0.5, ylo, 1.0, yhi - ylo), joint)
+			tx += side * 16.0
+		var ty := ceilf(ylo / 16.0) * 16.0
+		while ty < yhi:
+			b.rect(Rect2(minf(f0, back0), ty - 0.5, depth, 1.0), joint)
+			ty += 16.0
+		# the parapet's shade on the tiles inside it, and the dividing wall's
+		b.rect(Rect2(minf(f0 + side * 2.5, f0 + side * 11.0), ylo, 8.5, yhi - ylo), SHADOW)
+		b.rect(Rect2(minf(f0, back0), y1 + 1.5, depth, 6.0), SHADOW)
+		# a house taller than the one south of it throws its shade on that roof
+		if _h(salt * 7) < 0.3 and not in_xing(y0 + 8.0):
+			b.rect(Rect2(minf(f0, back0), y0, depth, 16.0), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.30))
 	# the dividing wall to the next plot
 	b.line(Vector2(f1, y1), Vector2(back1, y1), PARAPET.darkened(0.15), 3.0)
 	# beyond it, the back of the block: lower roofs and an interior patio
 	var bt: Color = BACK_TONES[absi(salt / 3) % BACK_TONES.size()]
 	b.polygon(PackedVector2Array([Vector2(back0, y0), Vector2(back1, y1), Vector2(far, y1), Vector2(far, y0)]), bt)
+	if straight and yhi - ylo > 40.0:
+		# the lower roofs behind: pantiles, a terrat or a light well each
+		# (world/gotic.gd), laid at a fixed depth so a redraw lays the same ones
+		var Gotic: GDScript = load("res://world/gotic.gd")
+		var bw := absf(far - back0) - 6.0
+		var cut := 150.0 + _h(salt + 31) * 90.0
+		var near := Rect2(minf(back0 + side * 3.0, back0 + side * (3.0 + cut)), ylo + 3.0, cut, yhi - ylo - 6.0)
+		var rest := Rect2(minf(back0 + side * (cut + 7.0), far), ylo + 3.0, bw - cut - 4.0, yhi - ylo - 6.0)
+		Gotic.draw_block(m, b, near, Gotic.roof_hash(salt, 41))
+		if rest.size.x > 30.0:
+			Gotic.draw_block(m, b, rest, Gotic.roof_hash(salt, 43))
 	if _h(salt * 3) < 0.4:
 		var pw := 70.0 + _h(salt + 1) * 60.0
 		var px := back0 + side * (30.0 + _h(salt + 2) * 60.0)
@@ -1058,6 +1169,22 @@ static func _plot(b: ShapeBatch, side: float, y0: float, y1: float, salt: int) -
 	b.rect(Rect2(sh + Vector2(4.0, 5.0) - Vector2(16.0, 13.0), Vector2(32.0, 26.0)), SHADOW)
 	b.rect(Rect2(sh - Vector2(16.0, 13.0), Vector2(32.0, 26.0)), STAIR_HOUSE)
 	b.rect(Rect2(sh - Vector2(16.0, 13.0), Vector2(32.0, 4.0)), STAIR_HOUSE.lightened(0.15))
+	# its door onto the terrat, on the street side, and the step outside it
+	var dx := sh.x - side * 16.0
+	b.rect(Rect2(minf(dx, dx - side * 3.0), sh.y - 6.0, 3.0, 12.0), Color(0.36, 0.26, 0.20))
+	b.rect(Rect2(minf(dx - side * 3.0, dx - side * 8.0), sh.y - 7.0, 5.0, 14.0), STAIR_HOUSE.darkened(0.12))
+	# an air-conditioning unit by the parapet, or a satellite dish
+	var kit := Vector2(fm + side * (26.0 + _h(salt + 21) * 20.0), lerpf(y0, y1, 0.2 + _h(salt + 22) * 0.2))
+	if _h(salt + 23) < 0.5:
+		b.rect(Rect2(kit + Vector2(2.0, 3.0) - Vector2(9.0, 7.0), Vector2(18.0, 14.0)), SHADOW)
+		b.rect(Rect2(kit - Vector2(9.0, 7.0), Vector2(18.0, 14.0)), Color(0.86, 0.86, 0.84))
+		b.circle(kit + Vector2(2.0, 0.0), 5.0, Color(0.30, 0.30, 0.32))
+		b.circle(kit + Vector2(2.0, 0.0), 1.6, Color(0.70, 0.70, 0.72))
+	elif _h(salt + 24) < 0.6:
+		b.circle(kit + Vector2(2.0, 3.0), 7.0, SHADOW)
+		b.circle(kit, 7.0, Color(0.92, 0.92, 0.90))
+		b.circle(kit - Vector2(1.5, 1.5), 4.0, Color(0.98, 0.98, 0.97))
+		b.line(kit, kit + Vector2(side * -8.0, -4.0), Color(0.30, 0.30, 0.32), 1.4)
 	if _h(salt + 8) < 0.7:
 		var tk := sh + Vector2(side * 34.0, (_h(salt + 9) - 0.5) * 20.0)
 		b.circle(tk + Vector2(3.0, 4.0), 8.0, SHADOW)
@@ -1333,6 +1460,14 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 				sy += 10.0
 				k += 1
 			b.rect(Rect2(aw.position.x + (aw.size.x - 3.0 if s_in > 0.0 else 0.0), aw.position.y, 3.0, aw.size.y), col.darkened(0.3))
+			# the valance hanging off its front edge, scalloped
+			var vx := wx + s_in * 17.5
+			var vy := aw.position.y + 3.5
+			while vy < aw.end.y - 2.0:
+				b.coarse(Vector2(vx, vy), 3.2, col.darkened(0.12))
+				vy += 7.0
+			# the cranked arm it is wound in by, at its end
+			b.line(Vector2(wx, aw.end.y - 2.0), Vector2(wx + s_in * 15.0, aw.end.y - 2.0), IRON, 1.4)
 		# the sign: a small board on a bracket, out over the street
 		var sp := Vector2(wx + s_in * 20.0, y - half - 4.0)
 		b.line(Vector2(wx, sp.y), sp, IRON, 2.0)
