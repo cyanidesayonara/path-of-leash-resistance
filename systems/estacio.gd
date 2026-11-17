@@ -10,8 +10,16 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
+const EventFeed := preload("res://hud/event_feed.gd")
 
 const OVERHEAD_FOLLOWS_CAMERA := true
+
+const PLAT_STENCIL_YS: Array[float] = [-3320.0, -4120.0]
+const COACH_YS: Array[float] = [-3450.0, -3780.0, -4110.0, -4440.0]
+const PLAT_BENCH_POS: Array[Vector2] = [Vector2(304.0, -3700.0), Vector2(976.0, -3700.0), Vector2(304.0, -4320.0), Vector2(976.0, -4320.0)]
+const WAIT_PASSENGERS := [[Vector2(470.0, -3560.0), Color(0.24, 0.38, 0.56)], [Vector2(488.0, -4240.0), Color(0.56, 0.28, 0.24)],
+	[Vector2(940.0, -3540.0), Color(0.32, 0.42, 0.32)], [Vector2(932.0, -4200.0), Color(0.42, 0.34, 0.48)]]
+const SHED_TRUSS_YS: Array[float] = [-3400.0, -3850.0, -4300.0]
 
 # L'Estacio's floor and fittings
 const TERRAZZO := Color(0.72, 0.73, 0.74)
@@ -483,29 +491,26 @@ static func draw_van(m: Node2D, _wc: ShapeBatch, v: Vector2) -> void:
 # coach position markers along the tactile edge, platform benches, and a few
 # waiting passengers.
 static func _draw_platforms(m: Node2D, b: ShapeBatch, tr: Rect2, vt: float, vb: float) -> void:
-	for py: float in [-3320.0, -4120.0]:
+	for py: float in PLAT_STENCIL_YS:
 		if py < vt - 40.0 or py > vb + 40.0:
 			continue
 		b.rect(Rect2(360.0, py - 18.0, 96.0, 26.0), Color(0.18, 0.24, 0.34, 0.85))
 		b.draw_string(m.font, Vector2(380.0, py), "VIA 1", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.95, 0.96, 0.98))
 		b.rect(Rect2(824.0, py - 18.0, 96.0, 26.0), Color(0.18, 0.24, 0.34, 0.85))
 		b.draw_string(m.font, Vector2(844.0, py), "VIA 2", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.95, 0.96, 0.98))
-	var coach_ys: Array[float] = [-3450.0, -3780.0, -4110.0, -4440.0]
-	for idx in range(coach_ys.size()):
-		var cy := coach_ys[idx]
+	for idx in range(COACH_YS.size()):
+		var cy := COACH_YS[idx]
 		if cy < vt - 30.0 or cy > vb + 30.0:
 			continue
 		var label := str(idx + 1)
-		for cx: float in [tr.position.x - 42.0, tr.end.x + 28.0]:
-			b.rect(Rect2(cx, cy - 12.0, 16.0, 18.0), Color(0.20, 0.24, 0.30, 0.85))
-			b.draw_string(m.font, Vector2(cx + 4.0, cy + 2.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.98, 0.86, 0.28))
+		_coach_badge(m, b, tr.position.x - 42.0, cy, label)
+		_coach_badge(m, b, tr.end.x + 28.0, cy, label)
 	# platform shelter benches tucked near the outer walls (clear of the owner's walk line)
-	for bp: Vector2 in [Vector2(304.0, -3700.0), Vector2(976.0, -3700.0), Vector2(304.0, -4320.0), Vector2(976.0, -4320.0)]:
+	for bp: Vector2 in PLAT_BENCH_POS:
 		if bp.y > vt - 50.0 and bp.y < vb + 50.0:
 			draw_bench(m, b, bp)
 	# a few calm waiting passengers on Platform 1 and 2
-	for wp: Array in [[Vector2(470.0, -3560.0), Color(0.24, 0.38, 0.56)], [Vector2(488.0, -4240.0), Color(0.56, 0.28, 0.24)],
-			[Vector2(940.0, -3540.0), Color(0.32, 0.42, 0.32)], [Vector2(932.0, -4200.0), Color(0.42, 0.34, 0.48)]]:
+	for wp: Array in WAIT_PASSENGERS:
 		var p: Vector2 = wp[0]
 		if p.y < vt - 30.0 or p.y > vb + 30.0:
 			continue
@@ -514,6 +519,11 @@ static func _draw_platforms(m: Node2D, b: ShapeBatch, tr: Rect2, vt: float, vb: 
 		b.rect(Rect2(p.x - 8.0, p.y - 5.0, 16.0, 10.0), col)
 		b.circle(p, 5.2, Color(0.88, 0.72, 0.60))
 		b.circle(p + Vector2(1.5, 0.0), 4.6, Color(0.22, 0.18, 0.16))
+
+
+static func _coach_badge(m: Node2D, b: ShapeBatch, cx: float, cy: float, label: String) -> void:
+	b.rect(Rect2(cx, cy - 12.0, 16.0, 18.0), Color(0.20, 0.24, 0.30, 0.85))
+	b.draw_string(m.font, Vector2(cx + 4.0, cy + 2.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.98, 0.86, 0.28))
 
 
 # Station café counter along the east concourse wall: oak/slate bar, chrome
@@ -533,14 +543,17 @@ static func _draw_cafe(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var case_r := Rect2(cr.position.x + 14.0, cr.end.y - 62.0, 32.0, 50.0)
 	b.rect(case_r, Color(0.76, 0.86, 0.92, 0.85))
 	b.rect(case_r.grow(-2.0), Color(0.28, 0.24, 0.22))
-	for py: float in [case_r.position.y + 12.0, case_r.position.y + 26.0, case_r.position.y + 40.0]:
-		b.circle(Vector2(case_r.get_center().x - 5.0, py), 4.0, Color(0.88, 0.64, 0.28))
-		b.circle(Vector2(case_r.get_center().x + 6.0, py), 3.6, Color(0.84, 0.56, 0.24))
+	var case_cx := case_r.get_center().x
+	for pi in range(3):
+		var py := case_r.position.y + 12.0 + float(pi) * 14.0
+		b.circle(Vector2(case_cx - 5.0, py), 4.0, Color(0.88, 0.64, 0.28))
+		b.circle(Vector2(case_cx + 6.0, py), 3.6, Color(0.84, 0.56, 0.24))
 	# chrome espresso machine (north half of counter)
 	var esp := Rect2(cr.position.x + 16.0, cr.position.y + 18.0, 28.0, 42.0)
 	b.rect(esp, Color(0.74, 0.76, 0.80))
 	b.rect(Rect2(esp.position.x + 2.0, esp.position.y + 2.0, 24.0, 6.0), Color(0.92, 0.94, 0.96))
-	for hy: float in [esp.position.y + 16.0, esp.position.y + 30.0]:
+	for hi in range(2):
+		var hy := esp.position.y + 16.0 + float(hi) * 14.0
 		b.line(Vector2(esp.position.x, hy), Vector2(esp.position.x - 8.0, hy), Color(0.14, 0.14, 0.16), 2.5)
 	b.circle(Vector2(esp.end.x - 6.0, esp.position.y + 14.0), 2.2, Color(0.92, 0.28, 0.24))
 	# stack of paper coffee cups
@@ -575,7 +588,7 @@ static func surface(m: Node2D, p: Vector2) -> int:
 
 
 static func tick(m: Node2D, delta: float) -> void:
-	if not m.started or m.paused or m.tutorial_mode or m.detour_active or m.estacio_crowd == null:
+	if not m.started or m.paused or m.phase == "freedom" or m.tutorial_mode or m.detour_active or m.estacio_crowd == null:
 		return
 	var out: Dictionary = m.estacio_crowd.tick(
 		delta,
@@ -590,31 +603,27 @@ static func tick(m: Node2D, delta: float) -> void:
 	if bool(out["warn"]):
 		Sfx.play("chime", 1.0, -5.0)
 		var d: Array = DEPARTURES[int(out["row"])]
-		var msg := "Train to %s — boarding Platform %s!" % [String(d[1]), String(d[2])] if bool(out["boarding"]) else "Train from %s — passengers arriving!" % String(d[1])
-		m.float_text(m.human.global_position + Vector2(0.0, -40.0), msg, Color(1.0, 0.92, 0.56), m.POP_SAY)
+		var feed_msg := "TRAIN TO %s! BOARDING PLATFORM %s" % [String(d[1]), String(d[2])] if bool(out["boarding"]) else "TRAIN FROM %s! PASSENGERS ARRIVING" % String(d[1])
+		m.feed.say(feed_msg, EventFeed.Tone.LOUD)
+		m.float_text(m.human.global_position + Vector2(0.0, -44.0), "ding dong!", Color(1.0, 0.92, 0.56))
 	if bool(out["bump"]):
 		m.human.velocity += (out["bump_dir"] as Vector2) * 120.0
-		m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
+		if m.human.grace_t <= 0.0:
+			m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.15, -6.0)
 		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Excuse me!", Color(1.0, 0.82, 0.68), m.POP_SAY)
 	if bool(out["dodge"]):
 		m.saves_done += 1
-		m.bones += 2
 		m.combo.add("DODGE", 2)
-		Sfx.play("star", 1.1, -6.0)
-		m.float_text(m.dog.global_position + Vector2(0.0, -20.0), "wave dodge! +2", Color(1.0, 0.92, 0.45))
-		m._update_hud()
+		m.award_points(2, "wave dodge! +2")
 
 
 static func on_bark(m: Node2D, pos: Vector2) -> void:
-	if not m.started or m.paused or m.tutorial_mode or m.detour_active or m.estacio_crowd == null:
+	if not m.started or m.paused or m.phase == "freedom" or m.tutorial_mode or m.detour_active or m.estacio_crowd == null:
 		return
 	if m.estacio_crowd.on_bark(pos):
-		m.bones += 2
 		m.combo.add("BARK", 2)
-		Sfx.play("star", 1.15, -6.0)
-		m.float_text(m.dog.global_position + Vector2(0.0, -20.0), "commuter bark! +2", Color(1.0, 0.92, 0.45))
-		m._update_hud()
+		m.award_points(2, "commuter bark! +2")
 
 
 # Overhead platform indicator boards (VIA 1 / VIA 2) and train-shed trusses
@@ -642,7 +651,7 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 		b.draw_string(m.font, Vector2(pb.x - 20.0, pb.y - 2.0), dest, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, tcol)
 		b.draw_string(m.font, Vector2(pb.x - 20.0, pb.y + 11.0), "BOARDING" if is_this else "ON TIME", HORIZONTAL_ALIGNMENT_LEFT, -1, 8, tcol)
 	# overhead train-shed steel cross-trusses spanning the platforms
-	for ty: float in [-3400.0, -3850.0, -4300.0]:
+	for ty: float in SHED_TRUSS_YS:
 		if ty < vt - 40.0 or ty > vb + 40.0:
 			continue
 		var e: Vector2 = m.walk_edges(ty)

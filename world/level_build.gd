@@ -2456,6 +2456,7 @@ static func build_level_data(m: Node2D) -> void:
 			add_rope_rect(m, Rect2(d - NETEJA_DUMPSTER * 0.5, NETEJA_DUMPSTER))
 	if m.lvl == "station":
 		add_rope_rect(m, ESTACIO_TRAIN)
+		add_rope_rect(m, ESTACIO_CAFE_RECT)
 	if m.lvl == "park":
 		add_rope_rect(m, park_slackline())
 		for st: Vector2 in [PARK_SLACK_A, PARK_SLACK_B]:

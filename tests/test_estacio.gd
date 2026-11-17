@@ -153,10 +153,11 @@ func _run() -> void:
 	_check(st_night.r > 0.85 and st_night.g > 0.85 and st_night.b > 0.85, "station night tint stays brightly lit (%s)" % st_night)
 	var st_mod: Dictionary = SkyLook.grade_mod("station", "clear", "night")
 	_check(float(st_mod["add_vig"]) < 0.08, "station night grade avoids heavy street vignette (%.2f)" % float(st_mod["add_vig"]))
-	# cafe counter is solid
+	# cafe counter is solid and wraps the leash
 	var cafe: Rect2 = LevelBuild.ESTACIO_CAFE_RECT
 	var cafe_stop := _push(dog, Vector2(cafe.position.x - 40.0, cafe.get_center().y), Vector2(400, 0), 40)
 	_check(cafe_stop.x < cafe.position.x, "the station cafe counter is solid")
+	_check(cafe in m.rope_rects, "the station cafe counter wraps the leash")
 	# crowd wave: 1.2s telegraph before surging, barkable during surge
 	_check(m.estacio_crowd != null, "estacio_crowd instantiated for station walk")
 	var cw: EstacioCrowd = m.estacio_crowd

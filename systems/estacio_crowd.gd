@@ -203,7 +203,7 @@ func _step_commuter(c: Dictionary, delta: float, walk_edges_fn: Callable, walkwa
 	var target_vx := 0.0
 
 	# Steer through the nearest ticket barrier gap when approaching the barrier line
-	if absf(p.y - barrier_y) < 120.0:
+	if absf(p.y - barrier_y) < 160.0:
 		var best_g := gaps[0]
 		var best_d := absf(p.x - best_g)
 		for g: float in gaps:
@@ -211,13 +211,15 @@ func _step_commuter(c: Dictionary, delta: float, walk_edges_fn: Callable, walkwa
 			if dg < best_d:
 				best_d = dg
 				best_g = g
-		target_vx += clampf((best_g - p.x) * 2.2, -110.0, 110.0)
+		target_vx += clampf((best_g - p.x) * 3.0, -180.0, 180.0)
+		if absf(p.y - barrier_y) < 28.0 and best_d > 22.0:
+			vy = 0.0
 
 	# Steer clear of the moving walkway, cafe counter, and train
-	for obs: Rect2 in [walkway.grow(12.0), cafe.grow(16.0), train.grow(16.0)]:
-		if obs.has_point(p + Vector2(0.0, signf(vy) * 26.0)):
-			var cx := obs.get_center().x
-			target_vx += (120.0 if p.x >= cx else -120.0)
+	var ahead := p + Vector2(0.0, signf(vy) * 26.0)
+	target_vx += _steer_rect(ahead, walkway.grow(12.0))
+	target_vx += _steer_rect(ahead, cafe.grow(16.0))
+	target_vx += _steer_rect(ahead, train.grow(16.0))
 
 	var push: float = float(c["side_push"])
 	if absf(push) > 0.5:
@@ -231,6 +233,12 @@ func _step_commuter(c: Dictionary, delta: float, walk_edges_fn: Callable, walkwa
 	c["pos"] = p
 	c["vx"] = target_vx
 	c["phase"] = float(c["phase"]) + delta * 9.0
+
+
+static func _steer_rect(ahead: Vector2, obs: Rect2) -> float:
+	if not obs.has_point(ahead):
+		return 0.0
+	return 120.0 if ahead.x >= obs.get_center().x else -120.0
 
 
 func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
