@@ -10,6 +10,7 @@ Append-only session history, newest first.
   - Telegraphed breaking wave at the bend (`WAVE_WARN_S = 0.95` s spray plume and shout ahead of the wash): catches whoever stays seaward (`human_soak`, `dog.slick`, shove inland, sliding loose bottles/balls/napkins) while leaving an east dry strip so pulling your human clear scores a dodge.
   - Sea wind rules in `systems/outdoors.gd` (`wind_strength`, `beach_parasols_open`, `blowing_napkins`, `kites_out`): flying café napkins along the promenade, sunhat gust, furled parasols in strong wind, and wind-bent palms.
   - New dare-giver `"kitesurfer"` (`entities/challenger.gd`, `entities/challenger_cast.gd`, `audio/music.gd` `DARES["kitesurfer"]` and `STYLES["sitges"]`), 15 goals (`dry`, `wave_dodge`, `napkin`, `punta_bark`, ...), and regression tests in `tests/test_sitges.gd`.
+- Review: rebased over La Molina and Sant Pau (Sitges is appended after Sant Pau in `Game.LEVELS` and `WALKS_SINCE_GATES`); `test_sitges` checks Sitges is present after Sant Pau instead of last; the prize goal reads "Snatch the plate of xató off the beach bar" instead of the bare dish.
 
 ## 2026-11-17 - Films: the pair acts, a dozing driver, a real foam crest
 
