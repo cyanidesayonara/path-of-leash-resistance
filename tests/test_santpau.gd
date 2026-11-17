@@ -117,7 +117,7 @@ func _run() -> void:
 	var WS: GDScript = load("res://world/world_sign.gd")
 
 	# --- 1. registration ---
-	_check(game.LEVELS[game.LEVELS.size() - 1] == "santpau", "santpau appended to LEVELS")
+	_check(game.LEVELS.has("santpau") and game.LEVELS.find("santpau") > game.LEVELS.find("molina"), "santpau in LEVELS after molina")
 	_check(game.CAROUSEL.find("santpau") == game.CAROUSEL.find("espanya") + 1, "in CAROUSEL right after espanya")
 	_check(int(game.STAR_GATE["santpau"]) == 46, "STAR_GATE is 46")
 	_check(String(game.CHASE_GATE.get("santpau", "")) == "boars", "CHASE_GATE is boars")

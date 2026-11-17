@@ -2,6 +2,10 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Sant Pau's test allows later walks
+
+- `tests/test_santpau.gd` no longer requires Sant Pau to be the last entry in `Game.LEVELS`; it checks it is present and after La Molina, so Sitges and Camí de Ronda can be appended.
+
 ## 2026-11-17 - v1.75 tagged
 
 - README: links the website as a place to play, says eight chases (L'Aeroport and Montserrat were missing), names v1.75 as the last tag, and drops the line about Millie from the credits; the itch page's credit line loses it too. The Store description and the press kit say eight chases as well, for the next submission.
