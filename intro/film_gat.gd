@@ -169,7 +169,7 @@ static func _plinth(c: CanvasItem, t: float) -> void:
 # The Raval's bronze cat side on, facing right, his feet at `at`: a heavy old
 # tomcat of our own, not anyone's sculpture, swollen to a monument's volume
 # with a small smug head on top. A deep chest, the belly hanging,
-# a big round haunch with the hind foot tucked forward under it, chunky
+# a big round haunch over the hind legs, chunky
 # forelegs, a thick tail; a broad head with a tom's jowls, whisker pads, a
 # nose, ears with their dark insides; all of it cast bronze with the sheen
 # rubbed bright where people touch him. `awake` opens his almond eyes;
@@ -218,7 +218,7 @@ static func cat(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, wa
 	# the far legs, darker
 	var stride := sin(t * 7.0) * 14.0 if walking else 0.0
 	_cat_leg(c, p, up, Vector2(70, -90), Vector2(70 - stride, 0), k, BRONZE_DARK, 0.0)
-	_cat_paw(c, p, Vector2(-40 + stride, -4), k, BRONZE_DARK, 46.0)
+	_cat_leg(c, p, up, Vector2(-70, -96), Vector2(-62 + stride, 0), k, BRONZE_DARK, 0.0)
 	# the body, inked as one mass and then filled: rump, barrel, chest, the
 	# belly hanging under them
 	var parts := [[Vector2(-110, -150), Vector2(96, 96)], [Vector2(-10, -176), Vector2(178, 126)],
@@ -231,7 +231,7 @@ static func cat(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, wa
 	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(0, -92)), Vector2(136, 40) * k), BRONZE_DARK)
 	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(-30, -250)), Vector2(130, 40) * k), BRONZE_LIT)
 	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(-60, -270)), Vector2(56, 12) * k), BRONZE_SPEC)
-	# the haunch: a great round thigh, the hind foot tucked forward under it
+	# the haunch: a great round thigh over the hind leg
 	# (no outline of its own: it is part of him, shaped by a crease along its front)
 	c.draw_colored_polygon(MillieSide.ellipse(up.call(Vector2(-110, -134)), Vector2(40, 24) * k), BRONZE_LIT)
 	var crease := PackedVector2Array()
@@ -239,7 +239,8 @@ static func cat(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, wa
 		var a := PI * (-0.35 + 0.75 * float(i) / 7.0)
 		crease.append(up.call(Vector2(-96, -110) + Vector2(cos(a) * 60.0, sin(a) * 56.0)))
 	c.draw_polyline(crease, BRONZE_DARK, 6.0 * k)
-	_cat_paw(c, p, Vector2(-62 - stride, -4), k, BRONZE_BASE, 50.0)
+	# the near hind leg, down out of the haunch, stepping opposite the foreleg
+	_cat_leg(c, p, up, Vector2(-100, -80), Vector2(-106 - stride, 0), k, BRONZE_BASE, 0.0)
 	if hiss > 0.0:
 		# hackles: a ridge of spiked fur along his back
 		for h in range(12):

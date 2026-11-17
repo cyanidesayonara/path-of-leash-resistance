@@ -462,7 +462,7 @@ static func build(m: Node2D) -> Array:
 	m.gat_tree_smashed = false
 
 	var marks: Array[Vector2] = [
-		START_PLINTH + Vector2(0.0, PLINTH_HALF.y + 8.0), # the empty plinth
+		START_PLINTH + Vector2(PLINTH_HALF.x + 14.0, PLINTH_HALF.y - 4.0), # the empty plinth, at its corner clear of his face
 		FOUNTAIN,
 		KIOSK.get_center() + Vector2(0.0, KIOSK.size.y * 0.5 + 8.0),
 		Vector2(400.0, -1100.0), # palm grate
@@ -2302,21 +2302,26 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 	Clay.stroke(c, tail_pts, 15.0, 12.0, base)
 	c.draw_circle(tail_pts[tail_pts.size() - 1], 9.0, base)
 
-	var body_half := Vector2(62.0, 52.0)
+	# swollen to a monument's volume: the haunches bulge either side behind,
+	# the bulk of him round as a dome, the small head set on its front
+	for sd: float in [-1.0, 1.0]:
+		Clay.ball(c, at + back * 26.0 + side * sd * 46.0, 32.0, base)
+	var body_half := Vector2(74.0, 64.0)
 	Clay.blob(c, at, body_half, face, base)
-	c.draw_colored_polygon(Clay.ellipse_pts(at - Shade.light * 14.0, body_half * 0.45, face), BRONZE_SPEC)
+	c.draw_colored_polygon(Clay.ellipse_pts(at - Shade.light * 16.0, body_half * 0.5, face), BRONZE_SPEC)
+	c.draw_circle(at - Shade.light * 26.0 + back * 10.0, 9.0, Color(1.0, 0.92, 0.74, 0.35))
 
-	var head_c := at + face * 38.0
-	var head_r := 36.0
+	var head_c := at + face * 46.0
+	var head_r := 29.0
 	Clay.ball(c, head_c, head_r, base)
-	Clay.ball(c, head_c + Vector2(-18.0, 8.0), 18.0, base)
-	Clay.ball(c, head_c + Vector2(18.0, 8.0), 18.0, base)
+	Clay.ball(c, head_c + Vector2(-15.0, 8.0), 15.0, base)
+	Clay.ball(c, head_c + Vector2(15.0, 8.0), 15.0, base)
 
 	var ear_droop: float = 6.0 if state == State.STUNNED else (-3.0 if angry else 0.0)
 	for sd: float in [-1.0, 1.0]:
 		var ear_base1 := head_c + Vector2(sd * 10.0, -head_r + 4.0 + ear_droop)
 		var ear_base2 := head_c + Vector2(sd * 24.0, -head_r + 10.0 + ear_droop)
-		var ear_tip := head_c + Vector2(sd * (20.0 + (6.0 if angry else 0.0)), -head_r - 14.0 + ear_droop)
+		var ear_tip := head_c + Vector2(sd * (18.0 + (6.0 if angry else 0.0)), -head_r - 10.0 + ear_droop)
 		c.draw_colored_polygon(PackedVector2Array([ear_base1, ear_tip, ear_base2]), dark)
 		c.draw_colored_polygon(PackedVector2Array([ear_base1.lerp(ear_base2, 0.2), ear_tip.lerp(head_c, 0.25), ear_base2.lerp(ear_base1, 0.2)]), lit)
 
@@ -2330,7 +2335,7 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 	elif state == State.AWAKEN:
 		open = clampf(act_t / 0.5, 0.0, 1.0)
 	for sd: float in [-1.0, 1.0]:
-		var eye_c := head_c + Vector2(sd * 15.0, -4.0)
+		var eye_c := head_c + Vector2(sd * 12.0, -4.0)
 		if state == State.PURR:
 			# contented, shut: a soft upturned line each
 			c.draw_line(eye_c + Vector2(-6, 1), eye_c + Vector2(0, -2), EYE_PUPIL, 2.5)
@@ -2346,12 +2351,20 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 				c.draw_circle(eye_c, 11.0, Color(eye_col.r, eye_col.g, eye_col.b, 0.28))
 			c.draw_colored_polygon(Clay.ellipse_pts(eye_c, Vector2(6.5, 6.5 * open), Vector2.RIGHT, 12), eye_col)
 			c.draw_line(eye_c - Vector2(0, 5.0 * open), eye_c + Vector2(0, 5.0 * open), EYE_PUPIL, 2.2)
+			if not (charging or angry or state == State.ENRAGE) and open > 0.3:
+				# a smug half-lidded look, as in his film; it snaps open to pounce
+				var lid := PackedVector2Array()
+				for li in range(9):
+					var la := PI + float(li) / 8.0 * PI
+					lid.append(eye_c + Vector2(cos(la) * 7.5, sin(la) * 7.5 * open))
+				c.draw_colored_polygon(lid, base)
+				c.draw_line(eye_c - Vector2(7.5, 0), eye_c + Vector2(7.5, 0), EYE_PUPIL, 2.0)
 			if angry:
 				# a heavy bronze brow, slanted down to the nose
 				c.draw_line(eye_c + Vector2(sd * 9.0, -12.0), eye_c + Vector2(-sd * 6.0, -6.0), dark, 4.0)
 
-	var nose_c := head_c + Vector2(0.0, 10.0)
-	c.draw_circle(nose_c, 5.0, NOSE_DARK)
+	var nose_c := head_c + Vector2(0.0, 8.0)
+	c.draw_colored_polygon(PackedVector2Array([nose_c + Vector2(-4.5, -3.0), nose_c + Vector2(4.5, -3.0), nose_c + Vector2(0, 2.0)]), NOSE_DARK)
 	c.draw_line(nose_c, nose_c + Vector2(0, 6), NOSE_DARK, 2.0)
 	c.draw_line(nose_c + Vector2(0, 6), nose_c + Vector2(-6, 9), NOSE_DARK, 2.0)
 	c.draw_line(nose_c + Vector2(0, 6), nose_c + Vector2(6, 9), NOSE_DARK, 2.0)
