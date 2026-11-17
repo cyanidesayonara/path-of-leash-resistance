@@ -16,15 +16,15 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 		"kite":
 			_kite(c, fd, t, s)
 		"umbrella":
-			_umbrella(c, fd)
+			_umbrella(c, fd, t, s)
 		"baker":
-			_baker(c, fd)
+			_baker(c, fd, t, s)
 		"picker":
-			_picker(c, fd)
+			_picker(c, fd, t, s)
 		"castanyera":
 			_castanyera(c, fd, t, s)
 		"scrapper":
-			_scrapper(c, fd)
+			_scrapper(c, fd, t, s)
 		"nightowl":
 			_nightowl(c, fd, t, s)
 		"flamenco":
@@ -34,17 +34,17 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 		"balloons":
 			_balloons(c, fd, t)
 		"hiker":
-			_hiker(c, fd)
+			_hiker(c, fd, t, s)
 		"gardener":
 			_gardener(c, fd, t, s)
 		"surfer":
-			_surfer(c, fd)
+			_surfer(c, fd, t, s)
 		"ranger":
 			_ranger(c, fd, t, s)
 		"drummer":
 			_drummer(c, fd, t, s)
 		"photographer":
-			_photographer(c, fd)
+			_photographer(c, fd, t, s)
 		"chess":
 			_chess(c, fd, t, s)
 		"drone":
@@ -64,25 +64,16 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 		"devil":
 			_devil(c, fd, t, s)
 		"pilot":
-			_pilot(c, fd)
+			_pilot(c, fd, t, s)
 		"monk":
-			_monk(c, fd)
+			_monk(c, fd, t, s)
 		"rider":
-			_rider(c, fd)
+			_rider(c, fd, t, s)
 		"cook":
-			_cook(c, fd)
+			_cook(c, fd, t, s)
 		_:
 			return false
 	return true
-
-
-# Whether a giver's drawing moves, so it is worth redrawing while she is near.
-const STILL: Array[String] = ["umbrella", "baker", "picker", "scrapper", "hiker", "surfer", "photographer", "pilot",
-	"monk", "rider", "cook"]
-
-
-static func animates(who: String) -> bool:
-	return not who in STILL
 
 
 # --- shared parts ----------------------------------------------------------------------
@@ -157,7 +148,7 @@ static func _kite(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 
 # El Diluvi: selling umbrellas in the rain, one open over his head, the rest
 # rolled in a bundle under his arm
-static func _umbrella(c: Node2D, fd: Vector2) -> void:
+static func _umbrella(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.62, 0.44, 0.32)
 	_shadow(c, Vector2.ZERO, 14.0, 14.0)
@@ -170,9 +161,11 @@ static func _umbrella(c: Node2D, fd: Vector2) -> void:
 	_person(c, Vector2.ZERO, fd, Color(0.36, 0.38, 0.30), skin, Color(0.10, 0.08, 0.08), "short", "none", Color.BLACK)
 	# the open one, over him: eight panels in two colours, and its tip
 	var top := -fd * 2.0 + side * 3.0
+	# turning it in his hand, the way a seller does to show it off
+	var turn := t * 0.9 + s
 	for k in range(8):
-		var a0 := float(k) / 8.0 * TAU
-		var a1 := float(k + 1) / 8.0 * TAU
+		var a0 := float(k) / 8.0 * TAU + turn
+		var a1 := float(k + 1) / 8.0 * TAU + turn
 		c.draw_colored_polygon(PackedVector2Array([top, top + Vector2.from_angle(a0) * 19.0, top + Vector2.from_angle(a1) * 19.0]),
 			Color(0.20, 0.42, 0.74, 0.94) if k % 2 == 0 else Color(0.96, 0.94, 0.90, 0.94))
 	c.draw_circle(top, 1.8, Color(0.12, 0.12, 0.12))
@@ -180,7 +173,7 @@ static func _umbrella(c: Node2D, fd: Vector2) -> void:
 
 # Sarrià at dawn: the baker out of the shop with a tray of loaves, flour on
 # his apron and a baker's cap
-static func _baker(c: Node2D, fd: Vector2) -> void:
+static func _baker(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.88, 0.70, 0.56)
 	var white := Color(0.96, 0.95, 0.92)
@@ -190,7 +183,8 @@ static func _baker(c: Node2D, fd: Vector2) -> void:
 	var head := fd * 5.0
 	c.draw_circle(head, 7.6, Color(0.98, 0.98, 0.96))
 	c.draw_circle(head - fd * 1.0, 5.0, Color(0.90, 0.90, 0.88))
-	var tray := fd * 16.0
+	# holding the tray out to you, and back, and out again
+	var tray := fd * (16.0 + maxf(0.0, sin(t * 1.8 + s)) * 3.0)
 	c.draw_colored_polygon(_bar(tray, side, 30.0, 12.0), Color(0.52, 0.36, 0.20))
 	for k in range(3):
 		var lp := tray + side * (float(k) - 1.0) * 9.0
@@ -202,7 +196,7 @@ static func _baker(c: Node2D, fd: Vector2) -> void:
 
 # El Bosc: a boletaire with his wicker basket of mushrooms, beret on, his
 # knife out over a find
-static func _picker(c: Node2D, fd: Vector2) -> void:
+static func _picker(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.84, 0.64, 0.50)
 	var jacket := Color(0.36, 0.42, 0.28)
@@ -219,8 +213,10 @@ static func _picker(c: Node2D, fd: Vector2) -> void:
 	_person(c, Vector2.ZERO, fd, jacket, skin, Color(0.56, 0.54, 0.52), "bald_spot", "none", Color.BLACK)
 	c.draw_circle(fd * 4.0, 7.8, Color(0.16, 0.16, 0.18))
 	c.draw_circle(fd * 4.0 - side * 1.5, 1.2, Color(0.08, 0.08, 0.08))
-	_arm(c, -side * 8.0, -side * 6.0 + fd * 14.0, jacket, skin)
-	c.draw_line(-side * 6.0 + fd * 14.0, -side * 6.0 + fd * 20.0, Color(0.70, 0.72, 0.74), 1.4)
+	# working the knife round the stalk of his find
+	var cut := -side * (6.0 + sin(t * 4.0 + s) * 2.0) + fd * 14.0
+	_arm(c, -side * 8.0, cut, jacket, skin)
+	c.draw_line(cut, cut + fd * 6.0 + side * 1.5, Color(0.70, 0.72, 0.74), 1.4)
 	var shroom := fd * 24.0 - side * 4.0
 	c.draw_circle(shroom, 3.6, Color(0.62, 0.36, 0.18))
 	c.draw_circle(shroom - Vector2(1.0, 1.0), 1.4, Color(0.82, 0.60, 0.36))
@@ -253,17 +249,20 @@ static func _castanyera(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 
 
 # La Ferralla: the scrap dealer and his trolley piled with metal
-static func _scrapper(c: Node2D, fd: Vector2) -> void:
+static func _scrapper(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.72, 0.52, 0.40)
 	var shirt := Color(0.56, 0.40, 0.26)
 	_shadow(c, Vector2.ZERO, 16.0, 14.0)
-	var cart := fd * 17.0 + side * 4.0
+	# rocking his trolley, the scrap in it rattling
+	var rock := sin(t * 2.2 + s)
+	var cart := fd * (17.0 + rock * 1.6) + side * 4.0
 	c.draw_colored_polygon(_bar(cart, side, 30.0, 22.0), Color(0.62, 0.64, 0.66))
 	c.draw_colored_polygon(_bar(cart, side, 26.0, 18.0), Color(0.30, 0.30, 0.32))
 	var junk: Array[Color] = [Color(0.66, 0.40, 0.24), Color(0.74, 0.76, 0.78), Color(0.46, 0.34, 0.28), Color(0.56, 0.58, 0.60)]
 	for k in range(6):
-		var jp := cart + side * (float(k % 3) - 1.0) * 8.0 + fd * (float(k / 3) - 0.5) * 8.0
+		var jp := cart + side * (float(k % 3) - 1.0) * 8.0 + fd * (float(k / 3) - 0.5) * 8.0 \
+			+ side * sin(t * 13.0 + float(k)) * 0.6 * absf(rock)
 		c.draw_line(jp - side * 5.0 + fd * 2.0, jp + side * 5.0 - fd * 2.0, junk[k % junk.size()], 3.4)
 	c.draw_circle(cart + side * 9.0 - fd * 3.0, 4.0, Color(0.74, 0.76, 0.78))
 	c.draw_circle(cart + side * 9.0 - fd * 3.0, 2.2, Color(0.30, 0.30, 0.32))
@@ -362,7 +361,7 @@ static func _balloons(c: Node2D, fd: Vector2, t: float) -> void:
 
 
 # La Carretera de les Aigües: a hiker with her pack and two poles, sun hat on
-static func _hiker(c: Node2D, fd: Vector2) -> void:
+static func _hiker(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.82, 0.62, 0.48)
 	var shirt := Color(0.30, 0.56, 0.62)
@@ -373,8 +372,10 @@ static func _hiker(c: Node2D, fd: Vector2) -> void:
 	c.draw_colored_polygon(_bar(pack - fd * 9.0, side, 16.0, 5.0), Color(0.26, 0.40, 0.30))
 	_shoes(c, fd, side, Color(0.40, 0.28, 0.18), 7.0)
 	_person(c, Vector2.ZERO, fd, shirt, skin, Color(0.52, 0.32, 0.18), "long", "sunhat", Color(0.86, 0.78, 0.56))
+	# catching her breath, leaning on one pole and then the other
 	for e: float in [-1.0, 1.0]:
-		var hand := side * e * 14.0 + fd * 6.0
+		var lean := maxf(0.0, sin(t * 1.6 + s + (PI if e > 0.0 else 0.0))) * 3.0
+		var hand := side * e * 14.0 + fd * (6.0 + lean)
 		_arm(c, side * e * 8.0, hand, shirt, skin)
 		c.draw_line(hand, hand + fd * 14.0 + side * e * 3.0, Color(0.70, 0.72, 0.76), 1.6)
 		c.draw_circle(hand + fd * 14.0 + side * e * 3.0, 1.4, Color(0.16, 0.16, 0.18))
@@ -401,21 +402,24 @@ static func _gardener(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 
 # Platja de Llevant: a surfer waiting on the waves, board under his arm,
 # wetsuit and salty hair
-static func _surfer(c: Node2D, fd: Vector2) -> void:
+static func _surfer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.78, 0.56, 0.40)
 	var suit := Color(0.10, 0.10, 0.12)
 	_shadow(c, Vector2.ZERO, 14.0, 18.0)
 	var board := side * 15.0
-	var a := board - fd * 26.0
-	var b := board + fd * 22.0
+	var tilt := fd.rotated(sin(t * 1.1 + s) * 0.07)
+	var a := board - tilt * 26.0
+	var b := board + tilt * 22.0
 	c.draw_line(a, b, Color(0.96, 0.94, 0.88), 11.0)
 	c.draw_circle(a, 5.5, Color(0.96, 0.94, 0.88))
 	c.draw_circle(b, 5.5, Color(0.96, 0.94, 0.88))
 	c.draw_line(a + fd * 4.0, b - fd * 4.0, Color(0.20, 0.62, 0.78), 2.0)
 	_shoes(c, fd, side, skin)
-	_person(c, Vector2.ZERO, fd, suit, skin, Color(0.84, 0.70, 0.38), "long", "none", Color.BLACK)
-	_arm(c, side * 8.0, board + fd * 4.0 - side * 4.0, suit, skin)
+	# looking out over the water for a wave that is not coming
+	_person(c, Vector2.ZERO, fd.rotated(sin(t * 0.5 + s) * 0.35), suit, skin, Color(0.84, 0.70, 0.38), "long", "none",
+		Color.BLACK)
+	_arm(c, side * 8.0, board + tilt * 4.0 - side * 4.0, suit, skin)
 
 
 # Els Senglars: a forest ranger watching for boars through her binoculars,
@@ -460,7 +464,7 @@ static func _drummer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 
 
 # Els Búnquers: a photographer at her tripod, the camera on the sunset
-static func _photographer(c: Node2D, fd: Vector2) -> void:
+static func _photographer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.88, 0.72, 0.60)
 	var coat := Color(0.24, 0.24, 0.30)
@@ -471,9 +475,15 @@ static func _photographer(c: Node2D, fd: Vector2) -> void:
 	c.draw_colored_polygon(_bar(tri, side, 12.0, 8.0), Color(0.14, 0.14, 0.16))
 	c.draw_circle(tri + fd * 5.0, 3.4, Color(0.26, 0.28, 0.32))
 	c.draw_circle(tri + fd * 5.0, 1.8, Color(0.50, 0.66, 0.86))
+	# a shot every few seconds: the flash, bright and gone
+	var shot := fmod(t + s, 3.2)
+	if shot < 0.16:
+		c.draw_circle(tri + fd * 7.0, 6.0 + shot * 30.0, Color(1.0, 1.0, 0.94, 0.7 * (1.0 - shot / 0.16)))
 	_shoes(c, fd, side, Color(0.30, 0.28, 0.30))
 	_person(c, Vector2.ZERO, fd, coat, skin, Color(0.70, 0.20, 0.16), "long", "beanie", Color(0.92, 0.70, 0.20))
-	_arm(c, side * 8.0, tri + side * 5.0 - fd * 3.0, coat, skin)
+	# her hand on the focus ring, turning it
+	var focus := fd * sin(t * 1.7 + s) * 1.5
+	_arm(c, side * 8.0, tri + side * 5.0 - fd * 3.0 + focus, coat, skin)
 	_arm(c, -side * 8.0, tri - side * 5.0 - fd * 3.0, coat, skin)
 
 
@@ -691,7 +701,7 @@ static func _devil(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 
 
 # L'Aeroport: a pilot with his cap and stripes, his flight bag at his side
-static func _pilot(c: Node2D, fd: Vector2) -> void:
+static func _pilot(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.80, 0.60, 0.46)
 	var navy := Color(0.12, 0.16, 0.28)
@@ -712,11 +722,17 @@ static func _pilot(c: Node2D, fd: Vector2) -> void:
 	c.draw_colored_polygon(_bar(head + fd * 6.0, side, 10.0, 4.0), Color(0.08, 0.08, 0.10))
 	c.draw_circle(head + fd * 3.0, 1.6, gold)
 	_arm(c, side * 8.0, bag - fd * 15.0, navy, skin)
+	# a look at his watch every few seconds: the wrist comes up in front
+	var w := fmod(t + s, 4.0)
+	var up := clampf(minf(w / 0.3, (1.4 - w) / 0.3), 0.0, 1.0) if w < 1.4 else 0.0
+	var wrist := (-side * 12.0 + fd * 3.0).lerp(-side * 3.0 + fd * 12.0, up)
+	_arm(c, -side * 8.0, wrist, navy, skin)
+	c.draw_circle(wrist - fd * 1.5, 1.6, gold)
 
 
 # Montserrat: a Benedictine monk in his black habit, hands folded on his
 # rosary, the hood down on his shoulders
-static func _monk(c: Node2D, fd: Vector2) -> void:
+static func _monk(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.88, 0.70, 0.58)
 	var black := Color(0.10, 0.10, 0.12)
@@ -727,14 +743,17 @@ static func _monk(c: Node2D, fd: Vector2) -> void:
 	var hands := fd * 11.0
 	_arm(c, side * 8.0, hands + side * 2.0, black, skin)
 	_arm(c, -side * 8.0, hands - side * 2.0, black, skin)
+	# telling his beads, one passing through his fingers at a time
+	var told := fmod(t * 1.2 + s, 1.0) * 1.6
 	for k in range(6):
-		c.draw_circle(hands + fd * (2.0 + float(k) * 1.6) + side * sin(float(k)) * 1.2, 0.9, Color(0.56, 0.36, 0.20))
+		c.draw_circle(hands + fd * (2.0 + float(k) * 1.6 + told) + side * sin(float(k) + told) * 1.2, 0.9,
+			Color(0.56, 0.36, 0.20))
 	c.draw_circle(hands + fd * 12.0, 1.4, Color(0.80, 0.66, 0.30))
 
 
 # La Diagonal: a delivery rider by his bike, the insulated box on his back
 # and the next order on his phone
-static func _rider(c: Node2D, fd: Vector2) -> void:
+static func _rider(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.62, 0.44, 0.32)
 	var teal := Color(0.12, 0.66, 0.62)
@@ -756,12 +775,15 @@ static func _rider(c: Node2D, fd: Vector2) -> void:
 	var ph := fd * 13.0 - side * 4.0
 	_arm(c, -side * 8.0, ph, teal, skin)
 	c.draw_colored_polygon(_bar(ph + fd * 2.0, side, 5.0, 8.0), Color(0.08, 0.08, 0.10))
-	c.draw_colored_polygon(_bar(ph + fd * 2.0, side, 3.6, 6.4), Color(0.60, 0.84, 0.96))
+	# the next order coming in: the screen lights up, and his thumb goes
+	var ping := maxf(0.0, sin(t * 2.5 + s))
+	c.draw_colored_polygon(_bar(ph + fd * 2.0, side, 3.6, 6.4), Color(0.60, 0.84, 0.96).lightened(0.3 * ping))
+	_arm(c, side * 8.0, ph + side * 3.0 + fd * (1.0 + ping * 2.0), teal, skin)
 
 
 # Carrer de Blai: a cook out of the kitchen for a minute, whites and toque,
 # a coffee in one hand and his cloth in the other
-static func _cook(c: Node2D, fd: Vector2) -> void:
+static func _cook(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.80, 0.60, 0.46)
 	var white := Color(0.96, 0.96, 0.94)
@@ -775,9 +797,14 @@ static func _cook(c: Node2D, fd: Vector2) -> void:
 	for k in range(6):
 		c.draw_circle(head + Vector2.from_angle(float(k) / 6.0 * TAU) * 4.4, 4.0, white)
 	c.draw_circle(head, 5.0, Color(0.90, 0.90, 0.88))
-	var cup := side * 12.0 + fd * 10.0
+	# a sip of his coffee every few seconds
+	var sip := fmod(t + s, 3.8)
+	var up := clampf(minf(sip / 0.35, (1.3 - sip) / 0.35), 0.0, 1.0) if sip < 1.3 else 0.0
+	var cup := (side * 12.0 + fd * 10.0).lerp(side * 5.0 + fd * 12.0, up)
 	_arm(c, side * 8.0, cup, white, skin)
 	c.draw_circle(cup + fd * 2.0, 3.2, Color(0.94, 0.94, 0.92))
 	c.draw_circle(cup + fd * 2.0, 2.2, Color(0.36, 0.22, 0.12))
-	_arm(c, -side * 8.0, -side * 10.0 + fd * 4.0, white, skin)
-	c.draw_colored_polygon(_bar(-side * 10.0 + fd * 8.0, side, 4.0, 10.0), Color(0.86, 0.86, 0.84))
+	var flick := sin(t * 3.0 + s) * 1.5
+	_arm(c, -side * 8.0, -side * 10.0 + fd * (4.0 + flick), white, skin)
+	c.draw_colored_polygon(_bar(-side * (10.0 + flick * 0.5) + fd * (8.0 + flick), side, 4.0, 10.0),
+		Color(0.86, 0.86, 0.84))

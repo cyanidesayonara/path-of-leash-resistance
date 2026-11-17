@@ -53,15 +53,6 @@ const WHO := {"beach": "monkey", "street": "statue", "port": "fisher", "site": "
 	"eixample": "guide", "angels": "skateboarder", "poble": "potter", "ciutadella": "juggler", "cremada": "devil",
 	"aeroport": "pilot", "montserrat": "monk", "diagonal": "rider", "blai": "cook"}
 
-# whose dare tune each of the cast plays (audio/music.gd DARES), the nearest
-# in mood among the tunes there are; a giver not listed has a tune of its own
-const TUNE := {"kite": "kid", "umbrella": "commuter", "baker": "avia", "picker": "fisher", "castanyera": "avia",
-	"scrapper": "builder", "nightowl": "breaker", "flamenco": "busker", "catlady": "statue", "balloons": "monkey",
-	"hiker": "runner", "gardener": "painter", "surfer": "skater", "ranger": "fisher", "drummer": "fan",
-	"photographer": "painter", "chess": "statue", "drone": "runner", "bubbles": "statue", "fortune": "statue",
-	"guide": "commuter", "skateboarder": "skater", "potter": "painter", "juggler": "monkey", "devil": "fan",
-	"pilot": "commuter", "monk": "statue", "rider": "builder", "cook": "busker"}
-
 # where they are on a walk whose spot main's rule (either side of the
 # corridor 1600 px in) would put on something or under it: El Metro's
 # escalator, a palm's crown on Plaça Reial, the solar pergola on El Fòrum
@@ -258,7 +249,8 @@ func setup(m: Node2D, mine: Node2D, giver := "kid") -> void:
 	main = m
 	my_dog = mine
 	who = giver if LINES.has(giver) else "kid"
-	_moves = who == "breaker" or (TUNE.has(who) and Cast.animates(who))
+	# everybody moves (the bronze monkey is the walk's own drawing)
+	_moves = who != "monkey"
 	# derived from position, never the global RNG - spawning this must not
 	# desync the deterministic autowalk traversal
 	seed_o = fmod(absf(position.x) * 0.017, TAU)
@@ -287,9 +279,10 @@ static func giver_for(lvl: String) -> String:
 	return String(WHO.get(lvl, "kid"))
 
 
-# The music cue for a giver's dare (audio/music.gd DARES).
+# The music cue for a giver's dare: every giver has a tune of their own
+# (audio/music.gd DARES).
 static func tune_of(giver: String) -> String:
-	return "dare_" + String(TUNE.get(giver, giver))
+	return "dare_" + giver
 
 
 func tune() -> String:
@@ -573,10 +566,16 @@ func _draw_builder(fd: Vector2) -> void:
 	draw_circle(head, 8.6, Color(0.96, 0.84, 0.14))
 	draw_circle(head - fd * 0.8, 6.6, Color(0.99, 0.90, 0.30))
 	draw_line(head - fd * 5.5, head + fd * 5.5, Color(0.88, 0.74, 0.10), 1.6)
-	# the bocadillo, half eaten
-	var hand := at + side * 13.0 + fd * 8.0
+	# the bocadillo, half eaten, up to his mouth for a bite every few seconds
+	var t := AnimClock.msec() / 1000.0
+	var c := fmod(t + seed_o, 3.4)
+	var bite := clampf(minf(c / 0.35, (1.2 - c) / 0.35), 0.0, 1.0) if c < 1.2 else 0.0
+	# and between bites he waves it about as he talks
+	var talk := side * sin(t * 2.6 + seed_o) * 1.6 * (1.0 - bite)
+	var hand := (at + side * 13.0 + fd * 8.0 + talk).lerp(at + side * 6.0 + fd * 13.0, bite)
 	draw_line(at + side * 9.0, hand, hivis.darkened(0.1), 4.5)
-	draw_line(hand - side * 2.0, hand + fd * 9.0 - side * 2.0, Color(0.86, 0.66, 0.38), 5.0)
+	var loaf := (fd * 9.0).lerp(-side * 7.0 + fd * 2.0, bite)
+	draw_line(hand - side * 2.0, hand + loaf - side * 2.0, Color(0.86, 0.66, 0.38), 5.0)
 
 
 # A skater on rollerblades, the way the seafront and the river parks are full
@@ -661,12 +660,17 @@ func _draw_busker(fd: Vector2) -> void:
 # An àvia from the market: grey hair in a bun, cardigan, her tartan shopping
 # trolley at her side with a leek poking out of it.
 func _draw_avia(fd: Vector2) -> void:
+	var t := AnimClock.msec() / 1000.0
 	var side := fd.orthogonal()
 	var at := -fd * 2.0
+	# she jiggles the trolley as she talks, and shakes her head at you now
+	# and then: tut-tut
+	var jig := sin(t * 7.0 + seed_o) * 1.2
+	var tut := 0.3 * sin(t * 9.0) if fmod(t + seed_o, 5.0) < 0.9 else 0.0
 	if main != null:
 		main.cast_shadow(self, at, 13.0, 14.0, 0.2)
 	# the trolley: two wheels, the tartan bag, the handle back to her hand
-	var trol := at + side * 20.0 - fd * 2.0
+	var trol := at + side * 20.0 - fd * 2.0 + fd * jig
 	draw_circle(trol - fd * 7.0 + side * 6.0, 3.0, Color(0.14, 0.14, 0.14))
 	draw_circle(trol - fd * 7.0 - side * 6.0, 3.0, Color(0.14, 0.14, 0.14))
 	draw_colored_polygon(_bar(trol, side, 16.0, 18.0), Color(0.62, 0.14, 0.18))
@@ -681,8 +685,8 @@ func _draw_avia(fd: Vector2) -> void:
 	draw_line(at + side * 8.0, trol - side * 6.0 + fd * 6.0, Color(0.30, 0.30, 0.32), 1.6)
 	for e: float in [-1.0, 1.0]:
 		draw_circle(at + side * e * 5.0 + fd * 10.0, 3.4, Color(0.20, 0.16, 0.14))
-	_person(at, fd, Color(0.56, 0.36, 0.52), Color(0.86, 0.70, 0.58), Color(0.80, 0.80, 0.82), "bun", "none",
-		Color.BLACK)
+	_person(at, fd.rotated(tut), Color(0.56, 0.36, 0.52), Color(0.86, 0.70, 0.58), Color(0.80, 0.80, 0.82), "bun",
+		"none", Color.BLACK)
 
 
 # A runner on Montjuïc, stopped to stretch: one leg out behind in a lunge,
@@ -784,8 +788,12 @@ func _draw_fan(fd: Vector2) -> void:
 # A commuter sat on his wheeled suitcase at L'Estació, tie loosened, phone in
 # hand, waiting on a late train.
 func _draw_commuter(fd: Vector2) -> void:
+	var t := AnimClock.msec() / 1000.0
 	var side := fd.orthogonal()
 	var at := -fd * 4.0
+	# a foot tapping, and every few seconds a look up the line for the train
+	var tap := maxf(0.0, sin(t * 9.0 + seed_o)) * 2.5
+	var look := 0.5 * smoothstep(0.0, 0.3, fmod(t + seed_o, 4.5)) * (1.0 - smoothstep(1.0, 1.3, fmod(t + seed_o, 4.5))) 		if fmod(t + seed_o, 4.5) < 1.3 else 0.0
 	if main != null:
 		main.cast_shadow(self, at, 15.0, 13.0, 0.2)
 	# the suitcase, on its side, the handle out
@@ -793,10 +801,11 @@ func _draw_commuter(fd: Vector2) -> void:
 	draw_colored_polygon(_bar(at, side, 24.0, 14.0), Color(0.24, 0.32, 0.44))
 	draw_line(at + side * 14.0, at + side * 22.0, Color(0.50, 0.52, 0.56), 2.0)
 	for e: float in [-1.0, 1.0]:
-		draw_line(at + side * e * 5.0, at + side * e * 6.0 + fd * 16.0, Color(0.22, 0.22, 0.26), 6.0)
-		draw_circle(at + side * e * 6.0 + fd * 18.0, 3.6, Color(0.10, 0.08, 0.08))
+		var toe := fd * (tap if e > 0.0 else 0.0)
+		draw_line(at + side * e * 5.0, at + side * e * 6.0 + fd * 16.0 + toe, Color(0.22, 0.22, 0.26), 6.0)
+		draw_circle(at + side * e * 6.0 + fd * 18.0 + toe, 3.6, Color(0.10, 0.08, 0.08))
 	var shirt := Color(0.86, 0.90, 0.96)
-	_person(at, fd, Color(0.30, 0.32, 0.38), Color(0.84, 0.66, 0.52), Color(0.20, 0.16, 0.12), "short", "none",
+	_person(at, fd.rotated(look), Color(0.30, 0.32, 0.38), Color(0.84, 0.66, 0.52), Color(0.20, 0.16, 0.12), "short", "none",
 		Color.BLACK)
 	# the open collar and the loosened tie
 	draw_circle(at + fd * 7.0, 3.4, shirt)
@@ -806,7 +815,7 @@ func _draw_commuter(fd: Vector2) -> void:
 	draw_line(at + side * 8.0, ph + side * 3.0, Color(0.84, 0.66, 0.52), 3.2)
 	draw_line(at - side * 8.0, ph - side * 3.0, Color(0.84, 0.66, 0.52), 3.2)
 	draw_colored_polygon(_bar(ph, side, 6.0, 9.0), Color(0.10, 0.10, 0.12))
-	draw_colored_polygon(_bar(ph, side, 4.4, 7.0), Color(0.60, 0.82, 0.96))
+	draw_colored_polygon(_bar(ph, side, 4.4, 7.0), Color(0.60, 0.82, 0.96).lightened(0.15 * maxf(0.0, sin(t * 3.0))))
 
 
 # A breakdancer practising in the ticket hall: a sheet of flattened cardboard
