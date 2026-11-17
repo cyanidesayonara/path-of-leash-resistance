@@ -2,6 +2,43 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Every walk its own dare-giver
+
+- Thirty walks still had the default dare-giver, the kid on his wooden bench. Now 29 of them have their own, drawn in a new `entities/challenger_cast.gd`. Each has five lines in the giver's voice (`challenger.LINES`, each saying the dare in so many words) and a name for the result card. The kid stays as El Barri's and the First Walk's, the kid from your street:
+  - El Parc: a kite flyer
+  - El Diluvi: an umbrella seller under his open one
+  - Sarrià: the baker with a tray of loaves
+  - El Bosc: a mushroom picker with his basket
+  - La Castanyada: the castanyera at her brazier
+  - La Ferralla: a scrap dealer with his trolley
+  - La Neteja: a night owl going home, heels in hand
+  - Plaça Reial: a flamenco dancer with her fan
+  - El Veterinari: a cat owner, the cat glaring out of its carrier
+  - El Tibidabo: a balloon seller
+  - Les Aigües: a hiker with her poles
+  - El Laberint: the gardener with his shears
+  - Llevant: a surfer with his board
+  - Els Senglars: a ranger at her binoculars
+  - Festa de Gràcia: a drummer
+  - Els Búnquers: a photographer at her tripod
+  - La Superilla: a chess player
+  - El Fòrum: a drone pilot, the drone out over the esplanade
+  - Plaça d'Espanya: a bubble maker
+  - Rambla del Raval: a fortune teller with her crystal ball
+  - L'Eixample: a tour guide with her flag
+  - Els Àngels: a skateboarder
+  - El Poble Espanyol: a potter at her wheel
+  - La Ciutadella: a juggler
+  - La Cremada: a devil whose fork spits sparks
+  - L'Aeroport: a pilot
+  - Montserrat: a monk with his rosary
+  - La Diagonal: a delivery rider by his bike
+  - Carrer de Blai: a cook on his break
+- Each of the new cast plays the existing dare tune nearest it in mood (`challenger.TUNE`, through `tune_of()`, which main's music cue now uses). Tunes of their own are for another pass.
+- Givers whose act moves (the kite, the clubs, the sparks, the bubbles and the rest; `Cast.animates`) redraw through `Redraw.later` while the dog is within 800 px, as the breakdancer does. Before, every giver held one pose.
+- `challenger.AT` now also moves Plaça Reial's giver out from under a palm's crown and El Fòrum's out from under the solar pergola.
+- Tests: `test_dare_retry.gd` (every walk's giver has every line, said plainly), `test_baked_music.gd` (every giver's tune is baked), `test_redraw_once.gd`, the tutorial tests and every walk's `--selftest` (the giver is on the walk, not in a solid, and has trick spots in reach). Each new giver was photographed in place.
+
 ## 2026-11-17 - El Metro: a breakdancer gives the dares
 
 - El Metro had the default dare-giver, the kid on a wooden park bench, and main's spawn rule put him at (810, -1600), on the escalator's treads. Now the walk has its own giver (`entities/challenger.gd`, `"breaker"`): a breakdancer practising on taped-down cardboard by the ticket hall's west wall, with a boombox against the wall behind him. He toprocks in his tracksuit and backwards cap, then drops into a headspin with his legs out in a V. He has his own lines ("Show me your moves!", "Lost the beat!", "You're in the crew now.") and his own dare tune in `audio/music.gd`: a funky minor riff, swung, on vibes over a groove.

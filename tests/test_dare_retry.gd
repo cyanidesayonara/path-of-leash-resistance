@@ -156,13 +156,13 @@ func _run() -> void:
 	m.on_bark(m.dog.global_position)
 	_check(m.challenge.phase == "offer" and not m.challenge.waiting, "a bark takes the dare")
 	_check(g._line() == "Get ready...", "taking it, the giver says get ready")
-	_check(m._music_cue() == "" and m._music_next() == "dare_" + g.who,
+	_check(m._music_cue() == "" and m._music_next() == g.tune(),
 		"the walk's music stops for the count-in, the giver's tune ready")
 	var counted: int = m.dare_counts
 	_step(m.challenge.READY_S + 0.1)
 	_check(m.dare_counts - counted == m.challenge.COUNT_IN, "a three-tick count-in (%d)" % (m.dare_counts - counted))
 	_check(m.challenge.phase == "live" and m.challenge.active, "the clock starts after a moment to get set")
-	_check(m._music_cue() == "dare_" + g.who, "the giver's tune plays while the clock runs")
+	_check(m._music_cue() == g.tune(), "the giver's tune plays while the clock runs")
 	_check(is_equal_approx(m._dare_tempo(), 1.0), "at its own tempo at first")
 	m.challenge.timer = m.HURRY_S * 0.5
 	_check(m._dare_tempo() > 1.0 and m._dare_tempo() < m.DARE_HURRY, "faster as the clock runs out")

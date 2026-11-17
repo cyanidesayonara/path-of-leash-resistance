@@ -34,9 +34,9 @@ func _run() -> void:
 	for lvl in Game.LEVELS:
 		asked.append(Music.walk_style(lvl))
 	asked.append(Music.walk_style("tutorial"))
-	var who: Dictionary = load("res://entities/challenger.gd").WHO
-	for w: String in who.values() + ["kid"]:
-		asked.append("dare_" + w)
+	var giver: GDScript = load("res://entities/challenger.gd")
+	for w: String in giver.WHO.values() + ["kid"]:
+		asked.append(giver.tune_of(w))
 	for a in asked:
 		_check(a in tracks, "the bake covers %s" % a)
 
