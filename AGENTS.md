@@ -134,7 +134,12 @@ explain every changed snapshot line; this does not relax the refactor rule.
   `whirl_bailed` keeps the entire bail frame shielded from raw tension,
   separation damping and the geometry cap even though `human.tick()` runs
   before `_apply_leash`; `_apply_leash` consumes both bail and fling one-shots
-  after every `_leash_tug` path. Never call `_leash_tug` directly.
+  after every `_leash_tug` path. Never call `_leash_tug` directly. Either
+  ending starts `WHIRL_REARM`, during which no orbit arms (a rope still wound
+  re-armed straight off the fling). While she orbits, the human node is turned
+  so the leash hand faces the pole and `_draw_whirl_body` draws her flying out
+  flat behind her grip, batched with the rest of her; `tools/whirl_capture.gd`
+  plays a whirl with real input and saves its frames.
   Tests: `test_whirl.gd` and `test_whirl_guided.gd` cover the pole, starting
   continuity, signed measure and reach, one-way progress, local budget,
   pull-dependent speed, pure and forced releases, refusal, real-pole guard,

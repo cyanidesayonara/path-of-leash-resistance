@@ -192,6 +192,11 @@ const WHIRL_ARM_EXCESS := 8.0
 const WHIRL_ARM_WIND := 0.55
 const WHIRL_ARM_END_WIND := 2.4
 const WHIRL_ARM_RANGE := 70.0
+# after an orbit ends (a fling or a bail), this long before another can arm:
+# a rope still wound round the pole re-armed at once and she went round again
+# straight off the fling, which read as a glitch rather than a second trick
+const WHIRL_REARM := 0.9
+var whirl_rearm_t := 0.0
 # how much heavier a tutorial owner waiting at a lesson is in the tug of war
 const TUT_BRACE := 8.0
 # Round the pole, not into it: with the rope over a pole beside the owner, the
@@ -8251,6 +8256,7 @@ func _shove_match_crowd(delta: float) -> void:
 
 
 func _apply_leash(delta: float) -> void:
+	whirl_rearm_t = maxf(0.0, whirl_rearm_t - delta)
 	_leash_tug(delta)
 	# The two ways an orbit ends, as one-shots, consumed once the tug above has
 	# had its frame - on EVERY path through it, including the early ones (no
@@ -8261,10 +8267,12 @@ func _apply_leash(delta: float) -> void:
 		# an abandoned orbit is not a fling: no score, no sfx, just enough
 		# slip left for her to stagger clear of the coil
 		human.whirl_bailed = false
+		whirl_rearm_t = WHIRL_REARM
 		if not leash.detached:
 			leash.free_slip_t = maxf(float(leash.free_slip_t), WHIRL_SLIP_BAIL)
 	if human.just_flung:
 		human.just_flung = false
+		whirl_rearm_t = WHIRL_REARM
 		flings_done += 1
 		# the two moves now CHAIN: wind him up with a carve, then let go
 		if vault_recent > 0.0:
@@ -8274,9 +8282,11 @@ func _apply_leash(delta: float) -> void:
 				Color(1.0, 0.86, 0.5))
 			vault_recent = 0.0
 		Sfx.play("fling")
-		# the hardest thing on the leash, and paid like it
+		# the hardest thing on the leash, and paid like it, and said out loud
 		bones += 6
 		combo.add("FLING", 30)
+		feed.say("FLING!  30", EventFeed.Tone.LOUD)
+		_slowmo()
 		if not leash.detached:
 			# a fresh fling must never be arrested by a residual wrap
 			leash.free_slip_t = 1.2
@@ -8409,7 +8419,7 @@ func _leash_tug(delta: float) -> void:
 	# The condition must hold for WHIRL_ARM_T, and the direction is decided
 	# over that same window.
 	var armed := false
-	if not whirling and not human.is_fallen() and excess > WHIRL_ARM_EXCESS:
+	if not whirling and not human.is_fallen() and excess > WHIRL_ARM_EXCESS and whirl_rearm_t <= 0.0:
 		# WHIRL_ARM_WIND covers the 270-degree partial wind that used to jam
 		# awkwardly without ever whirling
 		if absf(leash.winding()) > WHIRL_ARM_WIND and absf(leash.human_end_winding()) > WHIRL_ARM_END_WIND:
