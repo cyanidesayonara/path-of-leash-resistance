@@ -67,6 +67,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_pilot(c, fd, t, s)
 		"monk":
 			_monk(c, fd, t, s)
+		"instructor":
+			_instructor(c, fd, t, s)
 		"rider":
 			_rider(c, fd, t, s)
 		"cook":
@@ -808,3 +810,34 @@ static func _cook(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	_arm(c, -side * 8.0, -side * 10.0 + fd * (4.0 + flick), white, skin)
 	c.draw_colored_polygon(_bar(-side * (10.0 + flick * 0.5) + fd * (8.0 + flick), side, 4.0, 10.0),
 		Color(0.86, 0.86, 0.84))
+
+
+# La Molina: the ski school's instructor in her red jacket and bobble hat,
+# skis on, leaning on her poles, the whistle to her lips every so often
+static func _instructor(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.90, 0.72, 0.60)
+	var red := Color(0.86, 0.14, 0.14)
+	_shadow(c, Vector2.ZERO, 14.0, 15.0)
+	# the skis, side by side under her, tips curled up toward the path
+	for e: float in [-1.0, 1.0]:
+		var sk := side * e * 6.0
+		c.draw_line(sk - fd * 24.0, sk + fd * 22.0, Color(0.96, 0.84, 0.18), 4.0)
+		c.draw_circle(sk + fd * 23.0, 2.2, Color(0.96, 0.84, 0.18))
+	# a little shuffle on them, as instructors do while they wait
+	var shuffle := sin((t + s) * 3.0) * 1.5
+	_person(c, fd * shuffle * 0.3, fd, red, skin, Color(0.40, 0.24, 0.12), "ponytail", "beanie", Color(0.96, 0.96, 0.98))
+	# the bobble on her hat
+	c.draw_circle(fd * shuffle * 0.3 - fd * 2.0, 3.0, red)
+	# her poles, planted ahead either side, her hands on the grips
+	for e: float in [-1.0, 1.0]:
+		var grip := fd * 8.0 + side * e * 13.0
+		var tip := fd * 20.0 + side * e * 19.0
+		_arm(c, side * e * 8.0, grip, red, Color(0.14, 0.14, 0.16))
+		c.draw_line(grip, tip, Color(0.70, 0.72, 0.76), 1.8)
+		c.draw_circle(tip, 2.6, Color(0.20, 0.20, 0.22))
+	# the whistle, up to her lips for a moment every few seconds
+	var w := fmod(t + s, 5.0)
+	if w < 0.5:
+		c.draw_circle(fd * 9.0, 1.8, Color(0.92, 0.92, 0.20))
+

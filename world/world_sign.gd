@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -74,6 +74,7 @@ const FEEL := {
 	"pintxos": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
+	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
 	"rosemary": {"spacing": 0.18, "r": 0.07, "drag": 5.2, "take": 0.8, "spin": 3.5, "segment": true},
 	"pebbles": {"spacing": 0.11, "r": 0.07, "drag": 1.8, "take": 1.0, "roll": true},
 	"cactus": {"spacing": 0.16, "r": 0.085, "drag": 7.0, "take": 0.6, "spring": 12.0},
@@ -574,6 +575,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_studs(c, sign, h, t)
 		"bagtags":
 			_bagtags(c, sign, h)
+		"snowflakes":
+			_snowflakes(c, sign, h)
 		"rosemary":
 			_rosemary(c, sign, h)
 	for k in range(held.size()):
@@ -1514,3 +1517,29 @@ static func _azulejos(c: Object, sign: Dictionary, _h: float, light: Vector2) ->
 		c.draw_rect(rect, Color(0.96, 0.94, 0.88))
 		c.draw_rect(rect.grow(-1.6), col)
 		c.draw_circle(p, r * 0.36, Color(0.98, 0.96, 0.90))
+
+
+static func _snowflakes(c: Object, sign: Dictionary, _h: float) -> void:
+	# snowflakes from La Molina's piste: six-armed, each arm with its barbs,
+	# ice blue with white tips, so they read on the snow
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		for k in range(3):
+			var ax := Vector2.from_angle(rot + float(k) * PI / 3.0)
+			c.draw_line(p - ax * r + Vector2(1.2, 1.6), p + ax * r + Vector2(1.2, 1.6), Color(0.10, 0.16, 0.36, 0.40), 3.0)
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		for k in range(6):
+			var ax := Vector2.from_angle(rot + float(k) * PI / 3.0)
+			var tip := p + ax * r
+			c.draw_line(p, tip, Color(0.22, 0.42, 0.84), 2.6)
+			var mid := p + ax * r * 0.6
+			c.draw_line(mid, mid + ax.rotated(0.8) * r * 0.32, Color(0.34, 0.56, 0.92), 1.8)
+			c.draw_line(mid, mid + ax.rotated(-0.8) * r * 0.32, Color(0.34, 0.56, 0.92), 1.8)
+			c.draw_circle(tip, r * 0.10, Color(1.0, 1.0, 1.0))
+		c.draw_circle(p, r * 0.18, Color(0.96, 0.98, 1.0))
+

@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "sarria", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "metro", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "blai"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "sarria", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "metro", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "blai", "molina"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -54,6 +54,7 @@ const LEVEL_NAMES := {
 	"poble": "El Poble Espanyol", "ciutadella": "La Ciutadella", "cremada": "La Cremada",
 	"aeroport": "L'Aeroport",
 	"montserrat": "Montserrat",
+	"molina": "La Molina",
 	"raval": "Rambla del Raval",
 	# Cerdà's grid round the basilica, named for the district
 	"eixample": "L'Eixample",
@@ -107,6 +108,7 @@ const LEVEL_SUBTITLES := {
 	"cremada": "Badalona's devil night, and the Dimoni rolls",
 	"aeroport": "Terminal 1's long pier, with airport security on your tail",
 	"montserrat": "The serrated mountain trail, and the wild goats are loose",
+	"molina": "Up the piste in the snow, and the groomer's brake lets go",
 	"raval": "The rambla where the big bronze cat sits",
 	"eixample": "The grid of cut corners round the basilica",
 	"sarria": "The village the city swallowed, as its shutters go up",
@@ -116,7 +118,7 @@ const LEVEL_SUBTITLES := {
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "blai": 39, "aigues": 39, "gracia": 40, "horta": 41, "port": 43, "espanya": 45, "poble": 46, "aeroport": 47, "site": 47, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "blai": 39, "aigues": 39, "gracia": 40, "horta": 41, "molina": 42, "port": 43, "espanya": 45, "poble": 46, "aeroport": 47, "site": 47, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -159,6 +161,8 @@ const CHASE_GATE := {
 	"gracia": "cremada",
 	# the seventh chase, Barcelona-El Prat Terminal 1
 	"aeroport": "gracia",
+	# the snow chase, La Molina's piste
+	"molina": "aeroport",
 	# the eighth chase, Montserrat mountain trail
 	"montserrat": "aeroport",
 	# the first statue boss, after the second chase
@@ -214,10 +218,12 @@ const CAMPAIGN_SKY := {
 	"raval": ["clear", "night"], "eixample": ["clear", "day"], "diagonal": ["clear", "day"], "blai": ["clear", "night"],
 	# the morning dog walk: shutters going up, bread crates out, first light
 	"sarria": ["clear", "dawn"],
+	# the first snow walk
+	"molina": ["snow", "day"],
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "station", "carmel", "reial", "cremada", "forum", "diagonal", "blai", "aigues", "gracia", "horta", "port", "espanya", "poble", "aeroport", "site", "partit", "scrap", "montserrat", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "station", "carmel", "reial", "cremada", "forum", "diagonal", "blai", "aigues", "gracia", "horta", "molina", "port", "espanya", "poble", "aeroport", "site", "partit", "scrap", "montserrat", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -467,6 +473,7 @@ const LEVEL_SUBTITLES_CA := {
 	"cremada": "La nit del Dimoni de Badalona, i el Dimoni roda",
 	"aeroport": "La llarga Terminal 1, amb els de seguretat al darrere",
 	"montserrat": "El camí de la muntanya serrada, i les cabres salvatges van soltes",
+	"molina": "Pista amunt sota la neu, i a la màquina trepitjaneu se li deixa anar el fre",
 	"raval": "La rambla on seu el gat gros de bronze",
 	"eixample": "La quadrícula dels xamfrans al voltant de la basílica",
 	"sarria": "El poble que es va empassar la ciutat, mentre s'aixequen les persianes",
@@ -512,6 +519,7 @@ const LEVEL_SUBTITLES_ES := {
 	"cremada": "La noche del Dimoni de Badalona, y el Dimoni rueda",
 	"aeroport": "La larga Terminal 1, con los de seguridad detrás",
 	"montserrat": "El sendero de la montaña dentada, y las cabras salvajes andan sueltas",
+	"molina": "Pista arriba bajo la nieve, y a la pisanieves se le suelta el freno",
 	"raval": "La rambla donde se sienta el gato gordo de bronce",
 	"eixample": "La cuadrícula de chaflanes alrededor de la basílica",
 	"sarria": "El pueblo que se tragó la ciudad, mientras suben las persianas",
@@ -526,7 +534,7 @@ var agility_best := 0.0
 var gate_open: Array[String] = []
 # the walks that arrived with the chase gates: no save predates them, so
 # none is grandfathered past its gate
-const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "metro", "sarria", "blai"]
+const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "molina", "diagonal", "metro", "sarria", "blai"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.

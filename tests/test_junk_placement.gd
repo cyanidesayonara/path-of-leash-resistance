@@ -8,9 +8,9 @@ extends SceneTree
 
 const LEVELS := ["street", "park", "beach", "rain", "market", "oldtown", "trail", "station",
 	"besos", "site", "spook", "scrap", "guell", "neteja", "barri", "montjuic", "partit",
-	"tibidabo", "aigues", "horta", "llevant", "montserrat", "vet"]
+	"tibidabo", "aigues", "horta", "llevant", "montserrat", "molina", "vet"]
 # where a traffic cone would not belong (LevelBuild.CONE_KINDS): none
-const NO_CONES := ["park", "beach", "trail", "montjuic", "tibidabo", "aigues", "horta", "llevant", "montserrat", "vet"]
+const NO_CONES := ["park", "beach", "trail", "montjuic", "tibidabo", "aigues", "horta", "llevant", "montserrat", "molina", "vet"]
 # roofed walks, where the floor is swept and mopped
 const INDOORS := ["market", "vet", "station"]
 const JUNK := ["can", "bottle", "sack", "crate", "ball"]

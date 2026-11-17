@@ -26,6 +26,7 @@ const Ciutadella := preload("res://systems/ciutadella.gd")
 const Cremada := preload("res://systems/cremada.gd")
 const Aeroport := preload("res://systems/aeroport.gd")
 const Montserrat := preload("res://systems/montserrat.gd")
+const Molina := preload("res://systems/molina.gd")
 const BossMamut := preload("res://systems/boss_mamut.gd")
 const BossDrac := preload("res://systems/boss_drac.gd")
 const Carmel := preload("res://systems/carmel.gd")
@@ -140,6 +141,7 @@ const CROSS_SECTIONS := {
 	"cremada": ["none", 0.0, "none", 0.0],         # Carrer del Mar: the houses at the paving
 	"aeroport": ["none", 0.0, "none", 0.0],        # Terminal 1: glass curtain wall and boarding gates
 	"montserrat": ["none", 0.0, "none", 0.0],      # Montserrat mountain trail and terrace
+	"molina": ["none", 0.0, "none", 0.0],          # La Molina's piste between the snowbanks
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1390,6 +1392,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"cremada": half = Cremada.HALF
 		"aeroport": half = Aeroport.HALF
 		"montserrat": half = Montserrat.HALF
+		"molina": half = Molina.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1599,7 +1602,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "metro" or m.lvl == "blai" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "metro" or m.lvl == "blai" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat" or m.lvl == "molina":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1766,6 +1769,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_mont: Array = Montserrat.build(m)
 			hyd_list.assign(pl_mont[0])
 			keb_list.assign(pl_mont[1])
+		"molina":
+			var pl_mol: Array = Molina.build(m)
+			hyd_list.assign(pl_mol[0])
+			keb_list.assign(pl_mol[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2550,6 +2557,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "montserrat":
 		for r: Rect2 in Montserrat.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "molina":
+		for r: Rect2 in Molina.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "ciutadella":
 		for r: Rect2 in Ciutadella.wrap_rects():
 			add_rope_rect(m, r)
@@ -2688,6 +2698,9 @@ static func build_level_data(m: Node2D) -> void:
 		"montserrat":
 			m.prize_pos = Montserrat.PRIZE
 			m.prize_text = Montserrat.PRIZE_TEXT
+		"molina":
+			m.prize_pos = Molina.PRIZE
+			m.prize_text = Molina.PRIZE_TEXT
 		"ciutadella":
 			m.prize_pos = BossMamut.PRIZE
 			m.prize_text = BossMamut.PRIZE_TEXT
@@ -3315,6 +3328,14 @@ const FREEDOM_PROPS := {
 		[Vector2(538.0, -536.0), "shrub"], [Vector2(792.0, -522.0), "rock"], [Vector2(842.0, -308.0), "shrub"],
 		[Vector2(942.0, -240.0), "post"], [Vector2(1082.0, -442.0), "rock"],
 	],
+	# the snowfield above the xalet: places to dig in the snow, a fallen log,
+	# rocks under their caps of snow, a piste marker
+	"molina": [
+		[Vector2(226.0, -506.0), "dig"], [Vector2(610.0, -300.0), "dig"], [Vector2(1046.0, -330.0), "dig"],
+		[Vector2(380.0, -540.0), "log"], [Vector2(870.0, -500.0), "log"],
+		[Vector2(160.0, -400.0), "rock"], [Vector2(300.0, -300.0), "rock"], [Vector2(790.0, -540.0), "rock"],
+		[Vector2(1090.0, -460.0), "rock"], [Vector2(950.0, -250.0), "post"],
+	],
 }
 
 
@@ -3652,6 +3673,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_mont: Array[Rect2] = Montserrat.solids(m)
 			for i in range(ps_mont.size()):
 				out.append(["montserrat_solid_%d" % i, ps_mont[i]])
+		"molina":
+			var ps_mol: Array[Rect2] = Molina.solids(m)
+			for i in range(ps_mol.size()):
+				out.append(["molina_solid_%d" % i, ps_mol[i]])
 		"ciutadella":
 			var ps_ciut: Array[Rect2] = Ciutadella.solids(m)
 			for i in range(ps_ciut.size()):
@@ -4248,6 +4273,9 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "montserrat":
 		for r: Rect2 in Montserrat.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "molina":
+		for r: Rect2 in Molina.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "ciutadella":
 		for r: Rect2 in Ciutadella.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
@@ -4480,6 +4508,7 @@ const CONE_KINDS := {
 	"montjuic": ["bottle", "can"],
 	"aigues": ["bottle", "can"],
 	"montserrat": ["bottle", "can"],     # a pilgrim's empty water bottle
+	"molina": ["can", "bottle"],          # a skier's drink, dropped in the snow
 }
 
 
@@ -4554,6 +4583,7 @@ static func spawn_cones(m: Node2D) -> void:
 			"neteja": kinds = ["crate", "crate", "sack", "bottle"]
 			"station", "aeroport", "metro": kinds = ["can", "bottle", "bottle"]
 			"montserrat": kinds = ["bottle", "can", "sack"]
+			"molina": kinds = ["can", "bottle", "bottle"]
 			"oldtown": kinds = ["sack", "bottle", "can"]
 		# Litter accumulates around whatever produced it, so junk is placed by
 		# AREA rather than sprinkled evenly: crates pile up behind market stalls,

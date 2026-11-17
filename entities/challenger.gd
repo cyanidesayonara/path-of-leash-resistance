@@ -51,7 +51,7 @@ const WHO := {"beach": "monkey", "street": "statue", "port": "fisher", "site": "
 	"aigues": "hiker", "horta": "gardener", "llevant": "surfer", "boars": "ranger", "gracia": "drummer",
 	"carmel": "photographer", "superilla": "chess", "forum": "drone", "espanya": "bubbles", "raval": "fortune",
 	"eixample": "guide", "angels": "skateboarder", "poble": "potter", "ciutadella": "juggler", "cremada": "devil",
-	"aeroport": "pilot", "montserrat": "monk", "diagonal": "rider", "blai": "cook"}
+	"aeroport": "pilot", "montserrat": "monk", "diagonal": "rider", "blai": "cook", "molina": "instructor"}
 
 # where they are on a walk whose spot main's rule (either side of the
 # corridor 1600 px in) would put on something or under it: El Metro's
@@ -73,7 +73,7 @@ const FOOTPRINT := {"kid": Vector2(28.0, 62.0), "statue": Vector2(30.0, 30.0), "
 	"bubbles": Vector2(20.0, 20.0), "fortune": Vector2(28.0, 28.0), "guide": Vector2(20.0, 20.0),
 	"skateboarder": Vector2(20.0, 20.0), "potter": Vector2(28.0, 28.0), "juggler": Vector2(20.0, 20.0),
 	"devil": Vector2(20.0, 20.0), "pilot": Vector2(24.0, 22.0), "monk": Vector2(22.0, 22.0),
-	"rider": Vector2(24.0, 24.0), "cook": Vector2(20.0, 20.0)}
+	"rider": Vector2(24.0, 24.0), "cook": Vector2(20.0, 20.0), "instructor": Vector2(22.0, 22.0)}
 
 # What each of them says, as people talk, each line starting with a capital. "dare" always names
 # the numbers as "N tricks in N seconds", and the bubble adds TAKE while the dare waits
@@ -205,6 +205,9 @@ const LINES := {
 	"monk": {"idle": "Peace, dog. A dare, perhaps?", "dare": "%d tricks in %d seconds. I'll pray for you.",
 		"won": "A miracle! Come back for a harder one.", "lost": "Patience, my child. Come back and try again.",
 		"done": "Bless you, dog."},
+	"instructor": {"idle": "Hey, pup! Fancy a lesson? A dare, then.", "dare": "%d tricks in %d seconds! Knees bent!",
+		"won": "Gold medal! Come back for a harder one.", "lost": "Wipeout! Come back and try again.",
+		"done": "You've graduated, dog."},
 	"rider": {"idle": "My order's late anyway. Want a dare?", "dare": "%d tricks in %d seconds, before the next order!",
 		"won": "Delivered! Come back for a harder one.", "lost": "Wrong address! Come back and try again.",
 		"done": "Five stars, dog."},
@@ -225,7 +228,8 @@ const NAMES := {"kid": "the kid", "monkey": "the monkey", "statue": "the statue"
 	"chess": "the chess player", "drone": "the drone pilot", "bubbles": "the bubble maker",
 	"fortune": "the fortune teller", "guide": "the tour guide", "skateboarder": "the skateboarder",
 	"potter": "the potter", "juggler": "the juggler", "devil": "the devil", "pilot": "the pilot",
-	"monk": "the monk", "rider": "the delivery rider", "cook": "the cook"}
+	"monk": "the monk", "rider": "the delivery rider", "cook": "the cook",
+	"instructor": "the ski instructor"}
 
 var main: Node2D
 var my_dog: Node2D

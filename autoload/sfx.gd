@@ -369,6 +369,10 @@ func _build_library() -> void:
 	lib["crossing_bell"] = _crossing_bell()
 	# Sant Vicenç de Sarrià striking the hour (systems/sarria.gd)
 	lib["church_bell"] = _church_bell()
+	# La Molina: a snowball bursting, the groomer's diesel, a snow cannon spinning up
+	lib["poof"] = _poof()
+	lib["diesel"] = _diesel()
+	lib["cannon_whir"] = _cannon_whir()
 	lib["lion_roar"] = _lion_roar()
 	lib["drac_click"] = _drac_click()
 	lib["drac_jet"] = _drac_jet()
@@ -906,4 +910,50 @@ func _drac_jet() -> AudioStreamWAV:
 		var tone := sin(TAU * (380.0 + sin(TAU * 12.0 * t) * 60.0) * t) * 0.2
 		var env := minf(1.0, prog * 15.0) * (1.0 - smoothstep(0.6, 1.0, prog))
 		out[i] = (prev * 0.8 + tone) * env * 0.6
+	return _pack(out)
+
+
+func _poof() -> AudioStreamWAV:
+	# a snowball bursting: a soft low thud of noise, smoothed so it is powder
+	# and not grit
+	var n := int(0.32 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var lp := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		lp += (rng.randf_range(-1.0, 1.0) - lp) * 0.08
+		out[i] = (lp * 2.2 + sin(TAU * 70.0 * t) * 0.35) * exp(-t * 11.0) * 0.6
+	return _pack(out)
+
+
+func _diesel() -> AudioStreamWAV:
+	# the groomer's engine revving: a chugging low pulse that climbs
+	var n := int(0.9 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var ph := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var f := 34.0 + 30.0 * minf(t / 0.6, 1.0)
+		ph += TAU * f / RATE
+		var chug := 0.5 + 0.5 * signf(sin(ph))
+		var tone := sin(ph * 2.0) * 0.4 + sin(ph * 3.0) * 0.2 + rng.randf_range(-1.0, 1.0) * 0.25 * chug
+		var env := minf(t / 0.05, 1.0) * (1.0 - smoothstep(0.7, 0.9, t))
+		out[i] = tone * chug * env * 0.5
+	return _pack(out)
+
+
+func _cannon_whir() -> AudioStreamWAV:
+	# a snow cannon's fan spinning up: a rising whine over a breathy hiss
+	var n := int(0.8 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var ph := 0.0
+	for i in range(n):
+		var t := float(i) / RATE
+		var f := 180.0 + 520.0 * (t / 0.8)
+		ph += TAU * f / RATE
+		var env := minf(t / 0.1, 1.0) * (1.0 - smoothstep(0.65, 0.8, t))
+		out[i] = (sin(ph) * 0.25 + rng.randf_range(-1.0, 1.0) * 0.18 * (t / 0.8)) * env * 0.5
 	return _pack(out)
