@@ -44,6 +44,7 @@ const CAM_ROT := {"diagonal": 45.0}
 const Outdoors := preload("res://systems/outdoors.gd")
 const Angels := preload("res://systems/angels.gd")
 const Poble := preload("res://systems/poble.gd")
+const Sitges := preload("res://systems/sitges.gd")
 const GoticCastellers := preload("res://systems/gotic_castellers.gd")
 # the tutorial's pond for the brink lesson, beside the path at its station
 const TUT_POND_W := 150.0
@@ -139,6 +140,7 @@ const CROSS_SECTIONS := {
 	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
 	"poble": ["none", 0.0, "none", 0.0],           # walled architectural village in systems/poble.gd
+	"sitges": ["none", 0.0, "none", 0.0],          # promenade, sea, La Punta rock and church in systems/sitges.gd
 	"ciutadella": ["none", 0.0, "none", 0.0],      # the park and the mammoth's lawn in systems/ciutadella.gd
 	"cremada": ["none", 0.0, "none", 0.0],         # Carrer del Mar: the houses at the paving
 	"aeroport": ["none", 0.0, "none", 0.0],        # Terminal 1: glass curtain wall and boarding gates
@@ -1391,6 +1393,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"angels": half = Angels.HALF
 		"poble": half = Poble.HALF
+		"sitges": half = Sitges.HALF
 		"ciutadella": half = Ciutadella.HALF
 		"cremada": half = Cremada.HALF
 		"aeroport": half = Aeroport.HALF
@@ -1575,6 +1578,8 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Angels.edge_nodes(m)
 	elif m.lvl == "poble":
 		m.edge_nodes = Poble.edge_nodes(m)
+	elif m.lvl == "sitges":
+		m.edge_nodes = Sitges.edge_nodes(m)
 	elif m.lvl == "ciutadella":
 		m.edge_nodes = Ciutadella.edge_nodes(m)
 	elif m.lvl == "trail":
@@ -1607,7 +1612,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "metro" or m.lvl == "blai" or m.lvl == "santpau" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat" or m.lvl == "molina":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "metro" or m.lvl == "blai" or m.lvl == "santpau" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat" or m.lvl == "sitges" or m.lvl == "molina":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1762,6 +1767,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_poble: Array = Poble.build(m)
 			hyd_list.assign(pl_poble[0])
 			keb_list.assign(pl_poble[1])
+		"sitges":
+			var pl_sitges: Array = Sitges.build(m)
+			hyd_list.assign(pl_sitges[0])
+			keb_list.assign(pl_sitges[1])
 		"ciutadella":
 			var pl_ciut: Array = Ciutadella.build(m)
 			hyd_list.assign(pl_ciut[0])
@@ -2561,6 +2570,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "santpau":
 		for r: Rect2 in Santpau.wrap_rects():
 			add_rope_rect(m, r, false)
+	if m.lvl == "sitges":
+		for r: Rect2 in Sitges.wrap_rects(m):
+			add_rope_rect(m, r)
 	if m.lvl == "metro":
 		for r: Rect2 in Metro.wrap_rects():
 			add_rope_rect(m, r)
@@ -2705,6 +2717,9 @@ static func build_level_data(m: Node2D) -> void:
 		"poble":
 			m.prize_pos = Poble.PRIZE
 			m.prize_text = Poble.PRIZE_TEXT
+		"sitges":
+			m.prize_pos = Sitges.PRIZE
+			m.prize_text = Sitges.PRIZE_TEXT
 		"cremada":
 			m.prize_pos = Cremada.PRIZE
 			m.prize_text = Cremada.PRIZE_TEXT
@@ -3193,6 +3208,12 @@ const FREEDOM_PROPS := {
 		[Vector2(905.0, -225.0), "post"], [Vector2(175.0, -345.0), "shrub"], [Vector2(1085.0, -235.0), "shrub"],
 		[Vector2(290.0, -355.0), "rock"], [Vector2(990.0, -455.0), "log"],
 	],
+	"sitges": [
+		[Vector2(560.0, -300.0), "dig"], [Vector2(768.0, -268.0), "dig"], [Vector2(1042.0, -278.0), "dig"],
+		[Vector2(885.0, -516.0), "driftwood"], [Vector2(925.0, -235.0), "driftwood"], [Vector2(1055.0, -505.0), "driftwood"],
+		[Vector2(860.0, -420.0), "rock"], [Vector2(990.0, -410.0), "rock"], [Vector2(848.0, -296.0), "rock"],
+		[Vector2(980.0, -304.0), "rock"], [Vector2(536.0, -210.0), "post"], [Vector2(890.0, -198.0), "shrub"],
+	],
 	# the dog area at the park's north gate: plane trees' leaf litter, a
 	# drinking post, and a fallen bough
 	"cremada": [
@@ -3414,7 +3435,7 @@ static func placa_clear(m: Node2D, at: Vector2) -> bool:
 # paving. Not a park's gravel path, a forest trail, the scrapyard's dirt or
 # El Mosaic's terraces, and on the seafront only the promenade, not the brick
 # bike path beside it.
-const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "angels", "poble"]
+const WORKS_FREE := ["park", "barri", "trail", "scrap", "guell", "station", "aigues", "horta", "carmel", "superilla", "angels", "poble", "sitges"]
 const BEACH_PROM_X := 560.0
 
 # PASSEIG MARÍTIM's landmarks, on the walk itself so its stretches differ
@@ -3687,6 +3708,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_poble: Array[Rect2] = Poble.solids(m)
 			for i in range(ps_poble.size()):
 				out.append(["poble_solid_%d" % i, ps_poble[i]])
+		"sitges":
+			var ps_sitges: Array[Rect2] = Sitges.solids(m)
+			for i in range(ps_sitges.size()):
+				out.append(["sitges_solid_%d" % i, ps_sitges[i]])
 		"cremada":
 			var ps_crem: Array[Rect2] = Cremada.solids(m)
 			for i in range(ps_crem.size()):
@@ -3863,7 +3888,7 @@ static func build_walls(m: Node2D) -> void:
 	# On the beach the west wall moves out into the water, so she can actually
 	# get in the sea - the whole point of walking a dog along the seafront.
 	# Everywhere else it stays at the level edge.
-	var west_x: float = m.FREEDOM_WALL_W if (m.lvl == "beach" or m.lvl == "llevant") else 40.0
+	var west_x: float = m.FREEDOM_WALL_W if (m.lvl == "beach" or m.lvl == "llevant" or m.lvl == "sitges") else 40.0
 	var defs := [
 		[Vector2(west_x, mid_y), Vector2(100, span)],
 		[Vector2(1240.0, mid_y), Vector2(100, span)],
@@ -4097,7 +4122,7 @@ static func build_walls(m: Node2D) -> void:
 	match m.lvl:
 		"street": wall_sides = [-1.0]
 		"rain": wall_sides = []      # its frontage walls are the building line
-		"park", "trail", "beach", "llevant", "barri", "carmel": wall_sides = []
+		"park", "trail", "beach", "llevant", "barri", "carmel", "sitges": wall_sides = []
 		# a hillside with no buildings, and its path winds right across where
 		# the straight building line would stand
 		"montjuic": wall_sides = []
@@ -4292,6 +4317,9 @@ static func build_walls(m: Node2D) -> void:
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "poble":
 		for r: Rect2 in Poble.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "sitges":
+		for r: Rect2 in Sitges.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "cremada":
 		for r: Rect2 in Cremada.solids(m):
@@ -4533,6 +4561,7 @@ const CONE_KINDS := {
 	"tibidabo": ["ball"],
 	"beach": ["ball", "bottle"],
 	"llevant": ["ball", "bottle"],
+	"sitges": ["bottle", "ball"],
 	"trail": ["bottle", "can"],          # litter someone left on the path
 	"montjuic": ["bottle", "can"],
 	"aigues": ["bottle", "can"],
@@ -4603,7 +4632,7 @@ static func spawn_cones(m: Node2D) -> void:
 		var kinds := ["can", "bottle", "sack", "can"]
 		match m.lvl:
 			"scrap", "site": kinds = ["crate", "sack", "can", "bottle", "crate"]
-			"beach", "llevant": kinds = ["bottle", "ball", "can"]
+			"beach", "llevant", "sitges": kinds = ["bottle", "ball", "can"]
 			"park", "trail": kinds = ["bottle", "ball", "can"]
 			"besos": kinds = ["bottle", "ball", "can"]
 			"aigues": kinds = ["bottle", "can", "bottle"]   # what runners drop: no bin bags up here

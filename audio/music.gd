@@ -217,6 +217,10 @@ const STYLES := {
 	# bass, brushes like skis on snow, a big mountain reverb
 	"molina": {"bpm": 116, "key": 7, "lead": "glock", "lead2": ["whistle", 12], "comp": "arp",
 		"bass": "walk", "drums": "brush", "swing": 0.04, "verb": 0.38},
+	# Sitges: breezy coastal promenade bossa-rumba, guitar and bright whistle
+	# over walking bass and rim drums
+	"sitges": {"bpm": 120, "key": 7, "lead": "guitar", "lead2": ["whistle", 12], "comp": "bossa",
+		"bass": "walk", "drums": "rim", "swing": 0.06, "verb": 0.28},
 	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},
@@ -552,6 +556,13 @@ const DARES := {
 			[4, 1, 79], [5, 0.5, 83], [5.5, 0.5, 86], [6, 2, 83],
 			[8, 1, 76], [9, 0.5, 79], [9.5, 0.5, 83], [10, 1, 84], [11, 1, 81],
 			[12, 0.5, 79], [12.5, 0.5, 78], [13, 0.5, 76], [13.5, 0.5, 74], [14, 2, 73]]},
+	# the kitesurfer: breezy coastal surf riff on guitar and bright whistle
+	"kitesurfer": {"bpm": 148, "lead": "guitar", "lead2": ["whistle", 12], "comp": "push", "bass": "eighths",
+		"drums": "groove", "verb": 0.20, "chords": [[67, "maj"], [62, "maj"], [64, "min"], [60, "maj"]],
+		"mel": [[0, 0.5, 79], [0.5, 0.5, 83], [1, 0.5, 86], [1.5, 0.5, 83], [2, 1, 79], [3, 1, 74],
+			[4, 0.5, 78], [4.5, 0.5, 81], [5, 0.5, 86], [5.5, 0.5, 81], [6, 1, 78], [7, 1, 74],
+			[8, 0.5, 76], [8.5, 0.5, 79], [9, 0.5, 83], [9.5, 0.5, 79], [10, 1, 83], [11, 1, 79],
+			[12, 0.5, 84], [12.5, 0.5, 83], [13, 0.5, 81], [13.5, 0.5, 79], [14, 2, 79]]},
 }
 
 # --- the score: what plays when ---------------------------------------------

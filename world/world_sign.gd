@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "sitges": "seaglass", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "raval": "pegs", "tutorial": "balls",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -85,6 +85,7 @@ const FEEL := {
 	"biscuits": {"spacing": 0.15, "r": 0.075, "drag": 4.0, "take": 1.1, "spin": 4.0, "align": true},
 	"pinecones": {"spacing": 0.15, "r": 0.08, "drag": 2.2, "take": 1.0, "roll": true, "align": true},
 	"shells": {"spacing": 0.14, "r": 0.075, "drag": 3.5, "take": 1.0, "spin": 3.0},
+	"seaglass": {"spacing": 0.14, "r": 0.075, "drag": 3.2, "take": 1.0, "spin": 3.5},
 	"rubble": {"spacing": 0.16, "r": 0.08, "drag": 3.0, "take": 1.0, "spin": 3.0},
 	"balls": {"spacing": 0.15, "r": 0.075, "drag": 0.9, "take": 1.2, "roll": true},
 	"pingpong": {"spacing": 0.14, "r": 0.07, "drag": 0.8, "take": 1.3, "roll": true},
@@ -572,6 +573,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_wheels(c, sign, h, light)
 		"azulejos":
 			_azulejos(c, sign, h, light)
+		"seaglass":
+			_seaglass(c, sign, h, light)
 		"bulbs":
 			_bulbs(c, lines, h, t)
 		"studs":
@@ -1563,3 +1566,17 @@ static func _snowflakes(c: Object, sign: Dictionary, _h: float) -> void:
 			c.draw_circle(tip, r * 0.10, Color(1.0, 1.0, 1.0))
 		c.draw_circle(p, r * 0.18, Color(0.96, 0.98, 1.0))
 
+
+static func _seaglass(c: Object, sign: Dictionary, _h: float, light: Vector2) -> void:
+	# Tumbled coastal sea glass washed up along Sitges: frosted turquoise, cobalt, seafoam & white shards
+	var cols := [Color(0.32, 0.78, 0.76), Color(0.18, 0.46, 0.80), Color(0.58, 0.86, 0.74), Color(0.92, 0.95, 0.96)]
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_circle((pc.p as Vector2) + light * r * 0.45, r * 1.02, Color(0, 0, 0, 0.24))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col: Color = _pick(cols, float(pc["var"]))
+		c.draw_colored_polygon(_box(p, float(pc.rot), r * 1.05, r * 0.72), col.darkened(0.24))
+		c.draw_colored_polygon(_box(p, float(pc.rot), r * 0.90, r * 0.58), col)
+		c.draw_circle(p - light * r * 0.25, r * 0.24, Color(1.0, 1.0, 1.0, 0.55))
