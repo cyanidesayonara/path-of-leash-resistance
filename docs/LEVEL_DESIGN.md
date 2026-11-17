@@ -566,6 +566,31 @@ park could be just a neighborhood park in bcn."
 - After Platja de Llevant in the campaign (the planner's order), 16 stars,
   past El Besòs. Sign material: plane-tree seed balls.
 
+### Carrer de Blai (blai) - the pintxos street
+- Is: Poble-sec's pedestrian pintxos street at the foot of Montjuïc, at
+  night: sixteen bars down both walls, terraces along them, groups standing
+  out with a drink, strings of bulbs overhead. Built in `systems/blai.gd`.
+- Shape: narrow (facade to facade 420), two cross streets closed by
+  pilones, and half way up a placeta opening on the left (`edge_nodes`),
+  with two plane trees and the biggest terrace (an island your human keeps
+  to the far side of).
+- Signature line: thread the terraces and the standing groups without
+  touching the floor food, wrap the pilones at the cross streets, get under
+  a waiter's tray.
+- Temptation: dropped pintxos all the way up. Heading for one gets "Leave
+  it!"; leaving it pays once per pintxo and gives patience back, eating it
+  while told costs a third of their patience. A pintxo from a hand (sit
+  pretty by a diner) or caught in the air is fine.
+- Live event: the waiter's tray. Bump or bark at a waiter with a full tray:
+  it rocks for 0.8 s ("Whoa, whoa!"), then six pintxos fly. The placeta's
+  goes on its own once.
+- Skies: terraces full at night, fewer by day, empty in the rain (people
+  in the doorways instead); shutters and deliveries by day
+  (`systems/outdoors.gd`).
+- Off-leash: Plaça del Sortidor, a plaça with its fountain and pigeons.
+- After La Diagonal in the campaign, 39 stars, Els Senglars' tier. Sign
+  material: pintxos.
+
 ### First Walk (tutorial) - learn each trick in peace
 Santtu: "we should really upgrade the tutorial too, so that the user can
 learn each trick & mechanic individually and in peace, without all the

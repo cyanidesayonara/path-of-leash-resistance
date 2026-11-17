@@ -135,6 +135,10 @@ const SHOP_LEN := 118.0
 const SETT := Color(0.62, 0.60, 0.57)
 const SETT_LIT := Color(0.66, 0.64, 0.61)
 const SETT_JOINT := Color(0.48, 0.46, 0.44, 0.55)
+const SETT_DARK := Color(0.30, 0.29, 0.30, 0.16)
+const SETT_PALE := Color(0.92, 0.90, 0.86, 0.14)
+const CRACK := Color(0.40, 0.36, 0.32, 0.55)
+const FLAG_EDGE := Color(1.0, 0.97, 0.90, 0.16)
 const CHANNEL := Color(0.50, 0.48, 0.46)
 const FLAG := Color(0.76, 0.71, 0.63)
 const FLAG_ALT := Color(0.73, 0.68, 0.60)
@@ -159,6 +163,7 @@ const TERRAT := Color(0.78, 0.62, 0.50)
 const PARAPET := Color(0.90, 0.86, 0.78)
 const SHADOW := Color(0.04, 0.05, 0.07, 0.22)
 const IRON := Color(0.14, 0.14, 0.15)
+const IRON_SOFT := Color(0.20, 0.20, 0.22, 0.85)
 const GERANIUM := Color(0.90, 0.20, 0.26)
 const GERANIUM_PINK := Color(0.96, 0.46, 0.62)
 const LEAF := Color(0.22, 0.46, 0.22)
@@ -189,8 +194,38 @@ const GOODS_FORN: Array[Color] = [BREAD, BREAD_LIT, Color(0.78, 0.52, 0.26)]
 const GOODS_FARMACIA: Array[Color] = [Color(0.94, 0.94, 0.96), PHARMACY]
 const GOODS_LLIBRERIA: Array[Color] = [Color(0.72, 0.20, 0.20), Color(0.20, 0.36, 0.62), Color(0.90, 0.80, 0.40), Color(0.24, 0.50, 0.32)]
 const GOODS_CAFE: Array[Color] = [Color(0.40, 0.26, 0.18), Color(0.94, 0.92, 0.88)]
+const LAUNDRY: Array[Color] = [Color(0.94, 0.93, 0.90), Color(0.56, 0.72, 0.84), Color(0.92, 0.62, 0.56), Color(0.90, 0.82, 0.52)]
+const DOORS: Array[Color] = [Color(0.34, 0.22, 0.14), Color(0.20, 0.34, 0.28), Color(0.42, 0.26, 0.16), Color(0.24, 0.26, 0.36)]
+const BLOOMS: Array[Color] = [GERANIUM, GERANIUM_PINK, GERANIUM, Color(0.96, 0.94, 0.90)]
+const FLAG_WARM := Color(0.79, 0.74, 0.65)
+const FLAG_COOL := Color(0.71, 0.67, 0.61)
+const COOL := Color(0.50, 0.55, 0.76)
+const WARM := Color(1.0, 0.84, 0.58)
+const PATI := Color(0.44, 0.41, 0.36)
+const GRATE := Color(0.25, 0.25, 0.26)
+const GRATE_LIT := Color(0.40, 0.40, 0.41)
+const TREE_GRATE := Color(0.50, 0.47, 0.44)
+const FLOUR := Color(0.98, 0.96, 0.90)
+# street ironwork, where the paving is broken by the city's services: the
+# round sewer covers and the gutter grates down the channel
+const MANHOLES: Array[Vector2] = [
+	Vector2(716.0, -150.0), Vector2(566.0, -880.0), Vector2(712.0, -2010.0), Vector2(600.0, -2700.0),
+	Vector2(560.0, -3580.0), Vector2(704.0, -4400.0), Vector2(730.0, -4800.0),
+]
+const DRAINS: Array[float] = [-60.0, -640.0, -1120.0, -1880.0, -3420.0, -3900.0, -4420.0]
+# where the paving is marked by use: x, y, radius, and what marked it
+# (0 damp or grime, 1 flour at a bakery door)
+const STAINS: Array = [
+	[470.0, -520.0, 44.0, 0], [826.0, -1860.0, 40.0, 0], [796.0, -3640.0, 40.0, 0], [470.0, -4480.0, 40.0, 0],
+	[262.0, -3060.0, 46.0, 0], [900.0, -2530.0, 60.0, 0], [900.0, -2850.0, 60.0, 0], [340.0, -2960.0, 56.0, 0],
+	[860.0, -1530.0, 62.0, 0], [846.0, -1340.0, 54.0, 0], [640.0, -2390.0, 90.0, 0], [640.0, -3080.0, 90.0, 0],
+	[506.0, -724.0, 58.0, 1], [752.0, -3962.0, 58.0, 1],
+]
 # the tower's ground shadow, filled in place each frame
 static var _shadow_buf := PackedVector2Array()
+# a wall's soft shadow on the paving: three rows of two points, reused
+static var _band_buf := PackedVector2Array()
+static var _band_alpha := PackedFloat32Array([1.0, 0.5, 0.0])
 
 
 # --- the walk's own state, on main as m.sarria --------------------------------------
@@ -685,6 +720,11 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 		return
 	var b := ShapeBatch.new()
 	var step := 40.0
+	var sun := _sun()
+	var reach := 34.0 + 30.0 * sun
+	var shade_col := Color(0.05, 0.06, 0.12, 0.10 + 0.16 * sun)
+	var foot_col := Color(0.05, 0.06, 0.12, 0.16)
+	_band_buf.resize(6)
 	var y := floorf(lo / step) * step
 	while y < hi:
 		var y2 := y + step
@@ -697,13 +737,25 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 			b.quad(Vector2(ea.x, y), Vector2(ea.y, y), Vector2(eb.y, y2), Vector2(eb.x, y2), FLAG)
 			if row % 2 == 0:
 				b.line(Vector2(minf(ea.x, eb.x), y), Vector2(maxf(ea.y, eb.y), y), FLAG_JOINT, 1.5)
+				b.line(Vector2(minf(ea.x, eb.x), y + 1.5), Vector2(maxf(ea.y, eb.y), y + 1.5), FLAG_EDGE, 1.0)
 			var fx := floorf(WALL_L / 80.0) * 80.0
 			while fx < WALL_R:
 				var ex0 := maxf(ea.x, eb.x)
 				var ex1 := minf(ea.y, eb.y)
 				if fx > ex0 and fx < ex1:
-					if (int(fx / 80.0) + row / 2) % 3 == 0:
-						b.rect(Rect2(fx + 1.0, y, minf(79.0, ex1 - fx - 1.0), step), FLAG_ALT)
+					# a tone to each flag, as quarried; here and there one that
+					# has cracked across, and one relaid paler
+					var hv := _lot_hash(int(fx / 80.0), float((row + 1) / 2), 9) % 9
+					var fw := minf(79.0, ex1 - fx - 1.0)
+					if hv < 3:
+						b.rect(Rect2(fx + 1.0, y, fw, step), FLAG_ALT if hv == 0 else (FLAG_WARM if hv == 1 else FLAG_COOL))
+					elif hv == 3 and fw > 70.0:
+						if row % 2 == 0:
+							b.line(Vector2(fx + 14.0, y + 12.0), Vector2(fx + 40.0, y + step), CRACK, 1.0)
+						else:
+							b.line(Vector2(fx + 40.0, y), Vector2(fx + 52.0, y + 26.0), CRACK, 1.0)
+					elif hv == 4 and fw > 70.0 and row % 2 == 0:
+						b.quad(Vector2(fx + 1.0, y + 1.0), Vector2(fx + 10.0, y + 1.0), Vector2(fx + 1.0, y + 9.0), Vector2(fx + 1.0, y + 9.0), FLAG_JOINT)
 					b.line(Vector2(fx, y), Vector2(fx, y2), FLAG_JOINT, 1.2)
 				fx += 80.0
 		else:
@@ -714,14 +766,25 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 			b.line(Vector2(ea.x, y), Vector2(ea.y, y), SETT_JOINT, 1.4)
 			b.line(Vector2(ea.x, y + 20.0), Vector2(ea.y, y + 20.0), SETT_JOINT, 1.0)
 			var off := 0.0 if row % 2 == 0 else 22.0
-			var sx := ea.x + 52.0 + off
+			var sx0 := ea.x + 52.0 + off
+			var sx := sx0
 			while sx < ea.y - 52.0:
 				b.line(Vector2(sx, y), Vector2(sx, y + 20.0), SETT_JOINT, 1.0)
 				b.line(Vector2(sx + 22.0, y + 20.0), Vector2(sx + 22.0, y2), SETT_JOINT, 1.0)
 				sx += 44.0
+			# setts of another tone, as granite comes: a few to a course
+			for j in range(3):
+				var hs := _lot_hash(row, float(j), 21)
+				var gx := sx0 + float(hs % maxi(1, int((ea.y - ea.x - 150.0) / 44.0))) * 44.0
+				if gx < ea.y - 100.0:
+					var low := hs % 2 == 0
+					b.rect(Rect2(gx + (22.0 if low else 0.0) + 1.0, y + (20.0 if low else 0.0) + 1.0, 42.0, 18.0), SETT_DARK if hs % 3 == 0 else SETT_PALE)
+			# the drainage channel: dished stone, a lit lip on the sunny side
 			var ca := (ea.x + ea.y) * 0.5
 			var cb := (eb.x + eb.y) * 0.5
 			b.line(Vector2(ca, y), Vector2(cb, y2), CHANNEL, 12.0)
+			b.line(Vector2(ca + 5.0, y), Vector2(cb + 5.0, y2), CHANNEL.lightened(0.16), 1.4)
+			b.line(Vector2(ca - 5.0, y), Vector2(cb - 5.0, y2), CHANNEL.darkened(0.16), 1.4)
 			b.line(Vector2(ca, y), Vector2(cb, y2), CHANNEL.darkened(0.25), 3.0)
 			for side: float in SIDES:
 				var a0 := ea.x if side < 0.0 else ea.y - 80.0
@@ -734,9 +797,34 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 			for side: float in SIDES:
 				var xa := ea.x if side < 0.0 else ea.y - 80.0
 				Panot.flor_row(b, xa, xa + 80.0, y, xa)
+		# the houses' shade on the paving: long from the west fronts, which
+		# stand between the street and the low sun, and a line of it where
+		# the east fronts meet the ground
+		if ym > float(m.GATE_Y):
+			_band_buf[0] = Vector2(ea.x, y)
+			_band_buf[1] = Vector2(eb.x, y2)
+			_band_buf[2] = Vector2(ea.x + reach * 0.45, y)
+			_band_buf[3] = Vector2(eb.x + reach * 0.45, y2)
+			_band_buf[4] = Vector2(ea.x + reach, y)
+			_band_buf[5] = Vector2(eb.x + reach, y2)
+			b.band(_band_buf, 2, shade_col, _band_alpha)
+			_band_buf[0] = Vector2(ea.y, y)
+			_band_buf[1] = Vector2(eb.y, y2)
+			_band_buf[2] = Vector2(ea.y - 5.0, y)
+			_band_buf[3] = Vector2(eb.y - 5.0, y2)
+			_band_buf[4] = Vector2(ea.y - 12.0, y)
+			_band_buf[5] = Vector2(eb.y - 12.0, y2)
+			b.band(_band_buf, 2, foot_col, _band_alpha)
 		y = y2
 	_ground_extras(m, b, lo, hi)
 	b.flush(wc)
+
+
+# How hard the sun throws a shadow: all of it on a clear day, a little of it
+# under cloud, and next to none after dark (Shade.throw)
+static func _sun() -> float:
+	var w := _weather()
+	return Shade.throw * (0.4 if w == "rain" or w == "snow" else 1.0)
 
 
 static func _square(y: float) -> bool:
@@ -744,12 +832,71 @@ static func _square(y: float) -> bool:
 
 
 static func _ground_extras(_m: Node2D, b: ShapeBatch, lo: float, hi: float) -> void:
-	# the church steps down into the plaça, and the tower's long shadow
-	if DOOR_Y + 120.0 > lo and DOOR_Y - 120.0 < hi:
+	var sun := _sun()
+	# where the paving is marked by use: the damp under the bins and benches,
+	# the mouths of the plaça, and flour trodden out of the bakery doors
+	for s: Array in STAINS:
+		var sy: float = s[1]
+		var sr: float = s[2]
+		if sy + sr < lo or sy - sr > hi:
+			continue
+		if int(s[3]) == 1:
+			if crates_out():
+				b.glow(Vector2(float(s[0]), sy), sr, Color(FLOUR.r, FLOUR.g, FLOUR.b, 0.20), 0.1)
+				for j in range(7):
+					var fp := Vector2(float(s[0]) + (_h(j * 3 + int(sy)) - 0.5) * sr * 1.5, sy + (_h(j * 5 + 2 + int(sy)) - 0.5) * sr * 1.3)
+					b.circle(fp, 1.4 + _h(j) * 1.2, Color(FLOUR.r, FLOUR.g, FLOUR.b, 0.5))
+		else:
+			b.glow(Vector2(float(s[0]), sy), sr, Color(0.10, 0.09, 0.10, 0.10), 0.15)
+	# the iron in the paving: sewer covers, and grates down the channel
+	for p: Vector2 in MANHOLES:
+		if p.y + 20.0 > lo and p.y - 20.0 < hi:
+			b.circle(p, 15.0, GRATE)
+			b.circle(p, 13.0, GRATE_LIT)
+			b.circle(p, 11.5, GRATE)
+			b.circle(p, 6.0, GRATE_LIT)
+			b.circle(p, 4.6, GRATE)
+			b.line(p + Vector2(-10.0, 0.0), p + Vector2(10.0, 0.0), GRATE_LIT, 1.2)
+			b.line(p + Vector2(0.0, -10.0), p + Vector2(0.0, 10.0), GRATE_LIT, 1.2)
+	for dy: float in DRAINS:
+		if dy + 20.0 > lo and dy - 20.0 < hi:
+			var e := edges_at(dy)
+			var dx := (e.x + e.y) * 0.5
+			b.rect(Rect2(dx - 9.0, dy - 15.0, 18.0, 30.0), GRATE_LIT)
+			b.rect(Rect2(dx - 7.5, dy - 13.5, 15.0, 27.0), GRATE)
+			for j in range(5):
+				b.line(Vector2(dx - 6.0, dy - 10.0 + float(j) * 5.0), Vector2(dx + 6.0, dy - 10.0 + float(j) * 5.0), Color(0.06, 0.06, 0.07), 2.0)
+	# the plane trees' iron grates, and what the pigeons leave under them
+	for i in range(TREES.size()):
+		var t := TREES[i]
+		if t.y + 40.0 < lo or t.y - 40.0 > hi:
+			continue
+		b.rect(Rect2(t.x - 29.0, t.y - 29.0, 58.0, 58.0), STONE_DARK)
+		b.rect(Rect2(t.x - 26.0, t.y - 26.0, 52.0, 52.0), TREE_GRATE)
+		for j in range(9):
+			var o := -22.0 + float(j) * 5.5
+			b.line(Vector2(t.x + o, t.y - 24.0), Vector2(t.x + o, t.y + 24.0), TREE_GRATE.darkened(0.30), 1.6)
+		b.line(Vector2(t.x - 26.0, t.y), Vector2(t.x + 26.0, t.y), TREE_GRATE.lightened(0.12), 3.0)
+		b.circle(t, 13.0, Color(0.34, 0.27, 0.20))
+		for j in range(5):
+			var a := _h(i * 11 + j) * TAU
+			var dp := t + Vector2.from_angle(a) * (40.0 + _h(i * 7 + j * 3) * 26.0)
+			b.circle(dp, 1.6 + _h(i + j) * 1.4, Color(0.96, 0.96, 0.94, 0.55))
+	# the church steps down into the plaça, the church's own shade at its
+	# foot, and the tower's long shadow
+	if DOOR_Y + 160.0 > lo and DOOR_Y - 160.0 < hi:
+		var sh := Shade.light * 44.0
+		b.quad(Vector2(WALL_L, NAVE.position.y - 6.0), Vector2(WALL_L, NAVE.end.y + 6.0),
+			Vector2(WALL_L + sh.x, NAVE.end.y + 6.0 + sh.y), Vector2(WALL_L + sh.x, NAVE.position.y - 6.0 + sh.y), Color(0.05, 0.06, 0.12, 0.16 * sun))
 		for k in range(3):
-			var w := 30.0 - float(k) * 9.0
-			b.rect(Rect2(WALL_L, DOOR_Y - 70.0 + float(k) * 4.0, w, 140.0 - float(k) * 8.0), STEP.darkened(0.04 * float(k)))
-			b.line(Vector2(WALL_L + w, DOOR_Y - 70.0 + float(k) * 4.0), Vector2(WALL_L + w, DOOR_Y + 70.0 - float(k) * 4.0), STEP.darkened(0.22), 1.5)
+			var w := 36.0 - float(k) * 11.0
+			var y0 := DOOR_Y - 78.0 + float(k) * 6.0
+			var y1 := DOOR_Y + 78.0 - float(k) * 6.0
+			b.rect(Rect2(WALL_L + Shade.light.x * 4.0, y0 + Shade.light.y * 4.0, w, y1 - y0), Color(0.05, 0.06, 0.12, 0.16))
+			b.rect(Rect2(WALL_L, y0, w, y1 - y0), STEP.lightened(0.05 * float(k)))
+			b.line(Vector2(WALL_L + w, y0), Vector2(WALL_L + w, y1), STEP.darkened(0.26), 1.6)
+			b.line(Vector2(WALL_L, y0), Vector2(WALL_L + w, y0), STEP.lightened(0.20), 1.2)
+			b.line(Vector2(WALL_L, y1), Vector2(WALL_L + w, y1), STEP.darkened(0.22), 1.4)
 	if TOWER.end.y + 260.0 > lo and TOWER.position.y - 40.0 < hi:
 		var d := Shade.light * 210.0
 		var a := Vector2(TOWER.end.x, TOWER.position.y)
@@ -762,17 +909,20 @@ static func _ground_extras(_m: Node2D, b: ShapeBatch, lo: float, hi: float) -> v
 		_shadow_buf[3] = e + d
 		_shadow_buf[4] = e
 		_shadow_buf[5] = c
-		b.polygon(_shadow_buf, Color(0.04, 0.05, 0.07, 0.14))
+		b.polygon(_shadow_buf, Color(0.05, 0.06, 0.12, 0.10 + 0.10 * sun))
 		_tower(b)
 	if SAINT.end.y + 80.0 > lo and SAINT.position.y - 40.0 < hi:
 		_saint(b)
-	# the wet ring round the fountain, and the gutter under the gardener's pots
-	if FOUNTAIN.y + 60.0 > lo and FOUNTAIN.y - 60.0 < hi:
-		b.circle(FOUNTAIN + Vector2(10.0, 12.0), 30.0, WET)
+	# the wet round the fountain, running off toward the channel, and the
+	# gutter under the gardener's pots
+	if FOUNTAIN.y + 80.0 > lo and FOUNTAIN.y - 80.0 < hi:
+		b.glow(FOUNTAIN + Vector2(8.0, 10.0), 52.0, Color(WET.r, WET.g, WET.b, 0.30), 0.35)
+		b.glow(FOUNTAIN + Vector2(-34.0, 30.0), 30.0, Color(WET.r, WET.g, WET.b, 0.22), 0.2)
+		b.glow(FOUNTAIN + Vector2(-64.0, 44.0), 20.0, Color(WET.r, WET.g, WET.b, 0.16), 0.2)
 	if BALCONY_Y + 60.0 > lo and BALCONY_Y - 60.0 < hi:
-		var gx := edges_at(BALCONY_Y).x + 22.0
-		b.circle(Vector2(gx, BALCONY_Y), 18.0, WET)
-		b.circle(Vector2(gx + 10.0, BALCONY_Y + 12.0), 12.0, WET)
+		var gx := edges_at(BALCONY_Y).x + 24.0
+		b.glow(Vector2(gx, BALCONY_Y), 30.0, Color(WET.r, WET.g, WET.b, 0.30), 0.3)
+		b.glow(Vector2(gx + 14.0, BALCONY_Y + 22.0), 20.0, Color(WET.r, WET.g, WET.b, 0.24), 0.2)
 
 
 # --- the houses, the church and the market (the edge layer: static) ------------------
@@ -788,7 +938,7 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	if hi > lo:
 		for side: float in SIDES:
 			_lots(b, side, lo, hi)
-		if NAVE.end.y + 40.0 > lo and NAVE.position.y - 40.0 < hi:
+		if NAVE.end.y + 160.0 > lo and NAVE.position.y - 240.0 < hi:
 			_church(b)
 		if MARKET.end.y + 40.0 > lo and MARKET.position.y - 40.0 < hi:
 			_market(b)
@@ -805,6 +955,14 @@ static func _taken(side: float, y0: float, y1: float) -> bool:
 	return false
 
 
+# the stretch of a side the church (with its rectory and sacristy) or the
+# market draws for itself; the houses either end are built up to it
+static func _own(side: float) -> Vector2:
+	if side < 0.0:
+		return Vector2(NAVE.position.y - 200.0, TOWER.end.y + 12.0)
+	return Vector2(MARKET.position.y, MARKET.end.y)
+
+
 static func _lot_hash(k: int, side: float, salt: int) -> int:
 	var h := (k * 73856093) ^ (int(side + 2.0) * 19349663) ^ (salt * 83492791)
 	return absi(h) % 1000
@@ -816,7 +974,7 @@ static func _front_x(y: float, side: float) -> float:
 
 
 static func _lots(b: ShapeBatch, side: float, lo: float, hi: float) -> void:
-	var far := FAR_L if side < 0.0 else FAR_R
+	var own := _own(side)
 	var k0 := int(floorf(lo / LOT_H)) - 1
 	var k1 := int(floorf(hi / LOT_H)) + 1
 	for k in range(k0, k1 + 1):
@@ -824,188 +982,578 @@ static func _lots(b: ShapeBatch, side: float, lo: float, hi: float) -> void:
 		var y1 := float(k + 1) * LOT_H + float(_lot_hash(k + 1, side, 1) % 30) - 15.0
 		if y1 < float(-5040.0) or y0 > 900.0:
 			continue
-		if _taken(side, y0, y1):
-			continue
-		var h := _lot_hash(k, side, 3)
-		var e0 := _front_x(y0, side)
-		var e1 := _front_x(y1, side)
-		# the house front, seen a little from the street: render, a stone
-		# socle at the pavement, shuttered windows and a balcony door
-		var f0 := e0 + side * FACE
-		var f1 := e1 + side * FACE
-		var render: Color = RENDERS[h % RENDERS.size()]
-		b.quad(Vector2(e0, y0), Vector2(f0, y0), Vector2(f1, y1), Vector2(e1, y1), render)
-		b.line(Vector2(e0, y0), Vector2(e1, y1), SOCLE, 4.0)
-		var ym := (y0 + y1) * 0.5
-		var mx := (e0 + e1) * 0.5 + side * FACE * 0.55
-		var shut := h % 3 == 0
-		for wo: float in WINDOW_ROWS:
-			var wy := ym + wo
-			if absf(wy - ym) > (y1 - y0) * 0.5 - 10.0:
-				continue
-			# a window or balcony door with its pair of green shutters,
-			# folded back against the wall or closed over it
-			b.rect(Rect2(mx - 4.0, wy - 9.0, 8.0, 18.0), WINDOW_DARK if not shut else SHUTTER_GREEN)
-			if not shut:
-				b.rect(Rect2(mx - 4.0, wy - 17.0, 8.0, 7.0), SHUTTER_GREEN_LIT)
-				b.rect(Rect2(mx - 4.0, wy + 10.0, 8.0, 7.0), SHUTTER_GREEN)
+		# a house boundary that falls just short of the church or the market
+		# moves up to it, so no gap is left between them
+		if y0 >= own.y and y0 < own.y + 24.0:
+			y0 = own.y
+		if y1 <= own.x and y1 > own.x - 24.0:
+			y1 = own.x
+		if y1 > own.x and y0 < own.y:
+			# a house the church or the market cuts into is built up to it
+			if y0 <= own.x - 24.0:
+				y1 = own.x
+			elif y1 >= own.y + 24.0:
+				y0 = own.y
 			else:
-				b.line(Vector2(mx - 4.0, wy), Vector2(mx + 4.0, wy), SHUTTER_GREEN.darkened(0.3), 1.0)
-		# the roof: front slope, ridge, back slope; a flat terrat on some
-		var d := FRONT_D + float(_lot_hash(k, side, 2) % 60)
-		var back0 := f0 + side * d
-		var back1 := f1 + side * d
-		var tile: Color = ROOF_TILES[h % ROOF_TILES.size()]
-		b.quad(Vector2(back0, y0), Vector2(far, y0), Vector2(far, y1), Vector2(back1, y1), tile.darkened(0.16))
-		if h % 5 == 2:
-			b.quad(Vector2(f0, y0), Vector2(back0, y0), Vector2(back1, y1), Vector2(f1, y1), TERRAT)
-			b.line(Vector2(f0 + side * 3.0, y0), Vector2(f1 + side * 3.0, y1), PARAPET, 4.0)
-			b.line(Vector2(f0, y0 + 2.0), Vector2(back0, y0 + 2.0), PARAPET, 3.0)
-			b.line(Vector2(f1, y1 - 2.0), Vector2(back1, y1 - 2.0), PARAPET, 3.0)
-			# pots of geraniums along the parapet, a washing line behind
-			for pi in range(3):
-				var pp := Vector2(f0, y0).lerp(Vector2(f1, y1), 0.22 + 0.28 * float(pi)) + Vector2(side * 10.0, 0.0)
-				b.circle(pp, 4.0, POT)
-				b.circle(pp + Vector2(0.0, -1.0), 3.2, GERANIUM if (pi + h) % 2 == 0 else LEAF)
-			if h % 2 == 0:
-				var wa := Vector2(f0 + side * 34.0, ym)
-				var wb := Vector2(back0 - side * 14.0, ym)
-				b.line(wa, wb, Color(0.30, 0.30, 0.32), 1.0)
-				for wi in range(3):
-					var wp := wa.lerp(wb, 0.2 + 0.3 * float(wi))
-					b.rect(Rect2(wp.x - 5.0, ym, 10.0, 9.0), [Color(0.94, 0.93, 0.90), Color(0.56, 0.72, 0.84), Color(0.92, 0.62, 0.56)][(wi + h) % 3])
+				continue
+		_lot(b, side, k, y0, y1)
+
+
+# how many storeys a house stands over its neighbours' eaves
+static func _storeys(k: int, side: float) -> int:
+	return _lot_hash(k, side, 11) % 3
+
+
+# One village house: its front seen a little from the street, the roof over
+# it, the pati behind and the back of the next street's row beyond that.
+# The sun is low on the west: what faces it is warm, what faces away is cool.
+static func _lot(b: ShapeBatch, side: float, k: int, y0: float, y1: float) -> void:
+	var far := FAR_L if side < 0.0 else FAR_R
+	var h := _lot_hash(k, side, 3)
+	var e0 := _front_x(y0, side)
+	var e1 := _front_x(y1, side)
+	var f0 := e0 + side * FACE
+	var f1 := e1 + side * FACE
+	var len := y1 - y0
+	var skew := (e1 - e0) / maxf(1.0, len)
+	var render: Color = RENDERS[h % RENDERS.size()]
+	render = render.lightened(0.05).lerp(WARM, 0.08) if side > 0.0 else render.darkened(0.12).lerp(COOL, 0.10)
+	b.quad(Vector2(e0, y0), Vector2(f0, y0), Vector2(f1, y1), Vector2(e1, y1), render)
+	# rising damp over the socle, and the eave's shade under the cornice
+	b.line(Vector2(e0 + side * 5.0, y0), Vector2(e1 + side * 5.0, y1), Color(0.0, 0.0, 0.0, 0.07), 5.0)
+	b.line(Vector2(f0 - side * 3.0, y0), Vector2(f1 - side * 3.0, y1), Color(0.05, 0.06, 0.12, 0.22), 5.0)
+	b.line(Vector2(e0, y0), Vector2(e1, y1), SOCLE, 4.0)
+	var ym := (y0 + y1) * 0.5
+	var mx := (e0 + e1) * 0.5 + side * FACE * 0.55
+	var shut := h % 3 == 0
+	var frame := render.lightened(0.22)
+	for wo: float in WINDOW_ROWS:
+		var wy := ym + wo
+		if absf(wy - ym) > len * 0.5 - 10.0:
+			continue
+		var wx := mx + skew * wo
+		# a window or balcony door in its stone surround, with its pair of
+		# green shutters folded back against the wall or closed over it
+		b.rect(Rect2(wx - 5.5, wy - 10.5, 11.0, 21.0), frame)
+		b.rect(Rect2(wx - 4.0, wy - 9.0, 8.0, 18.0), WINDOW_DARK if not shut else SHUTTER_GREEN)
+		if not shut:
+			b.rect(Rect2(wx - 4.0, wy - 17.0, 8.0, 7.0), SHUTTER_GREEN_LIT)
+			b.rect(Rect2(wx - 4.0, wy + 10.0, 8.0, 7.0), SHUTTER_GREEN)
+			b.line(Vector2(wx - 4.0, wy), Vector2(wx + 4.0, wy), Color(0.86, 0.84, 0.78, 0.5), 1.0)
 		else:
-			var r0 := f0 + side * d * 0.5
-			var r1 := f1 + side * d * 0.5
-			var lit := tile.lightened(0.10) if side > 0.0 else tile.darkened(0.04)
-			var shade := tile.darkened(0.14) if side > 0.0 else tile.lightened(0.04)
-			b.quad(Vector2(f0, y0), Vector2(r0, y0), Vector2(r1, y1), Vector2(f1, y1), lit)
-			b.quad(Vector2(r0, y0), Vector2(back0, y0), Vector2(back1, y1), Vector2(r1, y1), shade)
-			var dd := 10.0
-			while dd < d - 4.0:
-				if absf(dd - d * 0.5) > 4.0:
-					b.line(Vector2(f0 + side * dd, y0 + 2.0), Vector2(f1 + side * dd, y1 - 2.0), (lit if dd < d * 0.5 else shade).darkened(0.10), 1.2)
-				dd += 11.0
-			b.line(Vector2(r0, y0), Vector2(r1, y1), tile.lightened(0.22), 3.0)
-			b.line(Vector2(f0, y0), Vector2(f1, y1), tile.darkened(0.30), 2.5)
-			if h % 3 == 0:
-				var cp := Vector2((r0 + back0) * 0.5, ym - 10.0)
-				b.rect(Rect2(cp + Shade.light * 7.0 - Vector2(7, 7), Vector2(14, 14)), SHADOW)
-				b.rect(Rect2(cp - Vector2(7, 7), Vector2(14, 14)), Color(0.86, 0.80, 0.70))
-				b.rect(Rect2(cp - Vector2(4, 4), Vector2(8, 8)), Color(0.26, 0.22, 0.20))
-		# the party wall down to the next house
-		b.line(Vector2(e0, y0), Vector2(far, y0), Color(0.18, 0.13, 0.10, 0.5), 2.0)
+			for si in range(3):
+				b.line(Vector2(wx - 4.0, wy - 5.0 + float(si) * 5.0), Vector2(wx + 4.0, wy - 5.0 + float(si) * 5.0), SHUTTER_GREEN.darkened(0.3), 1.0)
+	# the street door between them, on its stone step
+	if h % 2 == 1 and len > 72.0:
+		var ex := (e0 + e1) * 0.5
+		var dx := ex if side > 0.0 else ex - 12.0
+		b.rect(Rect2(dx - 1.5, ym - 8.0, 15.0, 16.0), frame)
+		b.rect(Rect2(dx, ym - 6.0, 12.0, 12.0), DOORS[h % DOORS.size()])
+		b.line(Vector2(dx, ym), Vector2(dx + 12.0, ym), Color(0.0, 0.0, 0.0, 0.3), 1.0)
+		b.rect(Rect2(ex - 5.0 if side > 0.0 else ex, ym - 9.0, 5.0, 18.0), STEP)
+		b.line(Vector2(ex - side * 5.0, ym - 9.0), Vector2(ex - side * 5.0, ym + 9.0), STEP.darkened(0.25), 1.0)
+	# a downpipe from the gutter to the pavement
+	if h % 4 == 0:
+		b.line(Vector2(e0 + skew * 4.0, y0 + 4.0), Vector2(f0 + skew * 4.0, y0 + 4.0), Color(0.36, 0.38, 0.40), 1.6)
+
+	# the roof: front slope, ridge, back slope; a flat terrat on some
+	var d := FRONT_D + float(_lot_hash(k, side, 2) % 60)
+	var back0 := f0 + side * d
+	var back1 := f1 + side * d
+	var tile: Color = ROOF_TILES[h % ROOF_TILES.size()]
+	var toward := tile.lightened(0.12).lerp(WARM, 0.07)
+	var away := tile.darkened(0.17).lerp(COOL, 0.05)
+	if h % 5 == 2:
+		_terrat(b, side, h, y0, y1, f0, f1, back0, back1)
+	else:
+		var r0 := f0 + side * d * 0.5
+		var r1 := f1 + side * d * 0.5
+		var front := toward if side > 0.0 else away
+		var rear := away if side > 0.0 else toward
+		b.quad(Vector2(f0, y0), Vector2(r0, y0), Vector2(r1, y1), Vector2(f1, y1), front)
+		b.quad(Vector2(r0, y0), Vector2(back0, y0), Vector2(back1, y1), Vector2(r1, y1), rear)
+		# the Arab tiles' channels, running down each slope from the ridge
+		var front_rib := front.darkened(0.11)
+		var rear_rib := rear.darkened(0.11)
+		var ry := y0 + 5.0
+		while ry < y1 - 2.0:
+			var fx := f0 + skew * (ry - y0)
+			b.line(Vector2(fx + side * 2.0, ry), Vector2(fx + side * (d * 0.5 - 2.0), ry), front_rib, 1.0)
+			b.line(Vector2(fx + side * (d * 0.5 + 2.0), ry), Vector2(fx + side * (d - 1.0), ry), rear_rib, 1.0)
+			ry += 7.0
+		# tiles replaced over the years, paler or darker than the rest
+		for j in range(4):
+			var hp := _lot_hash(k * 5 + j, side, 23)
+			var px := f0 + skew * len * 0.5 + side * (8.0 + float(hp % int(d - 24.0)))
+			var py := y0 + 8.0 + float((hp / 7) % int(maxf(8.0, len - 22.0)))
+			b.rect(Rect2(px - 5.0, py, 10.0, 6.0), Color(1.0, 0.9, 0.8, 0.10) if hp % 2 == 0 else Color(0.1, 0.05, 0.05, 0.12))
+		b.line(Vector2(r0 + 2.5, y0), Vector2(r1 + 2.5, y1), Color(0.05, 0.04, 0.08, 0.20), 2.5)
+		b.line(Vector2(r0, y0), Vector2(r1, y1), tile.lightened(0.26), 3.0)
+		if h % 3 == 0:
+			# a chimney on the back slope, its cap and its shadow
+			var cp := Vector2((r0 + back0) * 0.5, ym - 10.0)
+			b.quad(cp + Vector2(-7.0, 7.0), cp + Vector2(7.0, -7.0), cp + Vector2(7.0, -7.0) + Shade.light * 18.0, cp + Vector2(-7.0, 7.0) + Shade.light * 18.0, SHADOW)
+			b.rect(Rect2(cp - Vector2(7, 7), Vector2(14, 14)), Color(0.74, 0.68, 0.58))
+			b.rect(Rect2(cp - Vector2(7, 7), Vector2(14, 3)), Color(0.90, 0.85, 0.74))
+			b.rect(Rect2(cp - Vector2(7, 7), Vector2(3, 14)), Color(0.90, 0.85, 0.74))
+			b.rect(Rect2(cp - Vector2(3.5, 3.5), Vector2(8, 8)), Color(0.22, 0.18, 0.17))
+		if h % 7 == 3:
+			# a rooflight over the stair
+			var sp := Vector2((f0 + r0) * 0.5, ym + 14.0)
+			b.rect(Rect2(sp - Vector2(9, 11), Vector2(18, 22)), Color(0.30, 0.28, 0.28))
+			b.rect(Rect2(sp - Vector2(7, 9), Vector2(14, 18)), GLASS.darkened(0.30))
+			b.quad(sp + Vector2(-7, -9), sp + Vector2(-1, -9), sp + Vector2(-7, 1), sp + Vector2(-7, 1), GLASS.lightened(0.25))
+		if h % 4 == 1:
+			# a television aerial on the ridge, and its shadow down the tiles
+			var ap := Vector2((r0 + r1) * 0.5, ym + 26.0)
+			_aerial(b, ap + Shade.light * 16.0, SHADOW)
+			_aerial(b, ap, Color(0.80, 0.80, 0.84))
+	# the cornice and the gutter along the eave
+	b.line(Vector2(f0 + side * 1.5, y0), Vector2(f1 + side * 1.5, y1), tile.darkened(0.36), 2.0)
+	b.line(Vector2(f0 - side * 0.5, y0), Vector2(f1 - side * 0.5, y1), render.lightened(0.30), 2.4)
+	# a taller house up the street throws its shade down onto this one's roof
+	var over := _storeys(k - 1, side) - _storeys(k, side)
+	if over > 0:
+		var sw := 7.0 * float(over)
+		b.quad(Vector2(f0, y0), Vector2(back0, y0), Vector2(back0 + skew * sw, y0 + sw), Vector2(f0 + skew * sw, y0 + sw), Color(0.05, 0.04, 0.10, 0.24))
+
+	# the pati behind the house, down in the block's shade
+	var pw := 38.0 + float(_lot_hash(k, side, 13) % 26)
+	var p0 := back0 + side * pw
+	var p1 := back1 + side * pw
+	b.quad(Vector2(back0, y0), Vector2(p0, y0), Vector2(p1, y1), Vector2(back1, y1), PATI)
+	var wx0 := minf(back0, p0)
+	var wx1 := minf(back1, p1)
+	b.quad(Vector2(wx0, y0), Vector2(wx0 + pw * 0.45, y0), Vector2(wx1 + pw * 0.45, y1), Vector2(wx1, y1), Color(0.05, 0.05, 0.12, 0.30))
+	var pc := Vector2((back0 + p0 + back1 + p1) * 0.25, ym)
+	match _lot_hash(k, side, 17) % 4:
+		0:
+			# a lemon tree
+			b.circle(pc + Shade.light * 5.0, 15.0, SHADOW)
+			b.circle(pc, 15.0, LEAF.darkened(0.15))
+			b.circle(pc - Vector2(3.0, 4.0), 10.0, LEAF.lightened(0.08))
+			b.circle(pc + Vector2(5.0, 2.0), 2.0, Color(0.96, 0.84, 0.24))
+			b.circle(pc + Vector2(-6.0, 5.0), 2.0, Color(0.96, 0.84, 0.24))
+		1:
+			# a paved pati, a table and pots
+			b.rect(Rect2(pc.x - pw * 0.5 + 4.0, y0 + 8.0, pw - 8.0, len - 16.0), Color(0.62, 0.52, 0.44))
+			b.circle(pc + Vector2(0.0, -8.0), 6.0, Color(0.90, 0.88, 0.82))
+			b.circle(pc + Vector2(-7.0, 18.0), 4.0, POT)
+			b.circle(pc + Vector2(-7.0, 17.0), 3.2, LEAF)
+			b.circle(pc + Vector2(6.0, 24.0), 4.0, POT)
+			b.circle(pc + Vector2(6.0, 23.0), 3.2, GERANIUM)
+		2:
+			# a lean-to wash house
+			b.rect(Rect2(pc.x - pw * 0.5 + 3.0, y0 + 6.0, pw - 6.0, len * 0.42), tile.darkened(0.24))
+			b.line(Vector2(pc.x - pw * 0.5 + 3.0, y0 + 6.0 + len * 0.42), Vector2(pc.x + pw * 0.5 - 3.0, y0 + 6.0 + len * 0.42), tile.darkened(0.4), 1.6)
+			b.circle(pc + Vector2(0.0, 22.0), 8.0, LEAF.darkened(0.1))
+		_:
+			# a kitchen garden in rows
+			b.rect(Rect2(pc.x - pw * 0.5 + 5.0, y0 + 10.0, pw - 10.0, len - 20.0), Color(0.36, 0.30, 0.22))
+			var gy := y0 + 16.0
+			while gy < y1 - 14.0:
+				b.line(Vector2(pc.x - pw * 0.5 + 8.0, gy), Vector2(pc.x + pw * 0.5 - 8.0, gy), LEAF.lightened(0.04), 3.0)
+				gy += 9.0
+	# the back of the next street's row, and the roofs beyond it
+	var h2 := _lot_hash(k, side, 19)
+	var tile2: Color = ROOF_TILES[h2 % ROOF_TILES.size()]
+	var d2 := 150.0 + float(h2 % 40)
+	var q0 := p0 + side * d2
+	var q1 := p1 + side * d2
+	var m0 := p0 + side * d2 * 0.5
+	var m1 := p1 + side * d2 * 0.5
+	var near2 := (tile2.lightened(0.08) if side > 0.0 else tile2.darkened(0.20)).darkened(0.06)
+	var far2 := (tile2.darkened(0.20) if side > 0.0 else tile2.lightened(0.08)).darkened(0.06)
+	b.quad(Vector2(p0, y0), Vector2(m0, y0), Vector2(m1, y1), Vector2(p1, y1), near2)
+	b.quad(Vector2(m0, y0), Vector2(q0, y0), Vector2(q1, y1), Vector2(m1, y1), far2)
+	b.quad(Vector2(q0, y0), Vector2(far, y0), Vector2(far, y1), Vector2(q1, y1), tile2.darkened(0.30))
+	var ry2 := y0 + 6.0
+	while ry2 < y1 - 2.0:
+		var px2 := p0 + skew * (ry2 - y0)
+		b.line(Vector2(px2 + side * 2.0, ry2), Vector2(px2 + side * (d2 * 0.5 - 2.0), ry2), near2.darkened(0.10), 1.0)
+		b.line(Vector2(px2 + side * (d2 * 0.5 + 2.0), ry2), Vector2(px2 + side * (d2 - 1.0), ry2), far2.darkened(0.10), 1.0)
+		ry2 += 9.0
+	b.line(Vector2(m0, y0), Vector2(m1, y1), tile2.lightened(0.16), 2.6)
+	b.line(Vector2(p0, y0), Vector2(p1, y1), Color(0.86, 0.80, 0.70), 2.0)
+	if h2 % 3 == 1:
+		var cp2 := Vector2((m0 + q0) * 0.5, ym + 8.0)
+		b.rect(Rect2(cp2 + Shade.light * 8.0 - Vector2(6, 6), Vector2(12, 12)), SHADOW)
+		b.rect(Rect2(cp2 - Vector2(6, 6), Vector2(12, 12)), Color(0.70, 0.64, 0.56))
+		b.rect(Rect2(cp2 - Vector2(3, 3), Vector2(6, 6)), Color(0.22, 0.18, 0.17))
+	# the party wall down to the next house
+	b.line(Vector2(e0, y0), Vector2(far, y0), Color(0.18, 0.13, 0.10, 0.5), 2.0)
+
+
+# a flat roof terrace: fired tiles inside a whitewashed parapet, the stair
+# hut, pots of geraniums along the street side and the washing out
+static func _terrat(b: ShapeBatch, side: float, h: int, y0: float, y1: float, f0: float, f1: float, back0: float, back1: float) -> void:
+	var ym := (y0 + y1) * 0.5
+	b.quad(Vector2(f0, y0), Vector2(back0, y0), Vector2(back1, y1), Vector2(f1, y1), TERRAT)
+	var gx := 18.0
+	var d := absf(back0 - f0)
+	while gx < d:
+		b.line(Vector2(f0 + side * gx, y0), Vector2(f1 + side * gx, y1), TERRAT.darkened(0.09), 1.0)
+		gx += 18.0
+	var gy := y0 + 18.0
+	while gy < y1:
+		b.line(Vector2(minf(f0, back0), gy), Vector2(maxf(f0, back0), gy), TERRAT.darkened(0.09), 1.0)
+		gy += 18.0
+	# the parapet's shade inside it, on the sun's side
+	var wx := minf(f0, back0)
+	b.rect(Rect2(wx, y0 + 2.0, d, 7.0), Color(0.05, 0.04, 0.10, 0.20))
+	b.rect(Rect2(wx, y0 + 2.0, 6.0, y1 - y0 - 4.0), Color(0.05, 0.04, 0.10, 0.20))
+	b.line(Vector2(f0 + side * 3.0, y0), Vector2(f1 + side * 3.0, y1), PARAPET, 4.0)
+	b.line(Vector2(back0 - side * 2.0, y0), Vector2(back1 - side * 2.0, y1), PARAPET.darkened(0.08), 3.0)
+	b.line(Vector2(f0, y0 + 2.0), Vector2(back0, y0 + 2.0), PARAPET, 3.0)
+	b.line(Vector2(f1, y1 - 2.0), Vector2(back1, y1 - 2.0), PARAPET.darkened(0.08), 3.0)
+	# the stair hut in the back corner
+	var hut := Rect2((back0 - 34.0) if side > 0.0 else (back0 + 6.0), y0 + 8.0, 28.0, 24.0)
+	b.rect(Rect2(hut.position + Shade.light * 12.0, hut.size), SHADOW)
+	b.rect(hut, PARAPET.darkened(0.10))
+	b.rect(hut.grow(-3.0), PARAPET)
+	b.rect(Rect2(hut.position.x + 9.0, hut.end.y - 3.0, 10.0, 3.0), DOORS[h % DOORS.size()])
+	for pi in range(4):
+		var pp := Vector2(f0, y0).lerp(Vector2(f1, y1), 0.16 + 0.22 * float(pi)) + Vector2(side * 11.0, 0.0)
+		b.circle(pp + Shade.light * 3.0, 4.4, SHADOW)
+		b.circle(pp, 4.4, POT)
+		b.circle(pp + Vector2(0.0, -1.0), 4.0, LEAF)
+		b.circle(pp + Vector2(-1.0, -1.6), 2.2, BLOOMS[(pi + h) % BLOOMS.size()])
+	if h % 2 == 0:
+		var wa := Vector2(f0 + side * 34.0, ym + 14.0)
+		var wb := Vector2(back0 - side * 14.0, ym + 14.0)
+		for wi in range(4):
+			var wp := wa.lerp(wb, 0.14 + 0.24 * float(wi))
+			b.rect(Rect2(wp.x - 5.0 + Shade.light.x * 9.0, wp.y + Shade.light.y * 9.0, 11.0, 3.0), SHADOW)
+		b.line(wa, wb, Color(0.30, 0.30, 0.32), 1.0)
+		for wi in range(4):
+			var wp := wa.lerp(wb, 0.14 + 0.24 * float(wi))
+			b.rect(Rect2(wp.x - 5.0, wp.y, 11.0, 9.0), LAUNDRY[(wi + h) % LAUNDRY.size()])
+			b.line(Vector2(wp.x - 5.0, wp.y), Vector2(wp.x + 6.0, wp.y), Color(1.0, 1.0, 1.0, 0.35), 1.2)
+	else:
+		# a folding chair and a table left out
+		var tp := Vector2((f0 + back0) * 0.5, ym + 16.0)
+		b.circle(tp + Shade.light * 4.0, 8.0, SHADOW)
+		b.circle(tp, 8.0, Color(0.92, 0.90, 0.84))
+		b.rect(Rect2(tp.x + 12.0, tp.y - 5.0, 9.0, 9.0), Color(0.30, 0.48, 0.62))
+
+
+static func _aerial(b: ShapeBatch, p: Vector2, col: Color) -> void:
+	b.line(p + Vector2(-9.0, 0.0), p + Vector2(11.0, 0.0), col, 1.2)
+	b.line(p + Vector2(-6.0, -5.0), p + Vector2(-6.0, 5.0), col, 1.0)
+	b.line(p + Vector2(0.0, -4.0), p + Vector2(0.0, 4.0), col, 1.0)
+	b.line(p + Vector2(6.0, -3.0), p + Vector2(6.0, 3.0), col, 1.0)
+
+
+# An octagon by its inradius, as three convex pieces: no polygon to
+# triangulate, so the tower's ground pass allocates nothing
+static func _oct(b: ShapeBatch, c: Vector2, r: float, col: Color) -> void:
+	var a := r * 0.41421356
+	b.rect(Rect2(c.x - a, c.y - r, a * 2.0, r * 2.0), col)
+	b.quad(Vector2(c.x - r, c.y - a), Vector2(c.x - a, c.y - r), Vector2(c.x - a, c.y + r), Vector2(c.x - r, c.y + a), col)
+	b.quad(Vector2(c.x + a, c.y - r), Vector2(c.x + r, c.y - a), Vector2(c.x + r, c.y + a), Vector2(c.x + a, c.y + r), col)
+
+
+# A pitched tile roof over r, its ridge running along x or along y: the
+# slope toward the sun (up the screen, and west) warm, the other in shade,
+# the tiles' channels running down from the ridge
+static func _roof(b: ShapeBatch, r: Rect2, tile: Color, along_x: bool, rib := 8.0) -> void:
+	var lit := tile.lightened(0.12).lerp(WARM, 0.07)
+	var shade := tile.darkened(0.17).lerp(COOL, 0.05)
+	var c := r.get_center()
+	if along_x:
+		b.rect(Rect2(r.position.x, r.position.y, r.size.x, c.y - r.position.y), lit)
+		b.rect(Rect2(r.position.x, c.y, r.size.x, r.end.y - c.y), shade)
+		var x := r.position.x + rib * 0.5
+		while x < r.end.x:
+			b.line(Vector2(x, r.position.y + 1.0), Vector2(x, c.y - 2.0), lit.darkened(0.11), 1.0)
+			b.line(Vector2(x, c.y + 2.0), Vector2(x, r.end.y - 1.0), shade.darkened(0.11), 1.0)
+			x += rib
+		b.line(Vector2(r.position.x, c.y + 2.5), Vector2(r.end.x, c.y + 2.5), Color(0.05, 0.04, 0.08, 0.20), 2.5)
+		b.line(Vector2(r.position.x, c.y), Vector2(r.end.x, c.y), tile.lightened(0.28), 3.0)
+	else:
+		b.rect(Rect2(r.position.x, r.position.y, c.x - r.position.x, r.size.y), lit)
+		b.rect(Rect2(c.x, r.position.y, r.end.x - c.x, r.size.y), shade)
+		var y := r.position.y + rib * 0.5
+		while y < r.end.y:
+			b.line(Vector2(r.position.x + 1.0, y), Vector2(c.x - 2.0, y), lit.darkened(0.11), 1.0)
+			b.line(Vector2(c.x + 2.0, y), Vector2(r.end.x - 1.0, y), shade.darkened(0.11), 1.0)
+			y += rib
+		b.line(Vector2(c.x + 2.5, r.position.y), Vector2(c.x + 2.5, r.end.y), Color(0.05, 0.04, 0.08, 0.20), 2.5)
+		b.line(Vector2(c.x, r.position.y), Vector2(c.x, r.end.y), tile.lightened(0.28), 3.0)
 
 
 # the monument in Plaça de Sant Vicenç: a stepped stone base, the column,
 # and the saint on top with his palm, seen from above
 static func _saint(b: ShapeBatch) -> void:
 	var c := SAINT.get_center()
-	b.circle(c + Shade.light * 30.0, 18.0, Color(0.04, 0.05, 0.07, 0.18))
+	# the column is tall: its shadow runs long across the flags
+	b.capsule(c + Shade.light * 10.0, c + Shade.light * 78.0, 8.0, Color(0.05, 0.06, 0.12, 0.16))
+	b.circle(c + Shade.light * 84.0, 11.0, Color(0.05, 0.06, 0.12, 0.16))
+	b.rect(Rect2(SAINT.position + Shade.light * 5.0, SAINT.size), SHADOW)
 	b.rect(SAINT, STONE_DARK)
-	b.rect(SAINT.grow(-4.0), STONE)
+	b.rect(Rect2(SAINT.position, Vector2(SAINT.size.x, 3.0)), STONE_LIT)
+	b.rect(Rect2(SAINT.position, Vector2(3.0, SAINT.size.y)), STONE_LIT)
+	b.rect(SAINT.grow(-5.0), STONE)
+	b.rect(Rect2(SAINT.position + Vector2(5.0, 5.0), Vector2(SAINT.size.x - 10.0, 2.0)), STONE_LIT)
 	b.rect(SAINT.grow(-10.0), STONE_LIT)
-	b.circle(c, 9.0, STONE_DARK)
-	b.circle(c, 7.0, Color(0.52, 0.48, 0.44))
-	b.circle(c + Vector2(-1.0, -1.0), 4.0, Color(0.64, 0.60, 0.56))
-	b.line(c + Vector2(2.0, 0.0), c + Vector2(9.0, -6.0), Color(0.36, 0.48, 0.30), 2.5)
+	b.rect(Rect2(SAINT.position + Vector2(10.0, SAINT.size.y - 13.0), Vector2(SAINT.size.x - 20.0, 3.0)), STONE.darkened(0.1))
+	_oct(b, c + Vector2(1.5, 2.0), 10.0, Color(0.0, 0.0, 0.0, 0.25))
+	_oct(b, c, 9.5, STONE_DARK)
+	_oct(b, c, 8.0, Color(0.74, 0.70, 0.62))
+	# the saint: shoulders, head, the palm in his hand
+	b.capsule(c + Vector2(-4.0, 1.0), c + Vector2(4.0, 1.0), 3.6, Color(0.50, 0.47, 0.44))
+	b.circle(c + Vector2(0.0, -0.5), 3.4, Color(0.66, 0.63, 0.59))
+	b.circle(c + Vector2(-0.8, -1.3), 1.8, Color(0.78, 0.75, 0.70))
+	b.line(c + Vector2(5.0, 1.0), c + Vector2(11.0, -6.0), Color(0.36, 0.48, 0.30), 2.2)
+	b.line(c + Vector2(11.0, -6.0), c + Vector2(13.0, -10.0), Color(0.44, 0.58, 0.34), 1.4)
 
 
 # Sant Vicenç de Sarrià: the nave's long tiled roof running back from the
-# plaça, its stone front on the square with the rose window, and the apse
+# plaça over its two aisles, the buttresses between the chapels, the stone
+# front on the square with its gable, the rose window over the door, and
+# the rectory and its garden up the street
 static func _church(b: ShapeBatch) -> void:
 	var r := NAVE
 	var ridge := r.get_center().y
-	b.rect(Rect2(r.position + Shade.light * 10.0, r.size), SHADOW)
-	b.rect(Rect2(r.position.x, r.position.y, r.size.x, ridge - r.position.y), ROOF_TILES[1].darkened(0.08))
-	b.rect(Rect2(r.position.x, ridge, r.size.x, r.end.y - ridge), ROOF_TILES[0].lightened(0.06))
-	var ty := r.position.y + 10.0
-	while ty < r.end.y - 6.0:
-		if absf(ty - ridge) > 5.0:
-			b.line(Vector2(r.position.x + 4.0, ty), Vector2(r.end.x - 30.0, ty), Color(0.0, 0.0, 0.0, 0.10), 1.2)
-		ty += 12.0
-	b.line(Vector2(r.position.x, ridge), Vector2(r.end.x - 26.0, ridge), ROOF_TILES[2].lightened(0.25), 4.0)
-	# the apse at the far end, a half-round of tile
-	b.circle(Vector2(r.position.x, ridge), r.size.y * 0.42, ROOF_TILES[3])
-	b.circle(Vector2(r.position.x - 6.0, ridge), r.size.y * 0.30, ROOF_TILES[3].lightened(0.08))
-	# the front: stone, the gable, the rose window over the door
+	var aisle := 38.0
+	var tile: Color = ROOF_TILES[0]
+	var x0 := r.position.x
 	var fx := r.end.x - 30.0
-	b.rect(Rect2(fx, r.position.y - 6.0, 30.0, r.size.y + 12.0), STONE)
-	b.rect(Rect2(fx + 22.0, r.position.y - 6.0, 8.0, r.size.y + 12.0), STONE_LIT)
-	b.circle(Vector2(fx + 15.0, ridge - 30.0), 13.0, STONE_DARK)
-	b.circle(Vector2(fx + 15.0, ridge - 30.0), 10.0, Color(0.30, 0.34, 0.52))
-	for k in range(8):
-		var a := float(k) * TAU / 8.0
-		b.line(Vector2(fx + 15.0, ridge - 30.0), Vector2(fx + 15.0, ridge - 30.0) + Vector2.from_angle(a) * 10.0, STONE_LIT, 1.4)
-	b.rect(Rect2(fx + 8.0, DOOR_Y - 26.0, 22.0, 52.0), STONE_DARK)
-	b.rect(Rect2(fx + 14.0, DOOR_Y - 20.0, 16.0, 40.0), Color(0.30, 0.20, 0.14))
-	b.line(Vector2(fx + 14.0, DOOR_Y), Vector2(fx + 30.0, DOOR_Y), Color(0.20, 0.14, 0.10), 1.5)
+	# the rectory up the street: its roof, its walled garden and a cypress
+	var rect_top := r.position.y - 200.0
+	_roof(b, Rect2(FAR_L, rect_top, WALL_L - FACE - FAR_L, 190.0), ROOF_TILES[2], false, 9.0)
+	var garden := Rect2(52.0, rect_top + 34.0, 96.0, 118.0)
+	b.rect(garden.grow(4.0), PARAPET.darkened(0.12))
+	b.rect(garden, Color(0.40, 0.44, 0.30))
+	b.rect(Rect2(garden.position, Vector2(garden.size.x * 0.4, garden.size.y)), Color(0.05, 0.05, 0.12, 0.26))
+	b.rect(Rect2(garden.position.x + 40.0, garden.position.y + 8.0, 12.0, garden.size.y - 16.0), Color(0.66, 0.60, 0.50))
+	b.circle(garden.position + Vector2(74.0, 34.0) + Shade.light * 8.0, 15.0, SHADOW)
+	b.circle(garden.position + Vector2(74.0, 34.0), 15.0, Color(0.16, 0.32, 0.22))
+	b.circle(garden.position + Vector2(71.0, 30.0), 9.0, Color(0.22, 0.42, 0.28))
+	b.circle(garden.position + Vector2(74.0, 88.0), 11.0, LEAF.darkened(0.1))
+	b.circle(garden.position + Vector2(72.0, 85.0), 7.0, LEAF.lightened(0.1))
+	var rec := RENDERS[1].darkened(0.12).lerp(COOL, 0.10)
+	b.rect(Rect2(WALL_L - FACE, rect_top, FACE, 196.0), rec)
+	b.line(Vector2(WALL_L - 3.0, rect_top), Vector2(WALL_L - 3.0, rect_top + 196.0), Color(0.0, 0.0, 0.0, 0.07), 5.0)
+	b.line(Vector2(WALL_L - FACE + 3.0, rect_top), Vector2(WALL_L - FACE + 3.0, rect_top + 196.0), Color(0.05, 0.06, 0.12, 0.22), 5.0)
+	b.line(Vector2(WALL_L, rect_top), Vector2(WALL_L, rect_top + 196.0), SOCLE, 4.0)
+	for wi in range(4):
+		var wy := rect_top + 30.0 + float(wi) * 44.0
+		b.rect(Rect2(WALL_L - 17.5, wy - 10.5, 11.0, 21.0), rec.lightened(0.22))
+		b.rect(Rect2(WALL_L - 16.0, wy - 9.0, 8.0, 18.0), SHUTTER_GREEN if wi % 2 == 0 else WINDOW_DARK)
+	b.line(Vector2(WALL_L - FACE - 0.5, rect_top), Vector2(WALL_L - FACE - 0.5, rect_top + 196.0), rec.lightened(0.30), 2.4)
+
+	# the church's shadow on the lower roofs to the south of it
+	b.rect(Rect2(x0, r.end.y, r.size.x, 16.0), Color(0.05, 0.04, 0.10, 0.22))
+	# the aisles: lean-to roofs either side, a storey under the nave's eaves
+	var north := tile.lightened(0.08).lerp(WARM, 0.05)
+	var south := tile.darkened(0.22).lerp(COOL, 0.05)
+	b.rect(Rect2(x0, r.position.y, fx - x0, aisle), north)
+	b.rect(Rect2(x0, r.end.y - aisle, fx - x0, aisle), south)
+	var ax := x0 + 5.0
+	while ax < fx:
+		b.line(Vector2(ax, r.position.y + 1.0), Vector2(ax, r.position.y + aisle - 2.0), north.darkened(0.11), 1.0)
+		b.line(Vector2(ax, r.end.y - aisle + 2.0), Vector2(ax, r.end.y - 1.0), south.darkened(0.11), 1.0)
+		ax += 8.0
+	# the nave over them, and the shade its wall drops on the south aisle
+	_roof(b, Rect2(x0, r.position.y + aisle, fx - x0, r.size.y - aisle * 2.0), tile, true)
+	b.rect(Rect2(x0, r.end.y - aisle, fx - x0, 12.0), Color(0.05, 0.04, 0.10, 0.28))
+	b.line(Vector2(x0, r.position.y + aisle), Vector2(fx, r.position.y + aisle), STONE_LIT, 3.0)
+	b.line(Vector2(x0, r.end.y - aisle), Vector2(fx, r.end.y - aisle), STONE, 3.0)
+	# buttresses between the chapels, capped in stone
+	var bx := x0 + 30.0
+	while bx < fx - 30.0:
+		b.rect(Rect2(bx - 6.0 + Shade.light.x * 6.0, r.end.y - 9.0 + Shade.light.y * 6.0, 12.0, 16.0), SHADOW)
+		b.rect(Rect2(bx - 6.0, r.position.y - 7.0, 12.0, 16.0), STONE)
+		b.rect(Rect2(bx - 6.0, r.position.y - 7.0, 12.0, 4.0), STONE_LIT)
+		b.rect(Rect2(bx - 6.0, r.end.y - 9.0, 12.0, 16.0), STONE.darkened(0.08))
+		b.rect(Rect2(bx - 6.0, r.end.y - 9.0, 12.0, 4.0), STONE_LIT.darkened(0.06))
+		bx += 86.0
+	b.line(Vector2(x0, r.position.y), Vector2(fx, r.position.y), STONE_DARK, 2.0)
+	b.line(Vector2(x0, r.end.y), Vector2(fx, r.end.y), STONE_DARK, 2.0)
+	# the apse at the far end, a half-round of tile
+	b.circle(Vector2(x0, ridge), r.size.y * 0.42, ROOF_TILES[3])
+	b.circle(Vector2(x0 - 6.0, ridge), r.size.y * 0.30, ROOF_TILES[3].lightened(0.08))
+
 	# the sacristy's low roof between the nave and the tower's foot
 	var sy := r.end.y
-	b.rect(Rect2(FAR_L, sy, WALL_L - FAR_L, TOWER.end.y + 12.0 - sy), ROOF_TILES[3].darkened(0.06))
-	b.line(Vector2(FAR_L, sy + (TOWER.end.y + 12.0 - sy) * 0.5), Vector2(WALL_L - FACE, sy + (TOWER.end.y + 12.0 - sy) * 0.5), ROOF_TILES[2].lightened(0.15), 3.0)
-	b.rect(Rect2(WALL_L - FACE, sy, FACE, TOWER.end.y + 12.0 - sy), STONE)
-	# the rectory and the houses behind the church to the north
-	b.rect(Rect2(FAR_L, r.position.y - 200.0, WALL_L - FAR_L, 196.0), ROOF_TILES[2].darkened(0.1))
-	b.rect(Rect2(WALL_L - FACE, r.position.y - 200.0, FACE, 196.0), RENDERS[1])
+	var sh := TOWER.end.y + 12.0 - sy
+	_roof(b, Rect2(FAR_L, sy + 16.0, WALL_L - FACE - FAR_L, sh - 16.0), ROOF_TILES[3], true, 9.0)
+	b.rect(Rect2(FAR_L, sy, WALL_L - FACE - FAR_L, 16.0), ROOF_TILES[3].darkened(0.24))
+	b.rect(Rect2(WALL_L - FACE, sy, FACE, sh), STONE.darkened(0.10))
+	b.line(Vector2(WALL_L - FACE, sy), Vector2(WALL_L - FACE, sy + sh), STONE_LIT, 2.0)
+
+	# the front on the plaça: dressed stone between pilasters, in its own
+	# shade at this hour; the gable's coping stands over the roof behind
+	var top := r.position.y - 6.0
+	var bot := r.end.y + 6.0
+	b.quad(Vector2(fx, ridge - 78.0) + Shade.light * 7.0, Vector2(fx - 20.0, ridge) + Shade.light * 7.0, Vector2(fx, ridge + 78.0) + Shade.light * 7.0, Vector2(fx, ridge) + Shade.light * 7.0, SHADOW)
+	b.quad(Vector2(fx, ridge - 78.0), Vector2(fx - 20.0, ridge), Vector2(fx, ridge + 78.0), Vector2(fx, ridge), STONE_LIT)
+	b.quad(Vector2(fx, ridge - 60.0), Vector2(fx - 13.0, ridge), Vector2(fx, ridge + 60.0), Vector2(fx, ridge), STONE)
+	b.rect(Rect2(fx, top, 30.0, bot - top), STONE.lerp(COOL, 0.08))
+	for ci in range(3):
+		b.line(Vector2(fx + 8.0 + float(ci) * 7.0, top), Vector2(fx + 8.0 + float(ci) * 7.0, bot), Color(0.36, 0.32, 0.28, 0.20), 1.0)
+	for po: float in PILASTERS:
+		b.rect(Rect2(fx + 2.0, ridge + po - 6.0, 28.0, 12.0), STONE_LIT.lerp(COOL, 0.06))
+		b.rect(Rect2(fx + 2.0, ridge + po + 4.0, 28.0, 2.0), STONE_DARK)
+	b.rect(Rect2(fx + 3.0, top, 5.0, bot - top), Color(0.05, 0.06, 0.12, 0.22))
+	b.rect(Rect2(fx - 2.0, top - 2.0, 5.0, bot - top + 4.0), STONE_LIT)
+	b.rect(Rect2(fx + 26.0, top, 4.0, bot - top), STONE_DARK)
+	# the cross on the gable's point
+	b.line(Vector2(fx - 26.0, ridge), Vector2(fx - 14.0, ridge), IRON, 2.0)
+	b.line(Vector2(fx - 21.0, ridge - 4.0), Vector2(fx - 21.0, ridge + 4.0), IRON, 2.0)
+	# the door in its arch, the rose window over it, a lancet either side
+	b.rect(Rect2(fx + 12.0, DOOR_Y - 22.0, 18.0, 44.0), STONE_DARK)
+	b.rect(Rect2(fx + 15.0, DOOR_Y - 17.0, 15.0, 34.0), Color(0.34, 0.22, 0.14))
+	b.rect(Rect2(fx + 15.0, DOOR_Y - 17.0, 15.0, 16.0), Color(0.40, 0.27, 0.17))
+	b.line(Vector2(fx + 15.0, DOOR_Y), Vector2(fx + 30.0, DOOR_Y), Color(0.16, 0.10, 0.07), 1.5)
+	b.circle(Vector2(fx + 24.0, DOOR_Y - 3.0), 1.3, BRONZE_LIT)
+	b.circle(Vector2(fx + 24.0, DOOR_Y + 3.0), 1.3, BRONZE_LIT)
+	var rose := Vector2(fx + 3.0, DOOR_Y)
+	b.circle(rose, 10.0, STONE_DARK)
+	b.circle(rose, 8.4, STONE_LIT)
+	b.circle(rose, 7.0, Color(0.20, 0.24, 0.46))
+	for k in range(8):
+		var a := float(k) * TAU / 8.0 + 0.39
+		b.circle(rose + Vector2.from_angle(a) * 4.4, 1.7, ROSE_GLASS[k % ROSE_GLASS.size()])
+	for k in range(4):
+		var a := float(k) * TAU / 8.0
+		b.line(rose - Vector2.from_angle(a) * 7.0, rose + Vector2.from_angle(a) * 7.0, STONE_LIT, 1.0)
+	b.circle(rose, 2.0, STONE_LIT)
+	for lo: float in LANCETS:
+		b.rect(Rect2(fx + 9.0, DOOR_Y + lo - 5.0, 13.0, 10.0), STONE_DARK)
+		b.rect(Rect2(fx + 11.0, DOOR_Y + lo - 3.0, 10.0, 6.0), Color(0.22, 0.28, 0.48))
 
 
-# the bell tower: square stone shaft, a parapet with pinnacles at the
-# corners, and the belfry's frame open to the sky (the bell is drawn live)
+const PILASTERS: Array[float] = [-116.0, -44.0, 44.0, 116.0]
+const LANCETS: Array[float] = [-80.0, 80.0]
+const ROSE_GLASS: Array[Color] = [Color(0.86, 0.24, 0.22), Color(0.94, 0.76, 0.26), Color(0.30, 0.52, 0.86), Color(0.36, 0.70, 0.44)]
+
+
+# The bell tower: the square stone shaft ends in a terrace behind its
+# parapet, pinnacles at the corners, and the eight-sided belfry stands on
+# it, open to the sky (the bell is drawn live). The clock faces the plaça
+# and shows the hour the bells are about to strike.
 static func _tower(b: ShapeBatch) -> void:
 	var r := TOWER
-	b.rect(r, STONE_DARK)
-	b.rect(r.grow(-8.0), STONE)
-	b.rect(Rect2(r.position.x + 8.0, r.position.y + 8.0, r.size.x - 16.0, 8.0), STONE_LIT)
-	b.rect(r.grow(-20.0), Color(0.24, 0.20, 0.18))
 	var c := r.get_center()
-	b.line(Vector2(r.position.x + 20.0, c.y), Vector2(r.end.x - 20.0, c.y), BELL_BEAM, 7.0)
-	b.line(Vector2(c.x, r.position.y + 20.0), Vector2(c.x, r.end.y - 20.0), BELL_BEAM.darkened(0.2), 3.0)
+	b.rect(r, STONE_DARK)
+	b.rect(Rect2(r.position, Vector2(r.size.x, 3.0)), STONE_LIT)
+	b.rect(Rect2(r.position, Vector2(3.0, r.size.y)), STONE_LIT)
+	b.rect(r.grow(-6.0), STONE)
+	# the parapet's shade on the terrace, and its balusters
+	b.rect(Rect2(r.position.x + 6.0, r.position.y + 6.0, r.size.x - 12.0, 6.0), Color(0.05, 0.05, 0.12, 0.26))
+	b.rect(Rect2(r.position.x + 6.0, r.position.y + 6.0, 6.0, r.size.y - 12.0), Color(0.05, 0.05, 0.12, 0.26))
+	for i in range(1, 10):
+		var o := float(i) * 11.0
+		b.line(Vector2(r.position.x + o, r.position.y), Vector2(r.position.x + o, r.position.y + 6.0), STONE_DARK.darkened(0.2), 1.2)
+		b.line(Vector2(r.position.x + o, r.end.y - 6.0), Vector2(r.position.x + o, r.end.y), STONE.darkened(0.3), 1.2)
+		b.line(Vector2(r.position.x, r.position.y + o), Vector2(r.position.x + 6.0, r.position.y + o), STONE_DARK.darkened(0.2), 1.2)
+		b.line(Vector2(r.end.x - 6.0, r.position.y + o), Vector2(r.end.x, r.position.y + o), STONE.darkened(0.3), 1.2)
+	# the belfry: its shadow on the terrace, its wall, the dark inside
+	_oct(b, c + Shade.light * 12.0, 42.0, Color(0.05, 0.05, 0.12, 0.34))
+	_oct(b, c, 42.0, STONE_DARK)
+	_oct(b, c - Vector2(1.0, 1.5), 40.0, STONE_LIT)
+	_oct(b, c + Vector2(1.5, 2.0), 37.0, STONE)
+	_oct(b, c, 31.0, Color(0.27, 0.23, 0.21))
+	_oct(b, c + Vector2(3.0, 5.0), 26.0, Color(0.34, 0.29, 0.26))
+	# the openings the sound goes out by, one to each side of the compass
+	b.rect(Rect2(c.x - 8.0, c.y - 41.0, 16.0, 10.0), STONE_DARK.darkened(0.25))
+	b.rect(Rect2(c.x - 8.0, c.y + 31.0, 16.0, 10.0), STONE_DARK.darkened(0.25))
+	b.rect(Rect2(c.x - 41.0, c.y - 8.0, 10.0, 16.0), STONE_DARK.darkened(0.25))
+	b.rect(Rect2(c.x + 31.0, c.y - 8.0, 10.0, 16.0), STONE_DARK.darkened(0.25))
+	b.line(Vector2(c.x - 31.0, c.y), Vector2(c.x + 31.0, c.y), BELL_BEAM, 7.0)
+	b.line(Vector2(c.x - 31.0, c.y - 2.5), Vector2(c.x + 31.0, c.y - 2.5), BELL_BEAM.lightened(0.2), 1.5)
+	b.line(Vector2(c.x, c.y - 31.0), Vector2(c.x, c.y + 31.0), BELL_BEAM.darkened(0.2), 3.0)
 	for ci in range(4):
 		# the corners in turn: top left, top right, bottom right, bottom left
 		var corner := Vector2(r.end.x if ci == 1 or ci == 2 else r.position.x, r.end.y if ci >= 2 else r.position.y)
-		var p := corner + (c - corner).normalized() * 9.0
-		b.circle(p + Shade.light * 5.0, 9.0, SHADOW)
-		b.circle(p, 8.0, STONE_LIT)
-		b.circle(p, 4.0, STONE)
-	# the clock on the plaça side
+		var p := corner + (c - corner).normalized() * 11.0
+		b.capsule(p + Shade.light * 4.0, p + Shade.light * 16.0, 6.0, Color(0.05, 0.05, 0.12, 0.30))
+		b.rect(Rect2(p - Vector2(8.0, 8.0), Vector2(16.0, 16.0)), STONE_DARK)
+		b.rect(Rect2(p - Vector2(7.0, 7.0), Vector2(14.0, 14.0)), STONE_LIT)
+		# a pinnacle is a little pyramid: two faces lit, two not
+		b.quad(p + Vector2(-7.0, 7.0), p + Vector2(7.0, 7.0), p + Vector2(7.0, -7.0), p, STONE.darkened(0.12))
+		b.circle(p, 2.2, STONE_LIT.lightened(0.2))
+	# the clock on the plaça side, in its stone round
 	var ck := Vector2(r.end.x - 2.0, c.y + 30.0)
-	b.circle(ck, 11.0, STONE_DARK)
-	b.circle(ck, 9.0, Color(0.94, 0.92, 0.86))
-	b.line(ck, ck + Vector2(0.0, -6.0), IRON, 1.5)
-	b.line(ck, ck + Vector2(4.0, 0.0), IRON, 1.5)
+	b.circle(ck + Shade.light * 3.0, 13.0, Color(0.05, 0.05, 0.12, 0.28))
+	b.circle(ck, 13.0, STONE_DARK)
+	b.circle(ck, 11.5, STONE_LIT)
+	b.circle(ck, 9.6, Color(0.95, 0.93, 0.86))
+	for k in range(12):
+		var ta := float(k) * TAU / 12.0
+		b.line(ck + Vector2.from_angle(ta) * (6.6 if k % 3 == 0 else 7.8), ck + Vector2.from_angle(ta) * 9.0, IRON, 1.6 if k % 3 == 0 else 1.0)
+	var hour := float(int(STRIKES.get(_hour(), 7)))
+	b.line(ck, ck + Vector2.from_angle(hour * TAU / 12.0 - PI * 0.5) * 5.0, IRON, 2.0)
+	b.line(ck, ck + Vector2(0.0, -7.6), IRON, 1.4)
+	b.circle(ck, 1.5, BRONZE)
 
 
-# El Mercat de Sarrià: the brick hall with its long roof and a glazed
-# lantern down the ridge; three arches on the street, the middle one open
+# El Mercat de Sarrià: the brick hall under its long roof, a glazed lantern
+# down the ridge, gables at either end; three stone-ringed arches on the
+# street, the middle one open
 static func _market(b: ShapeBatch) -> void:
 	var r := MARKET
 	var fx := r.position.x
-	b.rect(Rect2(fx + FACE, r.position.y, r.size.x - FACE, r.size.y), BRICK.darkened(0.14))
-	var ridge := fx + FACE + (r.size.x - FACE) * 0.5
-	b.rect(Rect2(fx + FACE, r.position.y + 8.0, ridge - fx - FACE, r.size.y - 16.0), Color(0.56, 0.36, 0.28))
-	b.rect(Rect2(ridge, r.position.y + 8.0, r.end.x - ridge, r.size.y - 16.0), Color(0.48, 0.30, 0.24))
-	var lx := fx + FACE + 40.0
+	var roof := Rect2(fx + FACE, r.position.y + 8.0, r.size.x - FACE, r.size.y - 16.0)
+	_roof(b, roof, Color(0.60, 0.36, 0.28), false, 9.0)
+	var ridge := roof.get_center().x
+	# purlins across the tiles, as a market hall's long roof shows them
+	var lx := fx + FACE + 46.0
 	while lx < r.end.x - 20.0:
-		if absf(lx - ridge) > 30.0:
-			b.line(Vector2(lx, r.position.y + 10.0), Vector2(lx, r.end.y - 10.0), Color(0.0, 0.0, 0.0, 0.10), 1.4)
-		lx += 26.0
-	b.rect(Rect2(ridge - 24.0, r.position.y + 20.0, 48.0, r.size.y - 40.0), GLASS)
-	var gy := r.position.y + 30.0
-	while gy < r.end.y - 30.0:
-		b.line(Vector2(ridge - 24.0, gy), Vector2(ridge + 24.0, gy), IRON, 1.2)
-		gy += 18.0
-	b.line(Vector2(ridge, r.position.y + 20.0), Vector2(ridge, r.end.y - 20.0), IRON, 2.0)
-	# the brick front on the street, its cornice and the three arches
-	b.rect(Rect2(fx, r.position.y, FACE, r.size.y), BRICK)
-	b.line(Vector2(fx + FACE, r.position.y), Vector2(fx + FACE, r.end.y), BRICK_LIT, 3.0)
-	b.line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), BRICK.darkened(0.3), 3.0)
+		if absf(lx - ridge) > 34.0:
+			b.line(Vector2(lx, roof.position.y), Vector2(lx, roof.end.y), Color(0.0, 0.0, 0.0, 0.10), 1.4)
+		lx += 46.0
+	# the lantern: iron and glass, the panes toward the sun bright
+	var lan := Rect2(ridge - 26.0, r.position.y + 22.0, 52.0, r.size.y - 44.0)
+	b.rect(Rect2(lan.position + Shade.light * 9.0, lan.size), Color(0.05, 0.04, 0.10, 0.26))
+	b.rect(lan.grow(2.0), IRON)
+	b.rect(Rect2(lan.position.x, lan.position.y, 26.0, lan.size.y), GLASS.lightened(0.14))
+	b.rect(Rect2(ridge, lan.position.y, 26.0, lan.size.y), GLASS.darkened(0.22))
+	var gy := lan.position.y + 16.0
+	var pane := 0
+	while gy < lan.end.y - 4.0:
+		b.line(Vector2(lan.position.x, gy), Vector2(lan.end.x, gy), IRON, 1.2)
+		if pane % 3 == 1:
+			b.rect(Rect2(lan.position.x + 2.0, gy + 2.0, 22.0, 12.0), Color(1.0, 1.0, 1.0, 0.16))
+		gy += 16.0
+		pane += 1
+	b.line(Vector2(ridge, lan.position.y), Vector2(ridge, lan.end.y), IRON, 2.4)
+	# the gables: brick, capped in stone
+	b.rect(Rect2(fx + FACE, r.position.y, r.size.x - FACE, 8.0), BRICK.darkened(0.10))
+	b.line(Vector2(fx + FACE, r.position.y + 1.5), Vector2(r.end.x, r.position.y + 1.5), STONE_LIT, 3.0)
+	b.rect(Rect2(fx + FACE, r.end.y - 8.0, r.size.x - FACE, 8.0), BRICK.darkened(0.22))
+	b.line(Vector2(fx + FACE, r.end.y - 6.5), Vector2(r.end.x, r.end.y - 6.5), STONE, 3.0)
+	b.rect(Rect2(fx + FACE, r.position.y + 8.0, r.size.x - FACE, 8.0), Color(0.05, 0.04, 0.10, 0.22))
+	# the brick front on the street, toward the sun: courses, piers, a stone
+	# base and cornice, and the three arches
+	b.rect(Rect2(fx, r.position.y, FACE, r.size.y), BRICK.lightened(0.05).lerp(WARM, 0.08))
+	for ci in range(3):
+		b.line(Vector2(fx + 6.0 + float(ci) * 5.0, r.position.y), Vector2(fx + 6.0 + float(ci) * 5.0, r.end.y), BRICK.darkened(0.14), 1.0)
+	b.line(Vector2(fx + FACE - 3.0, r.position.y), Vector2(fx + FACE - 3.0, r.end.y), Color(0.05, 0.06, 0.12, 0.22), 5.0)
+	b.line(Vector2(fx + FACE, r.position.y), Vector2(fx + FACE, r.end.y), STONE_LIT, 3.0)
+	b.line(Vector2(fx, r.position.y), Vector2(fx, r.end.y), STONE_DARK, 4.0)
+	for po: float in MARKET_PIERS:
+		b.rect(Rect2(fx + 2.0, MARKET_DOOR_Y + po - 7.0, FACE - 3.0, 14.0), BRICK_LIT.lerp(WARM, 0.10))
+		b.rect(Rect2(fx + 2.0, MARKET_DOOR_Y + po + 5.0, FACE - 3.0, 2.0), BRICK.darkened(0.3))
 	for ao: float in MARKET_ARCHES:
 		var ay := MARKET_DOOR_Y + ao
 		var open := absf(ay - MARKET_DOOR_Y) < 1.0
-		b.rect(Rect2(fx + 2.0, ay - 34.0, FACE - 4.0, 68.0), BRICK.darkened(0.35))
-		b.rect(Rect2(fx + 4.0, ay - 28.0, FACE - 8.0, 56.0), SHOP_LIGHT.darkened(0.25) if open else GLASS.darkened(0.35))
-		b.circle(Vector2(fx + FACE * 0.5, ay - 34.0), 6.0, BRICK_LIT)
+		# the arch's stone ring, its head toward the cornice
+		b.rect(Rect2(fx + 1.0, ay - 36.0, FACE - 9.0, 72.0), STONE_LIT)
+		b.circle(Vector2(fx + FACE - 9.0, ay), 12.0, STONE_LIT)
+		b.rect(Rect2(fx + 2.0, ay - 30.0, FACE - 10.0, 60.0), SHOP_LIGHT.darkened(0.12) if open else GLASS.darkened(0.30))
+		b.circle(Vector2(fx + FACE - 9.0, ay), 8.0, SHOP_LIGHT.darkened(0.12) if open else GLASS.darkened(0.30))
+		if not open:
+			b.line(Vector2(fx + 2.0, ay - 10.0), Vector2(fx + FACE - 6.0, ay - 10.0), IRON, 1.0)
+			b.line(Vector2(fx + 2.0, ay + 10.0), Vector2(fx + FACE - 6.0, ay + 10.0), IRON, 1.0)
+			b.line(Vector2(fx + 8.0, ay - 30.0), Vector2(fx + 8.0, ay + 30.0), IRON, 1.0)
+		else:
+			b.rect(Rect2(fx + 2.0, ay - 30.0, 4.0, 60.0), Color(0.36, 0.26, 0.18))
+
+
+const MARKET_PIERS: Array[float] = [-170.0, -65.0, 65.0, 170.0]
 
 
 # --- the furniture --------------------------------------------------------------
@@ -1033,10 +1581,17 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	var b := ShapeBatch.new()
 	b.circle(f + Shade.light * 10.0, 20.0, SHADOW)
 	b.circle(f, 20.0, STONE_DARK)
-	b.circle(f, 16.0, STONE)
-	b.circle(f + Vector2(4.0, 4.0), 11.0, WATER)
-	b.rect(Rect2(f.x - 8.0, f.y - 16.0, 16.0, 12.0), STONE_LIT)
+	b.circle(f - Vector2(1.0, 1.5), 18.5, STONE_LIT)
+	b.circle(f + Vector2(0.5, 1.0), 17.0, STONE)
+	b.circle(f + Vector2(4.0, 4.0), 12.0, STONE_DARK)
+	b.circle(f + Vector2(4.0, 4.0), 11.0, WATER.darkened(0.12))
+	b.circle(f + Vector2(3.0, 3.0), 8.0, WATER)
+	b.rect(Rect2(f.x - 8.0 + Shade.light.x * 4.0, f.y - 16.0 + Shade.light.y * 4.0, 16.0, 12.0), SHADOW)
+	b.rect(Rect2(f.x - 8.0, f.y - 16.0, 16.0, 12.0), STONE)
+	b.rect(Rect2(f.x - 8.0, f.y - 16.0, 16.0, 3.0), STONE_LIT)
+	b.rect(Rect2(f.x - 8.0, f.y - 16.0, 3.0, 12.0), STONE_LIT)
 	b.line(f + Vector2(0.0, -6.0), f + Vector2(0.0, 2.0), BRONZE, 3.0)
+	b.circle(f + Vector2(0.0, -8.0), 2.4, BRONZE_LIT)
 	b.flush(m._wc)
 
 
@@ -1059,7 +1614,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 			_crates(wc, CRATES_1)
 			_baker(wc, t)
 		if CRATES_2.end.y + 60.0 > vt and CRATES_2.position.y - 60.0 < vb:
-			_crates(wc, CRATES_2)
+			_crates(wc, CRATES_2, 1)
 	if MARKET.end.y > vt and MARKET.position.y < vb:
 		if market_open():
 			_fruit(wc)
@@ -1122,6 +1677,11 @@ static func _shop(wc: ShapeBatch, i: int, side: float, kind: String, y: float, u
 	var r := Rect2(x0, y - SHOP_LEN * 0.5, FACE, SHOP_LEN)
 	wc.rect(r.grow(2.0), STONE_DARK)
 	wc.rect(r, SHOP_LIGHT.darkened(0.18))
+	# the lit depth of the shop behind the glass, and its doorway
+	wc.rect(Rect2(x0 + (FACE * 0.5 if side > 0.0 else 0.0), r.position.y, FACE * 0.5, SHOP_LEN), SHOP_LIGHT.darkened(0.30))
+	wc.rect(Rect2(x0, y - 11.0, FACE, 22.0), SHOP_LIGHT.darkened(0.06))
+	wc.line(Vector2(x0, y - 12.0), Vector2(x0 + FACE, y - 12.0), STONE_DARK, 2.0)
+	wc.line(Vector2(x0, y + 12.0), Vector2(x0 + FACE, y + 12.0), STONE_DARK, 2.0)
 	var goods: Array[Color] = GOODS_CAFE
 	match kind:
 		"fruit": goods = FRUIT_COLS
@@ -1130,8 +1690,13 @@ static func _shop(wc: ShapeBatch, i: int, side: float, kind: String, y: float, u
 		"llibreria": goods = GOODS_LLIBRERIA
 	var gy := r.position.y + 10.0
 	var k := 0
+	var gx := x0 + (7.0 if side > 0.0 else FACE - 7.0)
 	while gy < r.end.y - 8.0:
-		wc.circle(Vector2(r.get_center().x, gy), 4.0, goods[(k + i) % goods.size()])
+		if absf(gy - y) > 15.0:
+			var g: Color = goods[(k + i) % goods.size()]
+			wc.circle(Vector2(gx + 1.0, gy + 1.5), 4.0, Color(0.0, 0.0, 0.0, 0.22))
+			wc.circle(Vector2(gx, gy), 4.0, g)
+			wc.circle(Vector2(gx - 1.2, gy - 1.2), 1.6, g.lightened(0.35))
 		gy += 11.0
 		k += 1
 	# the shutter rolls up toward the roof, away from the street
@@ -1148,13 +1713,22 @@ static func _shop(wc: ShapeBatch, i: int, side: float, kind: String, y: float, u
 	wc.rect(Rect2(bx, r.position.y - 2.0, 3.0, SHOP_LEN + 4.0), SHUTTER_SLAT.darkened(0.3))
 
 
-static func _crates(wc: ShapeBatch, r: Rect2) -> void:
+static func _crates(wc: ShapeBatch, r: Rect2, v := 0) -> void:
 	wc.rect(Rect2(r.position + Shade.light * 6.0, r.size), SHADOW)
 	var h := r.size.y / 2.0
 	for k in range(2):
 		var cr := Rect2(r.position.x, r.position.y + float(k) * h, r.size.x, h - 2.0)
 		wc.rect(cr, CRATE_DARK)
 		wc.rect(cr.grow(-2.5), CRATE)
+		wc.line(Vector2(cr.position.x + 2.5, cr.position.y + 3.0), Vector2(cr.end.x - 2.5, cr.position.y + 3.0), CRATE_DARK.darkened(0.15), 1.6)
+		if v == 1 and k == 0:
+			# the second bakery's top crate: croissants, and a coca dusted
+			# with sugar
+			for j in range(6):
+				var cc := Vector2(cr.position.x + 8.0 + float(j % 3) * 9.0, cr.position.y + 8.0 + float(j / 3) * 9.0)
+				wc.capsule(cc + Vector2(-2.5, 1.0), cc + Vector2(2.5, 1.0), 2.6, BREAD)
+				wc.circle(cc + Vector2(0.0, -0.5), 2.2, BREAD_LIT)
+			continue
 		# the loaves in it: barres de pa and a round pagès
 		for j in range(3):
 			var ly := cr.position.y + 6.0 + float(j) * 8.0
@@ -1251,7 +1825,7 @@ static func _sweeper(wc: ShapeBatch, p: Vector2, st: State, t: float) -> void:
 	wc.capsule(head + Vector2(0.0, -6.0), head + Vector2(0.0, 6.0), 3.0, Color(0.30, 0.26, 0.20))
 
 
-# --- overhead: balconies, the bakery awnings and the pharmacy's green cross ---------
+# --- overhead: balconies, the shops' awnings and signs, the pharmacy's green cross ---
 
 static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	if m.lvl != "sarria":
@@ -1272,24 +1846,68 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 		var y: float = SHOPS[i][0]
 		var side: float = SHOPS[i][1]
 		var e := _front_x(y, side)
-		match String(SHOPS[i][2]):
+		var kind := String(SHOPS[i][2])
+		match kind:
 			"forn":
-				# a striped canvas awning over the bakery door
-				var x0 := e if side < 0.0 else e - 12.0
-				var stripe := 0
-				var sy := y - SHOP_LEN * 0.5
-				while sy < y + SHOP_LEN * 0.5:
-					b.rect(Rect2(x0, sy, 12.0, minf(12.0, y + SHOP_LEN * 0.5 - sy)), Color(0.80, 0.22, 0.20) if stripe % 2 == 0 else Color(0.96, 0.92, 0.84))
-					sy += 12.0
-					stripe += 1
-				b.line(Vector2(x0 + (12.0 if side < 0.0 else 0.0), y - SHOP_LEN * 0.5), Vector2(x0 + (12.0 if side < 0.0 else 0.0), y + SHOP_LEN * 0.5), Color(0.60, 0.16, 0.14), 2.0)
+				_awning(b, e, side, y, 14.0, Color(0.80, 0.22, 0.20), Color(0.96, 0.92, 0.84))
+			"fruit":
+				_awning(b, e, side, y, 14.0, Color(0.22, 0.48, 0.30), Color(0.94, 0.92, 0.84))
+			"cafe":
+				_awning(b, e, side, y, 12.0, Color(0.74, 0.44, 0.26), Color(0.74, 0.44, 0.26).lightened(0.12))
 			"farmacia":
 				# the green cross on its bracket, out over the street
 				var cp := Vector2(e + side * -18.0, y - 40.0)
+				b.rect(Rect2(cp.x - 9.0 + Shade.light.x * 14.0, cp.y - 3.0 + Shade.light.y * 14.0, 18.0, 6.0), Color(0.05, 0.06, 0.12, 0.14))
+				b.rect(Rect2(cp.x - 3.0 + Shade.light.x * 14.0, cp.y - 9.0 + Shade.light.y * 14.0, 6.0, 18.0), Color(0.05, 0.06, 0.12, 0.14))
 				b.line(Vector2(e, cp.y), cp, IRON, 2.0)
+				b.rect(Rect2(cp.x - 10.0, cp.y - 4.0, 20.0, 8.0), PHARMACY.darkened(0.35))
+				b.rect(Rect2(cp.x - 4.0, cp.y - 10.0, 8.0, 20.0), PHARMACY.darkened(0.35))
 				b.rect(Rect2(cp.x - 9.0, cp.y - 3.0, 18.0, 6.0), PHARMACY)
 				b.rect(Rect2(cp.x - 3.0, cp.y - 9.0, 6.0, 18.0), PHARMACY)
+				b.rect(Rect2(cp.x - 2.0, cp.y - 2.0, 4.0, 4.0), PHARMACY.lightened(0.5))
+				_fascia(b, e, side, y, Color(0.92, 0.94, 0.92), PHARMACY)
+			"llibreria":
+				_fascia(b, e, side, y, Color(0.20, 0.28, 0.42), Color(0.90, 0.80, 0.40))
 	b.flush()
+
+
+# A canvas awning out over a shop door: stripes down its length, a
+# scalloped valance on the street edge, and its shade on the pavement
+static func _awning(b: ShapeBatch, e: float, side: float, y: float, out: float, col: Color, alt: Color) -> void:
+	var x0 := e if side < 0.0 else e - out
+	var top := y - SHOP_LEN * 0.5
+	var bot := y + SHOP_LEN * 0.5
+	b.rect(Rect2(x0 + Shade.light.x * 9.0, top + Shade.light.y * 9.0, out, SHOP_LEN), Color(0.05, 0.06, 0.12, 0.18))
+	var stripe := 0
+	var sy := top
+	while sy < bot:
+		b.rect(Rect2(x0, sy, out, minf(12.0, bot - sy)), col if stripe % 2 == 0 else alt)
+		sy += 12.0
+		stripe += 1
+	# the canvas sags from the wall to the bar: lit at the wall, a fold of
+	# shade toward the street
+	var wall := x0 + (0.0 if side < 0.0 else out)
+	var edge := x0 + (out if side < 0.0 else 0.0)
+	b.line(Vector2(wall + (-side) * 2.0, top), Vector2(wall + (-side) * 2.0, bot), Color(1.0, 1.0, 1.0, 0.16), 4.0)
+	b.line(Vector2(edge + side * 2.5, top), Vector2(edge + side * 2.5, bot), Color(0.0, 0.0, 0.0, 0.14), 3.0)
+	b.line(Vector2(edge, top), Vector2(edge, bot), col.darkened(0.30), 2.0)
+	var vy := top + 6.0
+	while vy < bot:
+		b.circle(Vector2(edge - side * 1.0, vy), 2.6, col.darkened(0.12) if int(vy - top) % 24 < 12 else alt.darkened(0.10))
+		vy += 12.0
+	b.line(Vector2(x0, top), Vector2(x0 + out, top), IRON, 1.4)
+	b.line(Vector2(x0, bot), Vector2(x0 + out, bot), IRON, 1.4)
+
+
+# a shop's signboard along the top of its window, with a row of letters
+static func _fascia(b: ShapeBatch, e: float, side: float, y: float, col: Color, ink: Color) -> void:
+	var x0 := e if side < 0.0 else e - 7.0
+	b.rect(Rect2(x0 + Shade.light.x * 5.0, y - SHOP_LEN * 0.5 + Shade.light.y * 5.0, 7.0, SHOP_LEN), Color(0.05, 0.06, 0.12, 0.16))
+	b.rect(Rect2(x0, y - SHOP_LEN * 0.5, 7.0, SHOP_LEN), col)
+	var ly := y - 36.0
+	while ly < y + 38.0:
+		b.rect(Rect2(x0 + 2.0, ly, 3.0, 5.0), ink)
+		ly += 8.0
 
 
 static func _near_shop(y: float, side: float) -> bool:
@@ -1299,21 +1917,52 @@ static func _near_shop(y: float, side: float) -> bool:
 	return false
 
 
+# A balcony over the street: the stone slab, a light iron railing, and
+# what its house keeps on it. One in four has the green roller blind let
+# down over the rail against the sun, one in four the washing out.
 static func _balcony(b: ShapeBatch, side: float, y: float, k: int, gardener: bool) -> void:
 	var e := _front_x(y, side)
 	var depth := 14.0
 	var x0 := e if side < 0.0 else e - depth
 	var len := 50.0 if gardener else 38.0
-	b.rect(Rect2(x0 - side * 6.0 + Shade.light.x * 6.0, y - len * 0.5 + Shade.light.y * 6.0, depth, len), Color(0.04, 0.05, 0.07, 0.18))
-	b.rect(Rect2(x0, y - len * 0.5, depth, len), STONE_LIT)
-	# the wrought-iron railing on the outer edge
+	var top := y - len * 0.5
 	var rx := x0 + (depth if side < 0.0 else 0.0)
-	b.line(Vector2(rx, y - len * 0.5), Vector2(rx, y + len * 0.5), IRON, 2.0)
-	b.line(Vector2(x0, y - len * 0.5), Vector2(x0 + depth, y - len * 0.5), IRON, 1.6)
-	b.line(Vector2(x0, y + len * 0.5), Vector2(x0 + depth, y + len * 0.5), IRON, 1.6)
-	var n := 5 if gardener else 2 + k % 2
+	var kind := 0 if gardener else _lot_hash(k, side, 29) % 4
+	b.rect(Rect2(x0 + Shade.light.x * 10.0, top + Shade.light.y * 10.0, depth, len), Color(0.05, 0.06, 0.12, 0.20))
+	b.rect(Rect2(x0, top, depth, len), STONE_LIT)
+	b.rect(Rect2(x0 + 1.5, top + 1.5, depth - 3.0, len - 3.0), Color(0.72, 0.56, 0.44))
+	# the wrought-iron railing: a rail and its uprights
+	b.line(Vector2(rx, top), Vector2(rx, top + len), IRON_SOFT, 1.4)
+	b.line(Vector2(x0, top), Vector2(x0 + depth, top), IRON_SOFT, 1.2)
+	b.line(Vector2(x0, top + len), Vector2(x0 + depth, top + len), IRON_SOFT, 1.2)
+	var uy := top + 4.0
+	while uy < top + len - 2.0:
+		b.line(Vector2(rx - 1.6, uy), Vector2(rx + 1.6, uy), IRON_SOFT, 1.0)
+		uy += 4.0
+	if kind == 1:
+		# the persiana: green slats rolled down and hung out over the rail
+		var px := rx if side < 0.0 else rx - 9.0
+		b.rect(Rect2(px, top + 5.0, 9.0, len - 16.0), SHUTTER_GREEN)
+		var py := top + 8.0
+		while py < top + len - 12.0:
+			b.line(Vector2(px, py), Vector2(px + 9.0, py), SHUTTER_GREEN_LIT, 1.0)
+			py += 3.0
+	elif kind == 3:
+		# washing over the rail
+		for i in range(2):
+			var wx := rx - (0.0 if side < 0.0 else 7.0)
+			b.rect(Rect2(wx, top + 5.0 + float(i) * 15.0, 7.0, 11.0), LAUNDRY[(k + i) % LAUNDRY.size()])
+	# pots along the rail, spilling over it
+	var n := 5 if gardener else (1 if kind == 1 or kind == 3 else 2 + k % 2)
 	for i in range(n):
-		var pp := Vector2(x0 + depth * 0.5, y - len * 0.5 + 6.0 + float(i) * (len - 12.0) / maxf(1.0, float(n - 1)))
-		b.circle(pp, 4.2, POT)
-		b.circle(pp + Vector2(0.0, -1.0), 3.8, LEAF)
-		b.circle(pp + Vector2(0.6, -1.5), 2.4, GERANIUM if (i + k) % 3 != 0 else GERANIUM_PINK)
+		var t := 0.5 if n == 1 else float(i) / float(n - 1)
+		var pp := Vector2(x0 + depth * 0.5 - side * 1.0, top + 7.0 + t * (len - 14.0))
+		if n == 1:
+			pp.y = top + len - 7.0
+		b.circle(pp, 4.0, POT)
+		b.circle(pp + Vector2(-side * 1.5, -1.0), 4.6, LEAF)
+		b.circle(pp + Vector2(-side * 4.0, 1.5), 3.0, LEAF.lightened(0.08))
+		var bloom: Color = BLOOMS[(i + k) % BLOOMS.size()]
+		b.circle(pp + Vector2(-side * 2.0, -2.0), 2.0, bloom)
+		b.circle(pp + Vector2(-side * 5.0, 1.0), 1.6, bloom)
+		b.circle(pp + Vector2(1.0, 2.0), 1.4, bloom.lightened(0.2))
