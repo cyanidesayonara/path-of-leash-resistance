@@ -808,6 +808,13 @@ var presentation_human_offset := Vector2.ZERO
 # it, so the slack never bunches into a ball as the two ends meet.
 var presentation_straighten := 0.0
 const PRESENT_SAG := 10.0
+# the rope's dropped shadow, from the collar (low) to the hand (high): the
+# further off the ground, the further its shadow falls
+const SHADE_DOG := Vector2(1.2, 1.8)
+const SHADE_HAND := Vector2(3.6, 5.4)
+# the player's leash takes the colour of her collar (Game.collar); an NPC's
+# keeps the leather brown
+const LEATHER := Color(0.55, 0.27, 0.23)
 
 
 # The rope as drawn, in global coordinates: always VIS_N samples, every solver
@@ -828,6 +835,19 @@ func visible_path() -> PackedVector2Array:
 		var chord := (a + b) * 0.5
 		_vis[2 * i + 1] = chord
 		if has_touch and (_touch[i] >= 0 or _touch[i + 1] >= 0):
+			# a span with both ends resting on the same pole is part of a coil:
+			# its midpoint goes on the arc round that pole, at the ends' own
+			# distance from it, rather than on the chord, so a coil reads as a
+			# loop round the trunk and not a polygon. On the arc it is further
+			# from the pole than the chord, so it clears it all the better.
+			var k := _touch[i]
+			if k >= 0 and k == _touch[i + 1] and k < obs_n:
+				var pl: Vector2 = _obs_pos[k]
+				var ra := a - pl
+				var rb := b - pl
+				var bis := ra.normalized() + rb.normalized()
+				if bis.length_squared() > 0.25:
+					_vis[2 * i + 1] = pl + bis.normalized() * (ra.length() + rb.length()) * 0.5
 			continue
 		var ta: Vector2 = pts[mini(i + 1, N - 1)] - pts[maxi(i - 1, 0)]
 		var tb: Vector2 = pts[mini(i + 2, N - 1)] - pts[i]
@@ -880,7 +900,7 @@ func _draw_shapes() -> void:
 			var line := end_a.lerp(end_z, u) + Vector2(0.0, sin(PI * u) * PRESENT_SAG)
 			p = p.lerp(to_local(line), presentation_straighten)
 		_loc[i] = p
-		_shade[i] = p + Vector2(2.0, 3.0)
+		_shade[i] = p + SHADE_DOG.lerp(SHADE_HAND, u)
 		_hi[i] = p + Vector2(0.0, -0.9)
 	# a flat 3px line reads as a debug gizmo. Four passes make it read as
 	# webbing: a dropped shadow, a dark edge, the body, and a lit top edge
@@ -888,7 +908,10 @@ func _draw_shapes() -> void:
 	# cinches thinner and hotter as it comes taut. A dynamic leash snag
 	# warms the strap so the tangle reads separately from a pole wrap.
 	var tight := taut_amount(used_length() / maxf(rest_len, 1.0))
-	var body := Color(0.55, 0.27, 0.23).lerp(Color(0.72, 0.28, 0.22), tight)
+	var base := LEATHER
+	if hero:
+		base = _collar_colour(AnimClock.msec())
+	var body := base.lerp(base.lightened(0.18), tight)
 	if dynamic_contacts > 0:
 		body = Color(0.72, 0.38, 0.22).lerp(Color(0.88, 0.42, 0.18), tight)
 	var wide := lerpf(4.2, 3.4, tight)
@@ -901,8 +924,38 @@ func _draw_shapes() -> void:
 		_b.draw_circle(cp + Vector2(1.2, 1.8), 5.2, Color(0.05, 0.04, 0.06, 0.28))
 		_b.draw_circle(cp, 4.6, Color(0.95, 0.55, 0.22, lerpf(0.65, 0.85, tight)))
 		_b.draw_circle(cp, 2.0, Color(1.0, 0.85, 0.55, 0.9))
-	# the handle loop in the owner's fist
+	# the dog end's clasp is on her harness, drawn by the dog over her own
+	# back (entities/dog.gd _leash_clip): this end of the rope is under her
+	# the owner's end: the retractable reel in their fist, where the strap
+	# goes in (the player's own; an NPC's strap ends in a plain loop)
 	var hp := to_local(_hand_pos() + presentation_human_offset)
-	_b.draw_circle(hp + Vector2(1.5, 2.0), 4.6, Color(0.05, 0.04, 0.06, 0.25))
-	_b.draw_circle(hp, 4.4, body.darkened(0.45))
-	_b.draw_circle(hp, 2.4, body.lightened(0.1))
+	_b.draw_circle(hp + Vector2(1.5, 2.0), 5.6 if hero else 4.6, Color(0.05, 0.04, 0.06, 0.25))
+	if hero:
+		_b.draw_circle(hp, 5.4, Color(0.16, 0.16, 0.19))
+		_b.draw_circle(hp + Vector2(-0.6, -0.7), 4.0, Color(0.28, 0.29, 0.33))
+		_b.draw_circle(hp + Vector2(1.6, -1.8), 1.5, base.lightened(0.2))
+	else:
+		_b.draw_circle(hp, 4.4, body.darkened(0.45))
+		_b.draw_circle(hp, 2.4, body.lightened(0.1))
+
+
+# The equipped collar's colour (Game.COLLARS), a little toned down to read as
+# strap, the rainbow cycling as the dog's own does.
+# Looked up at run time: the rope is also built bare by tests, before (or
+# without) the autoloads.
+func _collar_colour(now_ms: int) -> Color:
+	var game: Node = get_node_or_null("/root/Game") if is_inside_tree() else null
+	if game == null:
+		return LEATHER
+	var collars: Dictionary = game.COLLARS
+	var key := String(game.collar) if collars.has(game.collar) else "red"
+	var c: Color = collars[key].col
+	if key == "rainbow":
+		c = Color.from_hsv(fmod(float(now_ms) / 1000.0 * 0.35, 1.0), 0.7, 0.9)
+	return c.lerp(LEATHER, 0.25)
+
+
+# The strap's own colour, slack: what the dog's harness clip draws its last
+# stretch of rope in (entities/dog.gd), to match the rope.
+func strap_colour() -> Color:
+	return _collar_colour(AnimClock.msec()) if hero else LEATHER

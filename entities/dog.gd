@@ -800,6 +800,7 @@ func _draw_shapes() -> void:
 	var strap_thick := 3.8 if is_tito else (6.5 if is_gos else (7.0 if is_frenchie else (6.5 if is_galgo else 6.0)))
 	_b.draw_line(shoulder + side * strap_w, shoulder - side * strap_w, col, strap_thick)
 	_b.draw_circle(shoulder, 1.5 if is_tito else (2.4 if is_frenchie else 2.2), Color(0.3, 0.3, 0.32))
+	_leash_clip(shoulder)
 	var neck := shoulder + facing * (4.2 if is_tito else (7.2 if is_gos else (5.5 if is_frenchie else (9.0 if is_galgo else 6.5))))
 	var neck_w := 3.6 if is_tito else (5.8 if is_gos else (6.2 if is_frenchie else (4.5 if is_galgo else 5.5)))
 	var neck_thick := 2.4 if is_tito else (3.8 if is_gos else (4.5 if is_frenchie else (4.0 if is_galgo else 3.0)))
@@ -1125,3 +1126,24 @@ func _draw_shapes() -> void:
 		_b.draw_circle(shoulder + facing * 2.0, 9.0, Color(0.42, 0.56, 0.66, 0.32))
 		_b.draw_circle(head + facing * 12.0 + side * sin(t * 18.0) * 4.0, 2.2, Color(0.9, 0.95, 1.0, 0.8))
 		_b.draw_circle(head + facing * 12.0 - side * sin(t * 18.0) * 4.0, 1.8, Color(0.9, 0.95, 1.0, 0.6))
+
+
+# The leash clipped to her harness ring: the rope is tied to her middle and
+# drawn under her, so the last of it, from the ring to where it comes out
+# from under her, is drawn here on top, with the steel clasp on the ring.
+func _leash_clip(ring: Vector2) -> void:
+	if main == null or main.get("leash") == null or main.leash.get_parent() == null:
+		return
+	var l: Node2D = main.leash
+	if bool(l.detached) or l.pts.size() < 3 or l.dog != self:
+		return
+	var out: Vector2 = (l.pts[2] - l.pts[0]).rotated(-global_rotation)
+	if out.length_squared() < 1.0:
+		return
+	var exit := out.normalized() * 15.0
+	var strap: Color = l.strap_colour()
+	_b.draw_line(ring + Vector2(0.6, 0.9), exit + Vector2(0.6, 0.9), Color(0.05, 0.04, 0.06, 0.3), 3.6)
+	_b.draw_line(ring, exit, strap.darkened(0.3), 3.4)
+	_b.draw_line(ring, exit, strap, 2.0)
+	_b.draw_circle(ring, 2.6, Color(0.46, 0.48, 0.52))
+	_b.draw_circle(ring + Vector2(-0.6, -0.6), 1.2, Color(0.86, 0.88, 0.92))

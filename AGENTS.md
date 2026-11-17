@@ -86,9 +86,13 @@ explain every changed snapshot line; this does not relax the refactor rule.
   `setup()` always replaces the rope with exactly `N` current and previous
   points; repeated setup must never append another rope.
   `used_length()` is the solver polyline length. `visible_path()` is the
-  public, fixed-size visual path: every solver point is pinned, spans beside
-  contacts stay straight, and a curved midpoint is rejected if either new
-  segment would enter an obstacle. Drawing must consume that path and reuse
+  public, fixed-size visual path: every solver point is pinned, a span with
+  one end on a contact stays straight, a span with both ends on the same pole
+  puts its midpoint on the arc round it (a coil reads as a loop, not a
+  polygon), and a curved midpoint is rejected if either new segment would
+  enter an obstacle. The player's rope is drawn in her collar's colour, its
+  shadow falls further from it toward the hand, it ends in a reel in his
+  fist, and the dog draws its clip on her harness (`dog._leash_clip`). Drawing must consume that path and reuse
   its fixed buffers. `dog_pull_dir()` / `human_pull_dir()` use a
   three-segment length-weighted chord on an open end; any contact in that run
   restores the first-segment tangent, preserving wound arcs. Regression tests:
