@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Carrer de Blai: the art pass
+
+- Art only, all in `systems/blai.gd`. No solid, pole, surface, NPC path, RNG draw or goal moves, and the walk's behaviour snapshot is byte-identical.
+- The terrats are laid in fired tiles, with the parapet's and the dividing wall's shade inside them. A house taller than its southern neighbour throws its shade on that roof. Each stair hut has a door and a step, and the terrats carry air-conditioning units or satellite dishes beside the tanks and the washing.
+- The back of each block is real roofs now (pantiles, terrats, light wells, from `Gotic.draw_block`) at a fixed depth behind the street's houses. Before, it was one flat tone.
+- The street: the facades throw a soft contact shade on the paving at their feet (`ShapeBatch.band`). Cellar grates sit along the walls between the bars, damp round their edges. Some granite slabs are darkened by years of spilt drink, and a few are cracked.
+- The bars: by day and at dawn, a closed bar's shutter has its tags scrawled across, a bottom rail and two padlocks. An open bar's awning has a scalloped valance and the cranked arm it is wound in by.
+- Tests: `test_blai.gd`, `test_walk_hooks.gd`, `test_soft_light.gd`, `blai --selftest` and a `tools/playtest.gd` walk to the freedom area (0 problems). `tools/behaviour_snapshot.sh` (blai) is identical before and after, and `SURF_DUMP=1 tools/surface_map.sh blai` matches main's pattern. Draw calls at fixed frames are unchanged (282 at the median, 392 at max).
+
 ## 2026-11-17 - El Metro: the art pass
 
 - Art only, all in `systems/metro_art.gd`. No solid, pole, surface, NPC path or goal moves, and the walk's behaviour snapshot is byte-identical.
