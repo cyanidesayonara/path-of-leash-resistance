@@ -11505,6 +11505,14 @@ func _spawn_challenger() -> void:
 		giver.setup(self, dog, who)
 		_pops_layer().add_speaker(giver, giver.speech)
 		return
+	if script.AT.has(lvl):
+		# a walk whose usual spot is taken by something (El Metro's escalator)
+		giver.position = script.AT[lvl]
+		giver.z_index = 6
+		add_child(giver)
+		giver.setup(self, dog, who)
+		_pops_layer().add_speaker(giver, giver.speech)
+		return
 	var base := Vector2(walk_cx, -1600.0)
 	for offset: Vector2 in [
 		Vector2(170.0, 0.0), Vector2(-170.0, 0.0),

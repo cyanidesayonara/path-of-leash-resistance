@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - El Metro: a breakdancer gives the dares
+
+- El Metro had the default dare-giver, the kid on a wooden park bench, and main's spawn rule put him at (810, -1600), on the escalator's treads. Now the walk has its own giver (`entities/challenger.gd`, `"breaker"`): a breakdancer practising on taped-down cardboard by the ticket hall's west wall, with a boombox against the wall behind him. He toprocks in his tracksuit and backwards cap, then drops into a headspin with his legs out in a V. He has his own lines ("Show me your moves!", "Lost the beat!", "You're in the crew now.") and his own dare tune in `audio/music.gd`: a funky minor riff, swung, on vibes over a groove.
+- `challenger.AT` puts a giver where a walk needs it, instead of main's usual spot either side of the corridor, and `main._spawn_challenger` reads it. Only El Metro uses it, at (445, -1430).
+- Givers redraw only when their line changes, so their animation held still. The breakdancer's routine is his act, so he redraws while the dog is within 800 px.
+- Tests: `test_dare_retry.gd` (every giver has every line, said plainly), `test_baked_music.gd` (the bake covers `dare_breaker`), `test_metro.gd`, `test_tutorial_isolation.gd`, `metro --selftest` (the giver is on pavement, not in a solid, and has enough trick spots nearby) and a `tools/playtest.gd` run that takes the dare. `tools/behaviour_snapshot.sh` for metro and station is identical to main.
+
 ## 2026-11-17 - Carrer de Blai: the art pass
 
 - Art only, all in `systems/blai.gd`. No solid, pole, surface, NPC path, RNG draw or goal moves, and the walk's behaviour snapshot is byte-identical.
