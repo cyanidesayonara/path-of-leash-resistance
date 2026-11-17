@@ -2,6 +2,22 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Every dare-giver moves and has a tune of their own
+
+- Every dare-giver now moves while she is near (they redraw through `Redraw.later` within 800 px of the dog, as the breakdancer did). Most of the original givers already had motion in their drawing (the kid's wave, the statue's head turn, the busker's strum) but were only redrawn when their line changed, so they looked frozen. Three got motion of their own: the builder takes a bite of his bocadillo, the àvia jiggles her trolley and shakes her head at you, and the commuter taps his foot and looks up the line for his train. The eleven new givers that held one pose now have an idle too:
+  - the umbrella seller turns his umbrella
+  - the baker holds out his tray
+  - the mushroom picker works his knife
+  - the scrap dealer rocks his rattling trolley
+  - the hiker leans on her poles in turn
+  - the surfer shifts his board and looks out for a wave
+  - the photographer turns her focus ring, and her flash fires
+  - the pilot checks his watch
+  - the monk tells his beads
+  - the delivery rider gets an order ping
+  - the cook sips his coffee
+- Each of the 29 givers added this week has a dare tune of their own (`audio/music.gd DARES`) instead of borrowing the nearest one, for example a Phrygian rumba for the flamenco dancer, surf guitar for the surfer, a gralla over drums for the correfoc devil, plainchant for the monk, a carousel for the balloon seller and a tick-tock for the chess player. `challenger.TUNE`, the borrowing map, is gone. The bake grows by about 2 MB.
+
 ## 2026-11-17 - Dares you can read and win
 
 - A dare asked for 6, 8 and then 10 tricks in 20 seconds, and the trick nearly every walk offers, the pole swing, only fires while the zoomies are held. The zoomies only come back by landing tricks, and one swing used most of a full bar. So a dare was out of reach, and with an empty bar it could not even be started. Now the dare's clock starting fills the zoomies, and they cost nothing until it ends: the bar shimmers turquoise while they are free.
