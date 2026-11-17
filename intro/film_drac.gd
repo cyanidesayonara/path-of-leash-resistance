@@ -88,7 +88,7 @@ static func drac_at(t: float) -> Vector2:
 	if t < DROP_AT:
 		var f := Anim.span(t, HOP_AT, DROP_AT)
 		return Vector2(lerpf(PLINTH_X, PLINTH_X + 220.0, f), lerpf(PLINTH_TOP, FEET, f * f) - sin(f * PI) * 40.0)
-	return Vector2(Anim.k(t, [[DROP_AT, PLINTH_X + 220.0], [3.9, -30.0, "out"], [TITLE_AT, -10.0]]), FEET)
+	return Vector2(Anim.k(t, [[DROP_AT, PLINTH_X + 220.0], [3.9, 110.0, "out"], [TITLE_AT, 125.0]]), FEET)
 
 
 static func draw(c: CanvasItem, t_real: float) -> void:
@@ -111,6 +111,15 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		"walk": t_real * 13.0 if (t >= DROP_AT + 0.1 and t < 3.9) else -1.0,
 		"wag": 0.6 if t >= DROP_AT else 0.0,
 	}
+	# off the fountain his crest comes up; at the stare he stops, rears, lifts
+	# his head and hisses, jaws open on his teeth, tongue flicking
+	o["bristle"] = Anim.span(t, DROP_AT + 0.1, DROP_AT + 0.5)
+	var rear := Anim.span(t, 3.9, 4.15)
+	if rear > 0.0:
+		o["rise"] = lerpf(0.75, 1.0, rear)
+		o["lift"] = lerpf(0.6, 1.0, rear)
+		o["mouth"] = 0.85 * rear
+		o["tongue"] = pow(maxf(0.0, sin(t_real * 10.0)), 3.0) * rear
 	# the fountain from his mouth: running, sputtering, gone
 	var flow := 1.0 - Anim.span(t_real, STOP_AT - 0.05, STOP_AT)
 	if t_real >= SPUTTER_AT and t_real < STOP_AT:
@@ -328,7 +337,9 @@ static func stair(c: CanvasItem, t: float, x: float, top: float) -> void:
 # The pose `o`: `eye` open, `happy`, `dazed`, `rise` up off his belly, `tilt`
 # nose down (radians), `curl` the tail over his back, `wag`, `ripple` a swell
 # run down the tiles (0..1 as it runs), `lift` the head, `mouth` open,
-# `tongue` out, `spout` a jet of that length, `walk` the legs' phase (-1 still).
+# `tongue` out, `spout` a jet of that length, `walk` the legs' phase (-1 still),
+# `bristle` the crest raised into spikes (his threat display); an open mouth
+# shows a row of tile teeth.
 static func side(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o: Dictionary) -> Vector2:
 	var eye: float = o.get("eye", 1.0)
 	var happy: bool = o.get("happy", false)
@@ -343,6 +354,7 @@ static func side(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o:
 	var tongue: float = o.get("tongue", 0.0)
 	var spout: float = o.get("spout", 0.0)
 	var walk: float = o.get("walk", -1.0)
+	var bristle: float = o.get("bristle", 0.0)
 	var p := func(v: Vector2) -> Vector2: return at + Vector2(v.x * face, v.y).rotated(tilt * face) * k
 	var b := ShapeBatch.new(c)
 	var hb := lerpf(16.0, 36.0, rise)
@@ -411,6 +423,11 @@ static func side(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o:
 	for i in range(3, n - 2, 2):
 		var up_n: Vector2 = nrm[i] if nrm[i].y < 0.0 else -nrm[i]
 		var top: Vector2 = pts[i] + up_n * rad[i] * 0.86
+		if bristle > 0.0:
+			var side_t := up_n.orthogonal() * 5.0 * k
+			var tipc := top + up_n * (6.0 + 12.0 * bristle) * k
+			b.polygon(PackedVector2Array([top - side_t * 1.4, tipc + up_n * 2.5 * k, top + side_t * 1.4]), BossDrac.INK)
+			b.polygon(PackedVector2Array([top - side_t, tipc, top + side_t]), BossDrac.TILE_ORANGE)
 		b.circle(top, 4.2 * k, BossDrac.INK)
 		b.circle(top, 3.0 * k, BossDrac.TILE_WHITE)
 	for g in range(4):
@@ -427,6 +444,8 @@ static func side(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o:
 	if mouth > 0.03:
 		var low: Vector2 = hinge + (lip - hinge).rotated(0.5 * mouth * face)
 		b.polygon(PackedVector2Array([hinge, lip, low]), MOUTH)
+		if mouth > 0.25:
+			_teeth(b, hinge, lip, low, k, mouth)
 		b.capsule(hinge, low, 4.0 * k, BossDrac.INK)
 		b.capsule(hinge, low, 2.6 * k, BossDrac.TILE_YELLOW)
 	else:
@@ -439,7 +458,7 @@ static func side(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o:
 	b.circle(p.call(Vector2(72.0, sp[0].y - 5.0)), 2.0 * k, BossDrac.INK)
 	var ep: Vector2 = p.call(Vector2(52.0, sp[3].y - rad[3] / k * 0.85))
 	if not (dazed or happy or eye <= 0.05):
-		b.glow(ep, 30.0 * k * eye, Color(1.0, 0.80, 0.30, 0.45))
+		b.glow(ep, (30.0 + 14.0 * bristle) * k * eye, Color(1.0, 0.70 - 0.25 * bristle, 0.25, 0.45 + 0.2 * bristle))
 	b.circle(ep, 11.0 * k, BossDrac.INK)
 	if dazed:
 		b.circle(ep, 8.6 * k, BossDrac.TILE_WHITE)
@@ -464,6 +483,32 @@ static func side(c: CanvasItem, at: Vector2, k: float, face: float, t: float, o:
 	if spout > 0.0:
 		_spout(c, lip, Vector2(face, 0.0).rotated(tilt * face - face * 0.35), spout * k, t)
 	return lip
+
+
+# a row of tile teeth: hanging from the upper jaw, rising from the lower,
+# each a white shard outlined in ink, longest at the front
+static func _teeth(b: ShapeBatch, hinge: Vector2, lip: Vector2, low: Vector2, k: float, mouth: float) -> void:
+	var down := (lip - hinge).orthogonal().normalized()
+	if down.dot(low - hinge) < 0.0:
+		down = -down
+	var up := (low - hinge).orthogonal().normalized()
+	if up.dot(lip - hinge) < 0.0:
+		up = -up
+	var g := clampf((mouth - 0.25) / 0.5, 0.0, 1.0)
+	for j in range(5):
+		var u := 0.3 + float(j) * 0.15
+		var base := hinge.lerp(lip, u)
+		var along := (lip - hinge).normalized() * 4.0 * k
+		var tip := base + down * (5.0 + 4.0 * u) * k * g
+		b.polygon(PackedVector2Array([base - along * 1.3, tip + down * 1.5 * k, base + along * 1.3]), BossDrac.INK)
+		b.polygon(PackedVector2Array([base - along, tip, base + along]), BossDrac.TILE_WHITE)
+	for j in range(4):
+		var u := 0.35 + float(j) * 0.17
+		var base := hinge.lerp(low, u)
+		var along := (low - hinge).normalized() * 3.6 * k
+		var tip := base + up * (4.0 + 4.0 * u) * k * g
+		b.polygon(PackedVector2Array([base - along * 1.3, tip + up * 1.5 * k, base + along * 1.3]), BossDrac.INK)
+		b.polygon(PackedVector2Array([base - along, tip, base + along]), BossDrac.TILE_WHITE)
 
 
 # one leg side on: down and out from the body to an elbow, down to a foot
