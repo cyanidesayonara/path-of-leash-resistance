@@ -36,6 +36,24 @@ const LAWN := Color(0.40, 0.60, 0.30)
 const GRAVEL := Color(0.80, 0.71, 0.54)
 const WATER := Color(0.36, 0.58, 0.70)
 const INK := IntroKit.INK
+# his outline side on, feet at the origin, after the Ciutadella's: the rump
+# low behind, the shoulders a high hump, the chest under the head, and the
+# hair at his belly a ragged edge
+const MAMUT_BODY := [Vector2(-196, -178), Vector2(-222, -232), Vector2(-216, -292), Vector2(-180, -334),
+	Vector2(-110, -366), Vector2(-30, -392), Vector2(40, -404), Vector2(100, -400), Vector2(140, -384),
+	Vector2(172, -320), Vector2(172, -240), Vector2(150, -190), Vector2(100, -176), Vector2(70, -164),
+	Vector2(40, -176), Vector2(10, -162), Vector2(-20, -176), Vector2(-50, -162), Vector2(-80, -176),
+	Vector2(-110, -162), Vector2(-140, -176), Vector2(-170, -164)]
+# the ridge of his back, where the hair stands up
+const MAMUT_BACK := [Vector2(-200, -300), Vector2(-170, -326), Vector2(-130, -352), Vector2(-90, -372),
+	Vector2(-50, -386), Vector2(-10, -396), Vector2(30, -402), Vector2(70, -402), Vector2(110, -396), Vector2(140, -384)]
+# painted terracotta, as the Ciutadella's is
+const MAMUT := Color(0.74, 0.53, 0.41)
+const MAMUT_DARK := Color(0.58, 0.40, 0.30)
+const MAMUT_LIT := Color(0.86, 0.67, 0.53)
+const MAMUT_RIB := Color(0.60, 0.41, 0.31)
+const MAMUT_TUSK := Color(0.88, 0.86, 0.81)
+const MAMUT_TUSK_DARK := Color(0.68, 0.66, 0.62)
 # the sound cues: [time, sound, pitch, volume dB]
 const CUES := [
 	[1.30, "crack", 1.2, -10.0],
@@ -62,9 +80,9 @@ static func camera(t: float) -> Array:
 	if t >= BOLT_AT:
 		return [Vector2(400.0, 420.0) + shake, Anim.k(t, [[BOLT_AT, 1.0], [TITLE_AT, 0.9, "io"]])]
 	var x: float = Anim.k(t, [[0.0, 600.0], [1.6, 660.0, "io"], [2.2, 140.0, "io"], [3.9, 280.0, "io"],
-		[4.2, 760.0, "io"]])
+		[4.2, 470.0, "io"], [BOLT_AT, 520.0]])
 	var y: float = Anim.k(t, [[0.0, 470.0], [2.2, 380.0, "io"], [3.9, 420.0], [4.2, 520.0, "io"]])
-	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.2, 0.82, "io"], [3.9, 0.92, "io"], [4.2, 1.7, "io"]])
+	var z: float = Anim.k(t, [[0.0, 1.2], [1.6, 1.25, "io"], [2.2, 0.82, "io"], [3.9, 0.92, "io"], [4.2, 1.32, "io"], [BOLT_AT, 1.42]])
 	return [Vector2(x, y) + shake, z]
 
 
@@ -92,7 +110,11 @@ static func draw(c: CanvasItem, t_real: float) -> void:
 		trunk = Anim.span(t, BOLT_AT + 0.2, BOLT_AT + 0.5) * 0.7
 	var ear := sin(t_real * 40.0) * (1.0 - Anim.span(t, EAR_AT, EAR_AT + 0.4)) if t >= EAR_AT else 0.0
 	var walking := t >= DROP_AT + 0.1 and t < 3.9
-	mamut(c, mamut_at(t), MAMUT_K, t_real, awake, walking, trunk, ear)
+	# off the plinth he charges; where he pulls up at her, he trumpets
+	var rage := Anim.span(t, DROP_AT + 0.1, DROP_AT + 0.45)
+	if t >= 3.9 and t < BOLT_AT:
+		trunk = Anim.span(t, 3.9, 4.1) * 0.9
+	mamut(c, mamut_at(t), MAMUT_K, t_real, awake, walking, trunk, ear, rage)
 	if t >= DROP_AT and t < DROP_AT + 0.6:
 		var f := Anim.span(t, DROP_AT, DROP_AT + 0.6)
 		for k in range(9):
@@ -155,76 +177,192 @@ static func _plinth(c: CanvasItem, t: float) -> void:
 			Vector2(PLINTH_X + 70.0, PLINTH_TOP + 100.0), Vector2(PLINTH_X + 110.0, FEET)]), STONE_DARK.darkened(0.3), 5.0)
 
 
-# The mammoth side on, facing right, his feet at `at`: a domed, shaggy body
-# on four column legs, the high head with its small ear, the long curved
-# tusk and the trunk. `awake` opens his eye; `walking` swings the legs;
-# `trunk` curls the trunk up; `ear` twitches the ear. Shared with the card.
+# The mammoth side on, facing right, his feet at `at`, drawn after the
+# Ciutadella's own (Miquel Dalmau, 1907): painted terracotta, tall on four
+# long column legs, the back falling from a high hump to the rump, the head a
+# dome with a peak, carved hair running down him in ribs, the trunk hanging
+# to the ground and curling at its tip, and two great tusks sweeping out,
+# down and round into spirals that end in points. `awake` opens his eye;
+# `walking` swings the legs; `trunk` raises the trunk; `ear` twitches the
+# hair over his ear; `rage` is his charge: the body leaning in, the head down
+# and the tusks levelled, the hair along his back on end, the eye narrowed,
+# the mouth open when he trumpets; `sit` lowers him onto his haunches (the
+# win film's). Returns the trunk's tip. Shared with the card and the win film.
 static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, walking: bool,
-		trunk: float, ear := 0.0) -> void:
+		trunk: float, ear := 0.0, rage := 0.0, sit := 0.0) -> Vector2:
 	var p := func(v: Vector2) -> Vector2: return at + v * k
-	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(0, 4) * k, Vector2(230, 16) * k), Color(0, 0, 0, 0.35))
-	# legs, the far pair darker, thick as columns
+	# the body and head lean into the charge, or tip back onto the haunches to
+	# sit, turning about the front hips; the feet stay planted
+	var lean := 0.05 * rage - 0.2 * sit
+	var pivot := Vector2(120, -190)
+	var drop := Vector2(0, 30) * sit
+	var q := func(v: Vector2) -> Vector2: return at + (pivot + (v - pivot).rotated(lean) + drop) * k
+	var hd := Vector2(20, 40) * rage    # the head dropped to charge
+	var hq := func(v: Vector2) -> Vector2: return at + (pivot + (v + hd - pivot).rotated(lean) + drop) * k
+	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(10, 4) * k, Vector2(210, 16) * k), Color(0, 0, 0, 0.35))
+	# the far tusk, behind everything
+	_mamut_tusk(c, hq, Vector2(206, -324), k, rage, 0.9, MAMUT_TUSK_DARK)
+	# legs: long columns, the far pair darker, ribbed with hair down to the toenails
 	for i in range(4):
-		var hip: Vector2 = [Vector2(-130, -100), Vector2(90, -100), Vector2(-96, -100), Vector2(124, -100)][i]
-		var swing := sin(t * 5.0 + float(i) * 1.6) * 0.18 if walking else 0.0
-		var foot: Vector2 = hip + Vector2.from_angle(PI * 0.5 + swing) * 96.0
-		var col := STONE_DARK if i < 2 else STONE
-		c.draw_line(p.call(hip), p.call(foot), INK, 100.0 * k)
-		c.draw_line(p.call(hip), p.call(foot), col, 92.0 * k)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(foot), Vector2(50, 16) * k), col.darkened(0.1))
+		var hip: Vector2 = [Vector2(-150, -190), Vector2(100, -190), Vector2(-112, -190), Vector2(136, -190)][i]
+		var swing := sin(t * 5.0 + float(i) * 1.6) * 0.14 if walking else 0.0
+		var foot: Vector2 = hip + Vector2.from_angle(PI * 0.5 + swing) * 186.0
+		if hip.x < 0.0:
+			# sitting, the hind legs fold forward under him
+			foot = foot.lerp(Vector2(hip.x + 90.0, -10.0), sit)
+		var col := MAMUT_DARK if i < 2 else MAMUT
+		c.draw_line(q.call(hip), p.call(foot), INK, 74.0 * k)
+		c.draw_line(q.call(hip), p.call(foot), col, 66.0 * k)
+		c.draw_line(q.call(hip + Vector2(-14, 0)), p.call(foot + Vector2(-14, -20)), col.lightened(0.08), 14.0 * k)
+		for r in range(3):
+			var rx := -18.0 + float(r) * 18.0
+			c.draw_line(q.call(hip + Vector2(rx, 10)), q.call(hip + Vector2(rx, 10)).lerp(p.call(foot + Vector2(rx, 0)), 0.72),
+				MAMUT_RIB, 3.0 * k)
+		c.draw_colored_polygon(MillieSide.ellipse(p.call(foot), Vector2(40, 12) * k), col.darkened(0.15))
 		for n in range(3):
-			c.draw_circle(p.call(foot + Vector2(-24.0 + float(n) * 24.0, -6.0)), 8.0 * k, TUSK.darkened(0.15))
-	# the body: a domed back, the shaggy fringe hanging under it
-	var bc := Vector2(-10, -230)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(226, 156) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(220, 150) * k), STONE)
+			c.draw_circle(p.call(foot + Vector2(-18.0 + float(n) * 18.0, -5.0)), 7.0 * k, MAMUT_TUSK.darkened(0.1))
+	# the body: one outline, hump high, rump low, the belly's hair a ragged edge
+	var body := PackedVector2Array()
+	for v: Vector2 in MAMUT_BODY:
+		body.append(q.call(v))
+	if rage > 0.0:
+		# the hair along his back standing on end
+		for i in range(MAMUT_BACK.size()):
+			var rim: Vector2 = MAMUT_BACK[i]
+			var out := Vector2(-0.3, -1.0).normalized()
+			var ln := (18.0 + float(i % 3) * 8.0) * rage
+			var sd := Vector2(10.0, -3.0)
+			c.draw_colored_polygon(PackedVector2Array([q.call(rim - sd * 1.4 + Vector2(0, 8)), q.call(rim + out * (ln + 6.0)),
+				q.call(rim + sd * 1.4 + Vector2(0, 8))]), INK)
+			c.draw_colored_polygon(PackedVector2Array([q.call(rim - sd + Vector2(0, 8)), q.call(rim + out * ln),
+				q.call(rim + sd + Vector2(0, 8))]), MAMUT_DARK)
+	c.draw_colored_polygon(body, MAMUT)
+	# the light along the hump, the shade under the belly
+	c.draw_polyline(PackedVector2Array([q.call(Vector2(-196, -300)), q.call(Vector2(-120, -352)), q.call(Vector2(-40, -384)),
+		q.call(Vector2(40, -398)), q.call(Vector2(110, -388))]), MAMUT_LIT, 24.0 * k)
+	c.draw_polyline(PackedVector2Array([q.call(Vector2(-200, -200)), q.call(Vector2(-60, -186)), q.call(Vector2(150, -196))]),
+		MAMUT_DARK, 26.0 * k)
+	# the hair, carved: ribs running from the spine down over the flank
 	for i in range(16):
-		var fx := -200.0 + float(i) * 27.0
-		var fy := -100.0 + absf(float(i) - 7.5) * 5.0
-		c.draw_colored_polygon(PackedVector2Array([p.call(Vector2(fx - 18, fy - 40)), p.call(Vector2(fx + 18, fy - 40)),
-			p.call(Vector2(fx + 4, fy + 8 + float(i % 3) * 8.0))]), FUR.darkened(0.08))
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(-40, -70)), Vector2(130, 56) * k), STONE_LIT)
+		var sx := -196.0 + float(i) * 22.0
+		var top := _mamut_back_y(sx) + 14.0
+		var strand := PackedVector2Array()
+		for j in range(7):
+			var u := float(j) / 6.0
+			strand.append(q.call(Vector2(sx + sin(u * 4.0 + float(i) * 0.9) * 5.0 + u * 10.0, lerpf(top, -178.0, u))))
+		c.draw_polyline(strand, MAMUT_RIB, 3.5 * k)
+	var outline := body.duplicate()
+	outline.append(body[0])
+	c.draw_polyline(outline, INK, 6.0 * k)
+	# the head: a dome with a peak, ribbed with hair like the rest of him
+	var hc := Vector2(196, -380)
+	c.draw_colored_polygon(MillieSide.ellipse(hq.call(hc + Vector2(-16, -58)), Vector2(58, 46) * k), INK)
+	c.draw_circle(hq.call(hc), 88.0 * k, INK)
+	c.draw_colored_polygon(MillieSide.ellipse(hq.call(hc + Vector2(-16, -58)), Vector2(52, 40) * k), MAMUT)
+	c.draw_circle(hq.call(hc), 82.0 * k, MAMUT)
+	c.draw_colored_polygon(MillieSide.ellipse(hq.call(hc + Vector2(-22, -66)), Vector2(34, 22) * k), MAMUT_LIT)
 	for i in range(7):
-		var sx := -150.0 + float(i) * 45.0
-		c.draw_line(p.call(bc + Vector2(sx, -60)), p.call(bc + Vector2(sx + 10, 40)), FUR.darkened(0.15), 4.0 * k)
-	c.draw_circle(p.call(bc + Vector2(70, -40)), 14.0 * k, Color(0.40, 0.52, 0.30, 0.6))
-	# the head, high and domed, and the small ear
-	var hc := Vector2(200, -320)
-	c.draw_circle(p.call(hc), 104.0 * k, INK)
-	c.draw_circle(p.call(hc), 98.0 * k, STONE)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(-10, -50)), Vector2(70, 40) * k), STONE_LIT)
-	var ec := hc + Vector2(-50, 10)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(ec), Vector2(34, 46 + ear * 6.0) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(ec), Vector2(28, 40 + ear * 6.0) * k), FUR)
-	# the eye: shut, a stone lid; awake, amber under a heavy brow
-	var eye := hc + Vector2(40, -14)
+		var a := PI * (1.05 + 0.13 * float(i))
+		c.draw_line(hq.call(hc + Vector2.from_angle(a) * 76.0), hq.call(hc + Vector2.from_angle(a) * 40.0 + Vector2(6, 10)),
+			MAMUT_RIB, 3.5 * k)
+	# the hair falling over where the ear is, stirring
+	for i in range(3):
+		var ex := -46.0 + float(i) * 12.0
+		c.draw_line(hq.call(hc + Vector2(ex, -10)), hq.call(hc + Vector2(ex - 6.0 + ear * 4.0, 50)), MAMUT_RIB, 4.0 * k)
+	# the eye: shut, a carved lid; awake, amber under a heavy brow, narrowed
+	# to a glare when he charges
+	var eye := hc + Vector2(30, -6)
 	if awake <= 0.0:
-		c.draw_line(p.call(eye + Vector2(-14, 0)), p.call(eye + Vector2(14, 2)), INK, 5.0 * k)
+		c.draw_line(hq.call(eye + Vector2(-12, 0)), hq.call(eye + Vector2(12, 2)), INK, 5.0 * k)
 	else:
-		c.draw_circle(p.call(eye), 24.0 * k * awake, Color(1.0, 0.78, 0.3, 0.25))
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye), Vector2(13, 11 * awake) * k), INK)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye), Vector2(10, 8 * awake) * k), EYE_AMBER)
-		c.draw_circle(p.call(eye + Vector2(2, 0)), 4.0 * k, INK)
-		c.draw_line(p.call(eye + Vector2(-18, -20)), p.call(eye + Vector2(18, -12)), INK, 6.0 * k)
-	# the trunk: hanging and curled at the tip, or raised high to trumpet
+		var sq := 1.0 - 0.4 * rage
+		c.draw_colored_polygon(MillieSide.ellipse(hq.call(eye), Vector2(13, 11 * awake * sq) * k), INK)
+		c.draw_colored_polygon(MillieSide.ellipse(hq.call(eye), Vector2(9.5, 8 * awake * sq) * k), EYE_AMBER)
+		c.draw_circle(hq.call(eye + Vector2(3, 0)), (4.0 - 1.0 * rage) * k, INK)
+		c.draw_circle(hq.call(eye + Vector2(0, -2)), 1.5 * k, Color(1, 1, 0.92))
+		c.draw_colored_polygon(PackedVector2Array([hq.call(eye + Vector2(-22, -22 + 4.0 * rage)), hq.call(eye + Vector2(18, -13 + 8.0 * rage)),
+			hq.call(eye + Vector2(18, -6 + 8.0 * rage)), hq.call(eye + Vector2(-20, -14 + 4.0 * rage))]), INK)
+	# the trunk: hanging to the ground and curling forward at the tip, or
+	# raised high to trumpet
 	var trunk_pts := PackedVector2Array()
 	for i in range(12):
 		var f := float(i) / 11.0
-		var hang := Vector2(80.0 + f * 40.0 + sin(f * PI) * 20.0, 60.0 + f * 220.0 - f * f * 40.0)
-		var up := Vector2(80.0 + f * 160.0, 40.0 - f * 260.0 + f * f * 60.0)
-		trunk_pts.append(p.call(hc + hang.lerp(up, trunk)))
-	c.draw_polyline(trunk_pts, INK, 50.0 * k)
-	c.draw_polyline(trunk_pts, STONE, 42.0 * k)
-	for i in range(2, 11, 2):
-		c.draw_circle(trunk_pts[i], 6.0 * k, STONE_DARK)
-	# the tusk: out, down and curling up again. It is on the near side of
-	# the head, so it goes over the trunk, not under it
-	var tusk := PackedVector2Array()
-	for i in range(10):
-		var f := float(i) / 9.0
-		tusk.append(p.call(hc + Vector2(60.0 + f * 150.0, 60.0 + sin(f * PI * 0.9) * 90.0 - f * f * 150.0)))
-	c.draw_polyline(tusk, INK, 26.0 * k)
-	c.draw_polyline(tusk, TUSK, 18.0 * k)
+		var hang := Vector2(58.0 + sin(f * PI * 0.5) * 16.0 + maxf(0.0, f - 0.8) * 160.0,
+			26.0 + f * 330.0 - maxf(0.0, f - 0.85) * 520.0)
+		var up := Vector2(60.0 + f * 170.0, 20.0 - f * 250.0 + f * f * 70.0)
+		trunk_pts.append(hq.call(hc + hang.lerp(up, trunk)))
+	for i in range(11):
+		var w := lerpf(46.0, 22.0, float(i) / 10.0)
+		c.draw_line(trunk_pts[i], trunk_pts[i + 1], INK, (w + 8.0) * k)
+		c.draw_circle(trunk_pts[i + 1], (w + 8.0) * 0.5 * k, INK)
+	for i in range(11):
+		var w := lerpf(46.0, 22.0, float(i) / 10.0)
+		c.draw_line(trunk_pts[i], trunk_pts[i + 1], MAMUT, w * k)
+		c.draw_circle(trunk_pts[i + 1], w * 0.5 * k, MAMUT)
+	for i in range(1, 11):
+		var dn := (trunk_pts[i + 1] - trunk_pts[i - 1]).normalized().orthogonal()
+		var hw := lerpf(20.0, 10.0, float(i) / 10.0) * k
+		c.draw_line(trunk_pts[i] - dn * hw, trunk_pts[i] + dn * hw * 0.7, MAMUT_RIB, 3.0 * k)
+	if rage > 0.0 and trunk > 0.3:
+		# trumpeting: the mouth open under the raised trunk, breath off its tip
+		var o := clampf((trunk - 0.3) / 0.4, 0.0, 1.0) * rage
+		var mouth := PackedVector2Array([hq.call(hc + Vector2(30, 40)), hq.call(hc + Vector2(76, 30)),
+			hq.call(hc + Vector2(66, 56 + 28.0 * o)), hq.call(hc + Vector2(36, 58 + 18.0 * o))])
+		c.draw_colored_polygon(mouth, Color(0.48, 0.16, 0.18))
+		mouth.append(mouth[0])
+		c.draw_polyline(mouth, INK, 4.0 * k)
+		var sn := fposmod(t * 2.5, 1.0)
+		IntroKit.puff(c, trunk_pts[11] + Vector2(30.0 + sn * 70.0, -20.0 - sn * 50.0) * k, (14.0 + sn * 30.0) * k,
+			0.8 * (1.0 - sn) * o)
+	# the near tusk, over the trunk
+	_mamut_tusk(c, hq, Vector2(232, -312), k, rage, 1.0, MAMUT_TUSK)
+	return trunk_pts[11]
+
+
+# where his back is at x along him, for the hair ribs to start from
+static func _mamut_back_y(x: float) -> float:
+	var best := -300.0
+	for i in range(MAMUT_BACK.size() - 1):
+		var a: Vector2 = MAMUT_BACK[i]
+		var b: Vector2 = MAMUT_BACK[i + 1]
+		if x >= a.x and x <= b.x:
+			best = lerpf(a.y, b.y, (x - a.x) / (b.x - a.x))
+	return best
+
+
+# A tusk: out of the jaw it sweeps forward and down, then curls up and back
+# round into a spiral, tapering to a point. Charging, it is levelled.
+static func _mamut_tusk(c: CanvasItem, hq: Callable, root: Vector2, k: float, rage: float, size: float,
+		col: Color) -> void:
+	var spine := PackedVector2Array()
+	var pos := root
+	var ang := 1.05 - 0.3 * rage
+	for i in range(16):
+		spine.append(pos)
+		var u := float(i) / 15.0
+		pos += Vector2.from_angle(ang) * 33.0 * size * (1.0 - 0.35 * u)
+		ang -= 0.29 * (1.0 + 0.5 * u) * (1.0 - 0.25 * rage)
+	spine.append(pos)
+	var n := spine.size()
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	for i in range(n):
+		var dir := (spine[mini(i + 1, n - 1)] - spine[maxi(i - 1, 0)]).normalized()
+		var w := 16.0 * size * (1.0 - float(i) / float(n - 1))
+		left.append(hq.call(spine[i] + dir.orthogonal() * w))
+		right.append(hq.call(spine[i] - dir.orthogonal() * w))
+	var poly := PackedVector2Array()
+	poly.append_array(left)
+	right.reverse()
+	poly.append_array(right)
+	c.draw_colored_polygon(poly, col)
+	# the shade along its underside and the light along its top
+	var under := PackedVector2Array()
+	for i in range(n - 2):
+		under.append(left[i].lerp(hq.call(spine[i]), 0.5))
+	c.draw_polyline(under, col.darkened(0.15), 4.0 * k)
+	poly.append(poly[0])
+	c.draw_polyline(poly, INK, 4.5 * k)
 
 
 # the card: the lawn gone gold behind EL MAMUT!, his head filling the frame
@@ -232,6 +370,6 @@ static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, 
 static func _title(c: CanvasItem, t: float) -> void:
 	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 720.0 + 104.0), Color(0.92, 0.96, 0.82), Color(0.42, 0.58, 0.40))
 	var d := t - TITLE_AT
-	mamut(c, Vector2(-430.0 + d * 80.0, 1240.0), 2.2, t, 1.0, false, 1.0)
+	mamut(c, Vector2(-420.0 + d * 80.0, 1100.0), 2.0, t, 1.0, false, 0.55, 0.0, 1.0)
 	FilmKit.slam(c, t, "EL MAMUT!", Vector2(660, 200))
 	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.2), Color(1.0, 0.98, 0.90))

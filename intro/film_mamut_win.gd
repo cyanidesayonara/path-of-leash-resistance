@@ -243,108 +243,12 @@ static func _rower(c: CanvasItem, t: float) -> void:
 					hands + Vector2.from_angle(a) * 15.0, Color(1.0, 1.0, 0.8), 2.5)
 
 
-# The mammoth side on: domed body, column legs, high head, tusks, trunk and ear.
-# `sit` blends from standing (0.0) to sitting on haunches (1.0).
-# Returns the world coordinates of the trunk tip.
+# The mammoth is FilmMamut's, so he is one animal in both films. `sit`
+# blends from standing (0.0) to sitting on his haunches (1.0). Returns the
+# trunk's tip.
 static func mamut(c: CanvasItem, at: Vector2, k: float, t: float, awake: float, walking: bool,
 		trunk: float, ear := 0.0, sit := 0.0) -> Vector2:
-	var p := func(v: Vector2) -> Vector2: return at + v * k
-	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(0, 4) * k, Vector2(230, 16) * k), Color(0, 0, 0, 0.35))
-
-	# Legs: hind legs fold on the ground when sitting; front legs stay planted
-	for i in range(4):
-		var hip: Vector2
-		var foot: Vector2
-		if i == 0 or i == 2:
-			# Rear legs
-			var hip_stand := Vector2(-130, -100) if i == 0 else Vector2(-96, -100)
-			var hip_sit := Vector2(-130, -50) if i == 0 else Vector2(-96, -50)
-			hip = hip_stand.lerp(hip_sit, sit)
-			var swing := sin(t * 5.0 + float(i) * 1.6) * 0.18 if walking else 0.0
-			var foot_stand := hip_stand + Vector2.from_angle(PI * 0.5 + swing) * 96.0
-			var foot_sit := Vector2(-70.0 if i == 0 else -50.0, -4.0)
-			foot = foot_stand.lerp(foot_sit, sit)
-		else:
-			# Front legs
-			var hip_stand := Vector2(90, -100) if i == 1 else Vector2(124, -100)
-			var hip_sit := Vector2(90, -70) if i == 1 else Vector2(124, -70)
-			hip = hip_stand.lerp(hip_sit, sit)
-			var swing := sin(t * 5.0 + float(i) * 1.6) * 0.18 if walking else 0.0
-			var foot_stand := hip_stand + Vector2.from_angle(PI * 0.5 + swing) * 96.0
-			var foot_sit := hip_sit + Vector2(0.0, 66.0)
-			foot = foot_stand.lerp(foot_sit, sit)
-
-		var col := STONE_DARK if i < 2 else STONE
-		c.draw_line(p.call(hip), p.call(foot), INK, 100.0 * k)
-		c.draw_line(p.call(hip), p.call(foot), col, 92.0 * k)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(foot), Vector2(50, 16) * k), col.darkened(0.1))
-		for n in range(3):
-			c.draw_circle(p.call(foot + Vector2(-24.0 + float(n) * 24.0, -6.0)), 8.0 * k, TUSK.darkened(0.15))
-
-	# The body: domed back, lowered and tilted back slightly when sitting
-	var bc_stand := Vector2(-10, -230)
-	var bc_sit := Vector2(-25, -180)
-	var bc := bc_stand.lerp(bc_sit, sit)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(226, 156) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(220, 150) * k), STONE)
-	# Shaggy fringe hanging at the bottom of the body
-	for i in range(16):
-		var fx := -200.0 + float(i) * 27.0
-		var fy := -100.0 + absf(float(i) - 7.5) * 5.0 + sit * 50.0
-		c.draw_colored_polygon(PackedVector2Array([p.call(Vector2(fx - 18, fy - 40)),
-			p.call(Vector2(fx + 18, fy - 40)),
-			p.call(Vector2(fx + 4, fy + 8 + float(i % 3) * 8.0))]), FUR.darkened(0.08))
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(-40, -70)), Vector2(130, 56) * k), STONE_LIT)
-	for i in range(7):
-		var sx := -150.0 + float(i) * 45.0
-		c.draw_line(p.call(bc + Vector2(sx, -60)), p.call(bc + Vector2(sx + 10, 40)), FUR.darkened(0.15), 4.0 * k)
-	c.draw_circle(p.call(bc + Vector2(70, -40)), 14.0 * k, Color(0.40, 0.52, 0.30, 0.6))
-
-	# The head: high and domed, slightly lowered when sitting
-	var hc_stand := Vector2(200, -320)
-	var hc_sit := Vector2(185, -270)
-	var hc := hc_stand.lerp(hc_sit, sit)
-	c.draw_circle(p.call(hc), 104.0 * k, INK)
-	c.draw_circle(p.call(hc), 98.0 * k, STONE)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(-10, -50)), Vector2(70, 40) * k), STONE_LIT)
-	var ec := hc + Vector2(-50, 10)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(ec), Vector2(34, 46 + ear * 6.0) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(ec), Vector2(28, 40 + ear * 6.0) * k), FUR)
-
-	# The eye: shut stone lid, opening wide to bright amber at the boop
-	var eye := hc + Vector2(40, -14)
-	if awake <= 0.0:
-		c.draw_line(p.call(eye + Vector2(-14, 0)), p.call(eye + Vector2(14, 2)), INK, 5.0 * k)
-	else:
-		c.draw_circle(p.call(eye), 24.0 * k * awake, Color(1.0, 0.78, 0.3, 0.25))
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye), Vector2(13, 11 * awake) * k), INK)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(eye), Vector2(10, 8 * awake) * k), EYE_AMBER)
-		c.draw_circle(p.call(eye + Vector2(2, 0)), 4.0 * k, INK)
-		c.draw_line(p.call(eye + Vector2(-18, -20)), p.call(eye + Vector2(18, -12)), INK, 6.0 * k)
-
-	# The trunk: hanging down towards the lawn, reaching forward when sitting, or curled high to trumpet
-	var trunk_pts := PackedVector2Array()
-	for i in range(12):
-		var f := float(i) / 11.0
-		var hang_stand := Vector2(80.0 + f * 40.0 + sin(f * PI) * 20.0, 60.0 + f * 220.0 - f * f * 40.0)
-		var hang_sit := Vector2(80.0 + f * 180.0, 60.0 + f * 150.0 - sin(f * PI * 0.8) * 25.0)
-		var hang := hang_stand.lerp(hang_sit, sit)
-		var up := Vector2(80.0 + f * 160.0, 40.0 - f * 260.0 + f * f * 60.0)
-		trunk_pts.append(p.call(hc + hang.lerp(up, trunk)))
-	c.draw_polyline(trunk_pts, INK, 50.0 * k)
-	c.draw_polyline(trunk_pts, STONE, 42.0 * k)
-	for i in range(2, 11, 2):
-		c.draw_circle(trunk_pts[i], 6.0 * k, STONE_DARK)
-
-	# The tusk: curving out and curling up, on the near side over the trunk
-	var tusk := PackedVector2Array()
-	for i in range(10):
-		var f := float(i) / 9.0
-		tusk.append(p.call(hc + Vector2(60.0 + f * 150.0, 60.0 + sin(f * PI * 0.9) * 90.0 - f * f * 150.0)))
-	c.draw_polyline(tusk, INK, 26.0 * k)
-	c.draw_polyline(tusk, TUSK, 18.0 * k)
-
-	return trunk_pts[11]
+	return FilmMamut.mamut(c, at, k, t, awake, walking, trunk, ear, 0.0, sit)
 
 
 # The dog: trots in from the right, reaches snout up to boop his trunk, then stands proud barking
@@ -475,7 +379,7 @@ static func _title(c: CanvasItem, t: float) -> void:
 	IntroKit.vgrad(c, Rect2(-200, 0.0, 1680, 824.0), Color(0.95, 0.98, 0.88), Color(0.48, 0.64, 0.42))
 	var d := t - TITLE_AT
 	# Offset further to the left so text is completely unobstructed
-	mamut(c, Vector2(-480.0 + d * 50.0, 1240.0), 1.8, t, 1.0, false, 1.0, 0.0, 0.0)
+	mamut(c, Vector2(-430.0 + d * 50.0, 1100.0), 1.9, t, 1.0, false, 0.55, 0.0, 0.0)
 	FilmKit.slam(c, t, "EL MAMUT!", Vector2(640, 210))
 	IntroTitle.word(c, "VICTORIA A LA CIUTADELLA", Vector2(640, 410), 46)
 	IntroTitle.word(c, "LA CIUTADELLA IS YOURS", Vector2(640, 480), 30)
