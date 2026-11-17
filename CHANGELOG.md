@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Films: the pair acts, and the chase threats
+
+- The pair in every chase film (`FilmKit.pair`), shared by all of them:
+  - Your human, oblivious: his thumb scrolls the whole film, and while the threat bears down he chuckles at something on the screen, mouth opening and head bobbing.
+  - The yank is a sequence, not one held dive: the leash snaps and he lurches, eyes wide; then he is hauled along in great bounding hops, legs running in the air, mouth open, still holding the phone up.
+  - Her bolt is a gallop: the forelegs reach as the hind legs push, and her body stretches and bunches and bounds off the ground.
+
 ## 2026-11-17 - Films: the threat in the stare, and a boar that charges
 
 - Every chase and boss film's stare beat (4.2 s to the bolt) is now a two-shot that pushes in (zoom 1.32 to 1.42, centred at x 470 to 520) instead of a 1.7 close-up on her alone: she stares with the threat looming in the same frame, where before only a sliver of it showed at the edge. La Cremada, whose Dimoni float stands tall, frames it wider and higher (zoom 1.02 to 1.1).

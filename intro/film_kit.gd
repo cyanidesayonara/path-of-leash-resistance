@@ -34,12 +34,24 @@ static func pair(c: CanvasItem, t_real: float, feet: float, stand := false) -> V
 	# hauled after her a full leash length behind, the leash long and low
 	# between them: being dragged, not walking at her heel
 	var hx: float = Anim.k(t, [[0.0, 380.0], [BOLT_AT, 560.0], [BOLT_AT + 0.14, 572.0], [TITLE_AT, 1480.0, "in"]])
+	# the snap: a lurch, eyes wide; then hauled along in great bounding hops,
+	# his legs running in the air, mouth open, still holding the phone up
+	var snap := Anim.span(t_real, BOLT_AT + 0.05, BOLT_AT + 0.14)
+	var hop := absf(sin((t_real - BOLT_AT) * 11.0)) * snap
+	# oblivious: scrolling, and while it bears down on them he chuckles at
+	# something on the screen, shoulders shaking
+	var laugh := Anim.span(t_real, 2.7, 2.8) * (1.0 - Anim.span(t_real, 3.55, 3.7)) * (1.0 - go)
 	var hpose := {
-		"stride": t_real * 8.0, "stride_amp": 0.6 * (1.0 - go) + go,
-		"phone": 1.0, "glow": 0.5, "reach": 0.4 + 0.6 * go,
-		"lean": 0.85 * go, "lift": 0.5 * go, "head": 0.3 * go, "mouth": go,
+		"scroll": t_real * 1.3,
+		"stride": t_real * 8.0 + go * (t_real - BOLT_AT) * 14.0, "stride_amp": 0.6 * (1.0 - go) + 1.3 * go,
+		"phone": 1.0, "glow": 0.5 * (1.0 - snap), "reach": 0.4 + 0.6 * go,
+		"lean": 0.55 * go + 0.18 * snap * (1.0 - hop), "lift": 0.15 * go + 0.45 * hop,
+		"head": 0.3 * go - 0.12 * laugh * absf(sin(t_real * 16.0)),
+		"mouth": maxf(go * (0.7 + 0.3 * absf(sin(t_real * 9.0))), laugh * (0.25 + 0.3 * absf(sin(t_real * 16.0)))),
+		"phone_jolt": go * (1.0 - 0.5 * snap),
 	}
-	var hsq := Vector2(1.2, 0.88) if go > 0.0 else Vector2.ONE
+	var hsq := Vector2.ONE.lerp(Vector2(1.08, 0.94), go)
+	var hop_y := hop * 26.0
 	if stand:
 		hx = Anim.k(t, [[0.0, 380.0], [BOLT_AT, 560.0], [BOLT_AT + 0.16, 600.0, "snap"], [TITLE_AT, 600.0]])
 		hpose = {
@@ -47,7 +59,8 @@ static func pair(c: CanvasItem, t_real: float, feet: float, stand := false) -> V
 			"reach": 0.4 + 0.3 * go, "lean": -0.25 * go, "phone_jolt": go,
 		}
 		hsq = Vector2.ONE
-	var hand := IntroKit.human(c, Vector2(hx, feet), S, 1.0, hsq, hpose, 0.0, feet)
+	var hop_y_used := 0.0 if stand else hop_y
+	var hand := IntroKit.human(c, Vector2(hx, feet - hop_y_used), S, 1.0, hsq, hpose, 0.0, feet)
 	# her: trotting ahead, stopped by the sound, looking back at it, the
 	# stare, and the spin and dig into the bolt
 	var mx: float = Anim.k(t, [[0.0, 600.0], [1.35, 720.0, "out"], [BOLT_AT, 720.0], [BOLT_AT + 0.14, 900.0, "out"],
@@ -63,8 +76,9 @@ static func pair(c: CanvasItem, t_real: float, feet: float, stand := false) -> V
 		"lean": 0.22 * crouch + 0.12 * go,
 		"crouch": crouch,
 		"head_up": Anim.k(t, [[HEAR_AT, 0.0], [HEAR_AT + 0.2, 0.7, "out"], [STARE_AT, 0.5], [STARE_AT + 0.2, 0.2, "io"]]),
-		"reach": sin(t_real * 14.0) * 0.6 * trot + go,
-		"push": -sin(t_real * 14.0) * 0.6 * trot + 0.4 * crouch + 0.9 * go,
+		# trotting, then at full gallop: forelegs reaching as the hind legs push
+		"reach": sin(t_real * 14.0) * 0.6 * trot + go * (0.35 + 0.65 * sin(t_real * 22.0)),
+		"push": -sin(t_real * 14.0) * 0.6 * trot + 0.4 * crouch + go * (0.45 - 0.55 * sin(t_real * 22.0)),
 		"ear": Anim.k(t, [[HEAR_AT, 0.0], [HEAR_AT + 0.15, 1.1, "snap"], [STARE_AT, 0.9], [STARE_AT + 0.1, 1.3, "snap"],
 			[CROUCH_AT, -0.4, "out"], [BOLT_AT, -0.4], [BOLT_AT + 0.1, 1.2, "snap"]]),
 		"tail": sin(t_real * 14.0) * 0.4 * (1.0 - Anim.span(t, HEAR_AT, HEAR_AT + 0.2)) - 0.5 * stare,
@@ -87,9 +101,14 @@ static func pair(c: CanvasItem, t_real: float, feet: float, stand := false) -> V
 		pose["mouth"] = 0.4 + 0.5 * yap
 	var sq := Anim.squash(Anim.k(t, [[HEAR_AT, 1.0], [HEAR_AT + 0.15, 1.15, "snap"], [LOOK_AT, 1.0, "io"],
 		[CROUCH_AT, 1.0], [CROUCH_AT + 0.35, 0.8, "io"], [BOLT_AT, 0.8], [BOLT_AT + 0.08, 1.35, "snap"]]))
+	var bound := 0.0
 	if t > BOLT_AT + 0.05:
-		sq = Vector2(1.1, 0.92) if stand else Vector2(1.35, 0.8)
-	var mpos := Vector2(mx, feet) + Anim.boil(t_real, 2.0, 0.5)
+		# stretched at full reach, bunched as the hind legs come through
+		var g := sin(t_real * 22.0)
+		sq = Vector2(1.1, 0.92) if stand else Vector2(1.22 + 0.14 * g, 0.86 - 0.08 * g)
+		if not stand:
+			bound = maxf(0.0, -g) * 18.0
+	var mpos := Vector2(mx, feet - bound) + Anim.boil(t_real, 2.0, 0.5)
 	var m := IntroKit.millie(c, mpos, S * 0.95, face, sq, pose, feet)
 	IntroKit.leash(c, m["ring"], hand, Anim.k(t, [[0.0, 46.0], [BOLT_AT, 40.0], [BOLT_AT + 0.08, 0.0, "snap"]]))
 	# the startle: a jolt of lines over her head
