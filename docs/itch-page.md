@@ -129,7 +129,7 @@ On a phone or tablet: a stick on the left, DIG, PEE, BARK and RUN on the right (
 
 Single player. No ads, no purchases, no account. The download plays offline; the itch app keeps it up to date.
 
-Made in Godot by Santtu Nykänen. The dog is Millie, a distinguished salt-and-pepper mutt who squats like a lady.
+Made in Godot by Santtu Nykänen.
 ```
 
 ## What's new in 1.75
