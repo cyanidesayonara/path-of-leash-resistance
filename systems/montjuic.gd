@@ -2,7 +2,7 @@ class_name Montjuic
 extends RefCounted
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "grass_blocked", "surface", "tick"]
+const HOOKS := ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "draw_threshold", "grass_blocked", "surface", "tick"]
 
 
 const EventFeed := preload("res://hud/event_feed.gd")
@@ -393,16 +393,56 @@ static func blow_litter(m: Node2D) -> bool:
 const RAMPART := Color(0.62, 0.56, 0.46)
 const CANNON := Color(0.18, 0.18, 0.20)
 
+static func _hill_rim_xs(m: Node2D, y: float) -> Vector2:
+	var e: Vector2 = m.walk_edges(y)
+	var cx := (e.x + e.y) * 0.5
+	var hh := hill_half(m, y) + sin(y * 0.013) * 26.0
+	# flare the hilltop out over the last 220px to cradle the esplanade's ramparts
+	var top_t := smoothstep(m.GATE_Y + 220.0, m.GATE_Y - 30.0, y)
+	return Vector2(lerpf(cx - hh, 36.0, top_t), lerpf(cx + hh, 1214.0, top_t))
+
+
 # Past the esplanade's top edge: the castle, a stone rampart with its
 # crenellations, a bastion's point jutting out, the gate and the flag; the sea
 # out past the west side, the city's haze past the east.
 static func draw_castle_beyond(m: Node2D, c: Object) -> void:
 	var r: Rect2 = m._freedom_rect()
 	var top := r.position.y
+	var bot := r.end.y
 	var b := ShapeBatch.new()
 	b.rect(Rect2(-400.0, top - 2000.0, r.position.x + 400.0, 2000.0 + r.size.y), SEA)
-	b.rect(Rect2(r.position.x - 70.0, top - 2000.0, 40.0, 2000.0 + r.size.y), SEA.lightened(0.12))
+	# feather sea & city haze at the south edge to match draw_edge_layer at h = 1.0
+	var edge_sea := SEA.lerp(HAZE, 0.73 * 0.8)
+	var sea_pts := PackedVector2Array([
+		Vector2(-400.0, bot - 480.0), Vector2(r.position.x, bot - 480.0),
+		Vector2(-400.0, bot), Vector2(r.position.x, bot),
+	])
+	b.band(sea_pts, 2, edge_sea, PackedFloat32Array([0.0, 1.0]))
+	b.rect(Rect2(r.position.x - 70.0, top - 2000.0, 40.0, 2000.0 + r.size.y - 160.0), SEA.lightened(0.12))
+	var shelf_pts := PackedVector2Array([
+		Vector2(r.position.x - 70.0, bot - 160.0), Vector2(r.position.x - 30.0, bot - 160.0),
+		Vector2(r.position.x - 70.0, bot), Vector2(r.position.x - 30.0, bot),
+	])
+	b.band(shelf_pts, 2, SEA.lightened(0.12), PackedFloat32Array([1.0, 0.0]))
 	b.rect(Rect2(r.end.x, top - 2000.0, 700.0, 2000.0 + r.size.y), HAZE.darkened(0.08))
+	var edge_city := CITY_STREET.lerp(HAZE, 0.73)
+	var haze_pts := PackedVector2Array([
+		Vector2(r.end.x, bot - 400.0), Vector2(r.end.x + 700.0, bot - 400.0),
+		Vector2(r.end.x, bot), Vector2(r.end.x + 700.0, bot),
+	])
+	b.band(haze_pts, 2, edge_city, PackedFloat32Array([0.0, 1.0]))
+	# continue the hill-rim shadow up along the outer west & east ramparts so
+	# _rim_shadow does not start with a horizontal line at y = -5030
+	var wx := r.position.x - 34.0
+	var ex := r.end.x + 34.0
+	b.band(PackedVector2Array([
+		Vector2(wx, top), Vector2(wx - RIM_SHADE_W, top),
+		Vector2(wx, bot), Vector2(wx - RIM_SHADE_W, bot),
+	]), 2, Color(0.10, 0.12, 0.16, 0.30), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([1.0, 0.0]))
+	b.band(PackedVector2Array([
+		Vector2(ex, top), Vector2(ex + RIM_SHADE_W * 1.4, top),
+		Vector2(ex, bot), Vector2(ex + RIM_SHADE_W * 1.4, bot),
+	]), 2, Color(0.10, 0.12, 0.16, 0.38), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([1.0, 0.0]))
 	# the rampart, thick, along the whole top
 	b.rect(Rect2(r.position.x - 30.0, top - 230.0, r.size.x + 60.0, 190.0), RAMPART.darkened(0.12))
 	b.rect(Rect2(r.position.x - 30.0, top - 64.0, r.size.x + 60.0, 24.0), RAMPART)
@@ -516,22 +556,52 @@ static func draw_kites(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		b.flush()
 
 # The hill road the train runs on: asphalt across the hillside, a striped
-# crossing over the path, and a post each side with two red lights that
-# flash in turn while the train is coming.
+# crossing over the path, stone viaduct parapets where it clears the hill rims,
+# and a post each side with two red lights that flash in turn while the train is coming.
 static func draw_road(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
-	if TRAIN_Y + 40.0 < vt or TRAIN_Y - 40.0 > vb:
+	if TRAIN_Y + 46.0 < vt or TRAIN_Y - 46.0 > vb:
 		return
 	var e: Vector2 = m.walk_edges(TRAIN_Y)
+	var rim := _hill_rim_xs(m, TRAIN_Y)
 	# across the whole view and on down the hill either side, so the train
 	# arrives along it rather than appearing at the hillside's rim
 	var cx := 640.0
 	var hh := 980.0
-	b.rect(Rect2(cx - hh, TRAIN_Y - 26.0, hh * 2.0, 52.0), Color(0.36, 0.36, 0.38))
-	b.rect(Rect2(cx - hh, TRAIN_Y - 26.0, hh * 2.0, 3.0), Color(0.55, 0.53, 0.50))
-	b.rect(Rect2(cx - hh, TRAIN_Y + 23.0, hh * 2.0, 3.0), Color(0.55, 0.53, 0.50))
-	var x := cx - hh + 20.0
-	while x < cx + hh - 30.0:
-		if x < e.x - 20.0 or x > e.y + 10.0:
+	var x0 := cx - hh
+	var x1 := cx + hh
+	# viaduct shadow and piers where the road bridges past the hill's rims
+	for span: Vector2 in [Vector2(x0, rim.x), Vector2(rim.y, x1)]:
+		if span.y - span.x < 4.0:
+			continue
+		b.rect(Rect2(span.x, TRAIN_Y + 26.0, span.y - span.x, 16.0), Color(0.0, 0.0, 0.0, 0.24))
+		var px := span.x + 40.0
+		while px < span.y - 20.0:
+			b.rect(Rect2(px - 8.0, TRAIN_Y + 26.0, 16.0, 20.0), STONE.darkened(0.32))
+			px += 140.0
+	b.rect(Rect2(x0, TRAIN_Y - 26.0, hh * 2.0, 52.0), Color(0.36, 0.36, 0.38))
+	# hillside stone kerbs along the road, thickening into bridge parapets past the rims
+	for seg: Vector2 in [Vector2(x0, rim.x), Vector2(rim.y, x1)]:
+		if seg.y - seg.x < 2.0:
+			continue
+		b.rect(Rect2(seg.x, TRAIN_Y - 30.0, seg.y - seg.x, 6.0), STONE)
+		b.rect(Rect2(seg.x, TRAIN_Y - 30.0, seg.y - seg.x, 2.0), STONE.lightened(0.22))
+		b.rect(Rect2(seg.x, TRAIN_Y + 24.0, seg.y - seg.x, 6.0), STONE.darkened(0.14))
+		b.rect(Rect2(seg.x, TRAIN_Y + 24.0, seg.y - seg.x, 2.0), STONE.lightened(0.14))
+	for seg: Vector2 in [Vector2(rim.x, e.x), Vector2(e.y, rim.y)]:
+		if seg.y - seg.x < 2.0:
+			continue
+		b.rect(Rect2(seg.x, TRAIN_Y - 27.0, seg.y - seg.x, 3.5), STONE.darkened(0.14))
+		b.rect(Rect2(seg.x, TRAIN_Y - 27.0, seg.y - seg.x, 1.5), STONE.lightened(0.12))
+		b.rect(Rect2(seg.x, TRAIN_Y + 23.5, seg.y - seg.x, 3.5), STONE.darkened(0.18))
+		b.rect(Rect2(seg.x, TRAIN_Y + 23.5, seg.y - seg.x, 1.5), STONE.lightened(0.08))
+	# stone crossing kerb aprons and stop bars where the path meets the road
+	b.rect(Rect2(e.x - 4.0, TRAIN_Y - 26.0, 6.0, 52.0), STONE)
+	b.rect(Rect2(e.y - 2.0, TRAIN_Y - 26.0, 6.0, 52.0), STONE)
+	b.rect(Rect2(e.x - 14.0, TRAIN_Y - 22.0, 3.0, 44.0), Color(0.92, 0.90, 0.84, 0.72))
+	b.rect(Rect2(e.y + 11.0, TRAIN_Y - 22.0, 3.0, 44.0), Color(0.92, 0.90, 0.84, 0.72))
+	var x := x0 + 20.0
+	while x < x1 - 30.0:
+		if x < e.x - 28.0 or x > e.y + 18.0:
 			b.rect(Rect2(x, TRAIN_Y - 1.5, 26.0, 3.0), Color(0.92, 0.88, 0.70, 0.8))
 		x += 52.0
 	var sx := e.x + 8.0
@@ -555,6 +625,12 @@ static func draw_cactus_bed(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 	var r := CACTUS_BED
 	if r.end.y < vt - 40.0 or r.position.y > vb + 40.0:
 		return
+	# gravel approach apron from the path's east edge into the garden's west edge
+	var entry_y := r.position.y + 82.0
+	var ce: Vector2 = m.walk_edges(entry_y + 24.0)
+	if r.position.x > ce.y - 2.0:
+		b.rect(Rect2(ce.y - 4.0, entry_y - 3.0, r.position.x - ce.y + 6.0, 54.0), STONE.darkened(0.08))
+		b.rect(Rect2(ce.y - 4.0, entry_y, r.position.x - ce.y + 8.0, 48.0), Color(0.84, 0.77, 0.62))
 	b.rect(r.grow(8.0), STONE.darkened(0.20))
 	b.rect(r.grow(6.0), STONE.darkened(0.1))
 	b.rect(r, Color(0.86, 0.80, 0.66))
@@ -568,9 +644,10 @@ static func draw_cactus_bed(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 		var sp := r.position + Vector2(fmod(float(i) * 53.0, r.size.x - 10.0) + 5.0, fmod(float(i) * 37.0, r.size.y - 10.0) + 5.0)
 		b.circle(sp, 2.0 + float(i % 3), Color(0.70, 0.64, 0.54))
 
-	# terracotta border curb tiles
-	for side_x: float in [r.position.x, r.end.x - 3.0]:
-		b.rect(Rect2(side_x, r.position.y, 3.0, r.size.y), Color(0.72, 0.44, 0.30))
+	# terracotta border curb tiles, open at the path entry on the west side
+	b.rect(Rect2(r.position.x, r.position.y, 3.0, entry_y - r.position.y), Color(0.72, 0.44, 0.30))
+	b.rect(Rect2(r.position.x, entry_y + 48.0, 3.0, r.end.y - (entry_y + 48.0)), Color(0.72, 0.44, 0.30))
+	b.rect(Rect2(r.end.x - 3.0, r.position.y, 3.0, r.size.y), Color(0.72, 0.44, 0.30))
 	for side_y: float in [r.position.y, r.end.y - 3.0]:
 		b.rect(Rect2(r.position.x, side_y, r.size.x, 3.0), Color(0.72, 0.44, 0.30))
 
@@ -581,8 +658,9 @@ static func draw_cactus_bed(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 		b.rect(Rect2(bp.x - 7.0, bp.y - 7.0, 14.0, 7.0), Color(0.94, 0.92, 0.84))
 		b.line(Vector2(bp.x - 5.0, bp.y - 3.5), Vector2(bp.x + 5.0, bp.y - 3.5), Color(0.28, 0.24, 0.20), 1.0)
 
-	b.draw_string(ThemeDB.fallback_font, r.position + Vector2(4, -10), "JARDÍ DE CACTUS",
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.30, 0.26, 0.20))
+	# garden title south of the bed, clear of the -2100 shadow and the corner pine
+	b.draw_string(ThemeDB.fallback_font, Vector2(r.position.x + 58.0, r.end.y + 20.0), "JARDÍ DE CACTUS",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.24, 0.22, 0.16))
 
 
 # A cactus from above: the great barrel cactus (ribs and a crown of yellow
@@ -679,18 +757,34 @@ static func draw_font(m: Node2D, c: Object, vt: float, vb: float) -> void:
 # filling the rest of the path's width.
 static func draw_conveyor(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var z: Rect2 = m.conveyor_zone
-	if z.end.y < vt - 40.0 or z.position.y > vb + 40.0:
+	if z.end.y < vt - 60.0 or z.position.y > vb + 60.0:
 		return
 	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c as CanvasItem)
-	var e: Vector2 = m.walk_edges(z.get_center().y)
-	# the stairs either side: treads every ESC_TREAD * 2, a shadow under each nose
-	var sy := z.position.y
-	while sy < z.end.y:
-		for seg: Vector2 in [Vector2(e.x + 6.0, z.position.x - 10.0), Vector2(z.end.x + 10.0, e.y - 6.0)]:
-			b.rect(Rect2(seg.x, sy, seg.y - seg.x, ESC_TREAD * 2.0), STONE)
-			b.rect(Rect2(seg.x, sy + ESC_TREAD * 2.0 - 4.0, seg.y - seg.x, 4.0), STONE.darkened(0.25))
+	# stone landing aprons at bottom and top so the flight joins the sandy path
+	for ly: float in [z.position.y - 18.0, z.end.y]:
+		var le: Vector2 = m.walk_edges(ly + 9.0)
+		b.rect(Rect2(le.x + 2.0, ly, le.y - le.x - 4.0, 18.0), STONE)
+		b.rect(Rect2(le.x + 2.0, ly, le.y - le.x - 4.0, 2.5), STONE.lightened(0.22))
+		b.rect(Rect2(le.x + 2.0, ly + 15.0, le.y - le.x - 4.0, 3.0), STONE.darkened(0.22))
+		var lx := le.x + 28.0
+		while lx < le.y - 20.0:
+			b.line(Vector2(lx, ly + 2.0), Vector2(lx, ly + 16.0), STONE.darkened(0.22), 1.2)
+			lx += 36.0
+	# stairs either side, hugging the path's real edges and fitted evenly to z.size.y
+	var n_steps := maxi(1, int(roundf(z.size.y / (ESC_TREAD * 2.0))))
+	var step_h := z.size.y / float(n_steps)
+	for si in range(n_steps):
+		var sy := z.position.y + float(si) * step_h
+		var se: Vector2 = m.walk_edges(sy + step_h * 0.5)
+		for seg: Vector2 in [Vector2(se.x + 2.0, z.position.x - 10.0), Vector2(z.end.x + 10.0, se.y - 2.0)]:
+			if seg.y - seg.x < 4.0:
+				continue
+			b.rect(Rect2(seg.x, sy, seg.y - seg.x, step_h), STONE)
+			b.rect(Rect2(seg.x, sy + step_h - 4.0, seg.y - seg.x, 4.0), STONE.darkened(0.25))
 			b.rect(Rect2(seg.x, sy, seg.y - seg.x, 2.0), STONE.lightened(0.2))
-		sy += ESC_TREAD * 2.0
+		# stone cheek curbs framing the stair flight against the path edges
+		b.rect(Rect2(se.x + 1.0, sy, 4.0, step_h + 1.0), STONE.darkened(0.14))
+		b.rect(Rect2(se.y - 5.0, sy, 4.0, step_h + 1.0), STONE.darkened(0.14))
 	# the casing, a steel strip down the middle between the two runs
 	b.rect(Rect2(z.position.x - 10.0, z.position.y - 8.0, z.size.x + 20.0, z.size.y + 16.0), Color(0.38, 0.40, 0.43))
 	var half := z.size.x * 0.5
@@ -726,24 +820,33 @@ const ESPLANADE_EARTH_R := 24.0     # a tree pit's earth, as draw_esplanade ring
 
 
 # The hillside, under the path: a polygon between its rims, which narrow as it
-# climbs. (Past the rims the edge layer shows the city below.)
+# climbs and flare at the top to meet the castle esplanade. (Past the rims the
+# edge layer shows the city below.)
 static func draw_ground(m: Node2D, c: Object, vt: float, vb: float) -> void:
-	# in horizontal strips, rim to rim (a single long polygon with wavy sides
-	# does not always triangulate)
+	# trapezoidal quads between rims so steep upper flares have no stair-step edge
 	var left := PackedVector2Array()
 	var right := PackedVector2Array()
-	# up to the gate only: past it is the castle's esplanade, freedomlayer's
-	var y := floorf((maxf(vt, m.GATE_Y - 30.0) - 60.0) / 20.0) * 20.0
-	y = maxf(y, m.GATE_Y - 40.0)
+	var gate_top: float = float(m.GATE_Y) - 30.0
+	var y := maxf(floorf((vt - 60.0) / 20.0) * 20.0, gate_top)
 	var y1 := vb + 60.0
-	while y <= y1:
-		var e: Vector2 = m.walk_edges(y + 10.0)
-		var cx := (e.x + e.y) * 0.5
-		var hh := hill_half(m, y + 10.0) + sin((y + 10.0) * 0.013) * 26.0
-		c.draw_rect(Rect2(cx - hh, y, hh * 2.0, 21.0), HILL)
-		left.append(Vector2(cx - hh, y + 10.0))
-		right.append(Vector2(cx + hh, y + 10.0))
-		y += 20.0
+	if y <= y1:
+		var rx0 := _hill_rim_xs(m, y)
+		left.append(Vector2(rx0.x, y))
+		right.append(Vector2(rx0.y, y))
+		while y < y1:
+			var yn := y + 20.0
+			var rx1 := _hill_rim_xs(m, yn)
+			if c.has_method("draw_colored_polygon"):
+				c.draw_colored_polygon(PackedVector2Array([
+					Vector2(rx0.x, y), Vector2(rx0.y, y),
+					Vector2(rx1.y, yn), Vector2(rx1.x, yn),
+				]), HILL)
+			else:
+				c.draw_rect(Rect2(rx0.x, y, rx0.y - rx0.x, 21.0), HILL)
+			left.append(Vector2(rx1.x, yn))
+			right.append(Vector2(rx1.y, yn))
+			y = yn
+			rx0 = rx1
 	# the rim: rock breaking out where the hill drops away. A view that
 	# does not include the hill, such as the esplanade, leaves these empty,
 	# and a polyline needs two points.
@@ -752,6 +855,20 @@ static func draw_ground(m: Node2D, c: Object, vt: float, vb: float) -> void:
 			continue
 		c.draw_polyline(pts, Color(0.36, 0.33, 0.27), 7.0)
 		c.draw_polyline(pts, Color(0.58, 0.54, 0.44), 3.0)
+
+
+# Boarding terrace & path spur linking a telefèric station cleanly to the hill path.
+static func _draw_station_pad(m: Node2D, b: ShapeBatch, st: Vector2, on_left: bool) -> void:
+	var pad := Rect2(st + Vector2(-46.0, -32.0), Vector2(92.0, 62.0))
+	var se: Vector2 = m.walk_edges(st.y)
+	var spur_x0 := pad.end.x - 4.0 if on_left else se.y - 4.0
+	var spur_x1 := se.x + 4.0 if on_left else pad.position.x + 4.0
+	if spur_x1 > spur_x0:
+		b.rect(Rect2(spur_x0, st.y - 16.0, spur_x1 - spur_x0, 32.0), STONE.darkened(0.10))
+		b.rect(Rect2(spur_x0, st.y - 13.0, spur_x1 - spur_x0, 26.0), SAULO)
+	b.rect(pad.grow(4.0), STONE.darkened(0.14))
+	b.rect(pad, STONE)
+	b.rect(pad.grow(-4.0), SAULO.darkened(0.04))
 
 
 # What stands on the hill: the terraces and their steps, pines and agaves,
@@ -765,15 +882,24 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	if CACTUS_BED.end.y > vt - 40.0 and CACTUS_BED.position.y < vb + 40.0:
 		for i in range(CACTI.size()):
 			draw_cactus(b, CACTI[i], i == 0)
+	if m.cable_low != Vector2.ZERO and m.cable_low.y > vt - 60.0 and m.cable_low.y < vb + 60.0:
+		_draw_station_pad(m, b, m.cable_low, true)
+	if m.cable_top != Vector2.ZERO and m.cable_top.y > vt - 60.0 and m.cable_top.y < vb + 60.0:
+		_draw_station_pad(m, b, m.cable_top, false)
+	var mirador_y := -1500.0
+	var mir_e: Vector2 = m.walk_edges(mirador_y)
+	var mir_p := Vector2(mir_e.y + 24.0, mirador_y)
 	for wy: float in terrace_ys(m):
 		if wy < vt - 80.0 or wy > vb + 80.0:
 			continue
 		var e: Vector2 = m.walk_edges(wy)
-		var cx := (e.x + e.y) * 0.5
-		var hh := hill_half(m, wy) + sin(wy * 0.013) * 26.0
+		var rim := _hill_rim_xs(m, wy)
+		var is_mirador: bool = absf(wy - mirador_y) < 1.0
+		var is_top_station: bool = absf(wy - CableCar.TOP_Y) < 1.0 and m.cable_top != Vector2.ZERO
+		var right_start: float = mir_p.x + 18.0 if is_mirador else (float(m.cable_top.x) + 44.0 if is_top_station else e.y + 4.0)
 		# the wall: its cap along the top, its face below in shadow, and the
 		# shade it throws on the terrace beneath
-		for seg: Vector2 in [Vector2(cx - hh, e.x - 4.0), Vector2(e.y + 4.0, cx + hh)]:
+		for seg: Vector2 in [Vector2(rim.x, e.x - 4.0), Vector2(right_start, rim.y)]:
 			if seg.y - seg.x < 8.0:
 				continue
 			b.rect(Rect2(seg.x, wy + 14.0, seg.y - seg.x, 22.0), Color(0, 0, 0, 0.16))
@@ -794,15 +920,20 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				b.circle(Vector2(iv_x + 1.0, wy + iv_h), 2.0, Color(0.32, 0.54, 0.26))
 				iv_x += 48.0
 
-		# the flight of steps where the path cuts through it
+		# the flight of steps where the path cuts through it, with angled cheek curbs
 		for k in range(4):
 			var sy := wy - float(k) * (STEP_H / 4.0)
 			var se: Vector2 = m.walk_edges(sy)
+			b.rect(Rect2(se.x - 3.0, sy - 5.0, 4.0, STEP_H / 4.0 + 1.0), STONE.darkened(0.14))
+			b.rect(Rect2(se.y - 1.0, sy - 5.0, 4.0, STEP_H / 4.0 + 1.0), STONE.darkened(0.14))
 			b.rect(Rect2(se.x, sy - 3.0, se.y - se.x, 3.0), SAULO.darkened(0.22))
 			b.rect(Rect2(se.x, sy - 5.0, se.y - se.x, 2.0), SAULO.lightened(0.12))
 
 		# pier ends where the wall meets the path with terracotta flowerpots
-		for px: float in [e.x - 8.0, e.y + 2.0]:
+		var pier_xs: Array[float] = [e.x - 8.0]
+		if not is_mirador and not is_top_station:
+			pier_xs.append(e.y + 2.0)
+		for px: float in pier_xs:
 			b.rect(Rect2(px, wy - 8.0, 8.0, 24.0), STONE.darkened(0.12))
 			var pot_p := Vector2(px + 4.0, wy + 4.0)
 			b.circle(pot_p, 5.0, Color(0.70, 0.40, 0.26))
@@ -811,13 +942,15 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 
 		# sentinel Italian cypress trees (xiprers) at the outer terrace edges
 		if int(absf(wy)) % 600 == 0:
-			_cypress(b, Vector2(cx - hh + 18.0, wy - 10.0))
-			_cypress(b, Vector2(cx + hh - 18.0, wy - 10.0))
+			_cypress(b, Vector2(rim.x + 18.0, wy - 10.0))
+			_cypress(b, Vector2(rim.y - 18.0, wy - 10.0))
 
-		# the height, cut in a stone post at every third wall
+		# the height, cut in a stone post at every third wall (east side if near low station)
 		var k3 := int(roundf((m.START_Y - 260.0 - wy) / TERRACE_STEP))
 		if k3 % 3 == 1:
 			var post := Vector2(e.x - 30.0, wy - 26.0)
+			if m.cable_low != Vector2.ZERO and post.distance_to(m.cable_low) < 90.0:
+				post = Vector2(e.y + 30.0, wy - 26.0)
 			b.rect(Rect2(post.x - 12.0, post.y - 10.0, 24.0, 20.0), STONE.darkened(0.08))
 			b.rect(Rect2(post.x - 12.0, post.y - 10.0, 24.0, 3.0), STONE.lightened(0.2))
 			var metres := int(roundf(climb(m, wy) * TOP_M / 5.0) * 5.0)
@@ -825,36 +958,38 @@ static func draw_on_hill(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, 24, 11, Color(0.22, 0.18, 0.14))
 
 	# scenic mirador viewpoint with balustrade and viewing telescope overlooking the city
-	var mirador_y := -1500.0
 	if mirador_y > vt - 60.0 and mirador_y < vb + 60.0:
-		var me: Vector2 = m.walk_edges(mirador_y)
-		var mp := Vector2(me.y + 18.0, mirador_y)
-		b.circle(mp, 22.0, STONE)
-		b.circle(mp, 18.0, SAULO)
+		b.rect(Rect2(mir_e.y - 2.0, mirador_y - 11.0, mir_p.x - mir_e.y + 2.0, 22.0), STONE)
+		b.rect(Rect2(mir_e.y - 2.0, mirador_y - 8.0, mir_p.x - mir_e.y + 2.0, 16.0), SAULO)
+		b.circle(mir_p, 22.0, STONE)
+		b.circle(mir_p, 18.0, SAULO)
 		for bi in range(6):
 			var ba := -0.95 + float(bi) * 0.38
-			var bp := mp + Vector2.from_angle(ba) * 20.0
+			var bp := mir_p + Vector2.from_angle(ba) * 20.0
 			b.circle(bp, 2.4, STONE.lightened(0.15))
 			b.circle(bp, 1.5, STONE.darkened(0.25))
-		b.circle(mp, 5.5, Color(0.22, 0.24, 0.26))
-		b.rect(Rect2(mp.x - 2.0, mp.y - 7.0, 4.0, 9.0), Color(0.60, 0.62, 0.66))
-		b.line(mp + Vector2(-3.0, -7.0), mp + Vector2(7.0, -13.0), Color(0.76, 0.80, 0.84), 4.0)
-		b.circle(mp + Vector2(7.0, -13.0), 2.8, Color(0.35, 0.72, 0.88, 0.85))
+		b.circle(mir_p, 5.5, Color(0.22, 0.24, 0.26))
+		b.rect(Rect2(mir_p.x - 2.0, mir_p.y - 7.0, 4.0, 9.0), Color(0.60, 0.62, 0.66))
+		b.line(mir_p + Vector2(-3.0, -7.0), mir_p + Vector2(7.0, -13.0), Color(0.76, 0.80, 0.84), 4.0)
+		b.circle(mir_p + Vector2(7.0, -13.0), 2.8, Color(0.35, 0.72, 0.88, 0.85))
 	# agaves and prickly pears on the terraces, pines leaning out over the rim
 	var y := floorf((vt - 120.0) / 140.0) * 140.0
 	while y < vb + 120.0:
 		var e2: Vector2 = m.walk_edges(y)
-		var cx2 := (e2.x + e2.y) * 0.5
-		var hh2 := hill_half(m, y)
+		var rim2 := _hill_rim_xs(m, y)
 		var k := int(absf(y) / 140.0)
 		for s: float in [-1.0, 1.0]:
 			var inner: float = e2.x - 50.0 if s < 0.0 else e2.y + 50.0
-			var outer := cx2 + s * (hh2 - 40.0)
-			if absf(outer - inner) < 60.0:
+			var outer: float = (rim2.x + 40.0) if s < 0.0 else (rim2.y - 40.0)
+			if (outer - inner) * s < 60.0:
 				continue
 			var f := float((k * 7 + int(s + 1.0) * 3) % 10) / 10.0
 			var p := Vector2(lerpf(inner, outer, 0.25 + 0.6 * f), y + float(k % 3) * 20.0)
 			if FONT.grow(40.0).has_point(p) or CACTUS_BED.grow(40.0).has_point(p):
+				continue
+			if absf(p.y - TRAIN_Y) < 42.0 or p.distance_to(mir_p) < 44.0:
+				continue
+			if (m.cable_low != Vector2.ZERO and p.distance_to(m.cable_low) < 72.0) or (m.cable_top != Vector2.ZERO and p.distance_to(m.cable_top) < 72.0):
 				continue
 			if k % 3 == 0:
 				_agave(b, p)
@@ -933,17 +1068,16 @@ static func _pine(b: ShapeBatch, p: Vector2, s: float) -> void:
 # the sea open on the left.
 static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
-	# up to the gate: past it the esplanade draws its own sea and haze
-	var y := floorf((maxf(vt, m.GATE_Y) - 300.0) / 60.0) * 60.0
-	y = maxf(y, m.GATE_Y - 60.0)
+	# up to the esplanade's south wall (-5030): past it freedomlayer draws sea & haze
+	var gate_bot: float = m.GATE_Y - 30.0
+	var y := floorf((maxf(vt, gate_bot) - 300.0) / 60.0) * 60.0
+	y = maxf(y, gate_bot)
 	var street := CITY_STREET
 	while y < vb + 300.0:
 		var h := climb(m, y + 30.0)
 		var haze := 0.18 + 0.55 * h * h
-		var e: Vector2 = m.walk_edges(y + 30.0)
-		var cx := (e.x + e.y) * 0.5
-		var hh := hill_half(m, y + 30.0) - 30.0
-		var sea_to := lerpf(-900.0, cx - hh - 40.0, clampf((h - 0.45) / 0.4, 0.0, 1.0))
+		var rx := _hill_rim_xs(m, y + 30.0)
+		var sea_to := lerpf(-900.0, rx.x - 10.0, clampf((h - 0.45) / 0.4, 0.0, 1.0))
 		b.rect(Rect2(-400.0, y, 2100.0, 61.0), street.lerp(HAZE, haze))
 		if sea_to > -400.0:
 			b.rect(Rect2(-400.0, y, sea_to + 400.0, 61.0), SEA.lerp(HAZE, haze * 0.8))
@@ -951,20 +1085,18 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	# the blocks, on their own grid so they do not jump between strips
 	var cell := 64.0
 	var lit: float = Game.lamp_glow()
-	var by := maxf(floorf((vt - 300.0) / cell) * cell, m.GATE_Y - 40.0)
+	var by := maxf(floorf((vt - 300.0) / cell) * cell, gate_bot + 4.0)
 	while by < vb + 300.0:
 		var h2 := climb(m, by)
 		var haze2 := 0.18 + 0.55 * h2 * h2
 		var s := lerpf(1.0, 0.45, h2)            # further below, smaller
-		var e2: Vector2 = m.walk_edges(by)
-		var cx2 := (e2.x + e2.y) * 0.5
-		var hh2 := hill_half(m, by) - 30.0
-		var sea2 := lerpf(-900.0, cx2 - hh2 - 40.0, clampf((h2 - 0.45) / 0.4, 0.0, 1.0))
+		var rx2 := _hill_rim_xs(m, by)
+		var sea2 := lerpf(-900.0, rx2.x - 10.0, clampf((h2 - 0.45) / 0.4, 0.0, 1.0))
 		var step := cell * s
 		# the camera never leaves 0..1280 on this walk: nothing wider is seen
 		var bx := -40.0
 		while bx < 1320.0:
-			if (bx + step < cx2 - hh2 or bx > cx2 + hh2) and bx > sea2 + 6.0:
+			if (bx + step < rx2.x + 26.0 or bx > rx2.y - 26.0) and bx > sea2 + 6.0:
 				_block(b, Vector2(bx, by), step, haze2)
 				if lit > 0.0 and (int(bx / step) + int(by / step)) % 2 == 0:
 					b.glow(Vector2(bx, by), 5.0 + 9.0 * s, Color(1.0, 0.86, 0.56, lit * (1.0 - haze2 * 0.3)), 0.5)
@@ -977,16 +1109,14 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 # The hill's shade on the city below, just past each rim: one feathered strip
 # a side, following the rim's wobble as draw_ground draws it.
 static func _rim_shadow(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
-	var y := maxf(floorf((vt - 300.0) / 20.0) * 20.0, m.GATE_Y - 40.0)
+	var y := maxf(floorf((vt - 300.0) / 20.0) * 20.0, m.GATE_Y - 30.0)
 	var left := PackedVector2Array()
 	var right := PackedVector2Array()
 	var rows := PackedFloat32Array()
 	while y < vb + 300.0:
-		var e: Vector2 = m.walk_edges(y)
-		var cx := (e.x + e.y) * 0.5
-		var hh := hill_half(m, y) + sin(y * 0.013) * 26.0
-		left.append_array([Vector2(cx - hh, y), Vector2(cx - hh - RIM_SHADE_W, y)])
-		right.append_array([Vector2(cx + hh, y), Vector2(cx + hh + RIM_SHADE_W * 1.4, y)])
+		var rx := _hill_rim_xs(m, y)
+		left.append_array([Vector2(rx.x, y), Vector2(rx.x - RIM_SHADE_W, y)])
+		right.append_array([Vector2(rx.y, y), Vector2(rx.y + RIM_SHADE_W * 1.4, y)])
 		rows.append(1.0)
 		y += 20.0
 	if rows.size() < 2:
@@ -1048,18 +1178,68 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	draw_esplanade(m, c)
 
 
+# Join the castle esplanade to the hill: continue the side ramparts into a
+# stone south parapet flanking the gateposts, and feather the path's sand
+# smoothly into the esplanade's gravel through the gate.
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var r: Rect2 = m._freedom_rect()
+	var wall_y: float = float(m.GATE_Y) - 30.0
+	var ge: Vector2 = m.walk_edges(m.GATE_Y - 16.0)
+	var gl := maxf(float(m.gate_l), ge.x)
+	var gr := minf(float(m.gate_r), ge.y)
+	var esp_col := Color(0.74, 0.68, 0.56)
+	# cover the ribbon's last 10px kerb stubs inside the esplanade and feather into SAULO
+	b.rect(Rect2(gl - 4.0, wall_y - 14.0, gr - gl + 8.0, 22.0), esp_col)
+	var grad := PackedVector2Array([
+		Vector2(gl, wall_y + 8.0), Vector2(gr, wall_y + 8.0),
+		Vector2(gl, m.GATE_Y + 6.0), Vector2(gr, m.GATE_Y + 6.0),
+	])
+	b.band(grad, 2, esp_col, PackedFloat32Array([1.0, 0.0]))
+	for i in range(14):
+		var px := lerpf(gl + 16.0, gr - 16.0, fmod(float(i) * 0.37 + 0.11, 1.0))
+		var py := lerpf(wall_y - 6.0, m.GATE_Y + 12.0, fmod(float(i) * 0.61 + 0.17, 1.0))
+		b.circle(Vector2(px, py), 1.8 + float(i % 2) * 0.7, Color(0.62, 0.56, 0.46, 0.55))
+	# south rampart wall flanking the stone gateposts, turning cleanly at the side corners
+	for seg: Vector2 in [Vector2(r.position.x - 34.0, gl - 26.0), Vector2(gr + 26.0, r.end.x + 34.0)]:
+		if seg.y - seg.x < 8.0:
+			continue
+		b.rect(Rect2(seg.x, wall_y + 24.0, seg.y - seg.x, 18.0), Color(0, 0, 0, 0.18))
+		b.rect(Rect2(seg.x, wall_y, seg.y - seg.x, 24.0), RAMPART)
+		b.rect(Rect2(seg.x, wall_y, seg.y - seg.x, 5.0), RAMPART.lightened(0.14))
+		b.rect(Rect2(seg.x, wall_y + 18.0, seg.y - seg.x, 6.0), RAMPART.darkened(0.24))
+		var jx := seg.x + 28.0
+		while jx < seg.y - 8.0:
+			b.line(Vector2(jx, wall_y + 5.0), Vector2(jx, wall_y + 18.0), RAMPART.darkened(0.32), 1.3)
+			jx += 32.0
+	for cx: float in [r.position.x - 34.0, r.end.x]:
+		b.rect(Rect2(cx, wall_y - 4.0, 34.0, 30.0), RAMPART)
+		b.rect(Rect2(cx + 4.0, wall_y, 26.0, 22.0), RAMPART.lightened(0.10))
+
+
 # The esplanade is gravel from parapet to parapet: it handles as paving, bar
-# the soft ground of its tree pits and planters. The hill keeps the default.
+# the soft ground of its tree pits and planters; the hill road is paved too.
 static func surface(m: Node2D, p: Vector2) -> int:
+	if absf(p.y - TRAIN_Y) < 26.0:
+		return Surfaces.S.PAVEMENT
 	return Surfaces.paved_past_gate(m, p, m.trees, ESPLANADE_EARTH_R)
 
 
-# no grass on the cactus bed, round the fountain, or past the hill's rims
+# no grass on the cactus bed (or its path entry), round the fountain, on the
+# hill road, on the telefèric station pads, or past the rims
 static func grass_blocked(m: Node2D, p: Vector2) -> bool:
+	if absf(p.y - TRAIN_Y) < 34.0:
+		return true
 	if CACTUS_BED.grow(8.0).has_point(p) or FONT.grow(16.0).has_point(p):
 		return true
-	var me: Vector2 = m.walk_edges(p.y)
-	return absf(p.x - (me.x + me.y) * 0.5) > hill_half(m, p.y) - 16.0
+	var cactus_entry := Rect2(CACTUS_BED.position.x - 56.0, CACTUS_BED.position.y + 78.0, 60.0, 56.0)
+	if cactus_entry.has_point(p):
+		return true
+	if m.cable_low != Vector2.ZERO and Rect2(m.cable_low + Vector2(-50.0, -36.0), Vector2(140.0, 72.0)).has_point(p):
+		return true
+	if m.cable_top != Vector2.ZERO and Rect2(m.cable_top + Vector2(-90.0, -36.0), Vector2(140.0, 72.0)).has_point(p):
+		return true
+	var rx := _hill_rim_xs(m, p.y)
+	return p.x < rx.x + 16.0 or p.x > rx.y - 16.0
 
 
 # a way marker post for a hydrant (main._draw_waymarker, shared with El Bosc)
