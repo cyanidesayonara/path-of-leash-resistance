@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - Polish El Parc
+
+- The dog park past the gate drew its trees with the forest's roots poking out of their crowns; El Parc now draws its own broadleaf grove (`Parc.draw_grove`).
+- At night the generic wall bulbs floated over the park fence where nothing stands, and the green park lamps barely glowed. The walk lists its own lamps (`Parc.night_lights`), so each lamp pours its light and the floating bulbs are gone; the lamps' faint duplicate glow is dropped.
+- The lake was a flat blue fill: it now deepens toward its middle with two soft gradients, one batch.
+- The papereras along the park's gravel heaped bin bags round them like a street's; in El Parc they collect bottles and cans (`spawn_cones`).
+- The lake's empty west shore gets two benches facing the water (`PARK_EDGE_BENCHES`).
+- The dog park's middle handled as pavement while drawn as lawn (392 surface-check mismatches over the walk, now 253, the rest tree crowns and edge samples): `Parc.surface` makes everything 40 past the gate grass.
+- `tests/test_parc.gd` covers the dog park's surface, the night lights and the bin palette; `test_walk_hooks` lists the new hooks.
+
 ## 2026-11-17 - New walk: Camí de Ronda
 
 - Added Camí de Ronda (`ronda`, `systems/ronda.gd`), the 43rd walk of the campaign: the old smugglers' and coastguards' footpath along the Costa Brava cliffs near Calella de Palafrugell and Llafranc on a tramuntana day (`["wind", "day"]`), starting in the fishing village's arched colonnades (*les voltes*), climbing stone steps around two headlands with a dry-stone parapet and wooden rail beside turquoise coves and *llaguts* below, dropping through an umbrella-pine wood, and ending off the leash on Cala del Pinar. No chase, no boss; placed right after Les Obres (`site`) in the carousel (`STAR_GATE` 47, `CHASE_GATE` `"boars"`), with its name laid in Mediterranean fishing floats (`"floats"` in `world/world_sign.gd`) and the gloss "The cliff path".
@@ -430,7 +440,6 @@ Append-only session history, newest first.
 - El Port's mooring bollards were never drawn (walk-module poles are not drawn by main): every one is now a cast-iron bollard with a line made fast.
 - `systems/boss_lleons.gd`, `systems/port.gd` (the arena bollards are poles; the boat is solid). `tests/test_lleons.gd` winds the real rope round a leg and a bollard (held still, his twin's pincer runs into him, he strains free) and barks at the pier (nothing until the horn, both flinch toward it, the reload).
 
-
 ## 2026-11-15 - Pilones instead of fire hydrants
 
 - The marking spot on every town walk without one of its own was a red fire hydrant, which Barcelona's streets do not have standing on the pavement. It is a pilona now, the city's knee-high cast-iron bollard: near black, a collar ring under a domed head, a lit rim so it reads on night paving, and a wet stain round its foot once it is marked (`main._draw_pilona`). Les Corts' own bollard uses the same drawing. Walks with a spot of their own (stumps, showers, waymarkers, crates, urns, tyres) are unchanged.
@@ -466,7 +475,6 @@ Append-only session history, newest first.
 - El Mosaic's stair has three fountain spouts now (`systems/boss_drac.gd`): a bronze pipe out of a knob of rock in each stair wall and the serpent's head under its medallion above El Drac's plinth. Each has a pressure tile of trencadís in its own colour on the paving. A paw or your human's shoe on a tile clicks it; the spout gurgles and marks its lane for 0.8 s while the tile glows, then fires a jet across the landing where he fights. A jet that catches him in the fight pays "soaked! +6" through `award_points`, takes 14 HP and dazes him for 2.2 s; at his last stand the serpent's jet chokes his own jet instead ("choked! +4"). Her water never knocks her or your human. A tile fires once per step and refills in 3.5 s. Until she has soaked him once, the banner between his attacks says "STEP ON A SPOUT'S TILE TO SOAK HIM" (`mosaic.idle_status`).
 - `tests/test_drac.gd`: the lanes cross the landing, the tiles sit on the stair out of their own lanes, the telegraph runs before any water, a jet from a tile hits him for its damage and daze and pays, a dazed dragon is not dazed twice, a held tile does not refire, your human triggers a tile too, tiles are inert while he sleeps, and the serpent chokes his last-stand jet.
 
-
 ## 2026-11-15 - El Mamut's arena: the rowboat jetty and the park chairs
 
 - The first of the boss arenas (docs/BOSSES.md). A rowboat jetty on the lake shore, a boat tied up at its end: lure his tusk charge onto its boards and they give way, and he goes through into the lake for 40 damage and the longest daze of the fight (4.6 s), then comes up spraying. Once: after that the land end is snapped boards and the boat has drifted off.
@@ -482,7 +490,6 @@ Append-only session history, newest first.
 - A new game in every plaça (about fifteen walks end in one): the pigeons. A flock of nine lands on scattered crumbs. Run at them and the near ones take off, lost (at a sprint they see her from much further off). Creep up, stop close and bark: every pigeon still down bursts up at once, a bone each, double when she is right among them, five more for the whole flock. Three flocks, each somewhere new (`systems/pigeon_game.gd`, test `tests/test_pigeon_game.gd`).
 - A new game at the dog beaches (Platja de Llevant, La Cremada): the waves. A crest builds out at sea (the telegraph), the wave rushes up the sand and drains back. Follow it out and outrun the next one: further out pays more, dry escapes in a row add up, and caught she is soaked and the streak is gone. Six waves (`systems/wave_game.gd`, test `tests/test_wave_game.gd`).
 - `tools/agility_frames.gd` films a run along the chalk line. Tests: the table's count and fault, the racing line passing every pole on its side and running clean, medals, the frisbee streak and leap pay.
-
 
 ## 2026-11-15 - Boss arenas planned
 
@@ -614,8 +621,6 @@ Append-only session history, newest first.
     - `_head_bump()` in `autoload/sfx.gd`: Heavy bronze impact clash with metallic chime decay.
   - Comprehensive test suite: `tests/test_lleons.gd` (47 checks covering registration, goals, wake trigger, pincer dodge, roar wind push, Double Rush collision stun, leg tangle wrapping, and double boop victory).
 
-
-
 ## 2026-11-11 - Walk 38: Montserrat, Sant Joan funicular crossing, and Wild Goat Herd chase
 
 - Added Walk 38: **Montserrat** (The serrated mountain trail and monastery terrace):
@@ -642,8 +647,6 @@ Append-only session history, newest first.
     - Added stone cliff ledge shading beneath the western balustrade overlooking Barcelona and center cable guide pulleys along the funicular track.
   - Comprehensive test suite: `tests/test_montserrat.gd` (30 checks covering registration, goals, chase profile, funicular crossing event, rolling boulder dodges, and cheese stall bark). All regression suites pass (`test_walk_registry.gd` 1100 checks, `test_walk_hooks.gd` 940 checks, `test_chase_film.gd` 265 checks, `test_main_properties_exist.gd` 3908 reads, `test_wrap.gd`, `test_tibidabo.gd`).
 
-
-
 ## 2026-11-11 - Walk 37: L'Aeroport concourse, Gate Rush live event, and Security Cart Buggy chase
 
 - Added Walk 37: **L'Aeroport** (Terminal 1 concourse at Barcelona-El Prat Airport):
@@ -666,7 +669,6 @@ Append-only session history, newest first.
   - Level pairing upgrade: **L'Estació** (`systems/estacio.gd`):
     - Added the direct *Aeroport T1* Rodalies departure board row on the main concourse board connecting the city station to the airport terminal, with updated divider lines.
   - Comprehensive test suite: `tests/test_aeroport.gd` (35 checks covering level registration, goals, chase profile, conveyor zone, buggy threat advance and luggage dodges, gate rush state machine, and carousel bark). All regression suites pass (`test_walk_hooks.gd` 922 checks, `test_chase_film.gd` 247 checks, `test_npc_clear_of_solids.gd` 372 checks, `test_wrap.gd`).
-
 
 ## 2026-11-14 - The sweeper drives like a cartoon machine
 

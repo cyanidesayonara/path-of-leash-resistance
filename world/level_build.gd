@@ -1230,6 +1230,8 @@ const PARK_EDGE_BENCHES: Array[Vector3] = [
 	Vector3(366.0, -400.0, 1.0), Vector3(914.0, -1500.0, 0.0),
 	Vector3(366.0, -1850.0, 2.0), Vector3(914.0, -3420.0, 1.0),
 	Vector3(366.0, -4000.0, 0.0),
+	# on the lake's west shore, facing the water
+	Vector3(336.0, -2570.0, 2.0), Vector3(336.0, -2880.0, 0.0),
 ]
 const PARK_TREE_GROUPS: Array[Vector2] = [
 	Vector2(150.0, -2240.0), Vector2(205.0, -2330.0), Vector2(120.0, -2410.0),
@@ -4684,8 +4686,11 @@ static func spawn_cones(m: Node2D) -> void:
 		# the bins, crates and cones litter the works. Feels observed rather than
 		# randomised, and it makes each stretch of a walk look like somewhere.
 		var zones: Array[Dictionary] = []
+		# El Parc's papereras are emptied every morning: a dropped bottle or
+		# can by them, never bin bags heaped on the gravel
+		var bin_pal: Array = ["bottle", "can", "bottle"] if m.lvl == "park" else ["sack", "sack", "bottle"]
 		for b in m.bins:
-			zones.append({"at": b, "pal": ["sack", "sack", "bottle"]})
+			zones.append({"at": b, "pal": bin_pal})
 		for st in m.stalls:
 			zones.append({"at": st, "pal": ["crate", "crate", "bottle"]})
 		for tb in m.tables:
