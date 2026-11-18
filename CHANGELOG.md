@@ -2,6 +2,12 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish El Mercat
+
+- El Mercat's ten wall stalls drew as bare brown slabs: the Rambla's stall drawer has no case for a market trade, and the fish counter drawn for #153 (`Mercat.draw_fish_counter`) was never called. A new walk hook, `draw_stall`, that only El Mercat has, lays each out as its trade with its customers queueing: the fish on ice, crates of fruit, the juice bar's cups, legs of ham with paper cones of slices, trays of olives and pickles, and sweets with jars on the back shelf. Every other walk's stalls draw as before.
+- The off-leash plaça handled as lawn either side of the middle while drawn as stone paving (694 surface-check mismatches over the walk, now 110): `Mercat.surface` makes it pavement, with the earth of the tree pits, planters and shrubs still soft.
+- `tests/test_mercat.gd` covers the plaça's surface and the trades drawn; `test_walk_hooks` lists the new hooks, and `test_cross_section` lists El Mercat among the walks whose off-leash area is paved.
+
 ## 2026-11-18 - Polish Passeig Marítim
 
 - The promenade was one flat fill with a hairline every 150: it is laid in big poured slabs now, three across, each a shade off its neighbours (`Passeig._slabs`, into the world batch).

@@ -29,7 +29,7 @@ const HOOKS := {
 	"tibidabo": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "surface", "tick"],
 	"beach": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_parasol", "on_bark", "surface", "takes_prints", "tick"],
 	"rain": ["draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_over_walkway"],
-	"market": ["draw_column", "draw_live", "draw_overhead", "draw_van"],
+	"market": ["draw_column", "draw_live", "draw_overhead", "draw_stall", "draw_van", "surface"],
 	"site": ["draw_log_prop", "draw_performer", "draw_top", "draw_van"],
 	"besos": ["draw_bollard", "draw_over_walkway"],
 	"park": ["draw_grove", "draw_live", "draw_over_walkway", "draw_path_edges", "grass_blocked", "night_lights", "surface"],

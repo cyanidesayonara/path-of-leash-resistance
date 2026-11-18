@@ -12555,6 +12555,9 @@ func _draw_furniture(vt: float, vb: float) -> void:
 		if kind == "pingpong":
 			_draw_pingpong(st)
 			continue
+		if walk_mod != null and walk_mod.has_method("draw_stall"):
+			walk_mod.draw_stall(self, st, kind, i)
+			continue
 		if kind != "":
 			_draw_rambla_stall(st, kind, i)
 			continue
