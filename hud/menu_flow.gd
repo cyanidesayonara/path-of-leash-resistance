@@ -91,7 +91,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 			return [["back", "back"]]
 		"walk":
 			var open := Game.is_unlocked(Game.level_id)
-			return [["left_right", "browse"], ["plant", "choose", open], ["pee", "wardrobe"],
+			return [["left_right", "browse"], ["up_down", "chapter"], ["plant", "choose", open], ["pee", "wardrobe"],
 				["back", "main menu"]]
 		"details":
 			var out := [["up_down", "pick"], ["left_right", "change"]]
@@ -110,7 +110,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 			return [["left_right", "tab"], ["up_down", "browse"],
 				["plant", verb, st == "owned" or st == "afford"], ["back", "back"]]
 		"progress":
-			return [["back", "back"]]
+			return [["left_right", "chapter"], ["back", "back"]]
 		"settings":
 			if Game.rebind_step >= 0:
 				return [["back", "cancel"]]
@@ -228,8 +228,11 @@ static func refresh_menu_text(m: Node2D) -> void:
 # The walk-select plaque: what the player has done on the walk in view.
 static func walk_info(m: Node2D) -> Dictionary:
 	var sel: String = Game.level_id
+	var chs := Game.chapters()
+	var ci := Game.chapter_index(sel)
 	var info := {"id": sel, "locked": not Game.is_unlocked(sel), "index": Game.CAROUSEL.find(sel),
-		"count": Game.CAROUSEL.size(), "lines": []}
+		"count": Game.CAROUSEL.size(), "lines": [], "chapter": ci, "chapters": chs.size(),
+		"chapter_walks": chs[ci]}
 	if sel == "tutorial":
 		# the gloss on the ground already says what it is for
 		info.lines = ["About three minutes, nothing to get in the way. No stars, no score."]
@@ -384,6 +387,11 @@ static func tick_title(m: Node2D) -> bool:
 	if m.in_progress_view:
 		if back_pressed():
 			close_progress(m)
+		elif Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
+			# a chapter a page
+			var dir := 1 if Input.is_action_just_pressed("move_right") else -1
+			m.progress_chapter = wrapi(int(m.progress_chapter) + dir, 0, Game.chapters().size())
+			Sfx.play("ui")
 		return true
 	match m.menu_step:
 		0:
@@ -398,6 +406,12 @@ static func tick_title(m: Node2D) -> bool:
 				return true
 			if Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
 				Game.cycle_level(1 if Input.is_action_just_pressed("move_right") else -1)
+				Game.menu_step = 1
+				reload(m)
+				return true
+			if Input.is_action_just_pressed("move_up") or Input.is_action_just_pressed("move_down"):
+				# a chapter at a time: down goes on through the campaign
+				Game.cycle_chapter(1 if Input.is_action_just_pressed("move_down") else -1)
 				Game.menu_step = 1
 				reload(m)
 				return true
@@ -906,6 +920,7 @@ static func refresh_shop(m: Node2D) -> void:
 
 static func open_progress(m: Node2D) -> void:
 	m.in_progress_view = true
+	m.progress_chapter = Game.chapter_index(Game.level_id)
 	apply_menu_step(m)
 	Sfx.play("ui")
 
@@ -917,8 +932,12 @@ static func close_progress(m: Node2D) -> void:
 
 
 static func progress_rows(m: Node2D) -> Array:
+	# one chapter at a time, in the order they are played
 	var out := []
-	for lv in Game.LEVELS:
+	var chs := Game.chapters()
+	for lv: String in chs[clampi(int(m.progress_chapter), 0, chs.size() - 1)]:
+		if not Game.LEVEL_NAMES.has(lv) or not lv in Game.LEVELS:
+			continue
 		var ch := Game.chase_gate_needed(lv)
 		var row := {"id": lv, "name": Game.LEVEL_NAMES[lv], "gloss": Game.gloss(lv),
 			"locked": not Game.is_unlocked(lv), "gate": int(Game.STAR_GATE.get(lv, 0)),

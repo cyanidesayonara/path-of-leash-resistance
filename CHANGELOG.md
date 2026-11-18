@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Chapters in the walk select, theme colours on the film cards
+
+- The campaign is in chapters (`Game.chapters()`): the carousel cut after each boss walk (`BOSS_WALKS`), so every chapter ends on a boss, and a run longer than `CHAPTER_MAX` (12) between bosses halved; five chapters of 7 to 12 walks today. Derived, so it follows the carousel when the order is locked.
+- The walk select: left/right browses a walk, up/down jumps a chapter (`Game.cycle_chapter`, landing on the furthest open walk in it). The 47 tiny dots over the plaque are gone; the plaque now carries the chapter on top (CHAPTER N and a tab per chapter) and its walks as tokens: the one in view lifted in saffron, chases magenta diamonds, bosses turquoise rings, locked walks hollow, a saffron pip over a walk with all three stars. The walk's record sits under them in the same card, so nothing floats over the walk's ground.
+- YOUR WALKS is paged by chapter (left/right), opening on the chapter of the walk in view, in campaign order; its rows were 47 to a screen and unreadable, now about ten at full size.
+- The film cards (`IntroTitle.word`, `FilmKit.slam`) take the theme's colours: cream letters inked in deep navy with a magenta drop, and a band of trencadis (`UiKit.mosaic`) sliding in under the word.
+- Tests: `tests/test_chapters.gd` (chapters cover the carousel once, in order, bosses end chapters, paging comes round); `test_menu_flow` checks the pages together list every walk.
+
 ## 2026-11-17 - Polish El Parc
 
 - The dog park past the gate drew its trees with the forest's roots poking out of their crowns; El Parc now draws its own broadleaf grove (`Parc.draw_grove`).

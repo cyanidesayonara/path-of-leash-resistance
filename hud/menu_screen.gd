@@ -190,7 +190,8 @@ func _walk(vs: Vector2) -> void:
 	# screen, whichever walk is in view, with the walk dots above it.
 	var w := minf(560.0, vs.x - 48.0)
 	var shake: float = sin(float(main.locked_nudge) * 60.0) * 10.0 * (float(main.locked_nudge) / 0.35)
-	var h := 50.0
+	# the chapter's heading and its walks on top, this walk's record under them
+	var h := 112.0
 	var top := vs.y - Kit.BAR_FROM_BOTTOM - 22.0 - h
 	var r := Rect2(vs.x * 0.5 - w * 0.5 + shake, top, w, h)
 	Kit.card(self, r, Kit.accent("walk"), 12)
@@ -198,7 +199,7 @@ func _walk(vs: Vector2) -> void:
 	Kit.chevron(self, Vector2(r.position.x - 22.0, r.get_center().y), 18.0, Kit.GOLD, true)
 	Kit.chevron(self, Vector2(r.end.x + 22.0, r.get_center().y), 18.0, Kit.GOLD)
 	var body := Kit.body()
-	var row_y := r.position.y + 32.0
+	var row_y := r.position.y + 94.0
 	if bool(info.locked):
 		Kit.lock(self, Vector2(r.position.x + 34.0, row_y - 6.0), 16.0, Kit.INK_FAINT)
 		draw_string(body, Vector2(r.position.x + 58.0, row_y), String(info.lines[0]),
@@ -223,19 +224,66 @@ func _walk(vs: Vector2) -> void:
 	else:
 		draw_string(body, Vector2(r.position.x, row_y), "     ".join(info.lines),
 			HORIZONTAL_ALIGNMENT_CENTER, w, 16, Kit.INK_SOFT)
-	# where this walk sits in the list: one dot a walk, hollow while locked
-	var n := int(info.count)
-	var dx := 14.0
-	var x0 := vs.x * 0.5 - dx * float(n - 1) * 0.5 + shake
-	for i in range(n):
-		var p := Vector2(x0 + dx * float(i), r.position.y - 14.0)
-		var lv: String = Game.CAROUSEL[i]
-		if i == int(info.index):
-			draw_circle(p, 4.5, Kit.GOLD)
-		elif Game.is_unlocked(lv):
-			draw_circle(p, 3.0, Color(1, 1, 1, 0.45))
+	_chapter_strip(vs, r, info, shake)
+
+
+# Where this walk sits in the campaign: the chapter's heading (its number and
+# a tab for each chapter), then its walks as tokens, the one in
+# view lifted in saffron. A chase is a magenta diamond, a boss a turquoise
+# ring; a locked walk is hollow.
+func _chapter_strip(vs: Vector2, r: Rect2, info: Dictionary, shake: float) -> void:
+	var walks: Array = info.chapter_walks
+	var ci := int(info.chapter)
+	var n := walks.size()
+	var f := Kit.display()
+	var head_y := r.position.y + 26.0
+	var title := "CHAPTER %d" % (ci + 1)
+	var tw := Kit.text_w(f, title, 15)
+	var x := r.position.x + 28.0
+	draw_string(f, Vector2(x, head_y), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.SAFFRON)
+	x += tw + 12.0
+	for k in range(int(info.chapters)):
+		var tab := Rect2(x + float(k) * 16.0, head_y - 9.0, 12.0, 5.0)
+		draw_rect(tab, Kit.SAFFRON if k == ci else Color(Kit.INK_FAINT, 0.6))
+	# the walks
+	var dx := minf(40.0, (r.size.x - 56.0) / float(maxi(1, n)))
+	var x0 := r.get_center().x - dx * float(n - 1) * 0.5
+	var y := r.position.y + 54.0
+	draw_line(Vector2(r.position.x + 28.0, r.position.y + 74.0), Vector2(r.end.x - 28.0, r.position.y + 74.0),
+		Color(1, 1, 1, 0.08), 1.5)
+	for k in range(n):
+		var lv: String = walks[k]
+		var p := Vector2(x0 + dx * float(k), y)
+		var here := lv == String(info.id)
+		var open := Game.is_unlocked(lv)
+		var col: Color = Kit.INK
+		if lv in Game.BOSS_WALKS:
+			col = Kit.TURQUOISE
+		elif lv in Game.CHASE_WALKS:
+			col = Kit.MAGENTA
+		if here:
+			col = Kit.SAFFRON
+		var rad := 9.0 if here else 6.0
+		if lv in Game.CHASE_WALKS:
+			var dia := PackedVector2Array([p + Vector2(0, -rad - 1.5), p + Vector2(rad + 1.5, 0), p + Vector2(0, rad + 1.5),
+				p + Vector2(-rad - 1.5, 0)])
+			if open or here:
+				draw_colored_polygon(dia, col)
+			else:
+				dia.append(dia[0])
+				draw_polyline(dia, Color(col, 0.55), 1.6)
 		else:
-			draw_arc(p, 3.0, 0, TAU, 10, Color(1, 1, 1, 0.3), 1.2)
+			if open or here:
+				draw_circle(p, rad, col)
+			else:
+				draw_arc(p, rad, 0, TAU, 16, Color(col, 0.5), 1.6)
+			if lv in Game.BOSS_WALKS:
+				draw_arc(p, rad + 4.0, 0, TAU, 20, Color(col, 0.9 if (open or here) else 0.45), 2.0)
+		if here:
+			draw_arc(p, rad + 3.0 + (4.0 if lv in Game.BOSS_WALKS else 0.0), 0, TAU, 24, Color(Kit.SAFFRON, 0.5), 2.0)
+		elif open and Game.stars(lv) >= 3:
+			# all three stars: a small saffron pip over it
+			draw_circle(p + Vector2(0, -rad - 5.0), 2.2, Kit.SAFFRON)
 
 
 func _details(vs: Vector2) -> void:
@@ -488,6 +536,14 @@ func _progress(vs: Vector2) -> void:
 	Kit.heading(self, r.position + Vector2(36.0, 44.0), "YOUR WALKS", 26, acc)
 	Kit.purse(self, Vector2(r.end.x - 36.0, r.position.y + 42.0), Game.total_stars(), Game.total_bones)
 	var f := Kit.display()
+	# the page: this chapter's number and a tab for each, as on the walk select
+	var cx := r.position.x + 36.0 + Kit.text_w(f, "YOUR WALKS", 26) + 28.0
+	var ctitle := "CHAPTER %d" % (int(main.progress_chapter) + 1)
+	draw_string(f, Vector2(cx, r.position.y + 42.0), ctitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.SAFFRON)
+	cx += Kit.text_w(f, ctitle, 15) + 12.0
+	for k in range(Game.chapters().size()):
+		draw_rect(Rect2(cx + float(k) * 16.0, r.position.y + 33.0, 12.0, 5.0),
+			Kit.SAFFRON if k == int(main.progress_chapter) else Color(Kit.INK_FAINT, 0.6))
 	var body := Kit.body()
 	var c_stars := r.position.x + w * 0.46
 	var c_goals := r.position.x + w * 0.60

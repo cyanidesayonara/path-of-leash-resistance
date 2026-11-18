@@ -1261,6 +1261,7 @@ var prof_us := {}
 # perturbs the global seed the deterministic autowalk depends on.
 var ground_detail: Array[Dictionary] = []
 var in_progress_view := false
+var progress_chapter := 0        # the chapter YOUR WALKS shows
 var in_settings := false
 var settings_idx := 0
 var settings_panel: Control

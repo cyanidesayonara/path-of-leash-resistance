@@ -22,6 +22,7 @@ const TITLE_AT := 5.55
 const LENGTH := 6.6
 const S := 1.45                  # the pair's scale
 const INK := IntroKit.INK
+const UiKit := preload("res://hud/ui_kit.gd")
 
 
 # Your human and her, their feet at `feet`, walking right; returns her
@@ -139,6 +140,15 @@ static func _jolt(c: CanvasItem, at: Vector2, f: float) -> void:
 # the card's word, slammed in big and settling, with a ring of dust under it
 static func slam(c: CanvasItem, t: float, word: String, centre: Vector2) -> void:
 	var px := int(190.0 * (1.0 + 0.4 * (1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.18))))
+	# a band of trencadis under the word, the menus' own, sliding in with it
+	var bw := UiKit.display().get_string_size(word, HORIZONTAL_ALIGNMENT_LEFT, -1, 190).x + 80.0
+	var band := Anim.span(t, TITLE_AT + 0.05, TITLE_AT + 0.3)
+	if band > 0.0:
+		c.draw_set_transform(centre, -0.06, Vector2.ONE)
+		var br := Rect2(-bw * 0.5, 96.0, bw * band, 18.0)
+		c.draw_rect(br.grow(4.0), IntroTitle.INK)
+		UiKit.mosaic(c, br, 0)
+		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	IntroTitle.word(c, word, centre, px, -0.06)
 	for k in range(6):
 		var a := float(k) / 5.0 * PI
