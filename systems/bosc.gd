@@ -6,11 +6,14 @@ extends RefCounted
 # and its stepping stones, the fallen logs, the trail's ragged edges, the
 # way markers, the forest spring and the bocadillos.
 
+# its off-leash area's worn patch is soft at the edge (main.soft_wear)
+const SOFT_WEAR := true
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked"]
+const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked", "surface"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 # A half-eaten bocadillo in its foil, dropped off someone's picnic.
 static func draw_bocadillo(m: Node2D, c: Object, kp: Vector2) -> void:
@@ -262,6 +265,11 @@ static func draw_trough_prop(m: Node2D, c: Object, p: Vector2) -> void:
 static func grass_blocked(m: Node2D, p: Vector2) -> bool:
 	var e: Vector2 = m.walk_edges(p.y)
 	return p.x < e.x - m.LevelBuild.TRAIL_WOOD_OUT or p.x > e.y + m.LevelBuild.TRAIL_WOOD_OUT
+
+
+# La Clariana, past the gate, is lawn wall to wall
+static func surface(m: Node2D, p: Vector2) -> int:
+	return Surfaces.lawn_past_gate(m, p)
 
 
 # the wood, the stream and the fallen logs, after the rest of the ground
