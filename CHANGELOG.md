@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish El Barri
+
+- The pipicà's sauló was worn in two flat discs with a hard rim. They are gradients now, worn bare where the dogs run and inside the gate and fading into the packed ground (`Barri._draw_pipica`).
+- The silt stains where puddles dried on the gravel path were stacked flat discs, which read as stickers. They fade out into the gravel and darken inward now, and the odd darker patch in the gravel does the same (`Barri._draw_gravel`). All of it stays in the walk's one batch.
+- The pipicà handled as grass wall to wall but is drawn as sauló. It is packed ground now, soft only round its trees (`Surfaces.paved_past_gate`), and the hedge verges outside its fence stay grass. Surface-check mismatches in the off-leash area went from 475 to 117; what is left is the fence line, the tree crowns and the water bowls.
+- After dark the pipicà was unlit. Its fence carries floodlights now, three along the top, one down each side and one either side of the gate (`Barri.night_lights`, from the street's own lamps).
+- `tests/test_barri.gd` covers the sauló, a tree's soft earth, the hedge verge, and the floodlights on the fence.
+
 ## 2026-11-18 - One helper for the ground past the gate
 
 - Four walk polishes each wrote their own copy of one surface hook: the off-leash area paved wall to wall, soft only round its trees, planters, shrubs and dig spots. It is one helper now, `Surfaces.paved_past_gate(m, p, trees, earth_r)`, beside `Surfaces.lawn_past_gate(m, p)` for a lawn wall to wall. Both answer -1 short of the line 40 past the gate, so a walk's `surface` hook returns them as they stand. El Mercat, El Gòtic, Montjuïc and El Diluvi call the paved one, El Parc and La Rambla the lawn one; nothing plays or draws differently (`surface_at` over a 20-unit grid of each off-leash area is the same as before on all six, bar El Diluvi's dig spots, which are placed afresh every run).

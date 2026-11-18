@@ -15,6 +15,12 @@ const NightFronts := preload("res://world/night_fronts.gd")
 
 const PIPICA_GROUND := Color(0.72, 0.64, 0.48)
 const PIPICA_FENCE := Color(0.20, 0.38, 0.27)
+# floodlights on the pipica's fence: along the top run, as fractions of its
+# width, and one halfway down each side. Under main.NIGHT_LAMP_R, so the light
+# layer draws each a bracket and a lit lamp on the post
+const PIPICA_LIGHTS_TOP: Array[float] = [0.2, 0.5, 0.8]
+const PIPICA_LIGHTS_SIDE: Array[float] = [0.5]
+const PIPICA_LIGHT_R := 185.0
 
 
 # EL BARRI: the petanca pitch with its boules, and the playground.
@@ -155,8 +161,10 @@ static func _draw_pipica(m: Node2D, c: Object) -> void:
 	var r: Rect2 = m._freedom_rect()
 	var b := ShapeBatch.new()
 	b.rect(r, PIPICA_GROUND)
-	b.circle(r.get_center() + Vector2(0.0, 40.0), 190.0, Color(0.62, 0.54, 0.40, 0.30))
-	b.circle(Vector2(640.0, r.end.y - 30.0), 110.0, Color(0.62, 0.54, 0.40, 0.40))
+	# the sauló worn bare where the dogs run, and inside the gate: soft at the
+	# edge, as wear is
+	b.glow(r.get_center() + Vector2(0.0, 40.0), 260.0, Color(0.62, 0.54, 0.40, 0.34), 0.3)
+	b.glow(Vector2(640.0, r.end.y - 30.0), 150.0, Color(0.62, 0.54, 0.40, 0.42), 0.35)
 	# grit and pebbles in the sauló
 	for gi in range(160):
 		var gp := Vector2(r.position.x + fmod(float(gi) * 197.0, r.size.x),
@@ -485,11 +493,33 @@ static func _lawn_blocked(p: Vector2) -> bool:
 # main.surface_at, through walk_mod: past the railings is the street's
 # pavement, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:
-	if m.tutorial_mode or p.y <= m.GATE_Y:
+	if m.tutorial_mode:
 		return -1
+	if p.y <= m.GATE_Y:
+		# the pipica is sauló, packed hard: soft only round its trees. The
+		# hedge verges outside its fence stay main's grass
+		if not m._freedom_rect().has_point(p):
+			return -1
+		return Surfaces.paved_past_gate(m, p, m.trees)
 	if p.x < RAIL_W or p.x > RAIL_E:
 		return Surfaces.S.PAVEMENT
 	return -1
+
+
+# the street's lamps, and the pipica's floodlights on its fence posts
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	if m.tutorial_mode:
+		return out
+	var r: Rect2 = m._freedom_rect()
+	for f: float in PIPICA_LIGHTS_TOP:
+		out.append(Vector3(r.position.x + r.size.x * f, r.position.y + 4.0, PIPICA_LIGHT_R))
+	out.append_array(m.freedom_side_lamps(PIPICA_LIGHTS_SIDE, 4.0, PIPICA_LIGHT_R))
+	# either side of the gate, where the fence along the walk's end turns in
+	var fy: float = m.GATE_Y - 30.0
+	out.append(Vector3(m.gate_l - 20.0, fy, PIPICA_LIGHT_R))
+	out.append(Vector3(m.gate_r + 20.0, fy, PIPICA_LIGHT_R))
+	return out
 
 
 static func _h1(k: int, salt: float) -> float:
@@ -521,7 +551,7 @@ static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> vo
 		var py := float(k) * 90.0 + _h1(k, 7.0) * 90.0
 		var px := 420.0 + _h1(k, 8.0) * 440.0
 		if _h1(k, 9.0) > 0.82:
-			b.circle(Vector2(px, py), 18.0 + _h1(k, 10.0) * 16.0, Color(0.52, 0.45, 0.34, 0.12))
+			b.glow(Vector2(px, py), 24.0 + _h1(k, 10.0) * 20.0, Color(0.52, 0.45, 0.34, 0.16), 0.4)
 		for s in range(3):
 			var sp := Vector2(px + (_h1(k * 3 + s, 11.0) - 0.5) * 60.0, py + (_h1(k * 3 + s, 12.0) - 0.5) * 60.0)
 			b.circle(sp, 1.6, Color(0.86, 0.80, 0.68, 0.7))
@@ -552,10 +582,12 @@ static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> vo
 		if st.y < lo - 60.0 or st.y > hi + 60.0:
 			continue
 		var sp := Vector2(st.x, st.y)
-		b.circle(sp, st.z + 3.0, Color(0.80, 0.74, 0.60, 0.16))
-		b.circle(sp, st.z, Color(0.50, 0.44, 0.34, 0.24))
-		b.circle(sp + Vector2(st.z * 0.5, 2.0), st.z * 0.6, Color(0.50, 0.44, 0.34, 0.20))
-		b.circle(sp - Vector2(st.z * 0.4, 1.0), st.z * 0.45, Color(0.46, 0.40, 0.31, 0.18))
+		# the silt crust fades out into the gravel, the stain darkens inward:
+		# a flat rim read as a sticker on the ground
+		b.glow(sp, st.z + 8.0, Color(0.80, 0.74, 0.60, 0.14), 0.75)
+		b.glow(sp, st.z, Color(0.50, 0.44, 0.34, 0.30), 0.5)
+		b.glow(sp + Vector2(st.z * 0.5, 2.0), st.z * 0.65, Color(0.50, 0.44, 0.34, 0.20), 0.4)
+		b.glow(sp - Vector2(st.z * 0.4, 1.0), st.z * 0.5, Color(0.46, 0.40, 0.31, 0.18), 0.4)
 	# the gravel raked smooth beside the petanca pitch, the rake's teeth in it
 	var pp: Rect2 = LevelBuild.BARRI_PETANCA
 	if pp.end.y > lo - 20.0 and pp.position.y < hi + 20.0:

@@ -92,6 +92,46 @@ func _run() -> void:
 		if not on_shop and absf(fy - roundf(fy / 232.0) * 232.0) > 0.5:
 			off_door += 1
 	_check(off_door == 0, "the night fronts sit on the east block's doors (%d off)" % off_door)
+	# the pipica is packed sauló, soft only round its trees
+	var fr: Rect2 = m._freedom_rect()
+	var bare := Vector2.INF
+	var y := fr.position.y + 80.0
+	while y < m.GATE_Y - 80.0 and bare == Vector2.INF:
+		var x := fr.position.x + 80.0
+		while x < fr.end.x - 80.0:
+			var p := Vector2(x, y)
+			var clear := true
+			for t: Vector2 in m.trees:
+				clear = clear and p.distance_to(t) > 60.0
+			for pp: Dictionary in m.park_props:
+				clear = clear and p.distance_to(pp.pos) > 60.0
+			if clear:
+				bare = p
+				break
+			x += 40.0
+		y += 40.0
+	_check(bare != Vector2.INF and m.surface_at(bare) == m.Surfaces.S.PAVEMENT, "the pipica's sauló handles as packed ground (%s)" % bare)
+	var pit := Vector2.INF
+	for t: Vector2 in m.trees:
+		if fr.has_point(t) and t.y < m.GATE_Y - 40.0:
+			pit = t
+			break
+	_check(pit != Vector2.INF and m.surface_at(pit + Vector2(10.0, 0.0)) == m.Surfaces.S.GRASS, "the earth round a pipica tree is soft")
+	var verge := Vector2(fr.position.x - 30.0, fr.get_center().y)
+	_check(m.surface_at(verge) == m.Surfaces.S.GRASS, "the hedge verge outside the pipica's fence is grass (%d)" % m.surface_at(verge))
+	# after dark: the street's lamps, and floodlights on the pipica's fence
+	var street: Array[Vector3] = m.street_night_lights()
+	var lights: Array[Vector3] = m.night_lights()
+	_check(lights.size() == street.size() + BarriMod.PIPICA_LIGHTS_TOP.size() + 4,
+		"the street's %d lamps and the pipica's floodlights (%d in all)" % [street.size(), lights.size()])
+	var off_fence := 0
+	for i in range(street.size(), lights.size()):
+		var l: Vector3 = lights[i]
+		var on_side := absf(l.x - fr.position.x) < 8.0 or absf(l.x - fr.end.x) < 8.0
+		var on_run := absf(l.y - fr.position.y) < 8.0 or absf(l.y - (m.GATE_Y - 30.0)) < 1.0
+		if not (on_side or on_run) or l.z >= m.NIGHT_LAMP_R:
+			off_fence += 1
+	_check(off_fence == 0, "each floodlight is a fence lamp on the fence (%d not)" % off_fence)
 	for i in range(240):
 		await physics_frame
 	_check(m.get_tree().get_nodes_in_group("tourists").is_empty() and m.get_tree().get_nodes_in_group("pickpockets").is_empty(),
