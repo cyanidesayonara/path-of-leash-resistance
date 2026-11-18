@@ -61,7 +61,8 @@ path-of-leash-resistance/
                        # see docs/website.md
   docs/                # Store procedure, handover archive, plans
   PROJECT.md           # design pillars, roadmap
-  CHANGELOG.md         # newest-first session history
+  CHANGELOG.md         # newest-first session history (folded from changelog.d/)
+  changelog.d/         # one changelog fragment per change, see its README
   export_presets.cfg   # Web (threads off) and Windows presets
   godot/, build/       # local editor and export output (gitignored)
 ```
@@ -517,4 +518,9 @@ under it.
  before committing (`git commit -e`), never with `--no-verify`.
 - Feel/tuning decisions are made by playtesting, not by argument. Tuning
   knobs live in named constants at the top of each script.
-- Update CHANGELOG.md at the end of every working session
+- Every change gets a changelog entry, as its own fragment in `changelog.d/`
+  (`YYYY-MM-DD-short-slug.md`, a `## YYYY-MM-DD - Title` heading and the
+  bullets), never written into the top of `CHANGELOG.md`, where changes
+  landing side by side all conflicted. `python tools/changelog.py` folds the
+  fragments into `CHANGELOG.md`; it is run in its own PR now and then and
+  before a release's notes. CI checks the fragments' names and headings.
