@@ -35,6 +35,10 @@ jobs:
             git log --format='%h %s' -i -E --grep='^(co-authored-by|generated-by|assisted-by|made-with):|cursoragent@|noreply@anthropic' HEAD
             exit 1
           fi
+      # every changelog entry is a fragment in changelog.d/, named and headed
+      # as changelog.d/README.md says (tools/changelog.py)
+      - name: Changelog fragments are well formed
+        run: python3 tools/changelog.py --check
 
   # Every test in tests/ci_tests.txt and every walk check (each walk built,
   # sanity-checked and played, the tutorial and snow smokes, four full
