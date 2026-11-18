@@ -42,7 +42,7 @@ static func build(m: Node2D) -> void:
 	# weather sits behind the HUD text but over the world
 	m.weather_fx = Control.new()
 	m.weather_fx.set_script(load("res://hud/weather_overlay.gd"))
-	m.weather_fx.set_sky(Game.weather, Game.rain_amount(), Game.wind_amount())
+	m.weather_fx.set_sky(Game.weather, Game.rain_amount(), Game.wind_amount(), Game.dust_amount())
 	m.hud.add_child(m.weather_fx)
 	for side: String in ["letterbox_top", "letterbox_bot"]:
 		var bar := ColorRect.new()

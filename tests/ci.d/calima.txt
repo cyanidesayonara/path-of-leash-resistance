@@ -1,0 +1,3 @@
+# The calima: a clear day to the rules, a dust haze to the look, motes in the
+# air, and the fair-weather crowd kept in
+--headless --path . --script res://tests/test_calima.gd

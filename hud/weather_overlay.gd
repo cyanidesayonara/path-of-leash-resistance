@@ -1,7 +1,7 @@
 extends Control
 
-# Screen-space weather: rain, blown grit and leaves (spray off the sea), or
-# snow, drawn over the world but under the HUD text. Purely atmospheric; the
+# Screen-space weather: rain, blown grit and leaves (spray off the sea),
+# snow, or the calima's dust, drawn over the world but under the HUD text. Purely atmospheric; the
 # gameplay nudges (slick ground, a shoving wind) live in main.gd.
 #
 # Every particle has a depth, 0 far to 1 near: near ones are bigger, brighter
@@ -26,6 +26,9 @@ var night := false
 # is the wind's leaves and grit, thinned out.
 var rain_k := 1.0
 var wind_k := 0.0
+# how thick the dust hangs (Game.dust_amount): a calima's light wind carries
+# fine motes, never leaves
+var dust_k := 0.0
 # a gust blowing now (main's wind_gust, 0 to 1) and which way the wind
 # blows across the screen (+1 left to right)
 var push := 0.0
@@ -37,13 +40,17 @@ var sea := false
 
 # the walk's sky in one call: the mode, and a fresh scatter when only the
 # strength changed (a drizzle turning to a downpour is still "rain")
-func set_sky(kind: String, rain: float, wind: float) -> void:
+func set_sky(kind: String, rain: float, wind: float, dust := 0.0) -> void:
 	var m := kind
-	if kind == "clear" and wind >= 0.3:
+	if kind == "clear" and dust > 0.0:
+		m = "dust"
+	elif kind == "clear" and wind >= 0.3:
 		m = "wind"
-	var changed := not is_equal_approx(rain, rain_k) or not is_equal_approx(wind, wind_k)
+	var changed := not is_equal_approx(rain, rain_k) or not is_equal_approx(wind, wind_k) \
+		or not is_equal_approx(dust, dust_k)
 	rain_k = rain
 	wind_k = wind
+	dust_k = dust
 	if m != mode:
 		mode = m
 	elif changed:
@@ -55,6 +62,7 @@ const RAIN_N := 130
 const GRIT_N := 70
 const LEAF_N := 22
 const SNOW_N := 140
+const DUST_N := 48
 const SPLASH_N := 18
 const SPLASH_LIFE := 0.36
 const SPLASH_RATE := 46.0
@@ -103,6 +111,7 @@ func _count() -> int:
 		"rain": return int(RAIN_N * area * (0.35 + 0.65 * rain_k) * (1.0 + 0.4 * wind_k))
 		"wind": return int(GRIT_N * area * wind_k) + int(LEAF_N * (0.4 + 0.6 * wind_k))
 		"snow": return int(SNOW_N * area)
+		"dust": return int(DUST_N * area * dust_k)
 	return 0
 
 
@@ -160,12 +169,17 @@ func _process(delta: float) -> void:
 					spin[i] += delta * (2.0 + z * 3.0) * g
 				else:
 					v = Vector2((240.0 + 220.0 * g) * wind_sign, 30.0 * sin(t * 1.4 + float(i))) * (0.7 + z * 0.6)
+			"dust":
+				# hanging in the air more than falling: a slow drift downwind
+				# that wanders as it goes
+				v = Vector2((14.0 + 46.0 * wind_k) * wind_sign + sin(t * 0.5 + spin[i]) * 6.0,
+					5.0 + 4.0 * sin(t * 0.37 + spin[i] * 1.3)) * (0.6 + z * 0.7)
 			_:
 				v = Vector2(sin(t * (0.9 + z * 0.6) + spin[i]) * (12.0 + z * 26.0), 26.0 + z * 64.0)
 		drops[i] += v * delta
 		var d := drops[i]
 		if d.y > view_size.y + 10.0 or d.x < -40.0 or d.x > view_size.x + 40.0:
-			if mode == "wind":
+			if mode == "wind" or mode == "dust":
 				drops[i] = Vector2(-30.0 if wind_sign > 0.0 else view_size.x + 30.0, _rng.randf() * view_size.y)
 			elif mode == "rain" and absf(_rain_slant(g)) > 0.3:
 				# driven rain comes in from the windward side too
@@ -195,6 +209,7 @@ func _draw() -> void:
 		"rain": _draw_rain(b)
 		"wind": _draw_wind(b)
 		"snow": _draw_snow(b)
+		"dust": _draw_dust(b)
 	b.flush()
 
 
@@ -254,6 +269,19 @@ func _draw_wind(b: ShapeBatch) -> void:
 			var wob := sin(t * 6.0 + float(i)) * 3.0
 			var ln := (12.0 + z * 22.0) * (0.6 + g * 0.6)
 			b.line(d, d + Vector2(ln * wind_sign, wob), Color(0.88, 0.82, 0.70, (0.14 + z * 0.30) * (0.5 + g * 0.6)), 1.2 + z)
+
+
+# a mote of dust: tiny, soft, ochre by day and lamp-orange after dark, the
+# near ones with a faint halo so they read as out of focus
+func _draw_dust(b: ShapeBatch) -> void:
+	var col := Color(1.0, 0.78, 0.50) if night else Color(1.0, 0.93, 0.80)
+	for i in range(drops.size()):
+		var z := depth[i]
+		var d := drops[i]
+		var r := 0.8 + z * 1.4
+		if z > 0.55:
+			b.circle(d, r * 2.4, Color(col.r, col.g, col.b, 0.10 * z))
+		b.circle(d, r, Color(col.r, col.g, col.b, 0.30 + z * 0.36))
 
 
 func _draw_snow(b: ShapeBatch) -> void:

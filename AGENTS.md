@@ -199,14 +199,17 @@ explain every changed snapshot line; this does not relax the refactor rule.
   triangles into the caller's cached batch, so tiles add no draw call.
   Test: `tests/test_panot.gd`.
 - **Skies and times** (`autoload/game.gd`, `systems/sky.gd`, `systems/gusts.gd`):
-  the player picks a sky (`Game.SKIES`: clear, breeze, fog, drizzle, rain
-  (DOWNPOUR), storm, wind (GALE), snow) and a time (`Game.TIMES`: dawn,
+  the player picks a sky (`Game.SKIES`: clear, breeze, fog, calima (SAHARA
+  DUST), drizzle, rain (DOWNPOUR), storm, wind (GALE), snow) and a time (`Game.TIMES`: dawn,
   morning, day, dusk, evening, night). The rules never see them:
   `Game.weather` is the sky's kind (clear, rain, wind or snow) and
   `Game.hour` its hour (morning is day, evening is night), so every rule
   reads four kinds and four hours. Only the look (`Sky.tint`, `Sky.grade_mod`,
   the weather overlay) and the wind read the sky's strength
-  (`Game.rain_amount`, `wind_amount`, `fog_amount`). A sky of wind 0.5 or more
+  (`Game.rain_amount`, `wind_amount`, `fog_amount`, `dust_amount`); the
+  calima's dust is a haze term in the grade (`haze` in `hud/grade.gdshader`)
+  and motes in the overlay, and keeps the fair-weather crowd in
+  (`tests/test_calima.gd`). A sky of wind 0.5 or more
   blows in gusts (`systems/gusts.gd`): telegraphed 0.8 s ahead, then a shove
   downwind that a planted dog resists, a bowed leash and flying litter, off
   the sea on a coastal walk. Test: `tests/test_gusts.gd`.
