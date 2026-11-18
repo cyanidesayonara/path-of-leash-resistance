@@ -784,11 +784,11 @@ static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
 
 # What a name lies on where its own material vanishes into the ground, the
 # way the place would show it: Tibidabo's bulbs on the fairground's marquee
-# board, Sarrià's pastries on a bakery tray, La Castanyada's chestnuts on the
+# board, Sarrià's pastries on a panel of the street's own tiles, La Castanyada's chestnuts on the
 # seller's newspaper. Only where the backing is a thing the place would have:
 # a patch of darker ground under a name reads as a stain, not a frame.
 # Round the strokes' extent, as a flower bed is (planter_rect).
-const BACKINGS := {"bulbs": "board", "pastries": "tray", "chestnuts": "newspaper"}
+const BACKINGS := {"bulbs": "board", "pastries": "tiles", "chestnuts": "newspaper"}
 # a backing sits a little tighter under the letters than a bed, clear of the
 # gloss below
 const BACKING_PAD := 0.30
@@ -875,13 +875,40 @@ static func _backing(c: Object, sign: Dictionary, h: float) -> void:
 				var q := _perim(ring, float(i) / float(n))
 				c.circle(q, fr * 0.34, Color(0.30, 0.20, 0.10))
 				c.circle(q, fr * 0.24, Color(1.0, 0.86, 0.56))
-		"tray":
-			# a bakery's tray set down on the setts: a thin warm rim, the parchment
-			# the colour of the street's own stone, so it sits in it
-			var o := r.grow(maxf(3.0, h * 0.07))
-			_lying_shadow(c, o, h * 0.14, h)
-			_rr(c, o, h * 0.14, Color(0.60, 0.52, 0.47))
-			_rr(c, r, h * 0.09, Color(0.88, 0.80, 0.71, 0.9))
+		"tiles":
+			# flat in the pavement: a field of plain square tiles, a shade paler
+			# than the street, inside a border course of darker ones, the joints
+			# fine. Nothing raised, nothing casting a shadow.
+			var t := h * 0.95
+			var bw := maxf(4.0, h * 0.16)
+			var o := r.grow(bw)
+			var joint := Color(0.66, 0.59, 0.55)
+			c.rect(o, joint)
+			# the border course, tile by tile
+			var n := maxi(1, int(round(o.size.x / (bw * 3.0))))
+			var step := o.size.x / float(n)
+			for i in range(n):
+				var x := o.position.x + step * float(i)
+				for y in [o.position.y, r.end.y]:
+					c.rect(Rect2(x + 1.0, y + 1.0, step - 2.0, bw - 2.0),
+						Color(0.70, 0.62, 0.57).lerp(Color(0.73, 0.65, 0.60), _h(i, key, 95.0 + y)))
+			var m := maxi(1, int(round(r.size.y / (bw * 3.0))))
+			var vs := r.size.y / float(m)
+			for j in range(m):
+				var y2 := r.position.y + vs * float(j)
+				for x2 in [o.position.x, r.end.x]:
+					c.rect(Rect2(x2 + 1.0, y2 + 1.0, bw - 2.0, vs - 2.0),
+						Color(0.70, 0.62, 0.57).lerp(Color(0.73, 0.65, 0.60), _h(j, key, 97.0 + x2)))
+			# the field: whole squares, the last row and column cut to fit
+			var cols := maxi(1, int(round(r.size.x / t)))
+			var rows := maxi(1, int(round(r.size.y / t)))
+			var tw := r.size.x / float(cols)
+			var th := r.size.y / float(rows)
+			for j in range(rows):
+				for i in range(cols):
+					var k := j * cols + i
+					c.rect(Rect2(r.position.x + tw * float(i) + 0.8, r.position.y + th * float(j) + 0.8, tw - 1.6, th - 1.6),
+						Color(0.80, 0.73, 0.67).lerp(Color(0.84, 0.77, 0.70), _h(k, key, 99.0)))
 		"newspaper":
 			# the chestnut seller's newspaper: two sheets, a little crooked, the
 			# print faint so the chestnuts read over it
