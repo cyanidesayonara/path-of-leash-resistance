@@ -216,6 +216,12 @@ explain every changed snapshot line; this does not relax the refactor rule.
   thinned against each walk's own campaign sky). A new kind of person or prop
   says which skies it is out in there. Spawners keep their RNG draws and
   filter afterwards, so seeded walks replay. Test: `tests/test_outdoors.gd`.
+- **Dog skills** (`systems/dog_skills.gd`): each dog's signature skill opens
+  one skill goal on every walk, for her only, drawn under the walk's goals and
+  never counted toward its goals or stars. Met for the first time on a walk it
+  is a training point (`Game.record_skill`), as a buried find's is
+  (`systems/buried_finds.gd`); training buys her stats in the wardrobe.
+  Test: `tests/test_dog_skills.gd`.
 - Input actions are registered in code (`main.gd/_setup_input`), not in
   project.godot. Guarded against re-registration on scene reload.
 - **Button prompts** (`hud/prompts.gd`) name ACTIONS for the device the
@@ -324,7 +330,7 @@ photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
 Each walk has its campaign sky (`Game.CAMPAIGN_SKY`: a sky from `Game.SKIES` and a time from `Game.TIMES`); `--weather=W` (any sky, `storm` or `fog` included), `--hour=H` (any time) and `--night` override it on every walk for the run. The hour's look is `systems/sky.gd`: a tint, a grade, and for dawn and dusk a low sun from one side of the screen and (dawn) a ground mist, both in `hud/grade.gdshader`; `Game.lamp_glow()` says how lit the lamps are. `--lang=ca|es|en` writes the walks' glosses in that language for the run
-(the LANGUAGE setting, unsaved). `--look=him|her|N` draws your human as the
+(the LANGUAGE setting, unsaved). `--dog=millie|pipa|mochi|bruna|tito` walks that dog for the run (unsaved). `--look=him|her|N` draws your human as the
 default him or her, or the NEW LOOK that number seeds, for the run (unsaved). `--shot-goals` opens the goal list. `--shot-say` has your human and a passer-by speak at once. `--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
 magnifies the shot, and `--shot-cam=X,Y` points the camera at a spot rather
 than the pair, to judge how a prop or a person is drawn
