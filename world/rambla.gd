@@ -362,14 +362,9 @@ static func draw_tree_leaf_drifts(m: Node2D, b: ShapeBatch, vt: float, vb: float
 			b.polygon(PackedVector2Array([lp, lp + Vector2(3, -2), lp + Vector2(5, 1), lp + Vector2(2, 3)]), Color(0.72, 0.50, 0.24))
 
 
-# the Pipicà's trees are broadleaves standing in its lawn: no forest roots,
-# which the shared grove runs toward the edge lines and which read here as
-# sticks poking out of the crowns
+# the Pipicà's trees are broadleaves standing in its lawn
 static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
-	m._broadleaf_ground(c, p, 0.85)
-	var b := ShapeBatch.new()
-	m._broadleaf_trunk(b, p, 0.85)
-	b.flush(c)
+	m.broadleaf_grove(c, p)
 
 
 # the lawn again over the shared yard's hard-edged worn disc: worn soft where

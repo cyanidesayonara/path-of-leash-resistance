@@ -490,14 +490,9 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_lawns(m, maxf(vt, m.GATE_Y - 30.0), vb)
 
 
-# the dog park's trees are the lawn's broadleaves, standing in grass: no
-# forest roots, which the shared grove runs toward the walk's edge lines and
-# which read here as sticks poking out of the crowns
+# the dog park's trees are the lawn's broadleaves, standing in grass
 static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
-	m._broadleaf_ground(c, p, 0.85)
-	var b := ShapeBatch.new()
-	m._broadleaf_trunk(b, p, 0.85)
-	b.flush(c)
+	m.broadleaf_grove(c, p)
 
 
 # past the gate the dog park is lawn all the way across: the path's fill

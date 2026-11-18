@@ -2665,6 +2665,16 @@ func _broadleaf_trunk(b: Object, p: Vector2, scale: float) -> void:
 	b.circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
 
 
+# an off-leash grove tree standing in a lawn, for a walk's draw_grove hook: the
+# broadleaf's shadow and trunk, without the forest roots the shared grove runs
+# toward the edge lines, which read in a lawn as sticks poking out of the crowns
+func broadleaf_grove(c: Object, p: Vector2) -> void:
+	_broadleaf_ground(c, p, 0.85)
+	var b := ShapeBatch.new()
+	_broadleaf_trunk(b, p, 0.85)
+	b.flush(c)
+
+
 # a broadleaf's crown, into a batch (the canopy layer draws it over everyone);
 # `trunk` false for a faded crown, whose trunk shows from the ground pass
 func _broadleaf_crown(crown: ShapeBatch, p: Vector2, scale: float, trunk := true) -> void:
@@ -3191,6 +3201,20 @@ func night_lights() -> Array[Vector3]:
 		return _night_lights
 	_night_lights.append_array(street_night_lights())
 	return _night_lights
+
+
+# Lamps down both sides of the off-leash area, for a walk's night_lights hook:
+# a pair at each fraction of its depth in `fracs`, `inset` in from its edges,
+# each reaching `reach`. Under NIGHT_LAMP_R the light layer draws each its
+# bracket, so they read as lamps on the wall or fence there.
+func freedom_side_lamps(fracs: Array[float], inset: float, reach: float) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var r := _freedom_rect()
+	for f: float in fracs:
+		var y := r.position.y + r.size.y * f
+		out.append(Vector3(r.position.x + inset, y, reach))
+		out.append(Vector3(r.end.x - inset, y, reach))
+	return out
 
 
 # The street's own lamps: its lampposts, and a wall lamp every so often down

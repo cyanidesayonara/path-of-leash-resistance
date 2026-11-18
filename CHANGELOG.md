@@ -2,12 +2,21 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish El Barri
+
+- The pipicà's sauló was worn in two flat discs with a hard rim. They are gradients now, worn bare where the dogs run and inside the gate and fading into the packed ground (`Barri._draw_pipica`).
+- The silt stains where puddles dried on the gravel path were stacked flat discs, which read as stickers. They fade out into the gravel and darken inward now, and the odd darker patch in the gravel does the same (`Barri._draw_gravel`). All of it stays in the walk's one batch.
+- The pipicà handled as grass wall to wall but is drawn as sauló. It is packed ground now, soft only round its trees (`Surfaces.paved_past_gate`), and the hedge verges outside its fence stay grass. Surface-check mismatches in the off-leash area went from 475 to 117; what is left is the fence line, the tree crowns and the water bowls.
+- After dark the pipicà was unlit. Its fence carries floodlights now, three along the top, one down each side and one either side of the gate (`Barri.night_lights`, from the street's own lamps).
+- `tests/test_barri.gd` covers the sauló, a tree's soft earth, the hedge verge, and the floodlights on the fence.
+
 ## 2026-11-18 - One helper for the ground past the gate
 
 - Four walk polishes each wrote their own copy of one surface hook: the off-leash area paved wall to wall, soft only round its trees, planters, shrubs and dig spots. It is one helper now, `Surfaces.paved_past_gate(m, p, trees, earth_r)`, beside `Surfaces.lawn_past_gate(m, p)` for a lawn wall to wall. Both answer -1 short of the line 40 past the gate, so a walk's `surface` hook returns them as they stand. El Mercat, El Gòtic, Montjuïc and El Diluvi call the paved one, El Parc and La Rambla the lawn one; nothing plays or draws differently (`surface_at` over a 20-unit grid of each off-leash area is the same as before on all six, bar El Diluvi's dig spots, which are placed afresh every run).
 - `tests/test_surface_helpers.gd` covers both.
 - The worn patch in the middle of the shared yard, clearing and plaça is drawn by one function, `_worn_patch`: the flat disc as before, or on a walk listed in `main.SOFT_WEAR` a gradient with no edge. The list starts empty, so nothing draws differently; a polished walk adds itself on its own line.
-- The street's default lamps after dark (its lampposts, and a wall lamp down the building line where none is near) come from `main.street_night_lights()`, so a walk's `night_lights` hook can start from them and add or leave out its own instead of copying the rule. Night shots of La Rambla and El Besòs are pixel-identical.
+- The street's default lamps after dark (its lampposts, and a wall lamp down the building line where none is near) come from `main.street_night_lights()`, so a walk's `night_lights` hook can start from them and add or leave out its own instead of copying the rule. Night shots of La Rambla and El Besòs are pixel-identical. `main.freedom_side_lamps(fracs, inset, reach)` gives a walk wall lamps down both sides of its off-leash area (`tests/test_freedom_lamps.gd`); nothing calls it yet.
+- El Parc and La Rambla each had their own copy of one `draw_grove` hook: the off-leash trees as broadleaves standing in a lawn, without the forest roots that read there as sticks poking out of the crowns. It is `main.broadleaf_grove(c, p)` now, which both call; their off-leash shots are pixel-identical.
 - `world/stones.gd` stamps rough angular stones (riprap, a breakwater, a groin) into a ShapeBatch from a few outlines built once, so a walk's bank of stones needs no circles in a row and no triangulation per frame; `tests/test_stones.gd` covers it. Nothing calls it yet.
 - `tests/test_cross_section.gd` lists the walks whose off-leash area may be paved one to a line (`PAVED_FREEDOM`, El Mercat, El Gòtic and El Diluvi among them), so walks added side by side do not collide on one line.
 

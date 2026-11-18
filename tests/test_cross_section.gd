@@ -16,6 +16,7 @@ var LevelBuild: GDScript
 # added side by side do not collide
 const PAVED_FREEDOM: Array[String] = [
 	"aeroport",
+	"barri",
 	"forum",
 	"market",
 	"oldtown",
