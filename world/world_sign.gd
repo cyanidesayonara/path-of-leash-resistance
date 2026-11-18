@@ -234,7 +234,77 @@ static func _from_lines(txt: String, mat: String, lines: Array, h: float, key: f
 		var jit := 0.0 if mat == "cones" else h * 0.025
 		pieces.append(_piece(n, key, q + _j(n, key, 0.0, jit), float(feel.r) * h, {}))
 		n += 1
+	if mat == "carnations":
+		_plant_greenery(sign, n)
 	return sign
+
+
+# Leafy clumps planted round a flower name inside its bed, loose pieces like
+# the carnations, so the dog tramples and kicks them as she does the
+# flowers. Kept off the letters' strokes, from a hash of the sign.
+const GREENERY_PER := 6.0           # clumps per square cap height of bed
+const GREENERY_CLEAR := 0.15        # cap heights kept clear of a stroke
+
+
+static func _plant_greenery(sign: Dictionary, n0: int) -> void:
+	var h: float = sign.h
+	var key: float = sign.key
+	var r := planter_rect(sign)
+	if r.size.x <= 0.0:
+		return
+	var pts := Letters.points(sign.lines, h * 0.08)
+	var inner := r.grow(-h * 0.16)
+	var n := n0
+	# a low edging row along the inside of the kerb, all the way round
+	var step := h * 0.34
+	var edge: Array[Vector2] = []
+	var x := inner.position.x
+	while x <= inner.end.x:
+		edge.append(Vector2(x, inner.position.y))
+		edge.append(Vector2(x, inner.end.y))
+		x += step
+	var y := inner.position.y + step
+	while y < inner.end.y:
+		edge.append(Vector2(inner.position.x, y))
+		edge.append(Vector2(inner.end.x, y))
+		y += step
+	for i in range(edge.size()):
+		var e := edge[i] + _j(i, key, 90.0, h * 0.04)
+		(sign.pieces as Array).append(_piece(n, key, e, h * (0.11 + 0.04 * _h(i, key, 91.0)), {"leafy": true}))
+		n += 1
+	# and clumps filling the bed between the letters
+	var want := int(inner.size.x * inner.size.y / (h * h) * GREENERY_PER)
+	var placed := 0
+	for i in range(want * 4):
+		if placed >= want:
+			break
+		var q := inner.position + Vector2(_h(i, key, 80.0) * inner.size.x, _h(i, key, 81.0) * inner.size.y)
+		var clear := true
+		for v in pts:
+			if v.distance_squared_to(q) < h * h * GREENERY_CLEAR * GREENERY_CLEAR:
+				clear = false
+				break
+		if not clear:
+			continue
+		(sign.pieces as Array).append(_piece(n, key, q, h * (0.07 + 0.06 * _h(i, key, 82.0)), {"leafy": true}))
+		n += 1
+		placed += 1
+
+
+# the bed a flower name lies in, round its strokes' extent, or the one it
+# shares with the line above it (main sets "planter" on both)
+static func planter_rect(sign: Dictionary) -> Rect2:
+	if sign.has("planter"):
+		return sign.planter
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for pl: PackedVector2Array in sign.lines:
+		for v in pl:
+			lo = lo.min(v)
+			hi = hi.max(v)
+	if lo.x > hi.x:
+		return Rect2()
+	return Rect2(lo, hi - lo).grow(float(sign.h) * PLANTER_PAD)
 
 
 static func _piece(n: int, key: float, p: Vector2, r: float, extra: Dictionary) -> Dictionary:
@@ -719,13 +789,29 @@ static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
 	_flower_planter(c, sign, h)
 	_stroke(c, sign.lines, h * 0.24, Color(0.22, 0.44, 0.20))
 	_stroke(c, sign.lines, h * 0.15, Color(0.33, 0.56, 0.27))
+	# the greenery round the letters: a rosette of leaves, lit on the sun's
+	# side, each a piece the dog can trample or kick
 	for pc: Dictionary in sign.pieces:
+		if not bool(pc.get("leafy", false)):
+			continue
+		var lr: float = pc.r
+		var lp: Vector2 = pc.p
+		c.draw_circle(lp + Vector2(1.5, 2.0), lr * 0.95, Color(0.05, 0.08, 0.04, 0.25))
+		for k in range(5):
+			var a := float(pc.rot) + TAU * float(k) / 5.0
+			c.draw_circle(lp + Vector2.from_angle(a) * lr * 0.5, lr * 0.52, Color(0.20, 0.40, 0.19).lerp(Color(0.28, 0.50, 0.24), float(pc["var"])))
+		c.draw_circle(lp + Vector2(-1.0, -1.0) * lr * 0.2, lr * 0.45, Color(0.36, 0.60, 0.30))
+	for pc: Dictionary in sign.pieces:
+		if bool(pc.get("leafy", false)):
+			continue
 		var r: float = pc.r
 		var dir := Vector2.from_angle(float(pc.rot))
 		var p: Vector2 = pc.p
 		c.draw_line(p, p - dir * r * 2.4, Color(0.30, 0.50, 0.24), 1.8)
 		c.draw_line(p - dir * r * 1.2, p - dir * r * 1.2 + dir.rotated(0.9) * r * 0.9, Color(0.30, 0.50, 0.24), 1.4)
 	for pc: Dictionary in sign.pieces:
+		if bool(pc.get("leafy", false)):
+			continue
 		var r: float = pc.r
 		var p: Vector2 = pc.p
 		var col := _pick(cols, float(pc["var"]))
@@ -742,15 +828,12 @@ const PLANTER_PAD := 0.55          # cap heights of bed round the letters
 
 
 static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
-	var lo := Vector2(INF, INF)
-	var hi := Vector2(-INF, -INF)
-	for pl: PackedVector2Array in sign.lines:
-		for v in pl:
-			lo = lo.min(v)
-			hi = hi.max(v)
-	if lo.x > hi.x:
+	# a sign sharing the bed of the one above it lies in that one's
+	if bool(sign.get("bed_shared", false)):
 		return
-	var r := Rect2(lo, hi - lo).grow(h * PLANTER_PAD)
+	var r := planter_rect(sign)
+	if r.size.x <= 0.0:
+		return
 	var kerb := maxf(5.0, h * 0.14)
 	c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(kerb), Color(0.05, 0.05, 0.08, 0.24))
 	c.draw_rect(r.grow(kerb), Color(0.66, 0.63, 0.58))
