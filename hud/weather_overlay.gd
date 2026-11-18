@@ -1,8 +1,8 @@
 extends Control
 
-# Screen-space weather: rain, blown grit and leaves, or snow, drawn over the
-# world but under the HUD text. Purely atmospheric; the gameplay nudges (slick
-# ground, a shoving wind) live in main.gd.
+# Screen-space weather: rain, blown grit and leaves (spray off the sea), or
+# snow, drawn over the world but under the HUD text. Purely atmospheric; the
+# gameplay nudges (slick ground, a shoving wind) live in main.gd.
 #
 # Every particle has a depth, 0 far to 1 near: near ones are bigger, brighter
 # and faster, which is what makes a flat overlay read as weather falling
@@ -30,6 +30,9 @@ var wind_k := 0.0
 # blows across the screen (+1 left to right)
 var push := 0.0
 var wind_sign := 1.0
+# the wind is coming in off the sea (main's wind_off_sea): what it carries is
+# salt spray, not leaves, which come off trees inland
+var sea := false
 
 
 # the walk's sky in one call: the mode, and a fresh scatter when only the
@@ -148,7 +151,11 @@ func _process(delta: float) -> void:
 				var fall := 560.0 * (0.8 + 0.2 * rain_k)
 				v = Vector2(_rain_slant(g) * fall, fall) * (0.75 + z * 0.65)
 			"wind":
-				if _is_leaf(i):
+				if _is_leaf(i) and sea:
+					# spray rides the wind faster than a leaf and sinks as it goes
+					v = Vector2((260.0 + 220.0 * g) * wind_sign, 22.0 + 18.0 * sin(t * 3.3 + float(i))) * (0.75 + z * 0.5)
+					spin[i] += delta * 4.0
+				elif _is_leaf(i):
 					v = Vector2((170.0 + 160.0 * g) * wind_sign, 30.0 + 40.0 * sin(t * 2.1 + float(i)))
 					spin[i] += delta * (2.0 + z * 3.0) * g
 				else:
@@ -225,7 +232,14 @@ func _draw_wind(b: ShapeBatch) -> void:
 	for i in range(drops.size()):
 		var z := depth[i]
 		var d := drops[i]
-		if _is_leaf(i):
+		if _is_leaf(i) and sea:
+			# a fleck of spray: a bright droplet and the fine streak it leaves
+			var tail := (8.0 + z * 14.0) * (0.6 + g * 0.5)
+			var wob := sin(spin[i]) * 2.0
+			var sc := Color(0.90, 0.95, 0.98)
+			b.line(d, d - Vector2(tail * wind_sign, wob), Color(sc.r, sc.g, sc.b, 0.16 + z * 0.22), 1.0 + z * 0.8)
+			b.circle(d, 0.9 + z * 1.5, Color(sc.r, sc.g, sc.b, 0.40 + z * 0.40))
+		elif _is_leaf(i):
 			var s := 6.0 + z * 6.0
 			var ax := Vector2.from_angle(spin[i]) * s
 			var ay := Vector2.from_angle(spin[i] + PI * 0.5) * s * 0.45 * absf(cos(spin[i] * 1.7))

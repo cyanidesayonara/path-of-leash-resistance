@@ -114,6 +114,26 @@ func _run() -> void:
 		_check((d.x > 0.0) == left, "the beach's wind blows off the sea (%s, sea on the %s)" % [d, "left" if left else "right"])
 	else:
 		_check(false, "the beach has the sea on one side to blow off (left %s, right %s)" % [left, right])
+	# and what it carries is spray, in a breeze as in a gale, blowing onshore
+	for sky: String in ["wind", "breeze"]:
+		game.sky = sky
+		m.sea_check_t = 0.0
+		m.wind_dir = Vector2(-1.0 if left else 1.0, 0.0)
+		Gusts.tick_sea(m, 1.0 / 60.0)
+		_check(bool(m.wind_off_sea), "a %s off the sea blows spray, not leaves" % sky)
+		_check((m.wind_dir.x > 0.0) == left, "and blows onshore between gusts in a %s" % sky)
+	game.sky = "clear"
+	m.sea_check_t = 0.0
+	Gusts.tick_sea(m, 1.0 / 60.0)
+	_check(not bool(m.wind_off_sea), "a calm day by the sea blows nothing")
+	m.queue_free()
+	await process_frame
+
+	# inland the wind carries leaves
+	m = await _load(game, "park", "wind")
+	m.sea_check_t = 0.0
+	Gusts.tick_sea(m, 1.0 / 60.0)
+	_check(not bool(m.wind_off_sea), "a gale in the park blows leaves, not spray")
 	m.queue_free()
 	await process_frame
 
