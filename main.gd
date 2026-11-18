@@ -5136,6 +5136,7 @@ func _freedom_sign(c: Object, r: Rect2, txt: String, gloss := "") -> void:
 const SOFT_WEAR: Array[String] = [
 	"neteja",
 	"besos",
+	"sarria",
 ]
 
 

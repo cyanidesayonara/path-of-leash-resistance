@@ -355,6 +355,12 @@ const TREES: Array[Vector2] = [
 	Vector2(330.0, -2440.0), Vector2(330.0, -3040.0), Vector2(905.0, -3045.0),
 ]
 const LAMPS: Array[Vector2] = [Vector2(470.0, -2420.0), Vector2(780.0, -3050.0)]
+# wall lamps on the house fronts of the Plaça de Sant Vicenç (past the gate),
+# down each side as fractions of its depth; under main.NIGHT_LAMP_R, so the
+# light layer draws each its bracket
+const VICENC_LAMPS: Array[float] = [0.25, 0.6]
+const VICENC_FRONT := 30.0
+const VICENC_LAMP_R := 140.0
 
 
 # the pilones: a pair at each mouth of the plaça and at the street's foot,
@@ -390,12 +396,25 @@ static func flock_ys() -> Array[float]:
 	return [-2480.0, -2700.0, -2940.0]
 
 
-# Everything here is paved, the square past the gate included: what is not
-# water (main asks that first) handles as pavement
+# Everything here is paved: what is not water (main asks that first) handles
+# as pavement, but for the tree pits and planters in the square past the gate
 static func surface(m: Node2D, p: Vector2) -> int:
 	if p.y < float(m.GATE_Y):
-		return Surfaces.S.PAVEMENT
+		var s := Surfaces.paved_past_gate(m, p, m.trees)
+		return Surfaces.S.PAVEMENT if s < 0 else s
 	return -1
+
+
+# Sant Vicenç's trees are broadleaves standing in their pits
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m.broadleaf_grove(c, p)
+
+
+# the street's lamps, and wall lamps on Sant Vicenç's house fronts
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	out.append_array(m.freedom_side_lamps(VICENC_LAMPS, VICENC_FRONT, VICENC_LAMP_R))
+	return out
 
 
 static func tree_kind(m: Node2D, p: Vector2) -> int:
