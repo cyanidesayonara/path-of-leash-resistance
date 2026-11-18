@@ -232,6 +232,25 @@ func _run() -> void:
 		_check(bad == "", "the jogger with the dog at %s keeps clear (%s)" % [str(dp), bad])
 		_check(lo_y < S.JOG_Y1 + 40.0 and hi_y > S.JOG_Y0 - 40.0, "and still runs his whole route past her (%d..%d)" % [int(lo_y), int(hi_y)])
 
+	# --- 8. Sant Vicenç, past the gate ---
+	# paved, soft only in its tree pits; its wear soft-edged, its trees
+	# without forest roots, and wall lamps on its house fronts after dark
+	var Surf := preload("res://world/surfaces.gd")
+	var pits: Array[Vector2] = m.trees
+	var fr: Rect2 = m._freedom_rect()
+	var flags := Vector2(fr.get_center().x, m.GATE_Y - 200.0)
+	for pp: Dictionary in m.park_props:
+		if flags.distance_to(pp.pos) < 40.0:
+			flags += Vector2(90.0, 0.0)
+	_check(m.surface_at(flags) == Surf.S.PAVEMENT, "Sant Vicenç's flags handle as paving (%s)" % flags)
+	_check(not pits.is_empty() and m.surface_at(pits[0] + Vector2(8.0, 0.0)) == Surf.S.GRASS, "a tree pit there is soft")
+	_check("sarria" in m.SOFT_WEAR, "its worn patch is soft at the edge")
+	_check(m.walk_mod.has_method("draw_grove"), "its trees stand in their pits without forest roots")
+	var street_l: Array[Vector3] = m.street_night_lights()
+	var lights: Array[Vector3] = m.night_lights()
+	_check(lights.size() == street_l.size() + S.VICENC_LAMPS.size() * 2,
+		"the street's %d lamps and Sant Vicenç's wall lamps (%d in all)" % [street_l.size(), lights.size()])
+
 	print("test_sarria: %d checks, %d FAILED" % [checks, failures.size()])
 	if failures.is_empty():
 		print("OK")
