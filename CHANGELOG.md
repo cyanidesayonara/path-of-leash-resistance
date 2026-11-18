@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - The bosses look like their films in the walk
+
+- Els Senglars' stampede (`entities/boar_threat.gd`): the boars were round dark blobs with a row of grey dots. Each is now the film's sow from above: a heavy wedge, all shoulders, with the hackles raised in a ragged crest down the spine (grizzled tips that lift with her stride), grizzled hair swept back along the flanks, ears flat back, curved pointed tusks hooking out of the jaw, and red eyes glowing under a heavy scowl. Piglets keep their stripes on the same body.
+- The sow and piglets crossing the trail earlier in the walk (`systems/wild_boar.gd`) were a stack of circles; they are now drawn by the same `BoarThreat.boar`, turned to the way they run, and the sow is bigger than the dog.
+- El Drac (`systems/boss_drac.gd`): awake, his crest stands up in orange spines either side of his back, as in his film (`bristle` in his pose: rising as he wakes, highest when enraged or wound up, down when dazed), his eyes glow in their colour, and his open mouth shows a ring of teeth. Asleep and beaten he is as before.
+- Els Lleons (`systems/boss_lleons.gd`): awake and not beaten, each lion snarls as in the film: fangs bared under the curled lip with the jaw shut, creases across the bridge of the nose, and slit pupils.
+- All of it in the existing batches: no new draw calls.
+
 ## 2026-11-18 - Labels: no shimmer, Diagonal between its bike lanes, shorter glosses
 
 - The walks' names (`world/sign_layer.gd`) are painted at twice their size into an offscreen texture each and drawn smoothed. Painted straight onto the world, their hundreds of small hard-edged pieces (the world has no 2D antialiasing) snapped from pixel to pixel as the camera slid by fractions of one, and the names shimmered whenever it moved, Montjuïc's cacti worst of all. The offscreen pass runs only when the picture changes, as the canvas already did.

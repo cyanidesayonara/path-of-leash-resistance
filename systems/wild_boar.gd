@@ -26,6 +26,9 @@ extends RefCounted
 # - Zero new draw calls: batched directly into Els Senglars's existing ShapeBatch.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const BoarThreat := preload("res://entities/boar_threat.gd")
+const SOW_K := 0.62         # her size, as the stampede's boars are drawn
+const PIGLET_K := 0.3
 
 const START_POS := Vector2(340.0, -2150.0)
 const END_POS := Vector2(940.0, -2150.0)
@@ -60,12 +63,6 @@ var _toss := RandomNumberGenerator.new()
 var anim_time: float = 0.0
 
 # Visual colors
-const FUR_DARK := Color(0.20, 0.17, 0.15)
-const FUR_BRISTLE := Color(0.32, 0.26, 0.22)
-const SNOUT_PINK := Color(0.76, 0.52, 0.50)
-const TUSK_WHITE := Color(0.96, 0.95, 0.90)
-const PIG_BASE := Color(0.48, 0.38, 0.28)
-const PIG_STRIPE := Color(0.75, 0.65, 0.48)
 const TRUFFLE_BLACK := Color(0.14, 0.12, 0.10)
 const TRUFFLE_DIRT := Color(0.38, 0.28, 0.18)
 
@@ -187,48 +184,17 @@ func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	if state == State.IDLE:
 		return
 
-	# 2. Striped piglets trotting ahead
-	if state == State.RUNNING or state == State.TELEGRAPH:
-		var piglet_lead := 42.0 if state == State.RUNNING else 22.0
+	# 2. Striped piglets trotting ahead, and 3. the sow: the stampede's own
+	# boars (entities/boar_threat.gd), so she is the film's sow here too
+	var fwd := (END_POS - START_POS).normalized()
+	var running := state == State.RUNNING
+	var phase := anim_time * (16.0 if running else 3.0)
+	if running or state == State.TELEGRAPH:
+		var piglet_lead := 60.0 if running else 38.0
 		var p1 := pos + Vector2(piglet_lead, -12.0) + Vector2(sin(anim_time * 16.0) * 2.0, sin(anim_time * 18.0) * 2.0)
 		var p2 := pos + Vector2(piglet_lead - 10.0, 14.0) + Vector2(cos(anim_time * 15.0) * 2.0, cos(anim_time * 17.0) * 2.0)
 		for p: Vector2 in [p1, p2]:
-			b.circle(p + Shade.light * 3.0, 5.0, sh)
-			b.circle(p, 5.5, PIG_BASE)
-			b.circle(p + Vector2(3.5, 0.0), 3.5, PIG_BASE)
-			b.circle(p + Vector2(5.5, 0.0), 1.6, SNOUT_PINK)
-			b.line(p + Vector2(-3.0, -2.0), p + Vector2(2.0, -2.0), PIG_STRIPE, 1.2)
-			b.line(p + Vector2(-3.0, 2.0), p + Vector2(2.0, 2.0), PIG_STRIPE, 1.2)
-
-	# 3. Mother Sow
-	var bob := sin(anim_time * 12.0) * 2.0 if state == State.RUNNING else 0.0
+			BoarThreat.boar(b, p + fwd * 50.0 * PIGLET_K, PIGLET_K, phase + p.y, true, fwd)
+	var bob := sin(anim_time * 12.0) * 2.0 if running else 0.0
 	var sow_p := pos + Vector2(0.0, bob)
-
-	# Cast shadow
-	b.circle(sow_p + Shade.light * 6.0, 16.0, sh)
-
-	# Body: hindquarters and shoulders
-	b.circle(sow_p + Vector2(-6.0, 0.0), 12.0, FUR_DARK)
-	b.circle(sow_p + Vector2(6.0, 0.0), 14.0, FUR_BRISTLE)
-
-	# Bristly dorsal ridge
-	b.line(sow_p + Vector2(-12.0, -7.0), sow_p + Vector2(10.0, -8.0), FUR_DARK.darkened(0.2), 2.2)
-
-	# Head and cone wedge snout
-	b.circle(sow_p + Vector2(16.0, 0.0), 8.5, FUR_BRISTLE)
-	b.circle(sow_p + Vector2(22.0, 0.0), 5.0, FUR_BRISTLE)
-	b.circle(sow_p + Vector2(25.0, 0.0), 3.2, SNOUT_PINK)
-	b.circle(sow_p + Vector2(25.5, -1.0), 0.9, Color(0.2, 0.1, 0.1))
-	b.circle(sow_p + Vector2(25.5, 1.0), 0.9, Color(0.2, 0.1, 0.1))
-
-	# Pointed ears
-	b.circle(sow_p + Vector2(13.0, -7.5), 2.8, FUR_DARK)
-	b.circle(sow_p + Vector2(13.0, 7.5), 2.8, FUR_DARK)
-
-	# White tusks
-	b.line(sow_p + Vector2(19.0, -3.5), sow_p + Vector2(22.0, -5.5), TUSK_WHITE, 1.6)
-	b.line(sow_p + Vector2(19.0, 3.5), sow_p + Vector2(22.0, 5.5), TUSK_WHITE, 1.6)
-
-	# Curly tail
-	b.line(sow_p + Vector2(-16.0, 0.0), sow_p + Vector2(-21.0, -4.0), FUR_DARK, 1.8)
-	b.circle(sow_p + Vector2(-21.0, -4.0), 1.5, FUR_DARK)
+	BoarThreat.boar(b, sow_p + fwd * 50.0 * SOW_K, SOW_K, phase, false, fwd)

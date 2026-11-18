@@ -25,6 +25,16 @@ const HOOF_DARK := Color(0.12, 0.10, 0.09)
 # Piglet colours (striped rayones)
 const PIG_BASE := Color(0.48, 0.38, 0.28)
 const PIG_STRIPE := Color(0.75, 0.65, 0.48)
+# the sow's coat, as the film has it (intro/film_boars.gd)
+const SOW_FUR := Color(0.23, 0.18, 0.15)
+const SOW_GRIZZLE := Color(0.44, 0.37, 0.31)
+const SOW_BELLY := Color(0.13, 0.10, 0.09)
+const SOW_CREST := Color(0.52, 0.44, 0.36)
+# half the body's width down its length, rump (top) to shoulders and neck
+const BODY_W: Array[Vector2] = [Vector2(3, -50), Vector2(9, -47), Vector2(13, -40), Vector2(16, -28),
+	Vector2(20, -12), Vector2(25, 2), Vector2(29, 14), Vector2(27, 22), Vector2(18, 29)]
+const SOW_HAIR: Array[Vector2] = [Vector2(12, -30), Vector2(16, -16), Vector2(19, -2), Vector2(21, 10),
+	Vector2(9, -20), Vector2(13, 4)]
 
 const INK := Color(0.05, 0.04, 0.06)
 const DUST := Color(0.62, 0.50, 0.36)
@@ -157,69 +167,129 @@ func _draw() -> void:
 		var st: Array = SOUNDER[i]
 		var held: bool = float(squad.members[i]["stuck_t"]) > 0.4
 		var at: Vector2 = (squad.members[i]["pos"] as Vector2) - global_position
-		_boar(b, at + Vector2(0.0, BOAR_BACK - 14.0 + float(st[2])), float(st[0]),
+		boar(b, at + Vector2(0.0, BOAR_BACK - 14.0 + float(st[2])), float(st[0]),
 			rumble * (30.0 if held else 16.0) + float(i) * 1.3, bool(st[1]))
 	b.flush()
 
 
-# one of the sounder from above, its snout at `snout`, running south: the
-# bristling body with high shoulders and the mane down the spine, legs at a
-# gallop, ears out, the pink snout disc; an adult has tusks and red eyes
-# under a scowl, a piglet stripes and a piglet's eyes
-func _boar(b: ShapeBatch, snout: Vector2, k: float, phase: float, piglet: bool) -> void:
-	var fur := PIG_BASE if piglet else FUR_DARK
-	var c := snout + Vector2(0.0, -50.0 * k)
+# one of the sounder from above, its snout at `snout`, running along `fwd`
+# (south, for the stampede), the way
+# the film draws the sow side on (intro/film_boars.gd): a heavy wedge, all
+# shoulders, the hackles up in a ragged crest down the spine, grizzled flanks,
+# ears flat back, the long head ending in the pink snout disc. An adult has
+# curved tusks hooking out of the jaw and red eyes glowing under a scowl; a
+# piglet has stripes and a piglet's eyes.
+static func boar(b: ShapeBatch, snout: Vector2, k: float, phase: float, piglet: bool, fwd := Vector2.DOWN) -> void:
+	var fur := PIG_BASE if piglet else SOW_FUR
+	# her own frame: x across her, y along her toward the snout, in her units
+	var c := snout - fwd * 50.0 * k
+	var X := Transform2D(fwd.orthogonal() * k, fwd * k, c)
+	var sn := Vector2(0.0, 50.0)
 	b.circle(c + Vector2(5.0, 6.0) * k, 30.0 * k, Color(0.05, 0.06, 0.08, 0.24))
 	# legs, two pairs, galloping
-	var g := sin(phase) * 6.0 * k
+	var g := sin(phase) * 6.0
 	for s in [-1.0, 1.0]:
-		b.circle(c + Vector2(s * 19.0 * k, 22.0 * k + g * s), 6.0 * k, HOOF_DARK)
-		b.circle(c + Vector2(s * 17.0 * k, -26.0 * k - g * s), 6.0 * k, HOOF_DARK)
-	# the tail, flicking
-	b.line(c + Vector2(0, -40) * k, c + Vector2(sin(phase * 0.7) * 6.0, -52.0) * k, INK, 3.0 * k)
-	# body and the high shoulders, outlined
-	_oval(b, c + Vector2(0, -6) * k, Vector2(25, 40) * k, INK)
-	_oval(b, c + Vector2(0, -6) * k, Vector2(22, 37) * k, fur)
-	_oval(b, c + Vector2(0, 10) * k, Vector2(27, 21) * k, INK)
-	_oval(b, c + Vector2(0, 10) * k, Vector2(24, 18) * k, fur)
+		b.circle(X * Vector2(s * 20.0, 16.0 + g * s), 6.0 * k, HOOF_DARK)
+		b.circle(X * Vector2(s * 15.0, -30.0 - g * s), 5.5 * k, HOOF_DARK)
+	# the tail, flicking, a tassel at its end
+	var te := X * Vector2(sin(phase * 0.7) * 5.0, -57.0)
+	b.line(X * Vector2(0, -47), te, INK, 2.0 * k)
+	for s in [-1.0, 0.0, 1.0]:
+		b.line(te, te + X.basis_xform(Vector2(s * 2.5, -4.0)), INK, 1.4 * k)
+	# the body: a wedge, broad at the shoulders and tapering to the rump
+	var ink := PackedVector2Array()
+	var body := PackedVector2Array()
+	for side in [1.0, -1.0]:
+		for i in range(BODY_W.size()):
+			var j: int = i if side > 0.0 else BODY_W.size() - 1 - i
+			var v: Vector2 = BODY_W[j]
+			ink.append(X * Vector2(side * (v.x + 3.0), v.y))
+			body.append(X * Vector2(side * v.x, v.y))
+	b.polygon(ink, INK)
+	b.polygon(body, fur)
+	# the light along the near flank, and the dark belly side
+	b.polygon(PackedVector2Array([X * Vector2(-6, -40), X * Vector2(-13, -26), X * Vector2(-20, 4),
+		X * Vector2(-20, 18), X * Vector2(-8, 4)]), fur.lightened(0.06))
+	b.polygon(PackedVector2Array([X * Vector2(8, -40), X * Vector2(15, -26), X * Vector2(24, 6),
+		X * Vector2(24, 20), X * Vector2(11, 4)]), fur.darkened(0.22))
 	if piglet:
-		for sx in [-9.0, 0.0, 9.0]:
-			b.line(c + Vector2(sx, -34) * k, c + Vector2(sx, 18) * k, PIG_STRIPE, 3.0 * k)
+		for sx in [-8.0, 0.0, 8.0]:
+			b.line(X * Vector2(sx * 0.6, -40), X * Vector2(sx, 18), PIG_STRIPE, 3.0 * k)
 	else:
-		b.line(c + Vector2(0, -38) * k, c + Vector2(0, 18) * k, FUR_BRISTLE.lightened(0.15), 5.0 * k)
-		for m in range(6):
-			b.circle(c + Vector2(0.0, -34.0 + float(m) * 9.0) * k, 3.2 * k, FUR_BRISTLE.lightened(0.25))
-	# ears out to the sides, the head down to the snout
+		# grizzled hair swept back along the flanks
+		for i in range(SOW_HAIR.size()):
+			var h: Vector2 = SOW_HAIR[i]
+			for s in [-1.0, 1.0]:
+				var a := X * Vector2(s * h.x, h.y)
+				b.line(a, a + X.basis_xform(Vector2(s * 3.0, -9.0)), SOW_GRIZZLE, 1.6 * k)
+		# the hackles: a dark ridge down the spine, bristling in spikes that
+		# lift and settle with her stride
+		var lift := 0.8 + 0.2 * sin(phase * 2.0)
+		b.polygon(PackedVector2Array([X * Vector2(-6, 24), X * Vector2(6, 24), X * Vector2(2, -42),
+			X * Vector2(-2, -42)]), SOW_BELLY)
+		for i in range(9):
+			var y := 24.0 - float(i) * 7.4
+			var reach := (15.0 - float(i) * 1.1) * lift
+			for s in [-1.0, 1.0]:
+				var off := 0.0 if s > 0.0 else 3.6
+				var tip := X * Vector2(s * reach, y - 7.0 + off)
+				b.polygon(PackedVector2Array([X * Vector2(s * 1.0, y + 1.0 + off), tip,
+					X * Vector2(s * 0.5, y - 6.0 + off)]), SOW_BELLY)
+				# the bristles' pale, grizzled tips catch the light
+				b.line(X * Vector2(s * reach * 0.5, y - 3.5 + off), tip, SOW_CREST, 1.6 * k)
+	# ears flat back, pointed: she means it
 	for s in [-1.0, 1.0]:
-		b.polygon(PackedVector2Array([c + Vector2(s * 12, 20) * k, c + Vector2(s * 26, 14) * k,
-			c + Vector2(s * 15, 30) * k]), fur.darkened(0.15))
-	b.polygon(PackedVector2Array([c + Vector2(-16, 24) * k, c + Vector2(16, 24) * k, c + Vector2(10, 46) * k,
-		c + Vector2(-10, 46) * k]), fur)
-	b.circle(snout + Vector2(0, -2) * k, 9.0 * k, INK)
-	b.circle(snout + Vector2(0, -2) * k, 7.5 * k, SNOUT_PINK)
-	b.circle(snout + Vector2(-3, -2) * k, 1.8 * k, INK)
-	b.circle(snout + Vector2(3, -2) * k, 1.8 * k, INK)
+		b.polygon(PackedVector2Array([X * Vector2(s * 9, 26), X * Vector2(s * 24, 12),
+			X * Vector2(s * 15, 28)]), INK)
+		b.polygon(PackedVector2Array([X * Vector2(s * 11, 25), X * Vector2(s * 21, 15),
+			X * Vector2(s * 14, 26)]), fur.darkened(0.15))
+	# the long head down to the snout, outlined
+	b.polygon(PackedVector2Array([X * Vector2(-18, 20), X * Vector2(18, 20), X * Vector2(11, 47),
+		X * Vector2(-11, 47)]), INK)
+	b.polygon(PackedVector2Array([X * Vector2(-15, 22), X * Vector2(15, 22), X * Vector2(9, 45),
+		X * Vector2(-9, 45)]), fur)
+	b.circle(X * (sn + Vector2(0, -2)), 9.0 * k, INK)
+	b.circle(X * (sn + Vector2(0, -2)), 7.5 * k, SNOUT_PINK)
+	b.circle(X * (sn + Vector2(-3, -2)), 1.8 * k, INK)
+	b.circle(X * (sn + Vector2(3, -2)), 1.8 * k, INK)
 	if piglet:
 		for s in [-1.0, 1.0]:
-			b.circle(c + Vector2(s * 7, 33) * k, 2.6 * k, Color.WHITE)
-			b.circle(c + Vector2(s * 7, 34) * k, 1.5 * k, INK)
+			b.circle(X * Vector2(s * 7, 33), 2.6 * k, Color.WHITE)
+			b.circle(X * Vector2(s * 7, 34), 1.5 * k, INK)
 		return
-	# tusks curling out of the jaw
+	# the tusks: curved, hooking out of the jaw and back, pointed
 	for s in [-1.0, 1.0]:
-		b.polygon(PackedVector2Array([snout + Vector2(s * 7, -8) * k, snout + Vector2(s * 19, -18) * k,
-			snout + Vector2(s * 9, -3) * k]), TUSK_WHITE)
-	# small red eyes under a scowl, the brows down toward the snout
+		_tusk(b, X, sn + Vector2(s * 6.0, -9.0), s, 1.25, INK)
+		_tusk(b, X, sn + Vector2(s * 6.0, -9.0), s, 1.0, TUSK_WHITE)
+	# small red eyes glowing under a heavy scowl, the brows down toward the snout
 	for s in [-1.0, 1.0]:
-		b.circle(c + Vector2(s * 8, 33) * k, 3.2 * k, EYE_RED)
-		b.line(c + Vector2(s * 14, 27) * k, c + Vector2(s * 4, 31) * k, INK, 2.6 * k)
+		var e := X * Vector2(s * 8, 33)
+		b.glow(e, 9.0 * k, Color(EYE_RED, 0.55), 0.2)
+		b.circle(e, 3.2 * k, EYE_RED)
+		b.circle(e + X.basis_xform(Vector2(-0.8, 0.8)), 1.0 * k, Color(1.0, 0.85, 0.6))
+		b.polygon(PackedVector2Array([X * Vector2(s * 16, 26), X * Vector2(s * 3, 31),
+			X * Vector2(s * 4, 34), X * Vector2(s * 15, 30)]), INK)
 	# a snort of steam off the snout now and then
-	var sn := fposmod(phase * 0.08, 1.0)
-	if sn < 0.4:
-		b.circle(snout + Vector2(0.0, 10.0 + sn * 30.0) * k, (4.0 + sn * 14.0) * k, Color(0.95, 0.95, 0.95, 0.5 * (1.0 - sn / 0.4)))
+	var puff := fposmod(phase * 0.08, 1.0)
+	if puff < 0.4:
+		b.circle(X * (sn + Vector2(0.0, 10.0 + puff * 30.0)), (4.0 + puff * 14.0) * k, Color(0.95, 0.95, 0.95, 0.5 * (1.0 - puff / 0.4)))
 
 
-func _oval(b: ShapeBatch, at: Vector2, r: Vector2, col: Color) -> void:
-	var p := PackedVector2Array()
-	for i in range(14):
-		p.append(at + Vector2.from_angle(TAU * float(i) / 14.0) * r)
-	b.polygon(p, col)
+
+
+# a tusk from its root at the jaw, in the boar's frame X: out to the side and
+# hooking back toward the shoulders, tapering to a point (side on in the
+# film, this is the curve seen from above). `grow` past 1 draws its outline.
+static func _tusk(b: ShapeBatch, X: Transform2D, root: Vector2, s: float, grow: float, col: Color) -> void:
+	var outer := PackedVector2Array()
+	var inner := PackedVector2Array()
+	for i in range(7):
+		var u := float(i) / 6.0
+		var p := root + Vector2(s * u * 13.0, u * 4.0 - u * u * 15.0) * grow
+		var d := Vector2(s * 13.0, 4.0 - 30.0 * u).normalized()
+		var n := Vector2(-d.y, d.x) * (1.0 - u) * 2.6 * grow
+		outer.append(X * (p + n))
+		inner.append(X * (p - n))
+	inner.reverse()
+	outer.append_array(inner)
+	b.polygon(outer, col)
