@@ -1,0 +1,5 @@
+## 2026-11-18 - Seams: La Rambla's crossings and the threshold at every gate
+
+- The bike lanes across the walk (La Rambla, El Parc, Passeig, El Mercat) were a band of asphalt sliced straight through the walk. Across the walk they are the bike path's red now, edged in granite, with the cyclists' squares, give-way teeth facing the riders at the walk's edges and the round blue bike-lane sign at the corners; asphalt with its lines only over the roads.
+- La Rambla as the real one: no traffic crosses the promenade, so its zebras are where people step off it, on the side road and the bike path beside it, either side of the cross street, with the side road's stop line behind each (`main._draw_bike_lanes`).
+- Every walk's path stopped in a straight line under its off-leash ground. The threshold (`main._draw_threshold`, or a walk's own `draw_threshold`) joins them by what meets what: into grass, sand or mud a granite kerb right across with the grass poking over it (or sand drifting onto the paving) and a gap where a worn tongue of the path's ground runs on through the gate; into a paved plaça a soldier course of setts.
