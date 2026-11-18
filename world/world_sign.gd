@@ -754,7 +754,7 @@ static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
 
 # the planter a flower name lies in: its kerb, soil and ground cover, round
 # the strokes' extent
-const PLANTER_PAD := 0.28          # cap heights of bed round the letters
+const PLANTER_PAD := 0.42          # cap heights of bed round the letters
 
 
 static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
