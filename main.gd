@@ -4901,6 +4901,83 @@ func _draw_freedom_beyond(c: Object) -> void:
 	b.flush(c)
 
 
+# THE THRESHOLD. The walk's fill stops in a straight line THRESH_Y, and the
+# off-leash ground began right above it, two pictures laid edge to edge.
+# Joined now the way the place would join them, by what meets what:
+# - paving into soft ground (grass, sand, mud): a granite kerb along the
+#   line, the grass poking over it or the sand drifting onto the paving, and
+#   a worn tongue of the path's own ground running on through the gate, the
+#   way people actually walk in;
+# - paving into paving: a soldier course of setts across the line, as a
+#   plaça's paving meets a street's.
+# Water past the gate, or a walk that draws its own (walk_mod.draw_threshold),
+# keeps to itself. One batch.
+const THRESH_KERB := Color(0.70, 0.67, 0.61)
+const THRESH_KERB_W := 9.0
+const THRESH_TONGUE := 150.0     # how far the worn way runs on past the gate
+const THRESH_GAP := 120.0        # the way through the kerb
+
+
+func _draw_threshold() -> void:
+	var b := ShapeBatch.new()
+	if walk_mod != null and walk_mod.has_method("draw_threshold"):
+		walk_mod.draw_threshold(self, b)
+		b.flush(_wc)
+		return
+	var y := GATE_Y - 40.0
+	var e := walk_edges(y + 2.0)
+	var cx := (e.x + e.y) * 0.5
+	var past := surface_at(Vector2(cx, y - 70.0))
+	var path := surface_at(Vector2(cx, y + 60.0))
+	if past == Surfaces.S.WATER or path == Surfaces.S.WATER or path != Surfaces.S.PAVEMENT:
+		return
+	var walkway: Color = _ground_cols()[1]
+	var sh := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22)
+	var ge := walk_edges(GATE_Y - 16.0)
+	var gl := maxf(gate_l, ge.x)
+	var gr := minf(gate_r, ge.y)
+	if past == Surfaces.S.PAVEMENT or past == Surfaces.S.TILE:
+		# a soldier course: a row of setts laid across the line
+		b.rect(Rect2(e.x, y - 7.0, e.y - e.x, 14.0), walkway.darkened(0.16))
+		var sx := e.x
+		while sx < e.y - 2.0:
+			var w := minf(22.0, e.y - sx)
+			b.rect(Rect2(sx + 1.0, y - 6.0, w - 2.0, 12.0), walkway.darkened(0.06 + 0.05 * float(int(sx / 22.0) % 2)))
+			sx += 22.0
+		b.rect(Rect2(e.x, y + 7.0, e.y - e.x, 2.0), sh)
+		b.flush(_wc)
+		return
+	# the worn way in: the path's ground feathering on into the grass or sand
+	# for a few steps, as wide as people walk two abreast
+	var mx := (gl + gr) * 0.5
+	b.glow(Vector2(mx, y - THRESH_TONGUE * 0.45), THRESH_GAP * 0.75, Color(walkway.r, walkway.g, walkway.b, 0.42), 0.3)
+	b.glow(Vector2(mx, y - 12.0), THRESH_GAP * 0.62, Color(walkway.r, walkway.g, walkway.b, 0.62), 0.45)
+	# the kerb right across, broken where the way runs through
+	for seg: Vector2 in [Vector2(e.x, mx - THRESH_GAP * 0.5), Vector2(mx + THRESH_GAP * 0.5, e.y)]:
+		if seg.y - seg.x < 4.0:
+			continue
+		b.rect(Rect2(seg.x, y - THRESH_KERB_W * 0.5 + 3.0, seg.y - seg.x, THRESH_KERB_W), sh)
+		b.rect(Rect2(seg.x, y - THRESH_KERB_W * 0.5, seg.y - seg.x, THRESH_KERB_W), THRESH_KERB)
+		b.rect(Rect2(seg.x, y - THRESH_KERB_W * 0.5, seg.y - seg.x, 2.5), THRESH_KERB.lightened(0.18))
+		var jx := seg.x + 30.0
+		while jx < seg.y - 4.0:
+			b.line(Vector2(jx, y - THRESH_KERB_W * 0.5), Vector2(jx, y + THRESH_KERB_W * 0.5), THRESH_KERB.darkened(0.18), 1.2)
+			jx += 30.0
+		# what grows or drifts over it, by a hash along the line
+		var tx := seg.x + 6.0
+		while tx < seg.y - 6.0:
+			var h := fmod(sin(tx * 12.9898) * 43758.5453, 1.0)
+			h = h if h >= 0.0 else h + 1.0
+			if past == Surfaces.S.SAND:
+				b.circle(Vector2(tx, y + 6.0 + h * 10.0), 2.0 + h * 2.0, Color(0.90, 0.82, 0.62, 0.55))
+			elif h > 0.35:
+				var g := COL_GRASS.darkened(0.08 + 0.12 * h)
+				b.line(Vector2(tx, y - 2.0), Vector2(tx - 3.0, y + 5.0 + h * 5.0), g, 2.0)
+				b.line(Vector2(tx, y - 2.0), Vector2(tx + 3.0, y + 4.0 + h * 4.0), g, 2.0)
+			tx += 9.0 + h * 8.0
+	b.flush(_wc)
+
+
 # THE GATE, as the place would have it. It was a dark bar across the path
 # over a dashed line, which read as a road to cross on every walk, the forest
 # included. Now: timber posts and no sill on the walks that end in nature,
@@ -12752,27 +12829,95 @@ func _draw_cross_section(top: float, bottom: float, ctop: float, vt: float, vb: 
 			walk_mod.draw_over_walkway(self, _wc, vt, vb)
 
 
+# A bike lane across the walk, as the city paints one through a promenade:
+# asphalt over the roads it crosses, then across the walk itself the bike
+# path's red, edged in granite, the cyclists' squares either side, give-way
+# teeth facing the riders at the walk's edges, and the round blue bike-lane
+# sign at the corners. On La Rambla the zebras are where the real ones are,
+# on the side road and the bike path beside the promenade. It joins the walk
+# instead of cutting it.
+const XING_RED := Color(0.47, 0.30, 0.27)
+const XING_KERB := Color(0.66, 0.63, 0.58)
+const XING_BAR := 26.0           # a zebra bar and its gap
+const ZEBRA_DEPTH := 46.0        # how far along the side road a zebra runs
+const ZEBRA_GAP := 14.0          # between the junction and the zebra
+
+
 func _draw_bike_lanes(vt: float, vb: float) -> void:
 	var xing_col := Color(0.92, 0.90, 0.84, 0.88)
 	for i in range(lane_ys.size()):
 		var ly: float = lane_ys[i]
 		if ly + LANE_HALF + 50.0 < vt or ly - LANE_HALF - 50.0 > vb:
 			continue
-		_wc.draw_rect(Rect2(-400, ly - LANE_HALF, 2100, LANE_HALF * 2.0), COL_ROAD)
+		var top := ly - LANE_HALF
+		var bot := ly + LANE_HALF
+		_wc.draw_rect(Rect2(-400, top, 2100, LANE_HALF * 2.0), COL_ROAD)
+		# across the walk: the bike path's red, and the street's own bike
+		# lane carried straight through it
+		var red_r := SHOULDER_R if lvl == "street" else sw_r
+		_wc.draw_rect(Rect2(sw_l, top, red_r - sw_l, LANE_HALF * 2.0), XING_RED)
+		# the dashed centre and the edge lines run only over the roads
 		var x := -380.0
 		while x < 1700.0:
-			_wc.draw_line(Vector2(x, ly), Vector2(x + 30.0, ly), COL_STRIPE, 3.0)
+			if x + 30.0 < sw_l or x > red_r:
+				_wc.draw_line(Vector2(x, ly), Vector2(x + 30.0, ly), COL_STRIPE, 3.0)
 			x += 70.0
-		_wc.draw_line(Vector2(-400, ly - LANE_HALF), Vector2(1700, ly - LANE_HALF), COL_STRIPE, 2.0)
-		_wc.draw_line(Vector2(-400, ly + LANE_HALF), Vector2(1700, ly + LANE_HALF), COL_STRIPE, 2.0)
-		# it is a bike lane: where it crosses the walk, the cyclists'
-		# crossing in white squares either side, and the bicycle each way
+		for ey: float in [top, bot]:
+			_wc.draw_line(Vector2(-400, ey), Vector2(sw_l, ey), COL_STRIPE, 2.0)
+			_wc.draw_line(Vector2(red_r, ey), Vector2(1700, ey), COL_STRIPE, 2.0)
+			# granite edging where the red meets the walk's paving
+			_wc.draw_rect(Rect2(sw_l, ey - 3.0, red_r - sw_l, 6.0), XING_KERB)
+			_wc.draw_line(Vector2(sw_l, ey + (3.0 if ey == bot else -3.0)), Vector2(red_r, ey + (3.0 if ey == bot else -3.0)),
+				Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.25), 1.5)
+		# the cyclists' crossing in white squares either side
 		for e: float in [-1.0, 1.0]:
 			BikePaint.squares(_wc, Vector2(sw_l - 30.0, ly + e * (LANE_HALF - 10.0)),
-				Vector2(sw_r + 30.0, ly + e * (LANE_HALF - 10.0)), 9.0, xing_col)
-		for gx: float in [sw_l - 70.0, sw_r + 40.0]:
+				Vector2(red_r + 30.0, ly + e * (LANE_HALF - 10.0)), 9.0, xing_col)
+		# give way: teeth at the walk's edges, pointing at the riders coming in
+		for edge: Array in [[sw_l + 18.0, 1.0], [sw_r - 18.0, -1.0]]:
+			var tx: float = edge[0]
+			var dir: float = edge[1]
+			var ty := top + 26.0
+			while ty + 14.0 < bot - 22.0:
+				_wc.draw_colored_polygon(PackedVector2Array([Vector2(tx - dir * 8.0, ty), Vector2(tx - dir * 8.0, ty + 14.0),
+					Vector2(tx + dir * 8.0, ty + 7.0)]), Color(0.95, 0.94, 0.90, 0.9))
+				ty += 22.0
+		for gx: float in [sw_l - 70.0, red_r + 40.0]:
 			BikePaint.glyph(_wc, Vector2(gx, ly - 32.0), Vector2.LEFT, xing_col, COL_ROAD)
 			BikePaint.glyph(_wc, Vector2(gx + 30.0, ly + 32.0), Vector2.RIGHT, xing_col, COL_ROAD)
+		# La Rambla: no traffic crosses the promenade itself. Where the cross
+		# street meets the side road and the bike path running beside the
+		# walk, people step off the promenade over a zebra on each, either
+		# side of the junction, with the traffic's stop line behind it
+		if lvl == "street":
+			var white := Color(0.95, 0.94, 0.90, 0.92)
+			for side: float in [-1.0, 1.0]:
+				var z0 := (top - ZEBRA_GAP - ZEBRA_DEPTH) if side < 0.0 else (bot + ZEBRA_GAP)
+				for span: Vector2 in [Vector2(sw_l - 150.0, sw_l - 10.0), Vector2(BLANE_L + 2.0, BLANE_R - 2.0)]:
+					var zx := span.x + 4.0
+					while zx + XING_BAR * 0.5 <= span.y:
+						_wc.draw_rect(Rect2(zx, z0, XING_BAR * 0.5, ZEBRA_DEPTH), white)
+						zx += XING_BAR
+				var stop_y := (z0 - 12.0) if side < 0.0 else (z0 + ZEBRA_DEPTH + 12.0)
+				_wc.draw_rect(Rect2(sw_l - 150.0, stop_y - 3.0, 140.0, 6.0), Color(0.92, 0.90, 0.84, 0.85))
+		# the round blue bike-lane sign on a post at each corner of the walk
+		for corner: Vector2 in [Vector2(sw_l + 14.0, top - 18.0), Vector2(sw_r - 14.0, bot + 18.0)]:
+			_bike_sign(corner)
+
+
+func _bike_sign(at: Vector2) -> void:
+	contact_shadow(_wc, at, 4.0, 3.0)
+	_wc.draw_line(at, at + Shade.light * 26.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22), 3.0)
+	_wc.draw_circle(at, 3.0, Color(0.42, 0.44, 0.46))
+	_wc.draw_circle(at, 9.0, Color(0.95, 0.95, 0.95))
+	_wc.draw_circle(at, 7.6, Color(0.12, 0.36, 0.72))
+	# the white bicycle, small
+	var w := Color(0.97, 0.97, 0.97)
+	_wc.draw_arc(at + Vector2(-3.2, 1.6), 2.0, 0, TAU, 10, w, 1.1)
+	_wc.draw_arc(at + Vector2(3.2, 1.6), 2.0, 0, TAU, 10, w, 1.1)
+	_wc.draw_line(at + Vector2(-3.2, 1.6), at + Vector2(0.0, -1.2), w, 1.1)
+	_wc.draw_line(at + Vector2(0.0, -1.2), at + Vector2(3.2, 1.6), w, 1.1)
+	_wc.draw_line(at + Vector2(-1.0, -1.2), at + Vector2(1.6, -1.2), w, 1.1)
 
 
 func _draw_world_bike_lanes(vt: float, vb: float) -> void:
@@ -13356,8 +13501,10 @@ func _draw_world() -> void:
 	if vt < GATE_Y + 60.0 and (freedom_kind == "beach" or lvl == "beach"):
 		# only the water moves; the sand and everything on it is on the layer
 		_draw_beach_water()
-	# the gate between the walk and the off-leash space, when it is in view
+	# the gate between the walk and the off-leash space, when it is in view,
+	# on the threshold that joins the two grounds
 	if vt < GATE_Y + 100.0 and vb > GATE_Y - 120.0:
+		_draw_threshold()
 		_draw_gate()
 	# centred on the gate mouth, not nudged left by an eyeballed 40px; a walk
 	# with a material spells it in pieces instead (build_signs)
