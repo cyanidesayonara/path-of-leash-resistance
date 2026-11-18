@@ -180,9 +180,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "LA CABINA",
-      "gloss": "Terminal 1's long pier, with airport security on your tail",
-      "gloss_ca": "La llarga Terminal 1, amb els de seguretat al darrere",
-      "gloss_es": "La larga Terminal 1, con los de seguridad detrás",
+      "gloss": "Airport security on your tail",
+      "gloss_ca": "La Terminal 1, amb seguretat darrere",
+      "gloss_es": "La Terminal 1, con seguridad detrás",
       "goals": [
         {
           "id": "mark",
@@ -356,9 +356,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "CLAUSTRE DE LES LLETRES",
-      "gloss": "The skate plaza outside the white museum",
-      "gloss_ca": "La plaça dels patinadors davant del museu blanc",
-      "gloss_es": "La plaza de los patinadores frente al museo blanco",
+      "gloss": "The skate plaza by the museum",
+      "gloss_ca": "La plaça dels patinadors",
+      "gloss_es": "La plaza de los patinadores",
       "goals": [
         {
           "id": "mark",
@@ -444,7 +444,7 @@
       "clock_text": "2:45",
       "freedom_kind": "yard",
       "gate_text": "PIPICÀ",
-      "gloss": "The little park at the end of your street",
+      "gloss": "The little park down your street",
       "gloss_ca": "El parquet del final del teu carrer",
       "gloss_es": "El parquecito al final de tu calle",
       "goals": [
@@ -620,9 +620,9 @@
       "clock_text": "2:45",
       "freedom_kind": "clearing",
       "gate_text": "EL PRAT",
-      "gloss": "The river park that floods when it rains",
-      "gloss_ca": "El parc fluvial que s'inunda quan plou",
-      "gloss_es": "El parque fluvial que se inunda cuando llueve",
+      "gloss": "The river park that floods",
+      "gloss_ca": "El parc fluvial que s'inunda",
+      "gloss_es": "El parque fluvial que se inunda",
       "goals": [
         {
           "id": "mark",
@@ -696,7 +696,7 @@
       "prize_text": "Fetch the ball from beside the path",
       "sign_material": "pebbles",
       "star_gate": 14,
-      "weather": "rain"
+      "weather": "storm"
     },
     "blai": {
       "carry_text": "",
@@ -708,9 +708,9 @@
       "clock_text": "3:05",
       "freedom_kind": "placa",
       "gate_text": "PLAÇA DEL SORTIDOR",
-      "gloss": "The pintxos street, where everything on the floor is food",
-      "gloss_ca": "El carrer dels pintxos, on tot el que hi ha a terra és menjar",
-      "gloss_es": "La calle de los pintxos, donde todo lo que hay en el suelo es comida",
+      "gloss": "Pintxos, and food on the floor",
+      "gloss_ca": "Pintxos, i menjar per terra",
+      "gloss_es": "Pintxos, y comida por el suelo",
       "goals": [
         {
           "id": "mark",
@@ -796,7 +796,7 @@
       "clock_text": "2:50",
       "freedom_kind": "yard",
       "gate_text": "EL MIRADOR",
-      "gloss": "The wild Collserola downhill scramble",
+      "gloss": "A wild Collserola downhill",
       "gloss_ca": "La baixada salvatge per Collserola",
       "gloss_es": "El descenso salvaje por Collserola",
       "goals": [
@@ -884,9 +884,9 @@
       "clock_text": "3:10",
       "freedom_kind": "yard",
       "gate_text": "BÚNQUERS DEL CARMEL",
-      "gloss": "The sunset overlook above the city",
-      "gloss_ca": "El mirador del capvespre sobre la ciutat",
-      "gloss_es": "El mirador del atardecer sobre la ciudad",
+      "gloss": "The sunset lookout over the city",
+      "gloss_ca": "El mirador del capvespre",
+      "gloss_es": "El mirador del atardecer",
       "goals": [
         {
           "id": "mark",
@@ -972,9 +972,9 @@
       "clock_text": "3:20",
       "freedom_kind": "yard",
       "gate_text": "ÀREA DE GOSSOS",
-      "gloss": "The old citadel's park and its stone mammoth",
-      "gloss_ca": "El parc de l'antiga ciutadella i el seu mamut de pedra",
-      "gloss_es": "El parque de la antigua ciudadela y su mamut de piedra",
+      "gloss": "The old citadel and its mammoth",
+      "gloss_ca": "L'antiga ciutadella i el seu mamut",
+      "gloss_es": "La vieja ciudadela y su mamut",
       "goals": [
         {
           "id": "mark",
@@ -1060,9 +1060,9 @@
       "clock_text": "3:05",
       "freedom_kind": "beach",
       "gate_text": "PLATJA DEL DIMONI",
-      "gloss": "Badalona's devil night, and the Dimoni rolls",
-      "gloss_ca": "La nit del Dimoni de Badalona, i el Dimoni roda",
-      "gloss_es": "La noche del Dimoni de Badalona, y el Dimoni rueda",
+      "gloss": "Badalona's devil-burning night",
+      "gloss_ca": "La nit que Badalona crema el Dimoni",
+      "gloss_es": "Badalona quema a su Dimoni",
       "goals": [
         {
           "id": "mark",
@@ -1148,9 +1148,9 @@
       "clock_text": "3:00",
       "freedom_kind": "placa",
       "gate_text": "PLAÇA DE LES GLÒRIES",
-      "gloss": "The avenue that cuts the grid, and the tram that rides it",
-      "gloss_ca": "L'avinguda que talla la quadrícula, i el tramvia que hi passa",
-      "gloss_es": "La avenida que corta la cuadrícula, y el tranvía que la recorre",
+      "gloss": "The avenue that cuts the grid",
+      "gloss_ca": "L'avinguda que talla la quadrícula",
+      "gloss_es": "La avenida que corta la cuadrícula",
       "goals": [
         {
           "id": "mark",
@@ -1236,9 +1236,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "INTERIOR D'ILLA",
-      "gloss": "The grid of cut corners round the basilica",
-      "gloss_ca": "La quadrícula dels xamfrans al voltant de la basílica",
-      "gloss_es": "La cuadrícula de chaflanes alrededor de la basílica",
+      "gloss": "The grid of cut corners",
+      "gloss_ca": "La quadrícula dels xamfrans",
+      "gloss_es": "La cuadrícula de chaflanes",
       "goals": [
         {
           "id": "mark",
@@ -1324,9 +1324,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "PLAÇA D'ESPANYA",
-      "gloss": "The dancing fountains and grand palace cascades",
-      "gloss_ca": "Les fonts màgiques i les grans cascades del palau",
-      "gloss_es": "Las fuentes mágicas y las grandes cascadas del palacio",
+      "gloss": "Magic fountains below the palace",
+      "gloss_ca": "Les fonts màgiques sota el palau",
+      "gloss_es": "Las fuentes mágicas bajo el palacio",
       "goals": [
         {
           "id": "mark",
@@ -1412,9 +1412,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "ESPLANADA DEL FÒRUM",
-      "gloss": "The solar pergola and coastal esplanade",
-      "gloss_ca": "La pèrgola fotovoltaica i l'esplanada costanera",
-      "gloss_es": "La pérgola fotovoltaica y la explanada costera",
+      "gloss": "The solar pergola by the sea",
+      "gloss_ca": "La pèrgola solar vora el mar",
+      "gloss_es": "La pérgola solar junto al mar",
       "goals": [
         {
           "id": "mark",
@@ -1500,7 +1500,7 @@
       "clock_text": "2:55",
       "freedom_kind": "yard",
       "gate_text": "PLAÇA DE LA VIRREINA",
-      "gloss": "The decorated festival street run",
+      "gloss": "A festival of decorated streets",
       "gloss_ca": "La festa dels carrers guarnits",
       "gloss_es": "La fiesta de las calles adornadas",
       "goals": [
@@ -1588,9 +1588,9 @@
       "clock_text": "3:00",
       "freedom_kind": "clearing",
       "gate_text": "EL CALVARI",
-      "gloss": "A hillside park of mosaics and stone columns",
-      "gloss_ca": "Un parc de trencadís i columnes de pedra",
-      "gloss_es": "Un parque de mosaicos y columnas de piedra",
+      "gloss": "Mosaics and stone columns",
+      "gloss_ca": "Trencadís i columnes de pedra",
+      "gloss_es": "Mosaicos y columnas de piedra",
       "goals": [
         {
           "id": "mark",
@@ -1752,7 +1752,7 @@
       "prize_text": "Snatch the gardener's bocadillo off his barrow",
       "sign_material": "topiary",
       "star_gate": 41,
-      "weather": "clear"
+      "weather": "drizzle"
     },
     "llevant": {
       "carry_text": "",
@@ -1764,9 +1764,9 @@
       "clock_text": "3:00",
       "freedom_kind": "beach",
       "gate_text": "PLATJA DELS GOSSOS",
-      "gloss": "The dog beach at the far end of the coast",
-      "gloss_ca": "La platja dels gossos a l'extrem de la costa",
-      "gloss_es": "La playa para perros al final de la costa",
+      "gloss": "The dog beach at the coast's end",
+      "gloss_ca": "La platja dels gossos de la costa",
+      "gloss_es": "La playa de perros de la costa",
       "goals": [
         {
           "id": "mark",
@@ -1940,9 +1940,9 @@
       "clock_text": "3:05",
       "freedom_kind": "placa",
       "gate_text": "PLAÇA DE SANT GOS",
-      "gloss": "Out of the rain and one stop on the metro, at rush hour",
-      "gloss_ca": "Fora de la pluja i una parada de metro, en hora punta",
-      "gloss_es": "Fuera de la lluvia y una parada de metro, en hora punta",
+      "gloss": "Rush hour, one stop on the metro",
+      "gloss_ca": "Hora punta, una parada de metro",
+      "gloss_es": "Hora punta, una parada de metro",
       "goals": [
         {
           "id": "mark",
@@ -2028,9 +2028,9 @@
       "clock_text": "3:00",
       "freedom_kind": "clearing",
       "gate_text": "XALET DE LA MOLINA",
-      "gloss": "Up the piste in the snow, and the groomer's brake lets go",
-      "gloss_ca": "Pista amunt sota la neu, i a la màquina trepitjaneu se li deixa anar el fre",
-      "gloss_es": "Pista arriba bajo la nieve, y a la pisanieves se le suelta el freno",
+      "gloss": "Ski slopes and a runaway groomer",
+      "gloss_ca": "La pista i la trepitjaneu desbocada",
+      "gloss_es": "La pista y la pisanieves desbocada",
       "goals": [
         {
           "id": "mark",
@@ -2116,9 +2116,9 @@
       "clock_text": "3:05",
       "freedom_kind": "placa",
       "gate_text": "EL CASTELL",
-      "gloss": "The winding climb up to the castle",
-      "gloss_ca": "La pujada que serpenteja fins al castell",
-      "gloss_es": "La subida serpenteante hasta el castillo",
+      "gloss": "The winding climb to the castle",
+      "gloss_ca": "La pujada serpentejant al castell",
+      "gloss_es": "La subida serpenteante al castillo",
       "goals": [
         {
           "id": "mark",
@@ -2204,9 +2204,9 @@
       "clock_text": "3:05",
       "freedom_kind": "clearing",
       "gate_text": "MONESTIR DE MONTSERRAT",
-      "gloss": "The serrated mountain trail, and the wild goats are loose",
-      "gloss_ca": "El camí de la muntanya serrada, i les cabres salvatges van soltes",
-      "gloss_es": "El sendero de la montaña dentada, y las cabras salvajes andan sueltas",
+      "gloss": "Mountain paths and loose goats",
+      "gloss_ca": "Camins de muntanya i cabres soltes",
+      "gloss_es": "Senderos de montaña y cabras sueltas",
       "goals": [
         {
           "id": "mark",
@@ -2293,7 +2293,7 @@
       "freedom_kind": "placa",
       "gate_text": "PLAÇA",
       "gloss": "The city's dawn clean-up",
-      "gloss_ca": "La neteja de la ciutat a trenc d'alba",
+      "gloss_ca": "La ciutat neta a trenc d'alba",
       "gloss_es": "La limpieza de la ciudad al amanecer",
       "goals": [
         {
@@ -2644,9 +2644,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "JARDÍ DELS OLIVERS",
-      "gloss": "The walled village of copied towns",
-      "gloss_ca": "El poble emmurallat de pobles copiats",
-      "gloss_es": "El pueblo amurallado de pueblos copiados",
+      "gloss": "A walled village of copied towns",
+      "gloss_ca": "Un poble emmurallat de còpies",
+      "gloss_es": "Un pueblo amurallado de copias",
       "goals": [
         {
           "id": "mark",
@@ -2822,7 +2822,7 @@
       "gate_text": "EL PORXO",
       "gloss": "A shopping street in a downpour",
       "gloss_ca": "Un carrer de botigues sota el xàfec",
-      "gloss_es": "Una calle comercial bajo el chaparrón",
+      "gloss_es": "Calle de tiendas bajo el chaparrón",
       "goals": [
         {
           "id": "mark",
@@ -2908,9 +2908,9 @@
       "clock_text": "3:30",
       "freedom_kind": "placa",
       "gate_text": "RAMBLA DEL RAVAL",
-      "gloss": "The rambla where the big bronze cat sits",
-      "gloss_ca": "La rambla on seu el gat gros de bronze",
-      "gloss_es": "La rambla donde se sienta el gato gordo de bronce",
+      "gloss": "Where the big bronze cat sits",
+      "gloss_ca": "On seu el gat gros de bronze",
+      "gloss_es": "Donde se sienta el gato de bronce",
       "goals": [
         {
           "id": "mark",
@@ -3086,7 +3086,7 @@
       "gate_text": "CALA DEL PINAR",
       "gloss": "The cliff path",
       "gloss_ca": "El camí de ronda pels penya-segats",
-      "gloss_es": "El camino de ronda por los acantilados",
+      "gloss_es": "El camino de ronda entre acantilados",
       "goals": [
         {
           "id": "mark",
@@ -3260,9 +3260,9 @@
       "clock_text": "2:55",
       "freedom_kind": "placa",
       "gate_text": "PLAÇA DE SANT VICENÇ",
-      "gloss": "The village the city swallowed, as its shutters go up",
-      "gloss_ca": "El poble que es va empassar la ciutat, mentre s'aixequen les persianes",
-      "gloss_es": "El pueblo que se tragó la ciudad, mientras suben las persianas",
+      "gloss": "The village the city swallowed",
+      "gloss_ca": "El poble que s'empassà la ciutat",
+      "gloss_es": "El pueblo que se tragó la ciudad",
       "goals": [
         {
           "id": "mark",
@@ -3876,9 +3876,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "PASSATGE DEL VAPOR",
-      "gloss": "The green superblock reclaimed for pedestrians",
+      "gloss": "The car-free green superblock",
       "gloss_ca": "L'eix verd pacificat per a vianants",
-      "gloss_es": "El eje verde pacificado para peatones",
+      "gloss_es": "El eje verde para peatones",
       "goals": [
         {
           "id": "mark",
@@ -3941,7 +3941,7 @@
           "text": "Beat the clock (under 3:00)"
         }
       ],
-      "hour": "day",
+      "hour": "morning",
       "id": "superilla",
       "is_boss": false,
       "is_chase": false,
@@ -3964,9 +3964,9 @@
       "clock_text": "3:05",
       "freedom_kind": "placa",
       "gate_text": "MIRADOR DEL TIBIDABO",
-      "gloss": "The city's highest hill and its old fairground",
-      "gloss_ca": "El cim de la ciutat i les seves atraccions",
-      "gloss_es": "La cima de la ciudad y sus atracciones",
+      "gloss": "The hilltop fairground",
+      "gloss_ca": "El cim i les seves atraccions",
+      "gloss_es": "La cima y sus atracciones",
       "goals": [
         {
           "id": "mark",
@@ -4029,7 +4029,7 @@
           "text": "Beat the clock (under 3:05)"
         }
       ],
-      "hour": "day",
+      "hour": "morning",
       "id": "tibidabo",
       "is_boss": false,
       "is_chase": false,
@@ -4040,7 +4040,7 @@
       "prize_text": "Snatch the spun sugar off the fairground cart",
       "sign_material": "bulbs",
       "star_gate": 17,
-      "weather": "clear"
+      "weather": "fog"
     },
     "trail": {
       "carry_text": "",
@@ -4052,9 +4052,9 @@
       "clock_text": "3:00",
       "freedom_kind": "clearing",
       "gate_text": "LA CLARIANA",
-      "gloss": "A winding trail through the woods",
+      "gloss": "A winding woodland trail",
       "gloss_ca": "Un camí que serpenteja pel bosc",
-      "gloss_es": "Un sendero que serpentea por el bosque",
+      "gloss_es": "Un sendero por el bosque",
       "goals": [
         {
           "id": "mark",
@@ -4140,7 +4140,7 @@
       "clock_text": "",
       "freedom_kind": "yard",
       "gate_text": "PIPICÀ",
-      "gloss": "Learn the leash, one trick at a time",
+      "gloss": "Learn the leash, trick by trick",
       "gloss_ca": "Aprèn la corretja, truc a truc",
       "gloss_es": "Aprende la correa, truco a truco",
       "goals": [],
