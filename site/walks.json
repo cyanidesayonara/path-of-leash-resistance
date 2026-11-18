@@ -1,0 +1,772 @@
+{
+  "tutorial": {
+    "about": "The familiar stretch of sidewalk outside your building and the fenced corner pipicà yard at the end of the block. Before your human picks up speed down the avenue, there is room to learn how slack works, when to dig in, how to wind the leash around a bollard, and how to turn small errands into a combo.",
+    "shots": [
+      {
+        "file": "shot-tutorial.jpg",
+        "caption": "Learning the leash on the neighborhood strip",
+        "alt": "First Walk: the dog and human walk along a quiet neighborhood street at the start of the tutorial."
+      },
+      {
+        "file": "shot-tutorial-2.jpg",
+        "caption": "Off the leash in the corner yard",
+        "alt": "First Walk: the fenced neighborhood pipicà yard after unclipping the leash."
+      }
+    ]
+  },
+  "barri": {
+    "about": "A modest neighborhood street ending in a square and a small fenced dog run. Between stone benches, gravel flowerbeds, an outdoor ping-pong table and passing dogs on the same loop, it is the everyday circuit every Barcelona dog knows nose-first.",
+    "shots": [
+      {
+        "file": "shot-barri.jpg",
+        "caption": "Morning errands down El Barri",
+        "alt": "El Barri: plane trees, stone benches and neighborhood passers-by along a quiet street."
+      },
+      {
+        "file": "shot-barri-2.jpg",
+        "caption": "The neighborhood pipicà",
+        "alt": "El Barri: the fenced neighborhood dog yard beyond the gate."
+      }
+    ]
+  },
+  "street": {
+    "about": "Barcelona's famous tree-lined central promenade heading toward the square, paved in waves and Miró mosaic tiles. Flower kiosks, human statues, outdoor terraces, a narrow green bike lane and a couple of pickpockets keep the sidewalk crowded while your human drifts down the middle staring at a screen.",
+    "shots": [
+      {
+        "file": "shot-street.jpg",
+        "caption": "Threading the stalls and bike lane on La Rambla",
+        "alt": "La Rambla: the dog pulls her distracted human past flower stalls and a green bike lane."
+      },
+      {
+        "file": "shot-street-2.jpg",
+        "caption": "Unclipped at the pipicà",
+        "alt": "La Rambla: the off-leash corner yard past the end of the promenade."
+      }
+    ]
+  },
+  "park": {
+    "about": "Gravel walks, clipped hedges, park benches and a fenced duck pond where stray tennis balls keep drifting out of reach. A calm green shortcut away from delivery scooters, so long as nobody sends your ball into the water.",
+    "shots": [
+      {
+        "file": "shot-park.jpg",
+        "caption": "Past the duck pond in El Parc",
+        "alt": "El Parc: shaded park paths winding beside a fenced pond with ducks."
+      },
+      {
+        "file": "shot-park-2.jpg",
+        "caption": "Off-leash yard beyond the gate",
+        "alt": "El Parc: dogs playing inside the corner yard at the north end of the park."
+      }
+    ]
+  },
+  "beach": {
+    "about": "Barceloneta's waterfront promenade at dawn, when coastal wind blows loose sand across the paving toward Plaça de l'Hotel. Palm trees, beach umbrellas and canopies flank the sea before the daytime crowds spread out across the shore.",
+    "shots": [
+      {
+        "file": "shot-beach.jpg",
+        "caption": "Sea breeze at dawn along Passeig Marítim",
+        "alt": "Passeig Marítim: palm-lined promenade at dawn beside sandy beach and Mediterranean surf."
+      },
+      {
+        "file": "shot-beach-2.jpg",
+        "caption": "Plaça de l'Hotel off-leash plaza",
+        "alt": "Passeig Marítim: the coastal plaza at the northern end of the walk."
+      }
+    ]
+  },
+  "neteja": {
+    "about": "Barcelona before the shutters roll up: municipal street sweepers hiss along quiet dawn alleys with sudsy water jets and spinning brushes. Once you reach the square, one determined machine turns the corner behind you and pushes the whole run back home.",
+    "shots": [
+      {
+        "file": "shot-neteja.jpg",
+        "caption": "Dawn puddles before the shutters open",
+        "alt": "La Neteja: wet dawn cobblestones, laundry lines and cones along an early-morning lane."
+      },
+      {
+        "file": "shot-neteja-2.jpg",
+        "caption": "Chased back home by the street sweeper",
+        "alt": "La Neteja: a yellow street sweeper bearing down behind the dog and human on the run home."
+      },
+      {
+        "file": "shot-neteja-3.jpg",
+        "caption": "The turnaround square",
+        "alt": "La Neteja: the quiet square at the north end before the chase begins."
+      }
+    ]
+  },
+  "oldtown": {
+    "about": "Narrow medieval setts in the Gothic Quarter, stone bridges overhead, laundry strung between balconies and cats sunning themselves on masonry ledges. Tight stone corners make wrapping the leash around a bollard part of getting round the next bend.",
+    "shots": [
+      {
+        "file": "shot-oldtown.jpg",
+        "caption": "Narrow stone lanes and wall cats in El Gòtic",
+        "alt": "El Gòtic: old stone buildings, narrow cobblestone paths and a gothic bridge overhead."
+      },
+      {
+        "file": "shot-oldtown-2.jpg",
+        "caption": "Off the leash in the plaça",
+        "alt": "El Gòtic: the stone square beyond the old town alleys."
+      }
+    ]
+  },
+  "montjuic": {
+    "about": "The winding uphill road climbing Barcelona's seaside hill toward the seventeenth-century castle, bordered by prickly pear cactus and crossed overhead by the Montjuïc cable car. Between steep switchbacks and hill-path walkers, your human needs every bit of help up the grade.",
+    "shots": [
+      {
+        "file": "shot-montjuic.jpg",
+        "caption": "Climbing toward El Castell under the cable car",
+        "alt": "Montjuïc: a steep hillside walk lined with stone edges, cactus and the cable car line."
+      },
+      {
+        "file": "shot-montjuic-2.jpg",
+        "caption": "At the castle esplanade",
+        "alt": "Montjuïc: the open plaza outside El Castell at the top of the climb."
+      }
+    ]
+  },
+  "market": {
+    "about": "A covered iron market hall modeled on La Boqueria, noisy with stacked fruit stalls, glistening fish counters, delivery crates and shoppers stopping mid-aisle without warning. Keep your footing past the wet ice puddles if you want to haul a crate of oranges across the hall.",
+    "shots": [
+      {
+        "file": "shot-market.jpg",
+        "caption": "Fruit stalls and slick floors inside El Mercat",
+        "alt": "El Mercat: colorful market stalls packed with produce lining a busy indoor aisle."
+      },
+      {
+        "file": "shot-market-2.jpg",
+        "caption": "Outside on the market plaça",
+        "alt": "El Mercat: the open square outside the market hall."
+      }
+    ]
+  },
+  "rain": {
+    "about": "A steady downpour over an arcaded shopping avenue, filling stone gutters and storm drains while commuters hurry past under dark umbrellas toward the shelter of El Porxo. Keep your human out of the deep splashes unless soggy shoes are the plan.",
+    "shots": [
+      {
+        "file": "shot-rain.jpg",
+        "caption": "Rain-slick paving and umbrellas along El Diluvi",
+        "alt": "El Diluvi: falling rain, deep pavement puddles and pedestrians holding umbrellas."
+      },
+      {
+        "file": "shot-rain-2.jpg",
+        "caption": "Under cover at El Porxo",
+        "alt": "El Diluvi: the sheltered off-leash yard past the wet shopping avenue."
+      }
+    ]
+  },
+  "besos": {
+    "about": "The concrete-banked river park along the Besòs during heavy rain, where paved cycling paths hug the water channel beside weirs and flood walls. Reach the clearing at El Prat and the swollen flood front breaks loose behind you for the sprint home.",
+    "shots": [
+      {
+        "file": "shot-besos.jpg",
+        "caption": "Rain along the Besòs river channel",
+        "alt": "El Besòs: concrete riverbanks beside rising storm water in the rain."
+      },
+      {
+        "file": "shot-besos-2.jpg",
+        "caption": "Outrunning the flood front",
+        "alt": "El Besòs: a surging wall of floodwater chasing the dog and human back south."
+      },
+      {
+        "file": "shot-besos-3.jpg",
+        "caption": "High ground at El Prat",
+        "alt": "El Besòs: the riverside clearing past the gate at El Prat."
+      }
+    ]
+  },
+  "ciutadella": {
+    "about": "Parc de la Ciutadella's tree-lined paths, noisy green monk parakeets, rowboat lake and the famous stone mammoth sculpture beside the cascada. Halfway up the walk, the mammoth lumbers off its plinth and puts your leash control to a real test before the dog park opens.",
+    "shots": [
+      {
+        "file": "shot-ciutadella.jpg",
+        "caption": "Green paths and parakeets in La Ciutadella",
+        "alt": "La Ciutadella: shaded park paths and lush lawns leading toward the lake."
+      },
+      {
+        "file": "shot-ciutadella-2.jpg",
+        "caption": "Facing El Mamut by the lake",
+        "alt": "La Ciutadella: the stone mammoth charging beside the park lake and wooden jetty."
+      },
+      {
+        "file": "shot-ciutadella-3.jpg",
+        "caption": "Safe in the Àrea de Gossos",
+        "alt": "La Ciutadella: the fenced dog area past the northern park gate."
+      }
+    ]
+  },
+  "llevant": {
+    "about": "Barcelona's fenced dog beach at the northern edge of the waterfront, where sea gusts sweep towel-dotted sand into rolling shorebreak. Half the dogs in the district turn up beyond the gate at Platja dels Gossos.",
+    "shots": [
+      {
+        "file": "shot-llevant.jpg",
+        "caption": "Windy shorebreak at Platja de Llevant",
+        "alt": "Platja de Llevant: sunlit sandy walkway beside parasols, beach towels and sea surf."
+      },
+      {
+        "file": "shot-llevant-2.jpg",
+        "caption": "Unclipped on Platja dels Gossos",
+        "alt": "Platja de Llevant: dogs running free on the fenced beach area."
+      }
+    ]
+  },
+  "eixample": {
+    "about": "Ildefons Cerdà's unmistakable grid of octagonal chamfered corners, flower-stamped panot sidewalks, tour groups angled toward the basilica pond and plane trees shading every xamfrà on the way to a quiet interior d'illa garden.",
+    "shots": [
+      {
+        "file": "shot-eixample.jpg",
+        "caption": "Cut corners and panot sidewalks in L'Eixample",
+        "alt": "L'Eixample: chamfered octagonal block corners with flower tiles, crosswalks and cafe tables."
+      },
+      {
+        "file": "shot-eixample-2.jpg",
+        "caption": "Inside the interior d'illa courtyard",
+        "alt": "L'Eixample: the enclosed courtyard garden inside a residential block."
+      }
+    ]
+  },
+  "tibidabo": {
+    "about": "Up the steep flanks of Barcelona's tallest mountain toward the old hilltop fairground, where the vintage funicular climbs the slope alongside cliffside coin viewfinders, spun-sugar stalls and string lights glowing above the city.",
+    "shots": [
+      {
+        "file": "shot-tibidabo.jpg",
+        "caption": "Past the fairground ridge on El Tibidabo",
+        "alt": "El Tibidabo: mountain promenade with vintage funicular tracks, bulbs and cliff views."
+      },
+      {
+        "file": "shot-tibidabo-2.jpg",
+        "caption": "Overlooking the city from the Mirador",
+        "alt": "El Tibidabo: the off-leash terrace plaza at Mirador del Tibidabo."
+      }
+    ]
+  },
+  "vet": {
+    "about": "An unassuming residential block with park benches, hydrants and other dogs out on morning errands, until the sliding glass doors of the Clínica Veterinària come into view. One glimpse of the checkup scale and the vet chases your pair back down the avenue cone-first.",
+    "shots": [
+      {
+        "file": "shot-vet.jpg",
+        "caption": "Approaching the clinic with suspicion",
+        "alt": "El Veterinari: neighborhood sidewalk with benches and dogs before reaching the clinic."
+      },
+      {
+        "file": "shot-vet-2.jpg",
+        "caption": "Chased back down the street by the vet",
+        "alt": "El Veterinari: the vet in a white coat chasing the dog and human home."
+      },
+      {
+        "file": "shot-vet-3.jpg",
+        "caption": "Outside Clínica Veterinària",
+        "alt": "El Veterinari: the courtyard outside the veterinary clinic gate."
+      }
+    ]
+  },
+  "sarria": {
+    "about": "Early-morning dawn in old Sarrià, the former hilltop village absorbed by the city without losing its narrow streets. Metal bakery shutters rattle open to warm croissant air while Plaça de Sant Vicenç's bell tower counts the morning and balcony pots drip onto the stone.",
+    "shots": [
+      {
+        "file": "shot-sarria.jpg",
+        "caption": "Morning light as shutters lift in Sarrià",
+        "alt": "Sarrià: quiet dawn light across low village streets, bakeries and stone balconies."
+      },
+      {
+        "file": "shot-sarria-2.jpg",
+        "caption": "Plaça de Sant Vicenç",
+        "alt": "Sarrià: the square outside the village church tower."
+      }
+    ]
+  },
+  "trail": {
+    "about": "A dirt forest path winding up through pines and mud patches where sticks wait beside the verge and phone reception vanishes completely. With no bars on the screen, your human actually looks up at the trees once in a while.",
+    "shots": [
+      {
+        "file": "shot-trail.jpg",
+        "caption": "Muddy ruts and pine shade along El Bosc",
+        "alt": "El Bosc: a winding dirt forest path lined with dark pine canopy and muddy spots."
+      },
+      {
+        "file": "shot-trail-2.jpg",
+        "caption": "Off-leash woodland clearing",
+        "alt": "El Bosc: La Clariana forest clearing surrounded by pines."
+      }
+    ]
+  },
+  "angels": {
+    "about": "Plaça dels Àngels in front of the stark white museum facade, Barcelona's unofficial capital of street skateboarding. Smooth marble ledges are made to be ground along while dodging dropped boards and lamps on the way to Claustre de les Lletres.",
+    "shots": [
+      {
+        "file": "shot-angels.jpg",
+        "caption": "Skaters and marble ledges outside the museum",
+        "alt": "Els Àngels: wide paved plaza outside the white museum with skate ledges and lamps."
+      },
+      {
+        "file": "shot-angels-2.jpg",
+        "caption": "Quiet cloister yard beyond the plaza",
+        "alt": "Els Àngels: Claustre de les Lletres off-leash yard past the northern gate."
+      }
+    ]
+  },
+  "spook": {
+    "about": "All Saints' Eve on Castanyada night, warmed by glowing corner chestnut roasters and stalls piled with pine-nut panellets under paper lanterns. The smell of roast chestnuts hangs over every cobblestone while stray chocolates demand careful steering.",
+    "shots": [
+      {
+        "file": "shot-spook.jpg",
+        "caption": "Chestnut roasters and lanterns on La Castanyada",
+        "alt": "La Castanyada: warm night street lit by chestnut stalls and autumn festival banners."
+      },
+      {
+        "file": "shot-spook-2.jpg",
+        "caption": "Gathering in the night plaça",
+        "alt": "La Castanyada: the open evening square at the end of the festival walk."
+      }
+    ]
+  },
+  "boars": {
+    "about": "Down through Collserola's holm oaks, wallows and forest scrub toward El Mirador. Wild mountain boars root along the ditch outside the park edge and burst onto the path behind you to escort your pair straight back to town.",
+    "shots": [
+      {
+        "file": "shot-boars.jpg",
+        "caption": "Oaks and mud wallows along the Collserola track",
+        "alt": "Els Senglars: hillside forest path dotted with oak trees, mud wallows and trail signs."
+      },
+      {
+        "file": "shot-boars-2.jpg",
+        "caption": "Wild boars tearing down the slope behind you",
+        "alt": "Els Senglars: charging wild boars chasing the dog and human back toward town."
+      },
+      {
+        "file": "shot-boars-3.jpg",
+        "caption": "The ridge overlook at El Mirador",
+        "alt": "Els Senglars: the fenced hillside yard at El Mirador."
+      }
+    ]
+  },
+  "guell": {
+    "about": "Hillside terraces paved in broken trencadís ceramic: curved mosaic medallions, serpentine benches, a forest of stone columns and stone viaducts leading up to El Calvari. Standing watch over the grand stairway is El Drac himself, guarding the tiles until you trip him with the leash.",
+    "shots": [
+      {
+        "file": "shot-guell.jpg",
+        "caption": "Tiled columns and mosaic plaza in El Mosaic",
+        "alt": "El Mosaic: park terrace with mosaic benches, stone columns and trencadís medallions."
+      },
+      {
+        "file": "shot-guell-2.jpg",
+        "caption": "El Drac guarding the central stair",
+        "alt": "El Mosaic: the mosaic salamander boss perched along the central park stairway."
+      },
+      {
+        "file": "shot-guell-3.jpg",
+        "caption": "Wooded clearing at El Calvari",
+        "alt": "El Mosaic: the upper pine clearing at El Calvari."
+      }
+    ]
+  },
+  "superilla": {
+    "about": "Reclaimed Eixample crossroads closed to through cars and handed over to planters, painted geometric circles, wooden benches, family cargo bikes and concrete ping-pong tables. Everybody treats the asphalt like a shared living room until you zoom through at full leash.",
+    "shots": [
+      {
+        "file": "shot-superilla.jpg",
+        "caption": "Painted circles, planters and ping-pong tables",
+        "alt": "La Superilla: pedestrianized street painted with colored circles, street furniture and cargo trikes."
+      },
+      {
+        "file": "shot-superilla-2.jpg",
+        "caption": "Passatge del Vapor off-leash corner",
+        "alt": "La Superilla: the sheltered green yard at Passatge del Vapor."
+      }
+    ]
+  },
+  "metro": {
+    "about": "Ducking out of a rainstorm down into the metro for one quick rush-hour stop: ticket gates, bright platform tiles, folded umbrellas and packed train doors before surfacing back onto the wet street at Plaça de Sant Gos.",
+    "shots": [
+      {
+        "file": "shot-metro.jpg",
+        "caption": "Navigating the platform and train at rush hour",
+        "alt": "El Metro: underground station platform and metro carriage packed with commuters."
+      },
+      {
+        "file": "shot-metro-2.jpg",
+        "caption": "Back above ground at Plaça de Sant Gos",
+        "alt": "El Metro: rainy neighborhood square outside the metro exit."
+      }
+    ]
+  },
+  "station": {
+    "about": "Main-line concourse underfoot: gleaming station paving, brass tactile guide strips, ticket turnstiles, luggage trolleys and long moving walkways carrying hurried travelers from wall to wall while the clock ticks down.",
+    "shots": [
+      {
+        "file": "shot-station.jpg",
+        "caption": "Riding the moving walkways at L'Estació",
+        "alt": "L'Estació: wide train concourse with brass strips, commuters and moving walkways."
+      },
+      {
+        "file": "shot-station-2.jpg",
+        "caption": "Street-side pipicà outside the terminal",
+        "alt": "L'Estació: the outdoor corner yard beyond the station exit."
+      }
+    ]
+  },
+  "carmel": {
+    "about": "Dusk light over steep Carmel staircases and outdoor hill escalators climbing up to Turó de la Rovira's old concrete anti-aircraft batteries. Sunset blankets, patatas bravas and a full 360-degree view of Barcelona wait at the summit if your human looks up.",
+    "shots": [
+      {
+        "file": "shot-carmel.jpg",
+        "caption": "Climbing the hill escalators at dusk",
+        "alt": "Els Búnquers: golden dusk light across hillside paths and outdoor escalators."
+      },
+      {
+        "file": "shot-carmel-2.jpg",
+        "caption": "Over Barcelona at Búnquers del Carmel",
+        "alt": "Els Búnquers: the stone bunker terrace overlooking the city at sunset."
+      }
+    ]
+  },
+  "reial": {
+    "about": "One step off La Rambla into a palm-framed neoclassical square lit warmly at night under stone arcades, terrace tables, Gaudí's twin dragon lampposts and the Three Graces fountain in the middle.",
+    "shots": [
+      {
+        "file": "shot-reial.jpg",
+        "caption": "Arcades, palms and iron lampposts in Plaça Reial",
+        "alt": "Plaça Reial: arcaded night square lit by ornate iron lampposts beside tall palm trees."
+      },
+      {
+        "file": "shot-reial-2.jpg",
+        "caption": "Round the Three Graces fountain",
+        "alt": "Plaça Reial: the off-leash plaza inside the square."
+      }
+    ]
+  },
+  "cremada": {
+    "about": "Badalona's seafront on the night of Cremada del Dimoni, glowing under overhead gunpowder tracas and beachside festival stalls. Once the tall painted timber Dimoni breaks loose at Platja del Dimoni, sparks and rockets chase you every step back home.",
+    "shots": [
+      {
+        "file": "shot-cremada.jpg",
+        "caption": "Crackling tracas along Badalona's festival promenade",
+        "alt": "La Cremada: festive seafront promenade at night with overhead firework lines."
+      },
+      {
+        "file": "shot-cremada-2.jpg",
+        "caption": "Rockets flying from the rolling Dimoni",
+        "alt": "La Cremada: the painted devil effigy rolling behind the running pair firing rockets."
+      },
+      {
+        "file": "shot-cremada-3.jpg",
+        "caption": "The beach at Platja del Dimoni",
+        "alt": "La Cremada: sandy shoreline clearing at Platja del Dimoni."
+      }
+    ]
+  },
+  "forum": {
+    "about": "Where Avinguda Diagonal meets the Mediterranean edge: an immense coastal esplanade of pale concrete, low sea winds, skate rails and the monumental blue photovoltaic canopy tilting out over the water toward the marina.",
+    "shots": [
+      {
+        "file": "shot-forum.jpg",
+        "caption": "Under the solar canopy at El Fòrum",
+        "alt": "El Fòrum: vast concrete coastal plaza beneath shadows of the tilted solar pergola."
+      },
+      {
+        "file": "shot-forum-2.jpg",
+        "caption": "Esplanada del Fòrum",
+        "alt": "El Fòrum: the open waterfront yard past the esplanade gate."
+      }
+    ]
+  },
+  "diagonal": {
+    "about": "Broad Avinguda Diagonal slicing diagonally straight across the orthogonal grid toward Plaça de les Glòries. Newspaper kiosks anchor the wide stone median while the green tram glides past grass-lined tracks without making a sound.",
+    "shots": [
+      {
+        "file": "shot-diagonal.jpg",
+        "caption": "Crossing the tram rails on La Diagonal",
+        "alt": "La Diagonal: angled diagonal boulevard with grass tram tracks, green tram and kiosks."
+      },
+      {
+        "file": "shot-diagonal-2.jpg",
+        "caption": "Plaça de les Glòries",
+        "alt": "La Diagonal: the open plaza at Glòries."
+      }
+    ]
+  },
+  "blai": {
+    "about": "Poble-sec's favorite evening alley, packed tight from kerb to kerb with wooden pintxo tables, tipped serving trays, street buskers and glowing bar windows leading to Plaça del Sortidor. Every tortilla bite hovering at nose height tests your restraint.",
+    "shots": [
+      {
+        "file": "shot-blai.jpg",
+        "caption": "Evening pintxo terraces down Carrer de Blai",
+        "alt": "Carrer de Blai: narrow pedestrian street at night lined with lit bar terraces and diners."
+      },
+      {
+        "file": "shot-blai-2.jpg",
+        "caption": "End of the alley at Plaça del Sortidor",
+        "alt": "Carrer de Blai: the evening square at Plaça del Sortidor."
+      }
+    ]
+  },
+  "aigues": {
+    "about": "The long dirt contour track along Collserola's flank high over Barcelona, shared amicably—mostly—between jogging owners, squeaking mountain bikes, stone water fountains and shaded mirador benches on the way to Font de la Budellera.",
+    "shots": [
+      {
+        "file": "shot-aigues.jpg",
+        "caption": "Dirt track and cyclists along Carretera de les Aigües",
+        "alt": "La Carretera de les Aigües: wide dirt hillside trail winding past pine trees and cyclists."
+      },
+      {
+        "file": "shot-aigues-2.jpg",
+        "caption": "Shade clearing at Font de la Budellera",
+        "alt": "La Carretera de les Aigües: wooded spring clearing at Font de la Budellera."
+      }
+    ]
+  },
+  "gracia": {
+    "about": "Vila de Gràcia during its August Festa Major, every narrow street dressed wall-to-wall in themed paper arches, string lights and late-night churro counters. Reach Plaça de la Virreina and the masked correfoc devils light their pitchforks to run you straight back through the banners.",
+    "shots": [
+      {
+        "file": "shot-gracia.jpg",
+        "caption": "Handcrafted festival arches over Festa de Gràcia",
+        "alt": "Festa de Gràcia: night street roofed in colorful paper festival banners and lights."
+      },
+      {
+        "file": "shot-gracia-2.jpg",
+        "caption": "Pursued by the correfoc devils",
+        "alt": "Festa de Gràcia: masked fire devils with sparks chasing the pair back through the festival."
+      },
+      {
+        "file": "shot-gracia-3.jpg",
+        "caption": "Plaça de la Virreina",
+        "alt": "Festa de Gràcia: the quiet corner yard beside Plaça de la Virreina."
+      }
+    ]
+  },
+  "horta": {
+    "about": "Barcelona's oldest park tucked against Collserola's foot: tall clipped cypress hedges winding round marble statues, quiet mossy ponds and Eros standing in the heart of the maze before climbing out into the pines.",
+    "shots": [
+      {
+        "file": "shot-horta.jpg",
+        "caption": "Inside the cypress hedges of El Laberint d'Horta",
+        "alt": "El Laberint d'Horta: tall green cypress hedge maze paths around stone plinths."
+      },
+      {
+        "file": "shot-horta-2.jpg",
+        "caption": "Hillside pines past the maze",
+        "alt": "El Laberint d'Horta: forest clearing above the cypress labyrinth."
+      }
+    ]
+  },
+  "molina": {
+    "about": "Fresh Pyrenees snow up the ski piste at La Molina, ducking roaring snow cannons, plump snowmen and tumbling snowballs on the climb toward the mountain chalet. When the tracked snow-groomer slips its brake at the top, it thunders right down the run behind you.",
+    "shots": [
+      {
+        "file": "shot-molina.jpg",
+        "caption": "Snow cannons and ski poles up La Molina",
+        "alt": "La Molina: snowy ski piste lined with pine trees, snowmen and snow cannons."
+      },
+      {
+        "file": "shot-molina-2.jpg",
+        "caption": "Outrunning the runaway snow-groomer",
+        "alt": "La Molina: an orange tracked snow-groomer roaring down the white piste behind the pair."
+      },
+      {
+        "file": "shot-molina-3.jpg",
+        "caption": "Outside Xalet de la Molina",
+        "alt": "La Molina: snowy pine clearing outside the ski chalet."
+      }
+    ]
+  },
+  "port": {
+    "about": "Salt air, iron mooring bollards, startled gulls and fish auction stalls along Barcelona's fishing harbor up to Moll de la Fusta. Guarding the harbor column, the twin bronze lions leap off their plinths in pincer runs until you trip them together across the wharf.",
+    "shots": [
+      {
+        "file": "shot-port.jpg",
+        "caption": "Iron bollards and sea gulls along El Port",
+        "alt": "El Port: harbor wharf promenade with wooden decking, bollards and docked water."
+      },
+      {
+        "file": "shot-port-2.jpg",
+        "caption": "Els Lleons guarding the harbor crane",
+        "alt": "El Port: twin bronze lions charging across the harbor arena around iron bollards."
+      },
+      {
+        "file": "shot-port-3.jpg",
+        "caption": "Moll de la Fusta",
+        "alt": "El Port: the open harbor plaza past the wharf gate."
+      }
+    ]
+  },
+  "espanya": {
+    "about": "Montjuïc's grand monumental staircase by night, climbing past the tall brick towers and the Four Columns into the glowing colored pools and illuminated cascades of the Magic Fountain.",
+    "shots": [
+      {
+        "file": "shot-espanya.jpg",
+        "caption": "Night cascades and Four Columns above Plaça d'Espanya",
+        "alt": "Plaça d'Espanya: illuminated night staircases, columns and glowing fountain pools."
+      },
+      {
+        "file": "shot-espanya-2.jpg",
+        "caption": "Upper terrace plaza",
+        "alt": "Plaça d'Espanya: the open hilltop yard above the fountain."
+      }
+    ]
+  },
+  "santpau": {
+    "about": "Dusk through Domènech i Montaner's modernista hospital complex in El Guinardó: brick pavilions topped with glazed ceramic domes, orange-tree avenues, fragrant purple lavender beds and the tall bell tower chiming across Jardins de Sant Pau.",
+    "shots": [
+      {
+        "file": "shot-santpau.jpg",
+        "caption": "Lavender beds and orange-tree paths at Sant Pau",
+        "alt": "Sant Pau: dusk promenade past lavender beds, citrus trees and ornate modernista pavilions."
+      },
+      {
+        "file": "shot-santpau-2.jpg",
+        "caption": "Jardins de Sant Pau",
+        "alt": "Sant Pau: the walled garden area at the end of the complex."
+      }
+    ]
+  },
+  "poble": {
+    "about": "Montjuïc's walled open-air village built for the 1929 exhibition, threading stone arcades, sunlit ceramic tiles, craft workshops and regional town squares up to the quiet Jardí dels Olivers.",
+    "shots": [
+      {
+        "file": "shot-poble.jpg",
+        "caption": "Artisan squares inside El Poble Espanyol",
+        "alt": "El Poble Espanyol: sunlit stone courtyard lined with outdoor tables and craft workshops."
+      },
+      {
+        "file": "shot-poble-2.jpg",
+        "caption": "Among the olives at Jardí dels Olivers",
+        "alt": "El Poble Espanyol: the olive garden off-leash yard behind the village walls."
+      }
+    ]
+  },
+  "sitges": {
+    "about": "Along the whitewashed seawall promenade in Sitges under a brisk sea breeze, dodging plates of xató, fluttering cafe napkins and sudden breaking waves below the church bells of Sant Bartomeu before hitting the sand of Platja de la Fragata.",
+    "shots": [
+      {
+        "file": "shot-sitges.jpg",
+        "caption": "Seawall terraces and whitewashed fronts in Sitges",
+        "alt": "Sitges: breezy coastal promenade with white walls, beach bar tables and ocean spray."
+      },
+      {
+        "file": "shot-sitges-2.jpg",
+        "caption": "Platja de la Fragata",
+        "alt": "Sitges: wide sandy beach below Sant Bartomeu church."
+      }
+    ]
+  },
+  "aeroport": {
+    "about": "Out along the gleaming glass pier of Terminal 1 at El Prat, gliding on moving walkways past boarding rushes, giant chocolates and spinning baggage carousels toward La Cabina. Trigger the gate alarm and airport security keeps pace behind you the whole pier back.",
+    "shots": [
+      {
+        "file": "shot-aeroport.jpg",
+        "caption": "Moving walkways and baggage rush in L'Aeroport",
+        "alt": "L'Aeroport: airport concourse pier with moving walkways, suitcases and gate queues."
+      },
+      {
+        "file": "shot-aeroport-2.jpg",
+        "caption": "Terminal security hot on the leash",
+        "alt": "L'Aeroport: airport security chasing the dog and human back down the terminal concourse."
+      },
+      {
+        "file": "shot-aeroport-3.jpg",
+        "caption": "Inside the booth yard at La Cabina",
+        "alt": "L'Aeroport: the fenced pet zone outside the airport terminal."
+      }
+    ]
+  },
+  "site": {
+    "about": "A classic Barcelona street-trench work zone squeezed between orange safety nets, traffic cones, wet concrete trenches and a yellow digger blocking half the curb before El Solar opens behind the hoardings.",
+    "shots": [
+      {
+        "file": "shot-site.jpg",
+        "caption": "Cones, wet concrete and the digger in Les Obres",
+        "alt": "Les Obres: torn-up street work site with orange fences, cones and a yellow excavator."
+      },
+      {
+        "file": "shot-site-2.jpg",
+        "caption": "Open dirt lot at El Solar",
+        "alt": "Les Obres: the sandy vacant lot off-leash area behind the site fence."
+      }
+    ]
+  },
+  "ronda": {
+    "about": "The Mediterranean coastal cliff path winding past pine coves and wooden cliff railings high above fishing boats bobbing below. Crosswinds shove a careless pair toward the edge on the way to Cala del Pinar.",
+    "shots": [
+      {
+        "file": "shot-ronda.jpg",
+        "caption": "Pine cliffs and cove railings along Camí de Ronda",
+        "alt": "Camí de Ronda: narrow cliffside coastal trail with wooden railings above turquoise water."
+      },
+      {
+        "file": "shot-ronda-2.jpg",
+        "caption": "Sheltered pines at Cala del Pinar",
+        "alt": "Camí de Ronda: pine-framed coastal yard above Cala del Pinar."
+      }
+    ]
+  },
+  "partit": {
+    "about": "Kickoff night along the wide avenue outside the stadium: blue-and-garnet scarf stalls, mounted police, kids playing keepy-uppy on the corner and rival away supporters marching past on the way to Plaça del Gol.",
+    "shots": [
+      {
+        "file": "shot-partit.jpg",
+        "caption": "Supporters, scarf stalls and match night crowds",
+        "alt": "Dia de Partit: broad night avenue filled with stadium lights, scarf stands and match fans."
+      },
+      {
+        "file": "shot-partit-2.jpg",
+        "caption": "Plaça del Gol",
+        "alt": "Dia de Partit: the lit square beside the stadium gates."
+      }
+    ]
+  },
+  "scrap": {
+    "about": "Stacks of stripped delivery vans, slick oil puddles, sweeping security spotlights, laser beams and dozing gate watchmen inside an industrial yard. Keep your bark buttoned if you want to reach El Pati unseen.",
+    "shots": [
+      {
+        "file": "shot-scrap.jpg",
+        "caption": "Slipping past searchlights and stacked wrecks in La Ferralla",
+        "alt": "La Ferralla: junkyard lanes of wrecked vans, oil pools and sweeping security beams."
+      },
+      {
+        "file": "shot-scrap-2.jpg",
+        "caption": "The back yard at El Pati",
+        "alt": "La Ferralla: the fenced industrial courtyard at El Pati."
+      }
+    ]
+  },
+  "montserrat": {
+    "about": "High along Montserrat's sheer gray conglomerate trail past the yellow Sant Joan funicular crossing and mel i mató honey-and-cheese stands up to the monastery. Watch for loose mountain boulders on the climb and wild goats tearing down the stones on the return run.",
+    "shots": [
+      {
+        "file": "shot-montserrat.jpg",
+        "caption": "Crossing the funicular tracks below Montserrat's needles",
+        "alt": "Montserrat: steep mountain trail overlooking gray rock spires and funicular rails."
+      },
+      {
+        "file": "shot-montserrat-2.jpg",
+        "caption": "Wild goats charging down the trail behind you",
+        "alt": "Montserrat: mountain goats bounding behind the fleeing dog and human down the rocky path."
+      },
+      {
+        "file": "shot-montserrat-3.jpg",
+        "caption": "Monestir de Montserrat plateau",
+        "alt": "Montserrat: the mountain clearing outside Monestir de Montserrat."
+      }
+    ]
+  },
+  "raval": {
+    "about": "Streetlights and tall palms down the broad Rambla del Raval, where a giant plump bronze cat ordinarily naps peacefully on its plinth. Here El Gat springs down to prowl the promenade, scattering pigeons and leaping from awnings until a hard leash fling brings him back to earth.",
+    "shots": [
+      {
+        "file": "shot-raval.jpg",
+        "caption": "Palms and warm streetlamps on Rambla del Raval",
+        "alt": "Rambla del Raval: warm night promenade flanked by palm trees and glowing shopfronts."
+      },
+      {
+        "file": "shot-raval-2.jpg",
+        "caption": "El Gat prowling the promenade",
+        "alt": "Rambla del Raval: the giant bronze cat boss confronting the dog and human under palm trees."
+      },
+      {
+        "file": "shot-raval-3.jpg",
+        "caption": "The open square past the plinth",
+        "alt": "Rambla del Raval: the night plaça at the north end of the rambla."
+      }
+    ]
+  }
+}

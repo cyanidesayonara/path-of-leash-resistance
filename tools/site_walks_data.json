@@ -1,0 +1,4498 @@
+{
+  "boss_walks": [
+    "ciutadella",
+    "guell",
+    "port",
+    "raval"
+  ],
+  "carousel_count": 47,
+  "chapters": [
+    [
+      "tutorial",
+      "barri",
+      "street",
+      "park",
+      "beach",
+      "neteja",
+      "oldtown",
+      "montjuic",
+      "market",
+      "rain",
+      "besos",
+      "ciutadella"
+    ],
+    [
+      "llevant",
+      "eixample",
+      "tibidabo",
+      "vet",
+      "sarria",
+      "trail",
+      "angels",
+      "spook",
+      "boars",
+      "guell"
+    ],
+    [
+      "superilla",
+      "metro",
+      "station",
+      "carmel",
+      "reial",
+      "cremada",
+      "forum"
+    ],
+    [
+      "diagonal",
+      "blai",
+      "aigues",
+      "gracia",
+      "horta",
+      "molina",
+      "port"
+    ],
+    [
+      "espanya",
+      "santpau",
+      "poble",
+      "sitges",
+      "aeroport",
+      "site",
+      "ronda",
+      "partit",
+      "scrap",
+      "montserrat",
+      "raval"
+    ]
+  ],
+  "chase_walks": [
+    "neteja",
+    "besos",
+    "vet",
+    "boars",
+    "gracia",
+    "cremada",
+    "aeroport",
+    "molina",
+    "montserrat"
+  ],
+  "count": 46,
+  "dogs": [
+    {
+      "accel_mult": 1.0,
+      "breed": "Mongrel",
+      "desc": "Jack of all trades, master of sniffs",
+      "gap_mult": 1.0,
+      "herd_mult": 1.0,
+      "id": "millie",
+      "mass_mult": 1.0,
+      "muck_mult": 1.0,
+      "name": "Millie",
+      "plant_mult": 1.0,
+      "reel_mult": 1.0,
+      "speed_mult": 1.0,
+      "stars": 0,
+      "trait": "Balanced"
+    },
+    {
+      "accel_mult": 1.2,
+      "breed": "Galgo",
+      "desc": "A lightning sighthound who hates digging in",
+      "gap_mult": 1.0,
+      "herd_mult": 1.0,
+      "id": "pipa",
+      "mass_mult": 1.0,
+      "muck_mult": 1.0,
+      "name": "Pipa",
+      "plant_mult": 0.55,
+      "reel_mult": 1.0,
+      "speed_mult": 1.2,
+      "stars": 15,
+      "trait": "Fast, weak plant"
+    },
+    {
+      "accel_mult": 0.84,
+      "breed": "French bulldog",
+      "desc": "A stubborn little tank who refuses to budge",
+      "gap_mult": 1.0,
+      "herd_mult": 1.0,
+      "id": "mochi",
+      "mass_mult": 1.0,
+      "muck_mult": 1.0,
+      "name": "Mochi",
+      "plant_mult": 1.7,
+      "reel_mult": 1.0,
+      "speed_mult": 0.84,
+      "stars": 25,
+      "trait": "Plants hard, slow"
+    },
+    {
+      "accel_mult": 1.05,
+      "breed": "Gos d'atura",
+      "desc": "A shaggy sheepdog who steers your human with ease",
+      "gap_mult": 1.0,
+      "herd_mult": 1.45,
+      "id": "bruna",
+      "mass_mult": 1.0,
+      "muck_mult": 1.6,
+      "name": "Bruna",
+      "plant_mult": 1.0,
+      "reel_mult": 1.0,
+      "speed_mult": 1.0,
+      "stars": 35,
+      "trait": "Herds your human, collects muck"
+    },
+    {
+      "accel_mult": 1.25,
+      "breed": "Chihuahua",
+      "desc": "A tiny chihuahua who slips between obstacles and reels in fast",
+      "gap_mult": 0.57,
+      "herd_mult": 1.0,
+      "id": "tito",
+      "mass_mult": 0.45,
+      "muck_mult": 1.0,
+      "name": "Tito",
+      "plant_mult": 0.35,
+      "reel_mult": 1.65,
+      "speed_mult": 1.1,
+      "stars": 45,
+      "trait": "Slips through gaps, easily reeled in"
+    }
+  ],
+  "training": {
+    "cost": 40,
+    "max_points": 5,
+    "stats": [
+      "speed",
+      "plant",
+      "herd",
+      "agility"
+    ]
+  },
+  "walks": {
+    "aeroport": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "gracia",
+      "chase_gate_name": "Festa de Gràcia",
+      "chase_warning": "AIRPORT SECURITY! RUN FOR IT!",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "LA CABINA",
+      "gloss": "Airport security on your tail",
+      "gloss_ca": "La Terminal 1, amb seguretat darrere",
+      "gloss_es": "La Terminal 1, con seguridad detrás",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "walkway",
+          "text": "Ride the moving walkway end to end"
+        },
+        {
+          "id": "gate_rush",
+          "text": "Steer clear of the airport gate rush"
+        },
+        {
+          "id": "luggage_dodge",
+          "text": "Dodge 3 tumbling suitcases"
+        },
+        {
+          "id": "security_clean",
+          "text": "Get home without a suitcase clipping you"
+        },
+        {
+          "id": "carousel_bark",
+          "text": "Bark at the rotating baggage carousel"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the giant duty-free chocolate box"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "aeroport",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "L'Aeroport",
+      "prize_text": "Snatch the giant duty-free chocolate box",
+      "sign_material": "bagtags",
+      "star_gate": 47,
+      "weather": "clear"
+    },
+    "aigues": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "clearing",
+      "gate_text": "FONT DE LA BUDELLERA",
+      "gloss": "The hillside hike",
+      "gloss_ca": "La caminada pel vessant",
+      "gloss_es": "La caminata por la ladera",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "bikes",
+          "text": "Let 3 bikes squeak past your human"
+        },
+        {
+          "id": "view",
+          "text": "Get your human to look up at the view"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Nab the runner's banana off the mirador bench"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "aigues",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "La Carretera de les Aigües",
+      "prize_text": "Nab the runner's banana off the mirador bench",
+      "sign_material": "pinecones",
+      "star_gate": 39,
+      "weather": "clear"
+    },
+    "angels": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "vet",
+      "chase_gate_name": "El Veterinari",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "CLAUSTRE DE LES LLETRES",
+      "gloss": "The skate plaza by the museum",
+      "gloss_ca": "La plaça dels patinadors",
+      "gloss_es": "La plaza de los patinadores",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "ledge",
+          "text": "Grind a museum ledge"
+        },
+        {
+          "id": "decks",
+          "text": "Sniff 3 skateboards on the ground"
+        },
+        {
+          "id": "lamps",
+          "text": "Wrap the leash around 3 lamps"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the churro bag off the plaza ledge"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "angels",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Els Àngels",
+      "prize_text": "Snatch the churro bag off the plaza ledge",
+      "sign_material": "wheels",
+      "star_gate": 22,
+      "weather": "clear"
+    },
+    "barri": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "",
+      "chase_gate_name": "",
+      "chase_warning": "",
+      "clock_target": 165,
+      "clock_text": "2:45",
+      "freedom_kind": "yard",
+      "gate_text": "PIPICÀ",
+      "gloss": "The little park down your street",
+      "gloss_ca": "El parquet del final del teu carrer",
+      "gloss_es": "El parquecito al final de tu calle",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "hi",
+          "text": "Say hello to 3 dogs"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Get the ball back from under the ping-pong table"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:45)"
+        }
+      ],
+      "hour": "day",
+      "id": "barri",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Barri",
+      "prize_text": "Get the ball back from under the ping-pong table",
+      "sign_material": "leaves",
+      "star_gate": 0,
+      "weather": "clear"
+    },
+    "beach": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "",
+      "chase_gate_name": "",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DE L'HOTEL",
+      "gloss": "The beachfront promenade",
+      "gloss_ca": "El passeig de la platja",
+      "gloss_es": "El paseo de la playa",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "save",
+          "text": "Haul your human clear 2 times"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Swim out for the ball"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "dawn",
+      "id": "beach",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Passeig Marítim",
+      "prize_text": "Swim out for the ball",
+      "sign_material": "sand",
+      "star_gate": 3,
+      "weather": "wind"
+    },
+    "besos": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "neteja",
+      "chase_gate_name": "La Neteja",
+      "chase_warning": "THE RIVER'S UP! HEAD FOR HOME",
+      "clock_target": 165,
+      "clock_text": "2:45",
+      "freedom_kind": "clearing",
+      "gate_text": "EL PRAT",
+      "gloss": "The river park that floods",
+      "gloss_ca": "El parc fluvial que s'inunda",
+      "gloss_es": "El parque fluvial que se inunda",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "shallows",
+          "text": "Splash through the shallows 4 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Fetch the ball from beside the path"
+        },
+        {
+          "id": "floodgap",
+          "text": "Keep the deep flood front a leash length away"
+        },
+        {
+          "id": "dry",
+          "text": "Get your human home mostly dry"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:45)"
+        }
+      ],
+      "hour": "day",
+      "id": "besos",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "El Besòs",
+      "prize_text": "Fetch the ball from beside the path",
+      "sign_material": "pebbles",
+      "star_gate": 14,
+      "weather": "storm"
+    },
+    "blai": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DEL SORTIDOR",
+      "gloss": "Pintxos, and food on the floor",
+      "gloss_ca": "Pintxos, i menjar per terra",
+      "gloss_es": "Pintxos, y comida por el suelo",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "leave_it",
+          "text": "Leave it 3 times when told"
+        },
+        {
+          "id": "tray",
+          "text": "Catch a pintxo off a tipping tray"
+        },
+        {
+          "id": "beg",
+          "text": "Wait by a terrace or a group until someone shares"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the tortilla pintxo off the bar's window"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "night",
+      "id": "blai",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Carrer de Blai",
+      "prize_text": "Snatch the tortilla pintxo off the bar's window",
+      "sign_material": "pintxos",
+      "star_gate": 39,
+      "weather": "clear"
+    },
+    "boars": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "vet",
+      "chase_gate_name": "El Veterinari",
+      "chase_warning": "WILD BOARS! WATCH OUT!",
+      "clock_target": 170,
+      "clock_text": "2:50",
+      "freedom_kind": "yard",
+      "gate_text": "EL MIRADOR",
+      "gloss": "A wild Collserola downhill",
+      "gloss_ca": "La baixada salvatge per Collserola",
+      "gloss_es": "El descenso salvaje por Collserola",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "boar",
+          "text": "Keep the wild boars a leash length away"
+        },
+        {
+          "id": "mud",
+          "text": "Charge through 3 boar wallows"
+        },
+        {
+          "id": "oaks",
+          "text": "Pole-swing around 2 holm oaks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Find the golden acorn on the trail"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:50)"
+        }
+      ],
+      "hour": "day",
+      "id": "boars",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "Els Senglars",
+      "prize_text": "Find the golden acorn on the trail",
+      "sign_material": "pipes",
+      "star_gate": 25,
+      "weather": "clear"
+    },
+    "carmel": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 190,
+      "clock_text": "3:10",
+      "freedom_kind": "yard",
+      "gate_text": "BÚNQUERS DEL CARMEL",
+      "gloss": "The sunset lookout over the city",
+      "gloss_ca": "El mirador del capvespre",
+      "gloss_es": "El mirador del atardecer",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "escalator",
+          "text": "Ride the outdoor escalators up the hill"
+        },
+        {
+          "id": "view",
+          "text": "Get your human to look up at the view"
+        },
+        {
+          "id": "bunker",
+          "text": "Wrap the leash around an anti-aircraft gun"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the bravas from the sunset picnic blanket"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:10)"
+        }
+      ],
+      "hour": "dusk",
+      "id": "carmel",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Els Búnquers",
+      "prize_text": "Snatch the bravas from the sunset picnic blanket",
+      "sign_material": "rubble",
+      "star_gate": 33,
+      "weather": "clear"
+    },
+    "ciutadella": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "besos",
+      "chase_gate_name": "El Besòs",
+      "chase_warning": "",
+      "clock_target": 200,
+      "clock_text": "3:20",
+      "freedom_kind": "yard",
+      "gate_text": "ÀREA DE GOSSOS",
+      "gloss": "The old citadel and its mammoth",
+      "gloss_ca": "L'antiga ciutadella i el seu mamut",
+      "gloss_es": "La vieja ciudadela y su mamut",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "mamut_dodge",
+          "text": "Dodge the mammoth 4 times"
+        },
+        {
+          "id": "mamut_lake",
+          "text": "Lead the mammoth's charge into the lake"
+        },
+        {
+          "id": "mamut_trip",
+          "text": "Trip the mammoth with the leash"
+        },
+        {
+          "id": "parakeets",
+          "text": "Shoo the parakeets off your human's croissant"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Grab the rower's dropped sandwich"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:20)"
+        }
+      ],
+      "hour": "day",
+      "id": "ciutadella",
+      "is_boss": true,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "boss",
+      "lessons": [],
+      "name": "La Ciutadella",
+      "prize_text": "Grab the rower's dropped sandwich",
+      "sign_material": "feathers",
+      "star_gate": 15,
+      "weather": "clear"
+    },
+    "cremada": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "THE DIMONI IS LOOSE! RUN!",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "beach",
+      "gate_text": "PLATJA DEL DIMONI",
+      "gloss": "Badalona's devil-burning night",
+      "gloss_ca": "La nit que Badalona crema el Dimoni",
+      "gloss_es": "Badalona quema a su Dimoni",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "traca",
+          "text": "Pull your human clear of the traca"
+        },
+        {
+          "id": "dimoni_dodge",
+          "text": "Dodge 4 of the Dimoni's rockets"
+        },
+        {
+          "id": "dimoni_clean",
+          "text": "Get home without a rocket hitting you"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Grab the dropped sparkler"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "night",
+      "id": "cremada",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "La Cremada",
+      "prize_text": "Grab the dropped sparkler",
+      "sign_material": "casings",
+      "star_gate": 36,
+      "weather": "clear"
+    },
+    "diagonal": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DE LES GLÒRIES",
+      "gloss": "The avenue that cuts the grid",
+      "gloss_ca": "L'avinguda que talla la quadrícula",
+      "gloss_es": "La avenida que corta la cuadrícula",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "tram_dodge",
+          "text": "Dodge the tram 3 times"
+        },
+        {
+          "id": "tram_clean",
+          "text": "Get home without the tram bumping you"
+        },
+        {
+          "id": "kiosk",
+          "text": "Bark at the newspaper kiosk"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the bocadillo off the bench"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "diagonal",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "La Diagonal",
+      "prize_text": "Snatch the bocadillo off the bench",
+      "sign_material": "papers",
+      "star_gate": 38,
+      "weather": "clear"
+    },
+    "eixample": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "besos",
+      "chase_gate_name": "El Besòs",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "INTERIOR D'ILLA",
+      "gloss": "The grid of cut corners",
+      "gloss_ca": "La quadrícula dels xamfrans",
+      "gloss_es": "La cuadrícula de chaflanes",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "corners",
+          "text": "Mark the lamps on 3 cut corners"
+        },
+        {
+          "id": "tour",
+          "text": "Get photographed by a tour group"
+        },
+        {
+          "id": "pond",
+          "text": "Paddle in the pond by the basilica"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the croissant off the terrace table"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "eixample",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "L'Eixample",
+      "prize_text": "Snatch the croissant off the terrace table",
+      "sign_material": "planeballs",
+      "star_gate": 16,
+      "weather": "clear"
+    },
+    "espanya": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "PLAÇA D'ESPANYA",
+      "gloss": "Magic fountains below the palace",
+      "gloss_ca": "Les fonts màgiques sota el palau",
+      "gloss_es": "Las fuentes mágicas bajo el palacio",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "bubble",
+          "text": "Pop giant soap bubbles from the street performer"
+        },
+        {
+          "id": "magic_fountain",
+          "text": "Splash through the Magic Fountain basin"
+        },
+        {
+          "id": "columns",
+          "text": "Wrap the leash around the Four Columns"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the crystal finial off the cascade"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "night",
+      "id": "espanya",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Plaça d'Espanya",
+      "prize_text": "Snatch the crystal finial off the cascade",
+      "sign_material": "cascade",
+      "star_gate": 45,
+      "weather": "clear"
+    },
+    "forum": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "ESPLANADA DEL FÒRUM",
+      "gloss": "The solar pergola by the sea",
+      "gloss_ca": "La pèrgola solar vora el mar",
+      "gloss_es": "La pérgola solar junto al mar",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "skater",
+          "text": "Dodge or cheer the esplanade skater"
+        },
+        {
+          "id": "pergola",
+          "text": "Sprint under the pergola 3 times"
+        },
+        {
+          "id": "rails",
+          "text": "Grind skate rails for 6 style points"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the solar trophy off the marina podium"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "forum",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Fòrum",
+      "prize_text": "Snatch the solar trophy off the marina podium",
+      "sign_material": "solar",
+      "star_gate": 37,
+      "weather": "wind"
+    },
+    "gracia": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
+      "chase_warning": "CORREFOC! RUN FROM THE FIRE DEVILS!",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "yard",
+      "gate_text": "PLAÇA DE LA VIRREINA",
+      "gloss": "A festival of decorated streets",
+      "gloss_ca": "La festa dels carrers guarnits",
+      "gloss_es": "La fiesta de las calles adornadas",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "correfoc",
+          "text": "Keep the fire devils a leash length away"
+        },
+        {
+          "id": "churros",
+          "text": "Sit pretty at the churro stand"
+        },
+        {
+          "id": "decor",
+          "text": "Zoom under 3 festival arches"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Claim the festival award banner before the plaça"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "night",
+      "id": "gracia",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "Festa de Gràcia",
+      "prize_text": "Claim the festival award banner before the plaça",
+      "sign_material": "tickets",
+      "star_gate": 40,
+      "weather": "clear"
+    },
+    "guell": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "clearing",
+      "gate_text": "EL CALVARI",
+      "gloss": "Mosaics and stone columns",
+      "gloss_ca": "Trencadís i columnes de pedra",
+      "gloss_es": "Mosaicos y columnas de piedra",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "drac_dodge",
+          "text": "Dodge the dragon 4 times"
+        },
+        {
+          "id": "drac_column",
+          "text": "Wind the dragon round a column"
+        },
+        {
+          "id": "drac_trip",
+          "text": "Trip the dragon with the leash"
+        },
+        {
+          "id": "fling",
+          "text": "Tetherball your human around a pole"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Fetch the frisbee"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "guell",
+      "is_boss": true,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "boss",
+      "lessons": [],
+      "name": "El Mosaic",
+      "prize_text": "Fetch the frisbee",
+      "sign_material": "trencadis",
+      "star_gate": 27,
+      "weather": "clear"
+    },
+    "horta": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "clearing",
+      "gate_text": "COLLSEROLA",
+      "gloss": "The cypress maze",
+      "gloss_ca": "El laberint de xiprers",
+      "gloss_es": "El laberint de cipreses",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "fling",
+          "text": "Tetherball your human around a pole"
+        },
+        {
+          "id": "eros",
+          "text": "Steer your human round Eros in the maze"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the gardener's bocadillo off his barrow"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "horta",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Laberint d'Horta",
+      "prize_text": "Snatch the gardener's bocadillo off his barrow",
+      "sign_material": "topiary",
+      "star_gate": 41,
+      "weather": "drizzle"
+    },
+    "llevant": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "besos",
+      "chase_gate_name": "El Besòs",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "beach",
+      "gate_text": "PLATJA DELS GOSSOS",
+      "gloss": "The dog beach at the coast's end",
+      "gloss_ca": "La platja dels gossos de la costa",
+      "gloss_es": "La playa de perros de la costa",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "save",
+          "text": "Haul your human clear 2 times"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Swim out for the ball"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "llevant",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Platja de Llevant",
+      "prize_text": "Swim out for the ball",
+      "sign_material": "shells",
+      "star_gate": 15,
+      "weather": "wind"
+    },
+    "market": {
+      "carry_text": "Run the oranges to the far stall",
+      "chapter": 1,
+      "chase_gate": "neteja",
+      "chase_gate_name": "La Neteja",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA",
+      "gloss": "The market hall",
+      "gloss_ca": "El mercat cobert",
+      "gloss_es": "El mercado cubierto",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "zoom",
+          "text": "Run yourself tired"
+        },
+        {
+          "id": "carry",
+          "text": "Run the oranges to the far stall"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Grab the churro off the wet floor"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "day",
+      "id": "market",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Mercat",
+      "prize_text": "Grab the churro off the wet floor",
+      "sign_material": "fruit",
+      "star_gate": 11,
+      "weather": "clear"
+    },
+    "metro": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DE SANT GOS",
+      "gloss": "Rush hour, one stop on the metro",
+      "gloss_ca": "Hora punta, una parada de metro",
+      "gloss_es": "Hora punta, una parada de metro",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "turnstile",
+          "text": "Slip under a turnstile"
+        },
+        {
+          "id": "surge",
+          "text": "Dig in against the rush-hour crowd"
+        },
+        {
+          "id": "doors_clean",
+          "text": "Get home without the doors catching the leash"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the croissant off the platform bench"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "day",
+      "id": "metro",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Metro",
+      "prize_text": "Snatch the croissant off the platform bench",
+      "sign_material": "brollies",
+      "star_gate": 31,
+      "weather": "rain"
+    },
+    "molina": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "aeroport",
+      "chase_gate_name": "L'Aeroport",
+      "chase_warning": "THE GROOMER'S BRAKE IS OFF! RUN!",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "clearing",
+      "gate_text": "XALET DE LA MOLINA",
+      "gloss": "Ski slopes and a runaway groomer",
+      "gloss_ca": "La pista i la trepitjaneu desbocada",
+      "gloss_es": "La pista y la pisanieves desbocada",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "cannon_dodge",
+          "text": "Keep clear of 2 snow cannon blasts"
+        },
+        {
+          "id": "snowball_dodge",
+          "text": "Dodge 3 rolling snowballs"
+        },
+        {
+          "id": "groomer_clean",
+          "text": "Get home without a snowball hitting"
+        },
+        {
+          "id": "snowman_bark",
+          "text": "Bark the snowman's nose off"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the botifarra off the xalet's grill"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "molina",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "La Molina",
+      "prize_text": "Snatch the botifarra off the xalet's grill",
+      "sign_material": "snowflakes",
+      "star_gate": 42,
+      "weather": "snow"
+    },
+    "montjuic": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "neteja",
+      "chase_gate_name": "La Neteja",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "placa",
+      "gate_text": "EL CASTELL",
+      "gloss": "The winding climb to the castle",
+      "gloss_ca": "La pujada serpentejant al castell",
+      "gloss_es": "La subida serpenteante al castillo",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "estel",
+          "text": "Visit L'Estel gallery and claim the star bone"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "cable",
+          "text": "Find a ticket and ride the telefèric"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Fetch the frisbee"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "day",
+      "id": "montjuic",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Montjuïc",
+      "prize_text": "Fetch the frisbee",
+      "sign_material": "cactus",
+      "star_gate": 9,
+      "weather": "clear"
+    },
+    "montserrat": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "aeroport",
+      "chase_gate_name": "L'Aeroport",
+      "chase_warning": "WILD GOATS INCOMING! WATCH FOR BOULDERS!",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "clearing",
+      "gate_text": "MONESTIR DE MONTSERRAT",
+      "gloss": "Mountain paths and loose goats",
+      "gloss_ca": "Camins de muntanya i cabres soltes",
+      "gloss_es": "Senderos de montaña y cabras sueltas",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "funicular_dodge",
+          "text": "Wait out or dodge the Sant Joan funicular crossing"
+        },
+        {
+          "id": "boulder_dodge",
+          "text": "Dodge 3 rolling boulders"
+        },
+        {
+          "id": "goat_clean",
+          "text": "Get home without getting rammed"
+        },
+        {
+          "id": "mato_bark",
+          "text": "Bark at the mel i mató cheese stall"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the artisanal honey and mato cheese jar"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "day",
+      "id": "montserrat",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "Montserrat",
+      "prize_text": "Snatch the artisanal honey and mato cheese jar",
+      "sign_material": "rosemary",
+      "star_gate": 52,
+      "weather": "clear"
+    },
+    "neteja": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "",
+      "chase_gate_name": "",
+      "chase_warning": "STREET SWEEPER! RUN!",
+      "clock_target": 165,
+      "clock_text": "2:45",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA",
+      "gloss": "The city's dawn clean-up",
+      "gloss_ca": "La ciutat neta a trenc d'alba",
+      "gloss_es": "La limpieza de la ciudad al amanecer",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "hi",
+          "text": "Say hello to 3 dogs"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Fetch the frisbee"
+        },
+        {
+          "id": "outrun",
+          "text": "Keep the sweeper a leash length away"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:45)"
+        }
+      ],
+      "hour": "dawn",
+      "id": "neteja",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "La Neteja",
+      "prize_text": "Fetch the frisbee",
+      "sign_material": "suds",
+      "star_gate": 4,
+      "weather": "clear"
+    },
+    "oldtown": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "neteja",
+      "chase_gate_name": "La Neteja",
+      "chase_warning": "",
+      "clock_target": 170,
+      "clock_text": "2:50",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA",
+      "gloss": "The old town alleys",
+      "gloss_ca": "Els carrerons del barri vell",
+      "gloss_es": "Los callejones del casco antiguo",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "cats",
+          "text": "Chase off 3 cats on the walls"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "somni",
+          "text": "Visit El Somni gallery and claim the dream bone"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Steal the sardine under the cat's ledge"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:50)"
+        }
+      ],
+      "hour": "day",
+      "id": "oldtown",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Gòtic",
+      "prize_text": "Steal the sardine under the cat's ledge",
+      "sign_material": "setts",
+      "star_gate": 7,
+      "weather": "clear"
+    },
+    "park": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "",
+      "chase_gate_name": "",
+      "chase_warning": "",
+      "clock_target": 170,
+      "clock_text": "2:50",
+      "freedom_kind": "yard",
+      "gate_text": "PIPICÀ",
+      "gloss": "The city park",
+      "gloss_ca": "El parc de la ciutat",
+      "gloss_es": "El parque de la ciudad",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "hi",
+          "text": "Say hello to 3 dogs"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Fetch the ball from the middle of the pond"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:50)"
+        }
+      ],
+      "hour": "day",
+      "id": "park",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Parc",
+      "prize_text": "Fetch the ball from the middle of the pond",
+      "sign_material": "flowerbed",
+      "star_gate": 2,
+      "weather": "clear"
+    },
+    "partit": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DEL GOL",
+      "gloss": "Match day at the stadium",
+      "gloss_ca": "Dia de partit a l'estadi",
+      "gloss_es": "Día de partido en el estadio",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "march",
+          "text": "Keep your human out of the away march"
+        },
+        {
+          "id": "scarf",
+          "text": "Bring the lost scarf back"
+        },
+        {
+          "id": "kickabout",
+          "text": "Score a goal in the kids' street game"
+        },
+        {
+          "id": "fulltime",
+          "text": "Beat the crowd home"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the sausage from under the police horses"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "night",
+      "id": "partit",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Dia de Partit",
+      "prize_text": "Snatch the sausage from under the police horses",
+      "sign_material": "scarf",
+      "star_gate": 48,
+      "weather": "clear"
+    },
+    "poble": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "JARDÍ DELS OLIVERS",
+      "gloss": "A walled village of copied towns",
+      "gloss_ca": "Un poble emmurallat de còpies",
+      "gloss_es": "Un pueblo amurallado de copias",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "columns_poble",
+          "text": "Wrap the leash round 4 columns"
+        },
+        {
+          "id": "workshops",
+          "text": "Sniff 3 craft workshops"
+        },
+        {
+          "id": "watering",
+          "text": "Shake off under a watering can"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Swipe the glass porron off the table"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "poble",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Poble Espanyol",
+      "prize_text": "Swipe the glass porron off the table",
+      "sign_material": "azulejos",
+      "star_gate": 46,
+      "weather": "clear"
+    },
+    "port": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "placa",
+      "gate_text": "MOLL DE LA FUSTA",
+      "gloss": "The fishing wharf",
+      "gloss_ca": "El moll dels pescadors",
+      "gloss_es": "El muelle de los pescadores",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "gulls",
+          "text": "Startle 3 harbor seagulls into flight"
+        },
+        {
+          "id": "lleons_pincer",
+          "text": "Steer clear of the lions' pincer charge"
+        },
+        {
+          "id": "lleons_bump",
+          "text": "Trick the twin lions into colliding"
+        },
+        {
+          "id": "bollard",
+          "text": "Wrap the leash around an iron mooring bollard"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the prize catch from the auction stall"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "day",
+      "id": "port",
+      "is_boss": true,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "boss",
+      "lessons": [],
+      "name": "El Port",
+      "prize_text": "Snatch the prize catch from the auction stall",
+      "sign_material": "rope",
+      "star_gate": 43,
+      "weather": "clear"
+    },
+    "rain": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "neteja",
+      "chase_gate_name": "La Neteja",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "yard",
+      "gate_text": "EL PORXO",
+      "gloss": "A shopping street in a downpour",
+      "gloss_ca": "Un carrer de botigues sota el xàfec",
+      "gloss_es": "Calle de tiendas bajo el chaparrón",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "dry",
+          "text": "Get your human home mostly dry"
+        },
+        {
+          "id": "splash",
+          "text": "Splash through 4 puddles at speed"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the toy off the storm drain"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "day",
+      "id": "rain",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Diluvi",
+      "prize_text": "Snatch the toy off the storm drain",
+      "sign_material": "puddle",
+      "star_gate": 13,
+      "weather": "rain"
+    },
+    "raval": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "gracia",
+      "chase_gate_name": "Festa de Gràcia",
+      "chase_warning": "",
+      "clock_target": 210,
+      "clock_text": "3:30",
+      "freedom_kind": "placa",
+      "gate_text": "RAMBLA DEL RAVAL",
+      "gloss": "Where the big bronze cat sits",
+      "gloss_ca": "On seu el gat gros de bronze",
+      "gloss_es": "Donde se sienta el gato de bronce",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "clothesline",
+          "text": "Catch pouncing El Gat in a taut leash"
+        },
+        {
+          "id": "pigeons",
+          "text": "Scatter 10 pigeons"
+        },
+        {
+          "id": "swat",
+          "text": "Dodge 3 paw swats"
+        },
+        {
+          "id": "smash",
+          "text": "Make El Gat land on a palm or a table"
+        },
+        {
+          "id": "pummel",
+          "text": "Fling your human into El Gat"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the yarn from the overturned kiosk"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:30)"
+        }
+      ],
+      "hour": "night",
+      "id": "raval",
+      "is_boss": true,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "boss",
+      "lessons": [],
+      "name": "Rambla del Raval",
+      "prize_text": "Snatch the yarn from the overturned kiosk",
+      "sign_material": "pegs",
+      "star_gate": 53,
+      "weather": "clear"
+    },
+    "reial": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 170,
+      "clock_text": "2:50",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA REIAL",
+      "gloss": "The arcaded square off La Rambla",
+      "gloss_ca": "La plaça porticada de la Rambla",
+      "gloss_es": "La plaza porticada junto a La Rambla",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "colom",
+          "text": "Visit El Colom gallery and claim the cubist bone"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "gaudi",
+          "text": "Wrap the leash around a Gaudí dragon lamppost"
+        },
+        {
+          "id": "fountain",
+          "text": "Drink fresh water from the Three Graces fountain"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the hot churros from the terrace table"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:50)"
+        }
+      ],
+      "hour": "night",
+      "id": "reial",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Plaça Reial",
+      "prize_text": "Snatch the hot churros from the terrace table",
+      "sign_material": "fronds",
+      "star_gate": 35,
+      "weather": "clear"
+    },
+    "ronda": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "yard",
+      "gate_text": "CALA DEL PINAR",
+      "gloss": "The cliff path",
+      "gloss_ca": "El camí de ronda pels penya-segats",
+      "gloss_es": "El camino de ronda entre acantilados",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "ronda_gust",
+          "text": "Hold the line on the landward side through a gust"
+        },
+        {
+          "id": "ronda_coves",
+          "text": "Sniff along the rail over 2 coves"
+        },
+        {
+          "id": "ronda_boats",
+          "text": "Bark at 2 fishing boats below"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the anchovy bocadillo off the wall"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "day",
+      "id": "ronda",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Camí de Ronda",
+      "prize_text": "Snatch the anchovy bocadillo off the wall",
+      "sign_material": "floats",
+      "star_gate": 47,
+      "weather": "wind"
+    },
+    "santpau": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "JARDINS DE SANT PAU",
+      "gloss": "The modernista hospital",
+      "gloss_ca": "L'hospital modernista",
+      "gloss_es": "El hospital modernista",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "santpau_tour",
+          "text": "Cheer the school tour group with a bark"
+        },
+        {
+          "id": "santpau_chime",
+          "text": "Howl along with the clock tower's chime"
+        },
+        {
+          "id": "santpau_lavender",
+          "text": "Dash through 3 lavender beds"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the candied orange off the garden bench"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "dusk",
+      "id": "santpau",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Sant Pau",
+      "prize_text": "Snatch the candied orange off the garden bench",
+      "sign_material": "oranges",
+      "star_gate": 46,
+      "weather": "clear"
+    },
+    "sarria": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "vet",
+      "chase_gate_name": "El Veterinari",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DE SANT VICENÇ",
+      "gloss": "The village the city swallowed",
+      "gloss_ca": "El poble que s'empassà la ciutat",
+      "gloss_es": "El pueblo que se tragó la ciudad",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "bells",
+          "text": "Howl along with the church bells"
+        },
+        {
+          "id": "bread",
+          "text": "Sniff the bread at 2 bakeries"
+        },
+        {
+          "id": "gardener",
+          "text": "Bark good morning to the balcony gardener"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Pinch the bag of croissants on the market step"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "dawn",
+      "id": "sarria",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Sarrià",
+      "prize_text": "Pinch the bag of croissants on the market step",
+      "sign_material": "pastries",
+      "star_gate": 21,
+      "weather": "clear"
+    },
+    "scrap": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "lot",
+      "gate_text": "EL PATI",
+      "gloss": "The junkyard",
+      "gloss_ca": "El desballestament",
+      "gloss_es": "El desguace",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "ghost",
+          "text": "Cross the yard without waking anyone"
+        },
+        {
+          "id": "unseen",
+          "text": "Never get spotted"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Steal the bone from under the guard's nose"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "day",
+      "id": "scrap",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "La Ferralla",
+      "prize_text": "Steal the bone from under the guard's nose",
+      "sign_material": "plate",
+      "star_gate": 49,
+      "weather": "clear"
+    },
+    "site": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 170,
+      "clock_text": "2:50",
+      "freedom_kind": "lot",
+      "gate_text": "EL SOLAR",
+      "gloss": "The work site",
+      "gloss_ca": "El carrer en obres",
+      "gloss_es": "La calle en obras",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "close",
+          "text": "Scrape past traffic 3 times"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Fish the trowel out of the wet cement"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:50)"
+        }
+      ],
+      "hour": "day",
+      "id": "site",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Les Obres",
+      "prize_text": "Fish the trowel out of the wet cement",
+      "sign_material": "cones",
+      "star_gate": 47,
+      "weather": "clear"
+    },
+    "sitges": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "beach",
+      "gate_text": "PLATJA DE LA FRAGATA",
+      "gloss": "The town by the sea",
+      "gloss_ca": "El poble arran de mar",
+      "gloss_es": "El pueblo junto al mar",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "dry",
+          "text": "Get your human home mostly dry"
+        },
+        {
+          "id": "wave_dodge",
+          "text": "Pull your human clear of the breaking wave"
+        },
+        {
+          "id": "napkin",
+          "text": "Catch 3 flying napkins in the wind"
+        },
+        {
+          "id": "punta_bark",
+          "text": "Ring the bell at Sant Bartomeu"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the plate of xató off the beach bar"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "sitges",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Sitges",
+      "prize_text": "Snatch the plate of xató off the beach bar",
+      "sign_material": "seaglass",
+      "star_gate": 47,
+      "weather": "wind"
+    },
+    "spook": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "vet",
+      "chase_gate_name": "El Veterinari",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA",
+      "gloss": "The chestnut festival",
+      "gloss_ca": "La festa de les castanyes",
+      "gloss_es": "La fiesta de las castañas",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "tummy",
+          "text": "Walk past every chocolate"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Get the panellet without eating the candy"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "night",
+      "id": "spook",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "La Castanyada",
+      "prize_text": "Get the panellet without eating the candy",
+      "sign_material": "chestnuts",
+      "star_gate": 23,
+      "weather": "clear"
+    },
+    "station": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 170,
+      "clock_text": "2:50",
+      "freedom_kind": "yard",
+      "gate_text": "PIPICÀ",
+      "gloss": "Rush hour at the train station",
+      "gloss_ca": "Hora punta a l'estació de tren",
+      "gloss_es": "Hora punta en la estación de tren",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "walkway",
+          "text": "Ride the moving walkway end to end"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Grab the sandwich off the moving walkway"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:50)"
+        }
+      ],
+      "hour": "day",
+      "id": "station",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "L'Estació",
+      "prize_text": "Grab the sandwich off the moving walkway",
+      "sign_material": "studs",
+      "star_gate": 31,
+      "weather": "clear"
+    },
+    "street": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "",
+      "chase_gate_name": "",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "PIPICÀ",
+      "gloss": "The crowded promenade",
+      "gloss_ca": "El passeig ple de gent",
+      "gloss_es": "El paseo abarrotado",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "thief",
+          "text": "Stop 2 pickpockets"
+        },
+        {
+          "id": "wallet",
+          "text": "Keep your human's wallet safe"
+        },
+        {
+          "id": "drac",
+          "text": "Visit El Drac gallery and claim the dragon bone"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Fetch the frisbee across the bike lane"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "street",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "La Rambla",
+      "prize_text": "Fetch the frisbee across the bike lane",
+      "sign_material": "carnations",
+      "star_gate": 1,
+      "weather": "clear"
+    },
+    "superilla": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "yard",
+      "gate_text": "PASSATGE DEL VAPOR",
+      "gloss": "The car-free green superblock",
+      "gloss_ca": "L'eix verd pacificat per a vianants",
+      "gloss_es": "El eje verde para peatones",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "cargo",
+          "text": "Dodge the family cargo trike safely"
+        },
+        {
+          "id": "pingpong",
+          "text": "Slide under a concrete ping-pong table"
+        },
+        {
+          "id": "circles",
+          "text": "Sprint through 3 painted circles"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the horchata off the orxateria table"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "morning",
+      "id": "superilla",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "La Superilla",
+      "prize_text": "Snatch the horchata off the orxateria table",
+      "sign_material": "pingpong",
+      "star_gate": 29,
+      "weather": "clear"
+    },
+    "tibidabo": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "besos",
+      "chase_gate_name": "El Besòs",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "placa",
+      "gate_text": "MIRADOR DEL TIBIDABO",
+      "gloss": "The hilltop fairground",
+      "gloss_ca": "El cim i les seves atraccions",
+      "gloss_es": "La cima y sus atracciones",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "funicular",
+          "text": "Watch the vintage funicular climb the mountain"
+        },
+        {
+          "id": "viewfinder",
+          "text": "Gaze through the panoramic cliffside viewfinder"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the spun sugar off the fairground cart"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "morning",
+      "id": "tibidabo",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Tibidabo",
+      "prize_text": "Snatch the spun sugar off the fairground cart",
+      "sign_material": "bulbs",
+      "star_gate": 17,
+      "weather": "fog"
+    },
+    "trail": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "vet",
+      "chase_gate_name": "El Veterinari",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "clearing",
+      "gate_text": "LA CLARIANA",
+      "gloss": "A winding woodland trail",
+      "gloss_ca": "Un camí que serpenteja pel bosc",
+      "gloss_es": "Un sendero por el bosque",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "tofu",
+          "text": "Bring Tofu the cat home"
+        },
+        {
+          "id": "chase",
+          "text": "Chase off 2 critters"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Dig the pinecone out of the mud"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "day",
+      "id": "trail",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "El Bosc",
+      "prize_text": "Dig the pinecone out of the mud",
+      "sign_material": "sticks",
+      "star_gate": 21,
+      "weather": "clear"
+    },
+    "tutorial": {
+      "carry_text": "",
+      "chapter": 1,
+      "chase_gate": "",
+      "chase_gate_name": "",
+      "chase_warning": "",
+      "clock_target": 0,
+      "clock_text": "",
+      "freedom_kind": "yard",
+      "gate_text": "PIPICÀ",
+      "gloss": "Learn the leash, trick by trick",
+      "gloss_ca": "Aprèn la corretja, truc a truc",
+      "gloss_es": "Aprende la correa, truco a truco",
+      "goals": [],
+      "hour": "day",
+      "id": "tutorial",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": true,
+      "kind": "tutorial",
+      "lessons": [
+        {
+          "free": false,
+          "id": "walk",
+          "title": "Walk time."
+        },
+        {
+          "free": false,
+          "id": "pull",
+          "title": "The leash is real rope."
+        },
+        {
+          "free": false,
+          "id": "lead",
+          "title": "Lead the way."
+        },
+        {
+          "free": false,
+          "id": "plant",
+          "title": "Dig in."
+        },
+        {
+          "free": false,
+          "id": "patience",
+          "title": "Easy does it."
+        },
+        {
+          "free": false,
+          "id": "pee",
+          "title": "Leave your mark."
+        },
+        {
+          "free": false,
+          "id": "sniff",
+          "title": "A good sniff."
+        },
+        {
+          "free": false,
+          "id": "nose",
+          "title": "Follow your nose."
+        },
+        {
+          "free": false,
+          "id": "bark",
+          "title": "Use your voice."
+        },
+        {
+          "free": false,
+          "id": "turbo",
+          "title": "The zoomies."
+        },
+        {
+          "free": false,
+          "id": "poop",
+          "title": "Nature calls."
+        },
+        {
+          "free": false,
+          "id": "vault",
+          "title": "Swing around a post."
+        },
+        {
+          "free": false,
+          "id": "fling",
+          "title": "Tetherball."
+        },
+        {
+          "free": false,
+          "id": "grind",
+          "title": "Ride the ledge."
+        },
+        {
+          "free": false,
+          "id": "teeter",
+          "title": "The brink."
+        },
+        {
+          "free": false,
+          "id": "combo",
+          "title": "Chain them."
+        },
+        {
+          "free": false,
+          "id": "dare",
+          "title": "Take a dare."
+        },
+        {
+          "free": true,
+          "id": "practice",
+          "title": "Practice yard."
+        },
+        {
+          "free": true,
+          "id": "park",
+          "title": "Off the leash."
+        }
+      ],
+      "name": "First Walk",
+      "prize_text": "",
+      "sign_material": "balls",
+      "star_gate": 0,
+      "weather": "clear"
+    },
+    "vet": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "besos",
+      "chase_gate_name": "El Besòs",
+      "chase_warning": "THE VET IS HERE! ESCAPE!",
+      "clock_target": 165,
+      "clock_text": "2:45",
+      "freedom_kind": "yard",
+      "gate_text": "CLÍNICA VETERINÀRIA",
+      "gloss": "A trip to the vet",
+      "gloss_ca": "Una visita al veterinari",
+      "gloss_es": "Una visita al veterinario",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "hi",
+          "text": "Say hello to 3 dogs"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "scale",
+          "text": "Weigh in on the digital pet scale"
+        },
+        {
+          "id": "cone",
+          "text": "Escape the vet without getting bumped"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the liver treat jar from the reception desk"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:45)"
+        }
+      ],
+      "hour": "day",
+      "id": "vet",
+      "is_boss": false,
+      "is_chase": true,
+      "is_tutorial": false,
+      "kind": "chase",
+      "lessons": [],
+      "name": "El Veterinari",
+      "prize_text": "Snatch the liver treat jar from the reception desk",
+      "sign_material": "biscuits",
+      "star_gate": 19,
+      "weather": "clear"
+    }
+  },
+  "wardrobe": {
+    "bandanas": [
+      {
+        "color": "",
+        "cost": 0,
+        "id": "none",
+        "name": "No bandana"
+      },
+      {
+        "color": "#334773",
+        "cost": 60,
+        "id": "navy",
+        "name": "Navy bandana"
+      },
+      {
+        "color": "#406b4d",
+        "cost": 60,
+        "id": "forest",
+        "name": "Forest bandana"
+      },
+      {
+        "color": "#e6b840",
+        "cost": 100,
+        "id": "sunny",
+        "name": "Sunny bandana"
+      },
+      {
+        "color": "#b32633",
+        "cost": 100,
+        "id": "crimson",
+        "name": "Crimson bandana"
+      },
+      {
+        "color": "#733866",
+        "cost": 140,
+        "id": "plum",
+        "name": "Plum bandana"
+      }
+    ],
+    "coats": [
+      {
+        "cost": 0,
+        "dark": "#141417",
+        "fur": "#242124",
+        "id": "millie",
+        "mark": "#9e9994",
+        "name": "Millie (black)"
+      },
+      {
+        "cost": 90,
+        "dark": "#362117",
+        "fur": "#523324",
+        "id": "choc",
+        "mark": "#ad855c",
+        "name": "Chocolate"
+      },
+      {
+        "cost": 90,
+        "dark": "#8c6636",
+        "fur": "#b88c4d",
+        "id": "gold",
+        "mark": "#e0c794",
+        "name": "Golden"
+      },
+      {
+        "cost": 130,
+        "dark": "#4f4d52",
+        "fur": "#706b70",
+        "id": "grey",
+        "mark": "#a8a3a3",
+        "name": "Gray (Weimaraner)"
+      },
+      {
+        "cost": 130,
+        "dark": "#a38f70",
+        "fur": "#d1bd99",
+        "id": "cream",
+        "mark": "#f0e6cc",
+        "name": "Cream"
+      },
+      {
+        "cost": 220,
+        "dark": "#3d4552",
+        "fur": "#667080",
+        "id": "merle",
+        "mark": "#c7ccd6",
+        "name": "Blue merle"
+      }
+    ],
+    "collars": [
+      {
+        "color": "#b82924",
+        "cost": 0,
+        "id": "red",
+        "name": "Red (classic)"
+      },
+      {
+        "color": "#3366b3",
+        "cost": 40,
+        "id": "blue",
+        "name": "Blue"
+      },
+      {
+        "color": "#e6739e",
+        "cost": 40,
+        "id": "pink",
+        "name": "Pink"
+      },
+      {
+        "color": "#269994",
+        "cost": 60,
+        "id": "teal",
+        "name": "Teal"
+      },
+      {
+        "color": "#d9ad33",
+        "cost": 120,
+        "id": "gold",
+        "name": "Gold"
+      },
+      {
+        "color": "#8c4db8",
+        "cost": 150,
+        "id": "violet",
+        "name": "Violet"
+      },
+      {
+        "color": "#cc4d80",
+        "cost": 250,
+        "id": "rainbow",
+        "name": "Rainbow"
+      }
+    ],
+    "new_look": {
+      "hair_colors": 6,
+      "her_styles": [
+        "ponytail",
+        "curly",
+        "bob",
+        "long"
+      ],
+      "his_styles": [
+        "short",
+        "curly",
+        "bald",
+        "bun"
+      ],
+      "shirts": 8,
+      "shoes": 4,
+      "skins": 6,
+      "trousers": 5
+    }
+  }
+}
