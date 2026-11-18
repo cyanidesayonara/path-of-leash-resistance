@@ -9,7 +9,7 @@ extends RefCounted
 # beach freedom kind, which other walks share, so it stays in main.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_parasol", "on_bark", "surface", "takes_prints", "tick"]
+const HOOKS := ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_espigo", "draw_freedom", "draw_gate", "draw_live", "draw_overhead", "draw_parasol", "draw_threshold", "on_bark", "surface", "takes_prints", "tick"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -17,6 +17,13 @@ const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Letters := preload("res://world/sign_letters.gd")
 const Panot := preload("res://world/panot.gd")
+const Stones := preload("res://world/stones.gd")
+
+const ROCK_COLS: Array[Color] = [
+	Color(0.58, 0.57, 0.54), Color(0.68, 0.67, 0.63),
+	Color(0.50, 0.49, 0.47), Color(0.62, 0.60, 0.56),
+]
+const ESPIGO_SHADOW := Color(0.10, 0.20, 0.26, 0.45)
 
 # A BEACH TOWEL: striped across both ends, fringed, and either someone lying
 # on it in the sun or the things they left (flip-flops, a paperback, the sun
@@ -303,6 +310,22 @@ const HOTEL_RECT := Rect2(452.0, -5620.0, 728.0, 145.0)
 
 static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	var ftop: float = m.GATE_Y - 30.0
+	var bbot: float = m.START_Y + 394.0
+	var vis_lo := maxf(ftop, vt - 40.0)
+	var vis_hi := minf(bbot, vb + 40.0)
+	if vis_hi > vis_lo:
+		# continuous eastern building-line stone kerb & threshold strip (x = 1186..1198)
+		b.rect(Rect2(1184.0, vis_lo, 4.0, vis_hi - vis_lo), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14))
+		b.rect(Rect2(1188.0, vis_lo, 8.0, vis_hi - vis_lo), Color(0.68, 0.64, 0.57))
+		b.line(Vector2(1188.0, vis_lo), Vector2(1188.0, vis_hi), Color(0.54, 0.50, 0.44), 1.6)
+		b.line(Vector2(1195.0, vis_lo), Vector2(1195.0, vis_hi), Color(0.78, 0.74, 0.68), 1.4)
+		var ky := floorf(vis_lo / 36.0) * 36.0
+		while ky < vis_hi:
+			if ky >= vis_lo:
+				b.line(Vector2(1188.0, ky), Vector2(1196.0, ky), Color(0.52, 0.48, 0.42), 1.2)
+			ky += 36.0
 	var roofs := [Color(0.76, 0.70, 0.62), Color(0.66, 0.44, 0.34), Color(0.62, 0.62, 0.60), Color(0.82, 0.78, 0.70)]
 	var y: float = m.START_Y + 560.0
 	var k := 0
@@ -312,36 +335,48 @@ static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 		# the old works stands on this stretch, opposite the Pont del Petroli, and draws itself
 		var works: bool = String(m.lvl) == "beach" and top < WORKS_Y + 260.0 and y > WORKS_Y - 300.0
 		if y > vt - 40.0 and top < vb + 40.0 and not works:
-			var r := Rect2(1196.0, top + 8.0, 420.0, h - 16.0)
-			var col: Color = roofs[k % roofs.size()]
-			b.rect(r, col.darkened(0.25))
-			b.rect(r.grow(-5.0), col)
-			# the tiles of a roof terrace, in a grid
-			var gy := r.position.y + 18.0
-			while gy < r.end.y - 6.0:
-				b.line(Vector2(r.position.x + 5.0, gy), Vector2(r.position.x + 120.0, gy), col.darkened(0.08), 1.0)
-				gy += 18.0
-			var hut := Rect2(r.position.x + 26.0 + fmod(float(k) * 29.0, 40.0), r.position.y + 20.0 + fmod(float(k) * 43.0, maxf(1.0, r.size.y - 80.0)), 34.0, 28.0)
-			b.rect(Rect2(hut.position + Shade.light * 8.0, hut.size), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-			b.rect(hut, Color(0.70, 0.66, 0.60))
-			b.rect(Rect2(hut.position, Vector2(hut.size.x, 5.0)), Color(0.80, 0.76, 0.70))
-			if k % 2 == 0:
-				var tank := Vector2(r.position.x + 82.0, hut.end.y + 22.0)
-				if tank.y < r.end.y - 14.0:
-					b.circle(tank + Shade.light * 6.0, 10.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
-					b.circle(tank, 10.0, Color(0.30, 0.30, 0.32))
-					b.circle(tank + Vector2(-2.0, -2.0), 5.0, Color(0.44, 0.44, 0.46))
-			if k % 3 == 1:
-				# a washing line across the terrace, things pegged on it
-				var wy := r.end.y - 20.0
-				b.line(Vector2(r.position.x + 12.0, wy), Vector2(r.position.x + 110.0, wy), Color(0.86, 0.86, 0.84, 0.8), 1.0)
-				for p in range(4):
-					var wc := [Color(0.92, 0.92, 0.90), Color(0.40, 0.56, 0.78), Color(0.86, 0.46, 0.40)][(p + k) % 3] as Color
-					b.rect(Rect2(r.position.x + 20.0 + float(p) * 22.0, wy, 12.0, 8.0), wc)
-			elif k % 3 == 2:
-				b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0) + Shade.light * 10.0, 20.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
-				b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 20.0, Color(0.88, 0.56, 0.30))
-				b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 3.0, Color(0.40, 0.34, 0.28))
+			var r_top := maxf(top + 8.0, ftop)
+			var r_bot := y - 8.0
+			if r_bot - r_top > 36.0:
+				# side-street cobbled lane in the 16 px gap between blocks
+				if top + 8.0 > ftop + 4.0:
+					var alley := Rect2(1190.0, top - 8.0, 426.0, 16.0)
+					b.rect(alley, Color(0.52, 0.49, 0.44))
+					b.line(Vector2(1190.0, alley.get_center().y), Vector2(1340.0, alley.get_center().y), Color(0.42, 0.40, 0.36), 1.5)
+				var r := Rect2(1194.0, r_top, 422.0, r_bot - r_top)
+				var col: Color = roofs[k % roofs.size()]
+				b.rect(Rect2(r.position + Shade.light * 8.0, r.size), sh)
+				b.rect(r, col.darkened(0.25))
+				b.rect(r.grow(-5.0), col)
+				# lit seaward parapet coping
+				b.rect(Rect2(r.position.x, r.position.y, 4.0, r.size.y), col.lightened(0.14))
+				# the tiles of a roof terrace, in a grid
+				var gy := r.position.y + 18.0
+				while gy < r.end.y - 6.0:
+					b.line(Vector2(r.position.x + 5.0, gy), Vector2(r.position.x + 120.0, gy), col.darkened(0.08), 1.0)
+					gy += 18.0
+				var hut := Rect2(r.position.x + 26.0 + fmod(float(k) * 29.0, 40.0), r.position.y + 20.0 + fmod(float(k) * 43.0, maxf(1.0, r.size.y - 80.0)), 34.0, 28.0)
+				if hut.end.y < r.end.y - 6.0:
+					b.rect(Rect2(hut.position + Shade.light * 8.0, hut.size), sh)
+					b.rect(hut, Color(0.70, 0.66, 0.60))
+					b.rect(Rect2(hut.position, Vector2(hut.size.x, 5.0)), Color(0.80, 0.76, 0.70))
+				if k % 2 == 0:
+					var tank := Vector2(r.position.x + 82.0, hut.end.y + 22.0)
+					if tank.y < r.end.y - 14.0:
+						b.circle(tank + Shade.light * 6.0, 10.0, sh)
+						b.circle(tank, 10.0, Color(0.30, 0.30, 0.32))
+						b.circle(tank + Vector2(-2.0, -2.0), 5.0, Color(0.44, 0.44, 0.46))
+				if k % 3 == 1 and r.size.y > 60.0:
+					# a washing line across the terrace, things pegged on it
+					var wy := r.end.y - 20.0
+					b.line(Vector2(r.position.x + 12.0, wy), Vector2(r.position.x + 110.0, wy), Color(0.86, 0.86, 0.84, 0.8), 1.0)
+					for p in range(4):
+						var wc := [Color(0.92, 0.92, 0.90), Color(0.40, 0.56, 0.78), Color(0.86, 0.46, 0.40)][(p + k) % 3] as Color
+						b.rect(Rect2(r.position.x + 20.0 + float(p) * 22.0, wy, 12.0, 8.0), wc)
+				elif k % 3 == 2 and r.size.y > 70.0:
+					b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0) + Shade.light * 10.0, 20.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
+					b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 20.0, Color(0.88, 0.56, 0.30))
+					b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 3.0, Color(0.40, 0.34, 0.28))
 		y = top
 		k += 1
 	b.flush(m._wc)
@@ -362,24 +397,47 @@ static func _works(m: Node2D, vt: float, vb: float) -> void:
 	if WORKS_Y < vt - 900.0 or WORKS_Y > vb + 900.0:
 		return
 	var wx := 1190.0
+	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
+	# Paved stone factory yard apron & kerb bridging the three sheds into the panot promenade
+	var yard := Rect2(wx - 70.0, WORKS_Y - 254.0, 214.0, 708.0)
+	b.rect(Rect2(yard.position - Vector2(4.0, 0.0), Vector2(4.0, yard.size.y)), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14))
+	b.rect(yard, Color(0.68, 0.64, 0.58))
+	b.rect(yard.grow(-5.0), Color(0.73, 0.69, 0.63))
+	b.line(yard.position, Vector2(yard.position.x, yard.end.y), Color(0.54, 0.50, 0.44), 2.0)
+	b.line(yard.position, Vector2(yard.end.x, yard.position.y), Color(0.54, 0.50, 0.44), 2.0)
+	b.line(Vector2(yard.position.x, yard.end.y), yard.end, Color(0.54, 0.50, 0.44), 2.0)
+	# Cobblestone yard joints across the courtyard gaps between sheds
+	var jy := yard.position.y + 18.0
+	while jy < yard.end.y - 6.0:
+		b.line(Vector2(yard.position.x + 5.0, jy), Vector2(yard.end.x - 6.0, jy), Color(0.63, 0.59, 0.53), 1.2)
+		jy += 18.0
+	# Low brick compound wall along the east edge between the sheds
+	b.rect(Rect2(wx + 122.0, yard.position.y + 6.0, 10.0, yard.size.y - 12.0), Color(0.56, 0.38, 0.28))
+	b.line(Vector2(wx + 124.0, yard.position.y + 6.0), Vector2(wx + 124.0, yard.end.y - 6.0), Color(0.70, 0.50, 0.38), 1.8)
 	# the sheds: low, pale rendered walls with ribbed roofs
 	for i in range(3):
 		var sy := WORKS_Y + float(i) * 240.0 - 240.0
-		m._wc.draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.80, 0.76, 0.66))
+		var sr := Rect2(wx - 60.0, sy, 190.0, 200.0)
+		b.rect(Rect2(sr.position + Shade.light * 9.0, sr.size), sh)
+		b.rect(sr, Color(0.32, 0.29, 0.25))
+		b.rect(sr.grow(-2.5), Color(0.80, 0.76, 0.66))
 		# barrel-vaulted roof ribs, which is what says "works" and not "flats"
 		for r in range(9):
 			var ry := sy + 14.0 + float(r) * 21.0
-			m._wc.draw_line(Vector2(wx - 54.0, ry), Vector2(wx + 118.0, ry),
-				Color(0.62, 0.63, 0.62), 5.0)
-		m._wc.draw_rect(Rect2(wx - 60.0, sy, 190.0, 200.0), Color(0.32, 0.29, 0.25), false, 2.5)
+			b.line(Vector2(wx - 54.0, ry), Vector2(wx + 118.0, ry), Color(0.62, 0.63, 0.62), 5.0)
+			b.line(Vector2(wx - 54.0, ry - 1.8), Vector2(wx + 118.0, ry - 1.8), Color(0.86, 0.84, 0.78), 1.2)
+	b.flush(m._wc)
 	# the chimney: a tapering brick tower, and the long shadow that sells it
 	var cx := wx - 34.0
 	var cy := WORKS_Y
 	m.cast_shadow(m._wc, Vector2(cx, cy), 15.0, 340.0, 0.26)
-	m._wc.draw_circle(Vector2(cx, cy), 17.0, Color(0.52, 0.34, 0.25))
-	m._wc.draw_circle(Vector2(cx, cy), 12.5, Color(0.63, 0.42, 0.30))
-	m._wc.draw_circle(Vector2(cx - 2.0, cy - 2.0), 8.0, Color(0.72, 0.50, 0.36))
-	m._wc.draw_circle(Vector2(cx, cy), 5.0, Color(0.17, 0.14, 0.13))
+	var cb := ShapeBatch.new()
+	cb.circle(Vector2(cx, cy), 17.0, Color(0.52, 0.34, 0.25))
+	cb.circle(Vector2(cx, cy), 12.5, Color(0.63, 0.42, 0.30))
+	cb.circle(Vector2(cx - 2.0, cy - 2.0), 8.0, Color(0.72, 0.50, 0.36))
+	cb.circle(Vector2(cx, cy), 5.0, Color(0.17, 0.14, 0.13))
+	cb.flush(m._wc)
 	# a painted sign on the seaward shed wall, facing the walk
 	m._draw_world_text(Vector2(wx + 16.0, WORKS_Y + 176.0), "LA FÀBRICA", 17, "paint", 9.0)
 
@@ -1181,18 +1239,22 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 # each a shade off its neighbours the way poured slabs weather. Into the
 # world batch: no draw call of their own.
 static func _slabs(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
-	var lo := maxf(float(m.GATE_Y), floorf(vt / SLAB_ROW) * SLAB_ROW)
-	var hi := minf(m.START_Y + 200.0, vb)
+	var ftop: float = m.GATE_Y - 30.0
+	var lo := maxf(ftop, floorf(vt / SLAB_ROW) * SLAB_ROW)
+	var hi := minf(m.START_Y + 210.0, vb)
 	var w := (SLAB_X1 - SLAB_X0) / 3.0
 	var y := lo
 	while y < hi:
 		var row := floorf(y / SLAB_ROW)
-		for col in range(3):
-			var h := _hash(row * 3.0 + float(col), 4.7)
-			var r := Rect2(SLAB_X0 + w * float(col) + 1.0, y + 1.0, w - 2.0, SLAB_ROW - 2.0)
-			var tone := SLAB_COL.darkened(0.05 * h) if h < 0.5 else SLAB_COL.lightened(0.04 * (h - 0.5))
-			wc.draw_rect(r, tone)
-			wc.draw_rect(Rect2(r.position, Vector2(r.size.x, 2.0)), tone.lightened(0.07))
+		var y0 := maxf(y + 1.0, ftop)
+		var y1 := minf(y + SLAB_ROW - 1.0, hi)
+		if y1 > y0 + 2.0:
+			for col in range(3):
+				var h := _hash(row * 3.0 + float(col), 4.7)
+				var r := Rect2(SLAB_X0 + w * float(col) + 1.0, y0, w - 2.0, y1 - y0)
+				var tone := SLAB_COL.darkened(0.05 * h) if h < 0.5 else SLAB_COL.lightened(0.04 * (h - 0.5))
+				wc.draw_rect(r, tone)
+				wc.draw_rect(Rect2(r.position, Vector2(r.size.x, 2.0)), tone.lightened(0.07))
 		y += SLAB_ROW
 	for col in range(1, 3):
 		var x := SLAB_X0 + w * float(col)
@@ -1237,6 +1299,163 @@ static func draw_edge_layer(_m: Node2D, _c: Object, _vt: float, _vb: float) -> v
 	pass
 
 
+# Scalloped shoreline bands along the walk so deep sea, shallow turquoise water,
+# wet sand, damp swash and dry sand blend organically instead of meeting on
+# three straight vertical ruler lines.
+static func _shore_seams(m: Node2D, b: ShapeBatch, ftop: float, bottom: float, vt: float, vb: float, wt: float) -> void:
+	const STEP := 24.0
+	var y0 := maxf(ftop, floorf((vt - 48.0) / STEP) * STEP)
+	var y1 := minf(bottom, ceilf((vb + 48.0) / STEP) * STEP)
+	if y1 <= y0:
+		return
+	var sx0: float = m.BEACH_GATE_SHORE_X - m.BEACH_SHALLOW_W
+	var sx1: float = m.BEACH_GATE_SHORE_X
+	var sx2: float = m.BEACH_GATE_SHORE_X + m.BEACH_WET_W
+	var mid_sea: Color = m.BEACH_SEA_DEEP.lerp(m.BEACH_SEA_SHALLOW, 0.52)
+	var damp_sand: Color = m.BEACH_WET.lerp(m.BEACH_SAND, 0.54)
+	var y := y0
+	while y < y1:
+		var yn := minf(y + STEP, y1)
+		# 1. Deep-to-shallow reef transition at x ≈ 110
+		var d0 := sin(y * 0.019 + 0.7) * 6.5 + sin(y * 0.047) * 3.0
+		var d1 := sin(yn * 0.019 + 0.7) * 6.5 + sin(yn * 0.047) * 3.0
+		b.polygon(PackedVector2Array([
+			Vector2(sx0 - 10.0, y), Vector2(sx0 + d0, y),
+			Vector2(sx0 + d1, yn), Vector2(sx0 - 10.0, yn),
+		]), m.BEACH_SEA_DEEP)
+		b.polygon(PackedVector2Array([
+			Vector2(sx0 + d0 - 6.0, y), Vector2(sx0 + d0 + 7.0, y),
+			Vector2(sx0 + d1 + 7.0, yn), Vector2(sx0 + d1 - 6.0, yn),
+		]), mid_sea)
+		# 2. Shallow-to-wet-sand waterline at x ≈ 230
+		var w0 := sin(y * 0.024 + wt * 1.1) * 3.2 + sin(y * 0.053) * 1.8
+		var w1 := sin(yn * 0.024 + wt * 1.1) * 3.2 + sin(yn * 0.053) * 1.8
+		b.polygon(PackedVector2Array([
+			Vector2(sx1 - 6.0, y), Vector2(sx1 + w0, y),
+			Vector2(sx1 + w1, yn), Vector2(sx1 - 6.0, yn),
+		]), m.BEACH_SEA_SHALLOW)
+		b.polygon(PackedVector2Array([
+			Vector2(sx1 + w0, y), Vector2(sx1 + 6.0, y),
+			Vector2(sx1 + 6.0, yn), Vector2(sx1 + w1, yn),
+		]), m.BEACH_WET)
+		b.line(Vector2(sx1 + w0 + 1.2, y), Vector2(sx1 + w1 + 1.2, yn),
+			Color(0.96, 0.99, 1.0, 0.32 + 0.12 * sin(y * 0.03 + wt * 1.6)), 2.6)
+		# 3. Wet-sand-to-dry-sand swash margin at x ≈ 264
+		var t0 := sin(y * 0.041) * 3.4 + sin(y * 0.017 + 1.4) * 2.4
+		var t1 := sin(yn * 0.041) * 3.4 + sin(yn * 0.017 + 1.4) * 2.4
+		b.polygon(PackedVector2Array([
+			Vector2(sx2 - 6.0, y), Vector2(sx2 + t0, y),
+			Vector2(sx2 + t1, yn), Vector2(sx2 - 6.0, yn),
+		]), m.BEACH_WET)
+		b.polygon(PackedVector2Array([
+			Vector2(sx2 + t0, y), Vector2(sx2 + 7.0, y),
+			Vector2(sx2 + 7.0, yn), Vector2(sx2 + t1, yn),
+		]), m.BEACH_SAND)
+		b.polygon(PackedVector2Array([
+			Vector2(sx2 + t0 - 2.5, y), Vector2(sx2 + t0 + 4.5, y),
+			Vector2(sx2 + t1 + 4.5, yn), Vector2(sx2 + t1 - 2.5, yn),
+		]), damp_sand)
+		y = yn
+
+
+# Dressed kerbs, timber border beams, drainage channels and ashlar divider courses
+# along the longitudinal promenade seams (x = 380, 490, 570, 980).
+static func _promenade_kerbs(m: Node2D, b: ShapeBatch, ftop: float, bottom: float, vt: float, vb: float) -> void:
+	var y0 := maxf(ftop, vt - 40.0)
+	var y1 := minf(m.START_Y + 210.0, minf(bottom, vb + 40.0))
+	if y1 <= y0:
+		return
+	# 1. x = 380: boardwalk seaward fascia board & drop shadow on the sand
+	b.rect(Rect2(375.0, y0, 5.0, y1 - y0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.16))
+	b.rect(Rect2(380.0, y0, 4.5, y1 - y0), Color(0.36, 0.20, 0.15))
+	b.line(Vector2(384.5, y0), Vector2(384.5, y1), Color(0.56, 0.36, 0.28), 1.2)
+	# 2. x = 490: boardwalk landward timber beam + granite bike-path kerb
+	b.rect(Rect2(486.0, y0, 4.0, y1 - y0), Color(0.36, 0.20, 0.15))
+	b.rect(Rect2(490.0, y0, 5.5, y1 - y0), Color(0.72, 0.69, 0.63))
+	b.line(Vector2(490.0, y0), Vector2(490.0, y1), Color(0.46, 0.43, 0.38), 1.4)
+	b.line(Vector2(495.5, y0), Vector2(495.5, y1), Color(0.62, 0.59, 0.53), 1.2)
+	b.line(Vector2(498.5, y0), Vector2(498.5, y1), Color(0.97, 0.96, 0.93, 0.55), 1.8)
+	# 3. x = 570: bike-path eastern stripe + stone gutter channel against the slabs
+	b.line(Vector2(562.0, y0), Vector2(562.0, y1), Color(0.97, 0.96, 0.93, 0.55), 1.8)
+	b.rect(Rect2(565.5, y0, 6.0, y1 - y0), Color(0.71, 0.68, 0.62))
+	b.line(Vector2(565.5, y0), Vector2(565.5, y1), Color(0.58, 0.55, 0.49), 1.2)
+	b.line(Vector2(571.5, y0), Vector2(571.5, y1), Color(0.52, 0.49, 0.44), 1.4)
+	# 4. x = 980: dressed granite border course between the poured slabs and flower panots
+	b.rect(Rect2(976.0, y0, 7.5, y1 - y0), Color(0.70, 0.66, 0.59))
+	b.line(Vector2(976.0, y0), Vector2(976.0, y1), Color(0.54, 0.51, 0.45), 1.4)
+	b.line(Vector2(983.5, y0), Vector2(983.5, y1), Color(0.58, 0.54, 0.48), 1.4)
+	var ky := floorf(y0 / 50.0) * 50.0
+	while ky < y1:
+		if ky >= y0:
+			b.line(Vector2(490.0, ky), Vector2(495.5, ky), Color(0.54, 0.51, 0.45), 1.1)
+			b.line(Vector2(565.5, ky), Vector2(571.5, ky), Color(0.54, 0.51, 0.45), 1.1)
+			b.line(Vector2(976.0, ky), Vector2(983.5, ky), Color(0.54, 0.51, 0.45), 1.2)
+		ky += 50.0
+
+
+# South end at Estació de Badalona (y ≈ 318..354): closes off the sea and beach
+# with a coastal granite retaining seawall & riprap toe in front of the station
+# wall, and lays a stone forecourt threshold across the boardwalk, bike path,
+# promenade slabs and panot strip so the station bike rack and concourse sit on
+# a continuous paved apron.
+static func _station_south_edge(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var wall_y: float = float(m.HOME_Y) + 34.0
+	if vb < wall_y - 56.0 or vt > wall_y + 40.0:
+		return
+	var b := ShapeBatch.new()
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
+	# 1. Seaward coastal granite retaining wall & breakwater (x = -400..380)
+	var sw_top := wall_y - 28.0
+	b.rect(Rect2(-400.0, sw_top - 8.0, 780.0, 8.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+	# Banked dry sand & driftwood drift against the seawall toe (x = 240..380)
+	b.polygon(PackedVector2Array([
+		Vector2(236.0, sw_top), Vector2(380.0, sw_top - 14.0),
+		Vector2(380.0, sw_top + 2.0), Vector2(236.0, sw_top + 2.0),
+	]), Color(m.BEACH_SAND.r, m.BEACH_SAND.g, m.BEACH_SAND.b, 0.85))
+	# Riprap quarry stones along the seaward foot of the retaining wall
+	_rock_run(b, Vector2(-180.0, sw_top - 3.0), Vector2(256.0, sw_top - 3.0), 10.5, ESPIGO_SHADOW, 41)
+	# Dressed granite seawall coping & parapet (x = -400..380, y = sw_top..wall_y + 2)
+	b.rect(Rect2(-400.0, sw_top, 784.0, wall_y - sw_top + 2.0), Color(0.66, 0.63, 0.58))
+	b.rect(Rect2(-400.0, sw_top + 3.0, 784.0, wall_y - sw_top - 4.0), Color(0.75, 0.72, 0.66))
+	b.line(Vector2(-400.0, sw_top), Vector2(384.0, sw_top), Color(0.46, 0.43, 0.38), 2.0)
+	b.line(Vector2(-400.0, sw_top + 3.0), Vector2(384.0, sw_top + 3.0), Color(0.84, 0.81, 0.75), 1.5)
+	var gx := -360.0
+	while gx < 380.0:
+		b.line(Vector2(gx, sw_top), Vector2(gx, wall_y), Color(0.56, 0.53, 0.48), 1.3)
+		gx += 44.0
+	# Coastal steel promenade railing along the seawall top
+	b.line(Vector2(-380.0, sw_top + 7.0), Vector2(376.0, sw_top + 7.0), PIER_STEEL_DARK, 2.2)
+	var px := -360.0
+	while px <= 376.0:
+		b.rect(Rect2(px - 2.0, sw_top + 5.0, 4.0, 4.0), Color(0.32, 0.34, 0.38))
+		px += 36.0
+	# 2. Timber boardwalk south header & stone station forecourt apron (x = 380..1194)
+	var ap_top := wall_y - 36.0
+	# End beam closing the timber boardwalk at y = ap_top
+	b.rect(Rect2(380.0, ap_top - 6.0, 110.0, 6.0), Color(0.32, 0.18, 0.14))
+	b.line(Vector2(380.0, ap_top - 6.0), Vector2(490.0, ap_top - 6.0), Color(0.56, 0.36, 0.28), 1.4)
+	# Station forecourt ashlar stone apron across boardwalk, bike lane, slabs & panots
+	b.rect(Rect2(380.0, ap_top, 814.0, wall_y - ap_top + 2.0), Color(0.76, 0.73, 0.67))
+	# Soldier-course granite kerb along the north edge of the station forecourt (y = ap_top..ap_top + 10)
+	b.rect(Rect2(380.0, ap_top, 814.0, 10.0), Color(0.68, 0.65, 0.58))
+	b.line(Vector2(380.0, ap_top), Vector2(1194.0, ap_top), Color(0.50, 0.47, 0.42), 1.8)
+	b.line(Vector2(380.0, ap_top + 10.0), Vector2(1194.0, ap_top + 10.0), Color(0.56, 0.53, 0.47), 1.4)
+	var sx := 380.0
+	var sk := 0
+	while sx < 1190.0:
+		var sw := minf(24.0, 1194.0 - sx)
+		if sk % 2 == 0:
+			b.rect(Rect2(sx + 1.0, ap_top + 1.5, sw - 2.0, 7.0), Color(0.73, 0.70, 0.63))
+		b.line(Vector2(sx, ap_top), Vector2(sx, ap_top + 10.0), Color(0.54, 0.51, 0.45), 1.2)
+		if sk % 2 == 0:
+			b.line(Vector2(sx, ap_top + 10.0), Vector2(sx, wall_y), Color(0.68, 0.65, 0.59), 1.2)
+		sx += 24.0
+		sk += 1
+	b.line(Vector2(380.0, ap_top + 23.0), Vector2(1194.0, ap_top + 23.0), Color(0.68, 0.65, 0.59), 1.2)
+	b.rect(Rect2(380.0, wall_y - 4.0, 814.0, 4.0), sh)
+	b.flush(wc)
+
+
 # the ground from the sea to the blocks, in place of main's lawn and walkway
 static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
 	# where the dog beach's own ground stops: the land starts there, so its
@@ -1261,6 +1480,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	# shore has both, so here they carry its shore on down the walk
 	wc.draw_rect(Rect2(m.BEACH_GATE_SHORE_X, ftop, m.BEACH_WET_W, bottom - ftop), m.BEACH_WET)
 	var foam := ShapeBatch.new()
+	_shore_seams(m, foam, ftop, bottom, vt, vb, wt)
 	var fmy := maxf(ftop, vt - fmod(vt, 52.0) - 52.0)
 	while fmy < minf(bottom, vb + 52.0):
 		var fmx: float = m.BEACH_GATE_SHORE_X + 4.0 + sin(fmy * 0.02 + wt * 1.4) * 4.0
@@ -1302,7 +1522,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	var deck_top := ftop
 	wc.draw_rect(Rect2(380, deck_top, 110, bottom - deck_top), Color(0.46, 0.26, 0.21))
 	var bdeck := ShapeBatch.new()
-	var py := minf(m.START_Y + 200.0, vb + 22.0 - fmod(vb, 22.0))
+	var py := minf(m.START_Y + 210.0, vb + 22.0 - fmod(vb, 22.0))
 	while py - 20.0 >= deck_top and py > vt - 22.0:
 		if py < vb and py > vt:
 			# plank fill tone variation
@@ -1322,7 +1542,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	bdeck.flush(wc)
 	# the pale concrete path, with the dashed line down the middle of it
 	wc.draw_rect(Rect2(490, ftop, 80, bottom - ftop), Color(0.82, 0.79, 0.73))
-	var ddy := minf(m.START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
+	var ddy := minf(m.START_Y + 210.0, vb + 64.0 - fmod(vb, 64.0))
 	while ddy > m.GATE_Y and ddy > vt - 64.0:
 		if ddy < vb and ddy > vt:
 			wc.draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.97, 0.96, 0.93, 0.8), 3.0)
@@ -1330,10 +1550,10 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	_bike_stencils(m, wc, vt, vb)
 	wc.draw_rect(Rect2(570, ftop, 410, bottom - ftop), Color(0.79, 0.76, 0.7))
 	_slabs(m, wc, vt, vb)
-	var sy := minf(m.START_Y + 200.0, vb + 150.0 - fmod(vb, 150.0))
+	var sy := minf(m.START_Y + 210.0, vb + 150.0 - fmod(vb, 150.0))
 	while sy > m.GATE_Y and sy > vt - 150.0:
 		if sy < vb and sy > vt:
-			wc.draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
+			wc.draw_line(Vector2(570, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
 		sy -= 150.0
 	wc.draw_rect(Rect2(980, ftop, 210, bottom - ftop), Color(0.76, 0.72, 0.65))
 	# the town's own pavement along the blocks: flower panots
@@ -1345,6 +1565,9 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	# one flat grey (#151): the blocks' roofs now, from the building line
 	# at the east wall, with the cafe strip running up to it.
 	wc.draw_rect(Rect2(1190, ctop, 510, bottom - ctop), Color(0.35, 0.33, 0.31))
+	var bkerb := ShapeBatch.new()
+	_promenade_kerbs(m, bkerb, ftop, bottom, vt, vb)
+	bkerb.flush(wc)
 	_roofs(m, vt, vb)
 	_works(m, vt, vb)
 	# SQUARE CUT-OUTS in the paving, one under each palm. The promenade's
@@ -1359,10 +1582,6 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		wc.draw_rect(cut, Color(0.43, 0.40, 0.35))
 		wc.draw_rect(cut.grow(-2.0), Color(0.62, 0.58, 0.50))
 		wc.draw_rect(cut.grow(-5.0), Color(0.40, 0.34, 0.26))  # the soil in it
-	wc.draw_line(Vector2(380, bottom), Vector2(380, ftop), Color(0.55, 0.45, 0.32), 3.0)
-	wc.draw_line(Vector2(490, bottom), Vector2(490, ftop), m.COL_SEAM, 2.0)
-	wc.draw_line(Vector2(570, bottom), Vector2(570, ftop), m.COL_SEAM, 2.0)
-	wc.draw_line(Vector2(980, bottom), Vector2(980, ftop), m.COL_SEAM, 2.0)
 	_sand_creep(m, wc, vt, vb)
 	for t in m.tufts:
 		if t.y > vt and t.y < vb and t.x > 110.0 and (t.x < 330.0 or t.x > 1000.0) and t.x < 1170.0:
@@ -1371,6 +1590,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		if (m.towels[ti].rect as Rect2).end.y > vt - 40.0 and (m.towels[ti].rect as Rect2).position.y < vb + 40.0:
 			_towel(m, m.towels[ti], ti)
 	_landmarks(m, vt, vb)
+	_station_south_edge(m, wc, vt, vb)
 
 
 # The sand's parasols. Furled (dawn, the walk's own sky, and night) each is a
@@ -1409,6 +1629,118 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 	m._draw_lifeguard_tower(c, LevelBuild.BEACH_TOWER, false, true)
 
 
+# A two-course staggered run of tipped quarry stone from `a` to `z`, for the
+# espigó breakwater and the south seawall riprap.
+static func _rock_run(b: ShapeBatch, a: Vector2, z: Vector2, r: float, shadow: Color, salt: int) -> void:
+	var along := (z - a).normalized()
+	var across := along.orthogonal()
+	var n := int(a.distance_to(z) / (r * 1.25))
+	for k in range(n + 1):
+		for course in range(2):
+			var h := fmod(absf(sin(float(k * 2 + course) * 12.9898 + float(salt) * 0.123) * 43758.5453), 1.0)
+			var at := a.lerp(z, float(k) / float(maxi(1, n))) + along * (r * 0.6 * float(course)) \
+				+ across * (r * (0.5 if course == 0 else -0.45) + (h - 0.5) * r * 0.5)
+			var col: Color = ROCK_COLS[int(h * 97.0) % ROCK_COLS.size()]
+			Stones.lit_stone(b, at, r * (0.7 + h * 0.6), col, shadow, h)
+
+
+# The espigó breakwater across the water at the gate line, rooted into the wet
+# and dry sand with banked sand around its landward stones.
+static func draw_espigo(m: Node2D, c: Object) -> void:
+	var b := ShapeBatch.new()
+	var fy: float = m.GATE_Y - 30.0
+	var sx: float = m.BEACH_GATE_SHORE_X
+	# Banked sand drift & swash foam around the landward root of the breakwater
+	_ellipse(b, Vector2(sx + 20.0, fy), 28.0, 18.0, 0.0, Color(m.BEACH_WET.r, m.BEACH_WET.g, m.BEACH_WET.b, 0.65))
+	_ellipse(b, Vector2(sx + 32.0, fy), 22.0, 14.0, 0.0, Color(m.BEACH_SAND.r, m.BEACH_SAND.g, m.BEACH_SAND.b, 0.85))
+	_rock_run(b, Vector2(m.FREEDOM_WALL_W - 10.0, fy), Vector2(sx + 24.0, fy), 15.0, ESPIGO_SHADOW, 17)
+	b.flush(c)
+
+
+# THE THRESHOLD AT THE GATE (y = GATE_Y - 30 = -5030): joins the boardwalk
+# (380..490), bike lane (490..570), concrete promenade slabs (570..980) and
+# flower panot cafe strip (980..1190) into the Hotel L'Onada limestone plaza
+# (452..1190), with a stepped timber beachhead bastion around the northernmost
+# seaward palm at (462, -5000).
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var fy: float = m.GATE_Y - 30.0
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	# 1. Seaward timber beachhead landing & steps (x = 380..490, y = fy - 24..fy + 16)
+	# Frames the northernmost seaward palm pit (x = 435..489, y = -5027..-4973) and
+	# steps down from the boardwalk to the dry sand where the plaza seawall insets to x = 452.
+	var step_poly := PackedVector2Array([
+		Vector2(380.0, fy + 6.0), Vector2(416.0, fy - 20.0),
+		Vector2(490.0, fy - 20.0), Vector2(490.0, fy + 6.0),
+	])
+	b.polygon(PackedVector2Array([
+		Vector2(376.0, fy + 8.0), Vector2(414.0, fy - 22.0),
+		Vector2(490.0, fy - 22.0), Vector2(490.0, fy + 8.0),
+	]), sh)
+	b.polygon(step_poly, Color(0.46, 0.26, 0.21))
+	# Three timber steps angling from the boardwalk corner (380, fy) up into the plaza coping (452, fy - 20)
+	for st in range(3):
+		var t := float(st) / 3.0
+		var x_l := lerpf(382.0, 424.0, t)
+		var y_t := lerpf(fy + 2.0, fy - 18.0, t)
+		b.line(Vector2(x_l, y_t), Vector2(488.0, y_t), Color(0.32, 0.18, 0.14), 2.0)
+		b.line(Vector2(x_l + 1.0, y_t + 1.5), Vector2(488.0, y_t + 1.5), Color(0.58, 0.38, 0.30), 1.0)
+	b.line(Vector2(380.0, fy + 6.0), Vector2(416.0, fy - 20.0), Color(0.34, 0.19, 0.14), 3.0)
+	b.line(Vector2(416.0, fy - 20.0), Vector2(452.0, fy - 20.0), Color(0.34, 0.19, 0.14), 3.0)
+	# Blown sand drift softening the re-entrant beach corner at (416..452, fy - 20)
+	_smudge(b, Vector2(410.0, fy - 10.0), 26.0, 14.0, 13.7, Color(m.BEACH_SAND.r, m.BEACH_SAND.g, m.BEACH_SAND.b, 0.55))
+	_smudge(b, Vector2(434.0, fy - 24.0), 20.0, 11.0, 29.1, Color(CREEP_COL.r, CREEP_COL.g, CREEP_COL.b, 0.38))
+	# Re-draw the northernmost seaward palm's stone planter kerb cleanly over the timber bastion
+	for ps: Vector2 in m.palm_spots:
+		if absf(ps.y - float(m.GATE_Y)) < 45.0:
+			var cut := Rect2(ps.x - 27.0, ps.y - 27.0, 54.0, 54.0)
+			b.rect(cut, Color(0.43, 0.40, 0.35))
+			b.rect(cut.grow(-2.0), Color(0.62, 0.58, 0.50))
+			b.rect(cut.grow(-5.0), Color(0.40, 0.34, 0.26))
+	# 2. Full-width dressed limestone & granite soldier course across x = 470..1192 at y = fy (-5030)
+	var th := Rect2(470.0, fy - 7.0, 722.0, 14.0)
+	b.rect(Rect2(th.position.x, th.end.y, th.size.x, 3.0), sh)
+	b.rect(th, Color(0.66, 0.63, 0.56))
+	# Red-oxide tactile cycle-lane end band where the bike lane (496..565) meets the plaza
+	b.rect(Rect2(496.0, fy + 7.0, 69.0, 8.0), Color(0.74, 0.46, 0.38, 0.72))
+	b.line(Vector2(496.0, fy + 15.0), Vector2(565.0, fy + 15.0), Color(0.97, 0.96, 0.93, 0.75), 2.0)
+	var sx := th.position.x
+	var k := 0
+	while sx < th.end.x - 1.0:
+		var w := minf(22.0, th.end.x - sx)
+		var col := Color(0.78, 0.75, 0.68) if k % 2 == 0 else Color(0.73, 0.70, 0.63)
+		b.rect(Rect2(sx + 1.0, fy - 5.5, w - 2.0, 11.0), col)
+		b.rect(Rect2(sx + 1.0, fy - 5.5, w - 2.0, 2.0), col.lightened(0.08))
+		sx += 22.0
+		k += 1
+
+
+# THE GATE INTO THE HOTEL L'ONADA PLAZA: two dressed coastal limestone piers
+# aligned directly on the threshold course at y = GATE_Y - 30 (-5030), instead
+# of main's generic stone sill floating 24 px south on the promenade slabs.
+static func draw_gate(m: Node2D, b: ShapeBatch) -> void:
+	var fy: float = m.GATE_Y - 30.0
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25)
+	var gl: float = float(m.gate_l)
+	var gr: float = float(m.gate_r)
+	# Flush limestone & brass threshold band across the gate mouth [gl, gr] at y = fy
+	var sill := Rect2(gl, fy - 5.0, gr - gl, 10.0)
+	b.rect(sill, Color(0.82, 0.79, 0.72))
+	b.line(Vector2(gl, fy), Vector2(gr, fy), Color(0.68, 0.58, 0.36, 0.85), 2.2)
+	var jx := gl + 35.0
+	while jx < gr - 4.0:
+		b.line(Vector2(jx, sill.position.y), Vector2(jx, sill.end.y), Color(0.64, 0.60, 0.54), 1.4)
+		jx += 35.0
+	# Dressed coastal limestone gate piers flanking the mouth on the threshold line
+	for px: float in [gl - 14.0, gr + 14.0]:
+		var pr := Rect2(px - 14.0, fy - 14.0, 28.0, 28.0)
+		b.rect(Rect2(pr.position + Shade.light * 8.0, pr.size), sh)
+		b.rect(pr, Color(0.60, 0.56, 0.49))
+		b.rect(pr.grow(-3.5), Color(0.76, 0.72, 0.64))
+		b.rect(pr.grow(-7.0), Color(0.86, 0.83, 0.76))
+		b.circle(pr.get_center(), 4.5, Color(0.24, 0.46, 0.68))
+		b.circle(pr.get_center() - Vector2(1.0, 1.0), 2.0, Color(0.66, 0.84, 0.94))
+
+
 # THE HOTEL L'ONADA PLAZA (off-leash space at the top of Passeig Marítim):
 # coastal limestone esplanade overlooking the sea and the port breakwater, with the
 # 3D BADALONA tourist letters sign on its plinth and the white terraced hotel behind.
@@ -1418,44 +1750,131 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	var bot: float = r.end.y
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
 	var b := ShapeBatch.new()
-	# 1. Sea, shallows, wet sand, and beach sand along the west side (x < 380)
-	b.rect(Rect2(-400.0, top - 320.0, 860.0, bot - (top - 320.0) + 20.0), m.BEACH_SAND)
-	var bend_y: float = float(m.GATE_Y) - 300.0
+	# 1. Sea, shallows, wet sand, and beach sand along the west side, sampled smoothly
+	# along m.beach_shore_x(y) so the curved bay matches _draw_beach_water() with no polygon kink
 	var top_y: float = top - 320.0
-	var bot_y: float = bot
-	b.polygon(PackedVector2Array([
-		Vector2(-330.0, top_y), Vector2(m.beach_shore_x(top_y), top_y),
-		Vector2(m.beach_shore_x(bend_y), bend_y), Vector2(m.beach_shore_x(bot_y), bot_y),
-		Vector2(-330.0, bot_y),
-	]), m.BEACH_SEA_DEEP)
-	b.polygon(PackedVector2Array([
-		Vector2(m.beach_shore_x(top_y) - m.BEACH_SHALLOW_W, top_y), Vector2(m.beach_shore_x(top_y), top_y),
-		Vector2(m.beach_shore_x(bend_y), bend_y), Vector2(m.beach_shore_x(bot_y), bot_y),
-		Vector2(m.beach_shore_x(bot_y) - m.BEACH_SHALLOW_W, bot_y),
-		Vector2(m.beach_shore_x(bend_y) - m.BEACH_SHALLOW_W, bend_y),
-	]), m.BEACH_SEA_SHALLOW)
-	b.polygon(PackedVector2Array([
-		Vector2(m.beach_shore_x(top_y), top_y), Vector2(m.beach_shore_x(top_y) + 70.0, top_y),
-		Vector2(m.beach_shore_x(bend_y) + 70.0, bend_y),
-		Vector2(m.beach_shore_x(bot_y) + m.BEACH_WET_W, bot_y),
-		Vector2(m.beach_shore_x(bot_y), bot_y), Vector2(m.beach_shore_x(bend_y), bend_y),
-	]), m.BEACH_WET)
-	# 2. Coastal limestone esplanade paving from the seawall (x = 380) to the east wall
-	var plaza := Rect2(452.0, top - 320.0, 748.0, bot - (top - 320.0))
+	var bot_y: float = float(m.GATE_Y)
+	b.rect(Rect2(-400.0, top_y, 860.0, bot_y - top_y + 10.0), m.BEACH_SAND)
+	const SHORE_STEP := 20.0
+	var shore_pts := PackedVector2Array()
+	var shallow_in := PackedVector2Array()
+	var mid_in := PackedVector2Array()
+	var mid_out := PackedVector2Array()
+	var wet_out := PackedVector2Array()
+	var damp_out := PackedVector2Array()
+	var sy := top_y
+	while true:
+		var yy := minf(sy, bot_y)
+		var wobble := sin(yy * 0.029) * 2.2 + sin(yy * 0.061 + 1.1) * 1.2
+		var sx: float = m.beach_shore_x(yy) + wobble
+		shore_pts.append(Vector2(sx, yy))
+		shallow_in.append(Vector2(sx - m.BEACH_SHALLOW_W + sin(yy * 0.019 + 0.7) * 5.0, yy))
+		mid_in.append(Vector2(sx - m.BEACH_SHALLOW_W - 6.0 + sin(yy * 0.019 + 0.7) * 5.0, yy))
+		mid_out.append(Vector2(sx - m.BEACH_SHALLOW_W + 6.0 + sin(yy * 0.019 + 0.7) * 5.0, yy))
+		var wx_out: float = sx + m.BEACH_WET_W + sin(yy * 0.041) * 2.5
+		wet_out.append(Vector2(wx_out, yy))
+		damp_out.append(Vector2(wx_out + 5.0, yy))
+		if yy >= bot_y:
+			break
+		sy += SHORE_STEP
+	# Deep sea polygon
+	var deep_poly := PackedVector2Array([Vector2(-400.0, top_y)])
+	deep_poly.append_array(shore_pts)
+	deep_poly.append(Vector2(-400.0, bot_y))
+	b.polygon(deep_poly, m.BEACH_SEA_DEEP)
+	# Shallow turquoise band
+	var shallow_poly := PackedVector2Array(shallow_in)
+	for i in range(shore_pts.size() - 1, -1, -1):
+		shallow_poly.append(shore_pts[i])
+	b.polygon(shallow_poly, m.BEACH_SEA_SHALLOW)
+	# Intermediate reef blend band between deep and shallow sea
+	var mid_poly := PackedVector2Array(mid_in)
+	for i in range(mid_out.size() - 1, -1, -1):
+		mid_poly.append(mid_out[i])
+	b.polygon(mid_poly, m.BEACH_SEA_DEEP.lerp(m.BEACH_SEA_SHALLOW, 0.52))
+	# Damp sand transition margin
+	var damp_poly := PackedVector2Array(shore_pts)
+	for i in range(damp_out.size() - 1, -1, -1):
+		damp_poly.append(damp_out[i])
+	b.polygon(damp_poly, m.BEACH_WET.lerp(m.BEACH_SAND, 0.54))
+	# Wet sand swash band
+	var wet_poly := PackedVector2Array(shore_pts)
+	for i in range(wet_out.size() - 1, -1, -1):
+		wet_poly.append(wet_out[i])
+	b.polygon(wet_poly, m.BEACH_WET)
+	# Tide drift shells & pebbles along the curved bay waterline
+	var tdy := top_y + 24.0
+	while tdy < bot - 16.0:
+		var tdx: float = m.beach_shore_x(tdy) + m.BEACH_WET_W + sin(tdy * 0.041) * 2.5
+		var pk := absi(int(tdy * 0.17)) % 3
+		if pk == 0:
+			b.circle(Vector2(tdx + 1.5, tdy) + Shade.light * 1.2, 2.1, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+			b.circle(Vector2(tdx + 1.5, tdy), 1.9, Color(0.50, 0.48, 0.44))
+		elif pk == 1:
+			b.polygon(PackedVector2Array([
+				Vector2(tdx + 1.5, tdy - 1.5), Vector2(tdx + 4.5, tdy),
+				Vector2(tdx + 1.5, tdy + 1.5),
+			]), Color(0.96, 0.93, 0.88))
+		else:
+			b.line(Vector2(tdx, tdy), Vector2(tdx + 3.0, tdy + 1.8), Color(0.28, 0.32, 0.20), 1.2)
+		tdy += 36.0
+	# Soft blown sand banked against the seaward foot of the plaza seawall (x = 436..452)
+	b.rect(Rect2(438.0, top_y, 8.0, bot - top_y), Color(m.BEACH_SAND.r, m.BEACH_SAND.g, m.BEACH_SAND.b, 0.6))
+	b.rect(Rect2(444.0, top_y, 8.0, bot - top_y), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.16))
+	# 2. Coastal limestone esplanade paving from the seawall (x = 452) to the east wall (x = 1196)
+	var plaza := Rect2(452.0, top_y, 744.0, bot - top_y)
 	b.rect(plaza, Color(0.85, 0.82, 0.76))
-	b.rect(Rect2(452.0, top, 728.0, bot - top), Color(0.88, 0.85, 0.79))
-	# Seaward timber promenade coping & balustrade along x = 380
-	b.rect(Rect2(452.0, top, 18.0, bot - top), Color(0.48, 0.28, 0.22))
-	b.line(Vector2(470.0, top), Vector2(470.0, bot), Color(0.72, 0.68, 0.62), 2.5)
-	# Ashlar limestone paving grid across the hotel esplanade
+	b.rect(Rect2(452.0, top - 160.0, 738.0, bot - (top - 160.0)), Color(0.88, 0.85, 0.79))
+	# Continuous seaward stone seawall kerb & timber promenade balustrade from top_y to bot
+	b.rect(Rect2(448.0, top_y, 4.0, bot - top_y), Color(0.68, 0.64, 0.58))
+	b.rect(Rect2(452.0, top_y, 18.0, bot - top_y), Color(0.48, 0.28, 0.22))
+	var cpy := top_y + 22.0
+	while cpy < bot:
+		b.line(Vector2(452.0, cpy), Vector2(470.0, cpy), Color(0.34, 0.19, 0.14), 1.5)
+		cpy += 22.0
+	b.line(Vector2(452.0, top_y), Vector2(452.0, bot), Color(0.36, 0.20, 0.15), 2.0)
+	b.rect(Rect2(470.0, top_y, 4.0, bot - top_y), Color(0.72, 0.68, 0.62))
+	b.line(Vector2(474.0, top_y), Vector2(474.0, bot), Color(0.60, 0.56, 0.50), 1.4)
+	# Ashlar limestone paving grid across the entire hotel esplanade (top_y to bot)
 	var gx := 500.0
-	while gx < 1180.0:
-		b.line(Vector2(gx, top), Vector2(gx, bot), Color(0.79, 0.76, 0.70), 1.4)
+	while gx < 1190.0:
+		b.line(Vector2(gx, top_y), Vector2(gx, bot), Color(0.79, 0.76, 0.70), 1.4)
 		gx += 60.0
-	var gy := top + 40.0
+	var gy := top_y + 40.0
 	while gy < bot:
-		b.line(Vector2(470.0, gy), Vector2(1180.0, gy), Color(0.79, 0.76, 0.70), 1.4)
+		b.line(Vector2(474.0, gy), Vector2(1186.0, gy), Color(0.79, 0.76, 0.70), 1.4)
 		gy += 60.0
+	# Northern coastal garden terrace & stone boundary parapet behind Hotel L'Onada (y = top_y..HOTEL_RECT.position.y)
+	var nwall_y := HOTEL_RECT.position.y - 96.0
+	b.rect(Rect2(474.0, top_y, 716.0, nwall_y - top_y), Color(0.78, 0.74, 0.67))
+	b.rect(Rect2(474.0, nwall_y - 8.0, 716.0, 8.0), Color(0.66, 0.62, 0.56))
+	b.line(Vector2(474.0, nwall_y), Vector2(1190.0, nwall_y), Color(0.52, 0.48, 0.42), 2.0)
+	# Landscaped coastal planters along the north terrace court behind the hotel
+	var pbx := 510.0
+	var pbk := 0
+	while pbx < 1140.0:
+		var bed := Rect2(pbx, nwall_y + 18.0, 88.0, 44.0)
+		b.rect(Rect2(bed.position + Shade.light * 5.0, bed.size), sh)
+		b.rect(bed, Color(0.62, 0.58, 0.50))
+		b.rect(bed.grow(-4.0), Color(0.38, 0.32, 0.24))
+		for ti in range(2):
+			var lp := Vector2(bed.position.x + 24.0 + float(ti) * 40.0, bed.get_center().y)
+			b.circle(lp + Shade.light * 4.0, 14.0, sh)
+			b.circle(lp, 13.5, Color(0.22, 0.40, 0.25))
+			b.circle(lp - Shade.light * 3.0, 8.0, Color(0.32, 0.52, 0.32))
+			b.circle(lp + Vector2(3.0, -2.0), 2.6, Color(0.94, 0.48, 0.62) if (pbk + ti) % 2 == 0 else Color(0.96, 0.92, 0.94))
+		pbx += 132.0
+		pbk += 1
+	# Continuous eastern limestone parapet wall & coping (x = 1184..1200) meeting the walk's building line
+	b.rect(Rect2(1180.0, top_y, 4.0, bot - top_y), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14))
+	b.rect(Rect2(1184.0, top_y, 14.0, bot - top_y), Color(0.66, 0.62, 0.55))
+	b.rect(Rect2(1186.5, top_y, 9.0, bot - top_y), Color(0.76, 0.72, 0.65))
+	b.line(Vector2(1184.0, top_y), Vector2(1184.0, bot), Color(0.50, 0.46, 0.40), 1.6)
+	b.line(Vector2(1198.0, top_y), Vector2(1198.0, bot), Color(0.46, 0.42, 0.37), 1.6)
+	var eky := top_y + 36.0
+	while eky < bot:
+		b.line(Vector2(1184.0, eky), Vector2(1198.0, eky), Color(0.54, 0.50, 0.44), 1.2)
+		eky += 36.0
 	# Decorative nautical compass inlay in the center of the plaza
 	var comp := Vector2(640.0, m.GATE_Y - 290.0)
 	b.circle(comp, 44.0, Color(0.76, 0.73, 0.67))
@@ -1464,7 +1883,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	# 3. Hotel L'Onada (our own name, not a real hotel's) rising behind the north edge of the plaza:
 	# modern white curved ship-deck terraces, blue glass railings, and rooftop infinity pool
 	var hrect := HOTEL_RECT
-	b.rect(Rect2(hrect.position + Shade.light * 18.0, hrect.size), sh)
+	b.rect(Rect2(hrect.position + Shade.light * 14.0, hrect.size), sh)
 	b.rect(hrect, Color(0.95, 0.96, 0.97))
 	b.rect(hrect.grow(-8.0), Color(0.89, 0.91, 0.93))
 	# Stepped white ship-deck balconies with blue glass railings along the south facade
