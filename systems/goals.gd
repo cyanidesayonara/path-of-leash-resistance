@@ -144,7 +144,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"escalator": {"text": "Ride the outdoor escalators up the hill", "target": 1, "fn": func() -> int: return m.walkway_rides},
 		"bunker": {"text": "Wrap the leash around an anti-aircraft gun", "target": 1, "fn": func() -> int: return 1 if bool(m.get("carmel_cannon_wrapped")) else 0},
 		"dry": {"text": "Get your human home mostly dry", "target": 1, "fn": func() -> int: return 1 if m.human_soak < 0.5 else 0,
-			"readout": func() -> Dictionary: return {"text": "%d%% wet" % int(round(m.human_soak * 100.0)), "bad": m.human_soak >= 0.5}},
+			"readout": func() -> Dictionary: return {"text": I18n.t("goal_wet") % int(round(m.human_soak * 100.0)), "bad": m.human_soak >= 0.5}},
 		"splash": {"text": "Splash through %d puddles at speed", "target": 4, "fn": func() -> int: return m.splashes},
 		"shallows": {"text": "Splash through the shallows %d times", "target": 4, "fn": func() -> int: return m.shallow_splashes},
 		"thief": {"text": "Stop %d pickpockets", "target": 2, "fn": func() -> int: return m.thieves_stopped},
@@ -242,6 +242,7 @@ static func defs(m: Node2D) -> Dictionary:
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},
 		"jamon": {"text": "Find the hidden pernil", "target": 1, "fn": func() -> int: return 1 if bool(m.get("jamon_found")) else 0},
 		"clock": {"text": "Beat the clock (under %s)" % clock(float(m.clock_target)), "target": 1,
+			"arg": clock(float(m.clock_target)),
 			"fn": func() -> int: return 1 if (bool(m.finished) and float(m.elapsed) <= float(m.clock_target)) else 0,
 			"readout": func() -> Dictionary: return {"text": clock(float(m.elapsed)), "bad": float(m.elapsed) > float(m.clock_target)}},
 	}
@@ -261,6 +262,7 @@ static func build_quests(m: Node2D) -> void:
 		var d: Dictionary = all[id]
 		m.active_quests.append({
 			"id": id, "text": d.text, "target": int(d.target), "fn": d.fn, "readout": d.get("readout"),
+			"arg": d.get("arg"),
 			"was_true": int(d.fn.call()) >= int(d.target),
 		})
 	m.tofu_quest_active = ("tofu" in ids) and not Game.goal_done(m.lvl, "tofu")
@@ -291,6 +293,12 @@ static func row_extras(m: Node2D, q: Dictionary, row: Dictionary) -> Dictionary:
 
 static func quest_text(q: Dictionary) -> String:
 	var s: String = q.text
+	# the goal's words in the player's language: the clock goal carries its
+	# time, every other goal (a walk's prize too) is found by its English
+	if String(q.get("id", "")) == "clock" and q.get("arg") != null:
+		s = I18n.t("goal_clock") % String(q.arg)
+	else:
+		s = I18n.of_english(s)
 	if "%d" in s:
 		s = s % int(q.target)
 	# sentence case, whichever list the goal came from
@@ -313,11 +321,11 @@ static func credit(m: Node2D, q: Dictionary) -> void:
 	# by the goal list, not in the middle of the screen: a first time is
 	# gold, one already done on an earlier walk is quieter
 	if not Game.recording(m.lvl):
-		m.feed.toast("goal", ("FREE PLAY" if Game.free_play else "FREE WALK") + "  +5", quest_text(q), Color(0.98, 0.80, 0.38))
+		m.feed.toast("goal", I18n.t("toast_free_play" if Game.free_play else "toast_free_walk"), quest_text(q), Color(0.98, 0.80, 0.38))
 	elif newly:
-		m.feed.toast("goal", "GOAL!  +5", quest_text(q), Color(0.98, 0.80, 0.38))
+		m.feed.toast("goal", I18n.t("toast_goal"), quest_text(q), Color(0.98, 0.80, 0.38))
 	else:
-		m.feed.toast("goal", "DONE AGAIN  +5", quest_text(q), Color(0.58, 0.78, 0.62))
+		m.feed.toast("goal", I18n.t("toast_goal_again"), quest_text(q), Color(0.58, 0.78, 0.62))
 
 
 static func check(m: Node2D) -> void:
@@ -449,36 +457,36 @@ static func finish_walk(m: Node2D) -> void:
 		var perfect := total > 0 and run_done >= total
 		var rating := ""
 		if run_done == 0:
-			rating = "...well. A dog, anyway."
+			rating = I18n.t("results_rating_none")
 		elif perfect:
-			rating = "PERFECT WALK - every goal in one go"
+			rating = I18n.t("results_rating_perfect")
 		var rec: Dictionary = Game.record_result(m.lvl, m.bones, m.elapsed, perfect)
 		var lines: Array = []
 		var star_gain: int = Game.stars(m.lvl) - m.run_pre_level_stars
 		var head := ""
 		if Game.free_play:
-			head += "FREE PLAY (PRACTICE)   "
+			head += I18n.t("results_free_play") + "   "
 		elif Game.is_free_walk(m.lvl):
-			head += "FREE WALK   "
+			head += I18n.t("results_free_walk") + "   "
 		elif star_gain > 0:
-			head += "+%d STAR%s   " % [star_gain, "" if star_gain == 1 else "S"]
+			head += I18n.t("results_star_one" if star_gain == 1 else "results_star_other") % star_gain + "   "
 		if rec.bones_record:
-			head += "NEW BONES RECORD   "
+			head += I18n.t("results_bones_record") + "   "
 		if rec.time_record:
-			head += "BEST TIME"
+			head += I18n.t("results_best_time")
 		if head != "":
 			lines.append(head.strip_edges())
-		lines.append("%d/%d goals here    %d stars in all    %d bones banked"
+		lines.append(I18n.t("results_tally")
 			% [lifetime, total, Game.total_stars(), Game.total_bones])
 		if m.lvl == "partit" and m.match_day != null and m.match_day.result != "":
-			lines.append("The phone says %s." % MatchDay.score_line(m.match_day.result))
+			lines.append(I18n.t("results_phone_says") % MatchDay.score_line(m.match_day.result))
 		if m.combo.best_mult >= 2:
 			var best_style: bool = Game.record_style(m.lvl, int(m.combo.run_style))
-			lines.append("Best combo x%d    style %d%s" % [m.combo.best_mult, m.combo.run_style,
-				"    BEST STYLE" if best_style else ""])
+			lines.append(I18n.t("results_best_combo") % [m.combo.best_mult, m.combo.run_style,
+				I18n.t("results_best_style") if best_style else ""])
 		if m.overmarks > 0:
-			lines.append("%d spot%s over-marked. They will know."
-				% [m.overmarks, "" if m.overmarks == 1 else "s"])
+			lines.append(I18n.t("results_overmark_one" if m.overmarks == 1 else "results_overmark_other")
+				% m.overmarks)
 		# stars and the chase gates both open walks: announce what is open now
 		# that was not when the walk began
 		# (a walk begun without GET READY has no snapshot: stars only)
@@ -486,9 +494,9 @@ static func finish_walk(m: Node2D) -> void:
 			var opened: bool = Game.gate_crossed(m.run_pre_total_stars, other) if m.run_pre_unlocked.is_empty() \
 				else Game.is_unlocked(other) and not m.run_pre_unlocked.has(other)
 			if opened:
-				lines.append("NEW WALK UNLOCKED: %s" % Game.LEVEL_NAMES[other])
+				lines.append(I18n.t("results_unlocked") % Game.LEVEL_NAMES[other])
 		m.results = {
-			"title": "VERY GOOD DOG." if perfect else "GOOD DOG.", "stars": Game.stars(m.lvl),
+			"title": I18n.t("results_very_good_dog" if perfect else "results_good_dog"), "stars": Game.stars(m.lvl),
 			"rating": rating,
 			"rows": rows, "bones": m.bones, "phone": m.phone_hp, "time": int(m.elapsed),
 			"goal_bones": run_done * 5, "lines": lines,
@@ -536,18 +544,18 @@ static func finish_tutorial_walk(m: Node2D) -> void:
 	if m.epilogue_stage != null:
 		m.epilogue_stage.reset()
 	m.results = {
-		"title": "GOOD DOG.",
+		"title": I18n.t("results_good_dog"),
 		"stars": 0,
-		"rating": "You know the ropes.",
+		"rating": I18n.t("results_tut_rating"),
 		"rows": [],
 		"bones": m.bones,
 		"phone": m.phone_hp,
 		"time": int(m.elapsed),
 		"goal_bones": 0,
 		"lines": [
-			("%d bones banked" % m.bones) if banked else ("%d bones (banked the first time around)" % m.bones),
-			"Every real walk has goals to chase.",
-			"Next: El Barri, the everyday walk.",
+			(I18n.t("results_tut_banked") % m.bones) if banked else (I18n.t("results_tut_banked_before") % m.bones),
+			I18n.t("results_tut_goals"),
+			I18n.t("results_tut_next"),
 		],
 	}
 	m.results_card.visible = true

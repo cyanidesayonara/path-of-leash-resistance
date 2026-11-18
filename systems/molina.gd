@@ -257,7 +257,7 @@ static func idle_status(m: Node2D) -> String:
 	for i in range(CANNONS.size()):
 		var nz: Vector2 = CANNONS[i][0]
 		if cannon_state(i, m.elapsed) == 1 and absf(dp.y - nz.y) < 260.0:
-			return "SNOW CANNON! KEEP OUT OF ITS WAY"
+			return I18n.t("walk_molina_cannon")
 	return ""
 
 

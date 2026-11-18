@@ -12,21 +12,16 @@ const SHOW_S := 6.0
 
 # tests set this to exercise tips in a headless run
 static var force_headless := false
+# the tip on the banner now, so a change of language can re-fill it
+static var showing := ""
 
-const TEXT := {
-	"start": "{plant} DIGS IN WHEN THEY PULL. {pee} MARKS A SPOT",
-	"crack": "KEEP YOUR HUMAN ON THEIR FEET. THREE CRACKS AND THE PHONE IS GONE",
-	"teeter": "WOBBLING! STEER AWAY FROM THE EDGE",
-	"correct": "PULL GENTLY AND YOUR HUMAN FOLLOWS. HAUL AND THEY SNAP",
-	"whirl": "WOUND AROUND A POST! PULL AWAY TO SPIN THEM OFF",
-	"swing": "HOLD {turbo} AS THE LEASH CATCHES A POST TO SWING AROUND IT",
-	"grind": "HOLD {turbo} RUNNING ALONG A LEDGE TO RIDE IT",
-}
+# each tip's words are the I18n key "tip_" + its id
+const IDS: Array[String] = ["start", "crack", "teeter", "correct", "whirl", "swing", "grind"]
 
 
 # Show a tip if this player has never seen it. True when it was shown.
 static func show(m: Node2D, id: String) -> bool:
-	if m.tutorial_mode or m.auto_walk or not TEXT.has(id) or Game.tips_seen.has(id):
+	if m.tutorial_mode or m.auto_walk or not id in IDS or Game.tips_seen.has(id):
 		return false
 	# not for test and tool runs: they would spend the player's tips and
 	# write their save, and screenshots want the walk's own banner
@@ -36,10 +31,16 @@ static func show(m: Node2D, id: String) -> bool:
 		return false
 	Game.tips_seen.append(id)
 	Game.save_records()
-	m.tip_text = Prompts.fill(String(TEXT[id]))
+	showing = id
+	m.tip_text = Prompts.fill(I18n.t("tip_" + id))
 	m.tip_t = SHOW_S
 	m._update_hud()
 	return true
+
+
+static func refill(m: Node2D) -> void:
+	if m.tip_t > 0.0 and showing != "":
+		m.tip_text = Prompts.fill(I18n.t("tip_" + showing))
 
 
 static func tick(m: Node2D, delta: float) -> void:
@@ -48,4 +49,5 @@ static func tick(m: Node2D, delta: float) -> void:
 	m.tip_t -= delta
 	if m.tip_t <= 0.0:
 		m.tip_text = ""
+		showing = ""
 		m._update_hud()

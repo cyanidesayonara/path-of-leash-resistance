@@ -72,7 +72,7 @@ func _draw() -> void:
 	var f := ThemeDB.fallback_font
 	var h := _panel_height()
 	Kit.card(self, Rect2(0, 0, W, h), Kit.accent("settings"))
-	Kit.heading(self, Vector2(NAME_X, 46), "SETTINGS", 27, Kit.accent("settings"))
+	Kit.heading(self, Vector2(NAME_X, 46), I18n.t("settings_title"), 27, Kit.accent("settings"))
 	draw_line(Vector2(NAME_X, 62), Vector2(W - NAME_X, 62), Color(1, 1, 1, 0.14), 1.5)
 	var rows: Array = main.settings_rows()
 	for i in range(rows.size()):
@@ -133,6 +133,6 @@ func _toggle(f: Font, y: float, on: bool, picked: bool) -> void:
 	draw_rect(box, Color(1, 1, 1, 0.22), false, 1.2)
 	var knob := Vector2(box.position.x + (38.0 if on else 14.0), y)
 	draw_circle(knob, 8.0, Kit.SAFFRON if picked else Kit.INK_SOFT)
-	draw_string(f, Vector2(BAR_X + BAR_W + 16.0, y + 6.0), "ON" if on else "OFF",
+	draw_string(f, Vector2(BAR_X + BAR_W + 16.0, y + 6.0), I18n.t("setting_on" if on else "setting_off"),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 18,
 		Kit.INK if picked else Kit.INK_DIM)

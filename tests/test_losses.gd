@@ -49,11 +49,15 @@ func _run() -> void:
 		var tw: float = Kit.text_w(Kit.display(), title, px)
 		_check(tw <= 660.0 - Kit.HEAD_PAD, "'%s' fits the card, outline included (%.0fpx at %d)" % [title, tw, px])
 
-	# every hint is a plain sentence that fits the card
+	# every hint is a plain sentence that fits the card, in every language
+	var I: GDScript = load("res://hud/i18n.gd")
 	for cause: String in L.HINT:
-		for line: String in String(L.HINT[cause]).split("\n"):
-			_check(line.length() <= 64, "hint '%s' fits the card (%d chars)" % [cause, line.length()])
-		_check(not String(L.HINT[cause]).contains("{"), "hint '%s' names no key" % cause)
+		for lang: String in I.LANGS:
+			var hint := String(I.T[L.HINT[cause]][lang])
+			for line: String in hint.split("\n"):
+				_check(line.length() <= 64, "hint '%s' (%s) fits the card (%d chars)" % [cause, lang, line.length()])
+			_check(not hint.contains("{"), "hint '%s' (%s) names no key" % [cause, lang])
+	var comfort: String = I.t(L.COMFORT)
 
 	# the first loss: the joke, the hint, the comfort
 	m.phone_hp = 1
@@ -63,7 +67,7 @@ func _run() -> void:
 	_check(String(n.title) == "PHONE SMASHED", "the card keeps its title")
 	var body := "\n".join(n.body)
 	_check(body.contains("Bikes knock your human over"), "it says how to avoid it next time")
-	_check(body.contains(L.COMFORT), "the first loss ever gets a word of comfort")
+	_check(body.contains(comfort), "the first loss ever gets a word of comfort")
 	_check(not body.contains("new goal"), "no goals line when the walk ticked none")
 	_check(game.walks_lost == 1, "the loss is counted")
 	var verbs: Array = []
@@ -76,7 +80,7 @@ func _run() -> void:
 	var t: String = L.card(m, "THE HUMAN WENT DOWN THE MANHOLE\n\nThe walk does not.", "manhole")
 	_check(t.contains("Steer your human around open manholes"), "the manhole has its own hint")
 	_check(t.contains("This walk ticked 2 new goals. They stay ticked."), "the new goals are counted")
-	_check(not t.contains(L.COMFORT), "the comfort is for the first loss only")
+	_check(not t.contains(comfort), "the comfort is for the first loss only")
 	m.run_goals_new = 1
 	_check(L.card(m, "X", "").contains("This walk ticked a new goal. It stays ticked."), "one goal reads as one")
 	_check(not L.card(m, "X\n\nY", "").contains("\n\n\n"), "a loss with no hint has no gap for one")

@@ -1047,21 +1047,21 @@ func _update_fx(delta: float) -> void:
 func status() -> String:
 	match state:
 		State.PINCER_WARN:
-			return "PINCER ATTACK! STEP OUT!"
+			return I18n.t("boss_lleons_pincer")
 		State.ROAR_WARN:
-			return Prompts.fill("INCOMING ROAR! {plant} TO DIG IN!")
+			return Prompts.fill(I18n.t("boss_lleons_roar"))
 		State.RUSH_WARN:
-			return "CROSSING RUSH! TRICK THEM INTO COLLIDING!"
+			return I18n.t("boss_lleons_rush")
 		State.STUNNED:
 			if stun_net:
-				return Prompts.fill("NETTED! {bark} AT HIS NOSE!")
+				return Prompts.fill(I18n.t("boss_lleons_net"))
 			if stun_horn:
-				return Prompts.fill("THEY FLINCHED! {bark} AT THEIR NOSES!")
-			return Prompts.fill("HEAD BUMP! {bark} AT THEIR NOSES!")
+				return Prompts.fill(I18n.t("boss_lleons_flinch"))
+			return Prompts.fill(I18n.t("boss_lleons_bump"))
 		State.STAND:
-			return "LOOP LEASH AROUND BOTH PLINTHS  %d/%d" % [legs_tied, LEGS_TO_TIE]
+			return I18n.t("boss_lleons_loop") % [legs_tied, LEGS_TO_TIE]
 		State.SAT:
-			return Prompts.fill("{bark} ON EACH NOSE TO SETTLE THEM")
+			return Prompts.fill(I18n.t("boss_lleons_settle"))
 	return ""
 
 

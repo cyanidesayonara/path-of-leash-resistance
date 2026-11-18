@@ -135,8 +135,8 @@ func _draw() -> void:
 
 func _top(vs: Vector2, step: int) -> void:
 	# centred: the touch MENU button lives in the top-left corner
-	var bw := Kit.breadcrumb_w(Flow.STEP_NAMES)
-	Kit.breadcrumb(self, Vector2(vs.x * 0.5 - bw * 0.5, 48.0), Flow.STEP_NAMES, step,
+	var bw := Kit.breadcrumb_w(Flow.step_names())
+	Kit.breadcrumb(self, Vector2(vs.x * 0.5 - bw * 0.5, 48.0), Flow.step_names(), step,
 		Kit.accent(["walk", "details"][step]))
 	Kit.purse(self, Vector2(vs.x - 40.0, 48.0), Game.total_stars(), Game.total_bones)
 
@@ -213,10 +213,10 @@ func _walk(vs: Vector2) -> void:
 		for i in range(3):
 			Icons.draw_star(self, Vector2(r.position.x + 34.0 + float(i) * 26.0, row_y - 6.0), 10.0,
 				i < int(info.stars))
-		var goals := "%d / %d goals" % [int(info.goals), int(info.goals_total)]
+		var goals := I18n.t("walk_goals") % [int(info.goals), int(info.goals_total)]
 		draw_string(body, Vector2(r.position.x + 126.0, row_y), goals, HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 17, Kit.INK)
-		var right := "free play" if Game.free_play else String(info.best)
+		var right := I18n.t("walk_free_play") if Game.free_play else String(info.best)
 		if not Game.free_play and String(info.get("sky", "")) != "":
 			right = "%s   %s" % [String(info.sky), right]
 		draw_string(body, Vector2(r.position.x, row_y), right,
@@ -297,7 +297,7 @@ func _details(vs: Vector2) -> void:
 	# name and gloss on the ground above it are never under it
 	var r := Rect2(48.0, maxf(8.0, vs.y - Kit.BAR_FROM_BOTTOM - 22.0 - h), DETAILS_W, h)
 	Kit.card(self, r, acc)
-	Kit.heading(self, r.position + Vector2(28.0, 42.0), "GET READY", 24, acc)
+	Kit.heading(self, r.position + Vector2(28.0, 42.0), I18n.t("details_title"), 24, acc)
 	var y := r.position.y + 62.0
 	var f := Kit.display()
 	for i in range(rows.size()):
@@ -324,7 +324,7 @@ func _details(vs: Vector2) -> void:
 		var vcol: Color = Kit.INK_FAINT if (fixed or not unlocked) else (Kit.INK if picked else Kit.INK_SOFT)
 		draw_string(f, Vector2(vx - vw, y + 27.0), val, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, vcol)
 		if fixed:
-			var why := String(row.get("hint", "set by the walk"))
+			var why := String(row.get("hint", I18n.t("details_set_by_walk")))
 			draw_string(Kit.body(), Vector2(vx - vw - 12.0 - Kit.text_w(Kit.body(), why, 13), y + 26.0), why,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_FAINT)
 		elif not unlocked:
@@ -379,7 +379,7 @@ func _shop(vs: Vector2) -> void:
 	var acc := Kit.accent("shop")
 	var r := shop_rect()
 	Kit.card(self, r, acc, 16)
-	Kit.heading(self, r.position + Vector2(36.0, 54.0), "WARDROBE", 30, acc)
+	Kit.heading(self, r.position + Vector2(36.0, 54.0), I18n.t("shop_title"), 30, acc)
 	var f := Kit.display()
 	var bones := str(Game.total_bones)
 	var bx := r.end.x - 36.0 - Kit.text_w(f, bones, 22)
@@ -389,7 +389,7 @@ func _shop(vs: Vector2) -> void:
 	var tab := Flow.shop_tab_of(main)
 	var tx := r.position.x + 440.0
 	for k: String in Flow.SHOP_TABS:
-		var nm: String = Flow.SHOP_TAB_NAMES[k]
+		var nm: String = I18n.t(Flow.SHOP_TAB_NAMES[k])
 		var on := k == tab
 		Kit.heading(self, Vector2(tx, r.position.y + 104.0), nm, 17, acc if on else Kit.INK_FAINT)
 		if on:
@@ -411,18 +411,18 @@ func _shop(vs: Vector2) -> void:
 	var ncol := Kit.INK_SOFT
 	match st:
 		"maxed":
-			note = "Maxed out (Level %d)" % Game.MAX_STAT_POINTS
+			note = I18n.t("shop_maxed_note") % Game.MAX_STAT_POINTS
 			ncol = Kit.GOOD
 		"wearing":
-			note = "%s is wearing this" % Game.dog_name()
+			note = I18n.t("shop_wearing_note") % Game.dog_name()
 			ncol = Kit.GOOD
 		"owned":
-			note = "Yours already"
+			note = I18n.t("shop_owned_note")
 		"afford":
-			note = "%d bones" % int(data.cost)
+			note = I18n.t("shop_cost_note") % int(data.cost)
 			ncol = Kit.GOLD
 		"short":
-			note = "%d bones - %d more to go" % [int(data.cost), int(data.cost) - Game.total_bones]
+			note = I18n.t("shop_short_note") % [int(data.cost), int(data.cost) - Game.total_bones]
 			ncol = Kit.INK_FAINT
 	var shake: float = sin(float(main.locked_nudge) * 60.0) * 8.0 * (float(main.locked_nudge) / 0.35)
 	draw_string(Kit.body(), Vector2(r.position.x + 36.0 + shake, r.position.y + 482.0), note,
@@ -443,7 +443,7 @@ func _shop(vs: Vector2) -> void:
 		_swatch(Vector2(lx + 30.0, y + rr.size.y * 0.5), tab, key, d)
 		if tab == "stats":
 			var cur_stat := Game.get_dog_stat(Game.dog, key)
-			var stat_str := "Lv %d/%d" % [cur_stat, Game.MAX_STAT_POINTS]
+			var stat_str := I18n.t("shop_level") % [cur_stat, Game.MAX_STAT_POINTS]
 			draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), "%s (%s)" % [String(d.name), stat_str], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
 		else:
 			draw_string(Kit.body(), Vector2(lx + 56.0, y + 25.0), String(d.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
@@ -451,15 +451,15 @@ func _shop(vs: Vector2) -> void:
 		var right := rr.end.x - 16.0
 		match rs:
 			"maxed":
-				var mw := Kit.text_w(f, "MAXED", 13)
+				var mw := Kit.text_w(f, I18n.t("shop_maxed"), 13)
 				draw_rect(Rect2(right - mw - 16.0, y + 9.0, mw + 16.0, 20.0), Color(Kit.GOOD.r, Kit.GOOD.g, Kit.GOOD.b, 0.22))
-				draw_string(f, Vector2(right - mw - 8.0, y + 24.0), "MAXED", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.GOOD)
+				draw_string(f, Vector2(right - mw - 8.0, y + 24.0), I18n.t("shop_maxed"), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.GOOD)
 			"wearing":
-				var tw := Kit.text_w(f, "WEARING", 13)
+				var tw := Kit.text_w(f, I18n.t("shop_wearing"), 13)
 				draw_rect(Rect2(right - tw - 16.0, y + 9.0, tw + 16.0, 20.0), Color(Kit.GOOD.r, Kit.GOOD.g, Kit.GOOD.b, 0.22))
-				draw_string(f, Vector2(right - tw - 8.0, y + 24.0), "WEARING", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.GOOD)
+				draw_string(f, Vector2(right - tw - 8.0, y + 24.0), I18n.t("shop_wearing"), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.GOOD)
 			"owned":
-				draw_string(f, Vector2(lx, y + 25.0), "OWNED", HORIZONTAL_ALIGNMENT_RIGHT, lw - 16.0, 13, Kit.INK_FAINT)
+				draw_string(f, Vector2(lx, y + 25.0), I18n.t("shop_owned"), HORIZONTAL_ALIGNMENT_RIGHT, lw - 16.0, 13, Kit.INK_FAINT)
 			_:
 				var cost := str(int(d.cost))
 				var ccol: Color = Kit.GOLD if rs == "afford" else Kit.INK_FAINT
@@ -533,7 +533,7 @@ func _progress(vs: Vector2) -> void:
 	var w := r.size.x
 	_card_pop(r.get_center())
 	Kit.card(self, r, acc, 16)
-	Kit.heading(self, r.position + Vector2(36.0, 44.0), "YOUR WALKS", 26, acc)
+	Kit.heading(self, r.position + Vector2(36.0, 44.0), I18n.t("progress_title"), 26, acc)
 	Kit.purse(self, Vector2(r.end.x - 36.0, r.position.y + 42.0), Game.total_stars(), Game.total_bones)
 	var f := Kit.display()
 	# the page: this chapter's number and a tab for each, as on the walk select
@@ -549,7 +549,7 @@ func _progress(vs: Vector2) -> void:
 	var c_goals := r.position.x + w * 0.60
 	var c_best := r.position.x + w * 0.76
 	var hy := r.position.y + 78.0
-	for col: Array in [[r.position.x + 36.0, "WALK"], [c_stars, "STARS"], [c_goals, "GOALS"], [c_best, "BEST"]]:
+	for col: Array in [[r.position.x + 36.0, I18n.t("progress_col_walk")], [c_stars, I18n.t("progress_col_stars")], [c_goals, I18n.t("progress_col_goals")], [c_best, I18n.t("progress_col_best")]]:
 		draw_string(f, Vector2(float(col[0]), hy), String(col[1]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Kit.INK_FAINT)
 	var y := hy + 10.0
 	var font_px := 17 if rh >= 28.0 else (15 if rh >= 16.0 else (13 if rh >= 11.0 else 10))
@@ -580,10 +580,10 @@ func _progress(vs: Vector2) -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), lock_sz, Kit.INK_FAINT)
-			var lock_lbl := "Opens at %d stars" % int(row.gate)
+			var lock_lbl := I18n.t("progress_opens_at") % int(row.gate)
 			if String(row.get("chase_gate", "")) != "":
 				var ch_id: String = String(row.chase_gate)
-				lock_lbl = "Finish %s first" % Game.LEVEL_NAMES.get(ch_id, ch_id)
+				lock_lbl = I18n.t("progress_finish_first") % Game.LEVEL_NAMES.get(ch_id, ch_id)
 			draw_string(body, Vector2(c_stars + 24.0, base), lock_lbl,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 			continue
@@ -609,7 +609,7 @@ func _pause(vs: Vector2) -> void:
 	_card_pop(r.get_center())
 	Kit.card(self, r, acc)
 	Kit.mosaic(self, r)
-	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), "PAUSED", 30, acc,
+	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), I18n.t("pause_title"), 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, PAUSE_W)
 	var sub := "%s    %s" % [String(main._walk_name()), Flow.clock(float(main.elapsed))]
 	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 80.0), sub, HORIZONTAL_ALIGNMENT_CENTER,
@@ -668,7 +668,7 @@ func _walk_card(vs: Vector2) -> void:
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
 	if goals.is_empty():
-		draw_string(body, Vector2(r.position.x, y), "No goals on this walk.", HORIZONTAL_ALIGNMENT_CENTER,
+		draw_string(body, Vector2(r.position.x, y), I18n.t("walkcard_no_goals"), HORIZONTAL_ALIGNMENT_CENTER,
 			w, 17, Kit.INK_FAINT)
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
@@ -694,7 +694,7 @@ func _confirm(vs: Vector2) -> void:
 	var c := Flow.confirm_card(main)
 	var first := String(main.confirm_id) == "first"
 	var lines := String(c.body).split("\n")
-	var opts: Array = Flow.FIRST_OPTIONS if first else []
+	var opts: Array = Flow.first_options() if first else []
 	var extra := 16.0 + FIRST_ROW_H * float(opts.size()) + 44.0 if first else 0.0
 	var h := 150.0 + extra + 26.0 * float(lines.size() - 1)
 	var r := Rect2(vs.x * 0.5 - CONFIRM_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, CONFIRM_W, h)
@@ -720,7 +720,7 @@ func _confirm(vs: Vector2) -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
 		# the "don't ask again" box: the prompt bar's key ticks it, and the
 		# card shows whether it is ticked
-		var label := "Don't ask me again"
+		var label := I18n.t("confirm_dont_ask")
 		var tw: float = Kit.body().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		var box := 16.0
 		var x0 := r.position.x + CONFIRM_W * 0.5 - (box + 10.0 + tw) * 0.5

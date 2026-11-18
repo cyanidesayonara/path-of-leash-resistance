@@ -129,7 +129,7 @@ func _draw_shapes() -> void:
 		var on: bool = i < main.phone_hp
 		Icons.draw_phone_pip(_b, Vector2(PAD + i * 15, ROW_PHONE), 20.0, on)
 	var phone_col := LABEL_COL if main.phone_hp > 1 else Kit.BAD
-	_label("PHONE", 58.0, ROW_PHONE + 4.0, phone_col)
+	_label(I18n.t("vitals_phone"), 58.0, ROW_PHONE + 4.0, phone_col)
 
 	# the bones banked, right-aligned to the card's padding
 	var bones_s := str(main.bones)
@@ -144,7 +144,7 @@ func _draw_shapes() -> void:
 	if full and fmod(t / 350.0, 2.0) < 1.0:
 		tcol = Kit.SAFFRON_PALE
 	Icons.draw_droplet(_b, Vector2(PAD + 7.0, ROW_TANK + 7.5), 13.0, TANK_COL)
-	_label("PEE", LABEL_X, ROW_TANK)
+	_label(I18n.t("vitals_pee"), LABEL_X, ROW_TANK)
 	_bar(ROW_TANK, main.pee, tcol)
 
 	# the zoomies (green), gold while a golden bone lasts
@@ -157,13 +157,13 @@ func _draw_shapes() -> void:
 	elif main.dog.turbo_active and fmod(t / 120.0, 2.0) < 1.0:
 		ecol = Kit.LEAF_SOFT
 	Icons.draw_bolt(_b, Vector2(PAD + 7.0, ROW_ZOOM + 7.5), 13.0, ecol)
-	_label("ZOOMIES", LABEL_X, ROW_ZOOM)
+	_label(I18n.t("vitals_zoomies"), LABEL_X, ROW_ZOOM)
 	_bar(ROW_ZOOM, main.dog.energy, ecol)
 
 	# the spots her pee has marked, five drops in the pee's yellow filling in
 	# under its bar; the drop glyph at the label column is hollow, a spot
 	var made: int = mini(main.marks.size(), 5)
-	_label("MARKED", LABEL_X, ROW_MARKS)
+	_label(I18n.t("vitals_marked"), LABEL_X, ROW_MARKS)
 	for i in range(5):
 		var p := Vector2(BAR_X + 6.0 + i * 16.0, ROW_MARKS + 8.0)
 		if i < made:
@@ -174,7 +174,7 @@ func _draw_shapes() -> void:
 
 	# the streak, on the marked row's free end
 	if main.streak > 1:
-		var st := "x%d STREAK" % main.streak
+		var st := I18n.t("vitals_streak") % main.streak
 		var sw := Kit.text_w(Kit.display(), st, 10) + 10.0
 		var sr := Rect2(CARD_W - PAD - sw, ROW_MARKS, sw, 15.0)
 		_b.draw_rect(sr, Color(Kit.TURQUOISE, 0.30))
@@ -204,7 +204,7 @@ func _draw_shapes() -> void:
 				_b.draw_circle(c + Vector2(0.0, 2.0), 5.0, POOP_COL.darkened(0.2))
 				_b.draw_circle(c + Vector2(0.0, -1.5), 3.8, POOP_COL)
 				_b.draw_circle(c + Vector2(0.5, -4.5), 2.4, POOP_COL.lightened(0.12))
-				_label("POOP", LABEL_X, row, pcol)
+				_label(I18n.t("vitals_poop"), LABEL_X, row, pcol)
 				_bar(row, left, pcol)
 			"mood":
 				# a mood you cannot cancel has to be a mood you can see going

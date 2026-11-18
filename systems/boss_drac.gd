@@ -374,30 +374,30 @@ func spout_hint() -> String:
 		return ""
 	if main.dog.global_position.distance_to(pos) > 600.0:
 		return ""
-	return "STEP ON A SPOUT'S TILE TO SOAK HIM"
+	return I18n.t("boss_drac_spout")
 
 
 func status() -> String:
 	var near: bool = main != null and main.dog.global_position.distance_to(pos) < 600.0
 	match state:
 		State.TAIL_WHIP:
-			return "WATCH THE TAIL!" if near else ""
+			return I18n.t("boss_drac_tail") if near else ""
 		State.JET:
-			return "WATCH THE JET!" if near else ""
+			return I18n.t("boss_drac_jet") if near else ""
 		State.SLITHER:
-			return "WIND HIM ROUND A COLUMN" if near else ""
+			return I18n.t("boss_drac_wind") if near else ""
 		State.BENCH_WARN:
-			return "HE'S BOLTING ALONG THE BENCH!"
+			return I18n.t("boss_drac_bench")
 		State.BENCH_RUN:
-			return "GRIND TO THE BEND!"
+			return I18n.t("boss_drac_grind")
 		State.RETREAT:
-			return "AFTER HIM! TO HIS STEPS"
+			return I18n.t("boss_drac_retreat")
 		State.STAND:
 			if last_jet_warning():
-				return "WATCH THE JET!"
-			return "WRAP THE LEASH AROUND HIS LEGS  %d/%d" % [legs_tied, LEGS_TO_TIE]
+				return I18n.t("boss_drac_jet")
+			return I18n.t("boss_wrap_legs") % [legs_tied, LEGS_TO_TIE]
 		State.SLIDE:
-			return Prompts.fill("HE'S DOWN! {bark} ON HIS NOSE")
+			return Prompts.fill(I18n.t("boss_drac_down"))
 	return ""
 
 

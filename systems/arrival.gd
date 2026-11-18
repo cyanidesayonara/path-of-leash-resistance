@@ -133,7 +133,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	_hold_threat(m)
 	_apply(m, delta)
 	if float(m.arrival_t) >= SKIP_LOCK:
-		m.feed.set_banner("HEAD INSIDE")
+		m.feed.set_banner(I18n.t("hud_head_inside"))
 	m.dog.queue_redraw()
 	m.human.queue_redraw()
 	m.leash.queue_redraw()

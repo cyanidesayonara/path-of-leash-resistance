@@ -264,11 +264,11 @@ func banner(m: Node2D) -> String:
 		return ""
 	match state:
 		S.FORAGE, S.BOLT:
-			return "A SQUIRREL! CHASE IT UP A TREE"
+			return I18n.t("sq_chase")
 		S.RUSTLE, S.LEAP:
-			return "IT'S JUMPING! FOLLOW IT"
+			return I18n.t("sq_jump")
 		_:
-			return Prompts.fill("UNDER THE TREE: {bark} BARK AT IT")
+			return Prompts.fill(I18n.t("sq_bark"))
 
 
 # --- drawing: the squirrel, above the crowns ----------------------------------------

@@ -71,15 +71,12 @@ const Kit := preload("res://hud/ui_kit.gd")
 # what counts for the kid's dare, for a player who has not met the word yet
 # the dare card's width: it sits between the vitals and the goals card
 const DARE_W := 400.0
-const DARE_HOW := "Tricks: hold {turbo} and run round a ringed pole, grind a marked ledge, or fling your human. Zoomies are free while it runs."
 # how to take a dare on offer: it waits for her bark
 # the offer's prompt: the bark button itself, glowing, then these words; a
-# line under it says how to turn it down
-const DARE_TAKE := "to take the dare"
+# line under it says how to turn it down (I18n dare_how, dare_take, dare_leave)
 # the space above the offer's button row: its glowing halo reaches about 10 px
 # out from the key, which met the line above it ("Win 38 bones.")
 const TAKE_GAP := 12.0
-const DARE_LEAVE := "Walk on to leave it."
 # how long the card shows the button pressed and DARE ON! once she barks
 const TOOK_S := 0.9
 const TAKE_PX := 16
@@ -386,32 +383,32 @@ func _dare_card(vs: Vector2, y: float) -> void:
 	var lines: Array[String] = []
 	match String(ch.phase):
 		"offer":
-			var which := "DARE %d OF %d" % [g.dare_number(), g.dare_count()] if g != null else "DARE"
-			title = "%s: %d TRICKS IN %d SECONDS" % [which, int(ch.target), secs]
-			lines = [Prompts.fill(DARE_HOW), "%sWin %d bones." % ["Same dare, another go. " if bool(ch.retry) else "",
+			var which := I18n.t("dare_n_of") % [g.dare_number(), g.dare_count()] if g != null else I18n.t("dare_word")
+			title = I18n.t("dare_offer_title") % [which, int(ch.target), secs]
+			lines = [Prompts.fill(I18n.t("dare_how")), I18n.t("dare_win_bones") % [I18n.t("dare_retry") if bool(ch.retry) else "",
 				int(ch.reward)]]
 			if bool(ch.waiting):
-				lines.append(DARE_LEAVE)
+				lines.append(I18n.t("dare_leave"))
 			elif _took_t <= 0.0:
-				lines.append("Get ready...")
+				lines.append(I18n.t("dare_get_ready"))
 		"live":
-			title = "DARE: %d TRICKS" % int(ch.target)
-			lines = ["%d seconds left" % int(ceil(float(ch.timer))), String(main.dare_hint())]
+			title = I18n.t("dare_live_title") % int(ch.target)
+			lines = [I18n.t("dare_seconds_left") % int(ceil(float(ch.timer))), String(main.dare_hint())]
 		_:
-			var who: String = g.display_name() if g != null else "them"
+			var who: String = g.display_name() if g != null else I18n.t("dare_them")
 			var more: bool = g != null and g.has_another_go()
 			if bool(ch.succeeded):
-				title = "DARE WON! +%d" % int(ch.reward)
-				lines = ["%d tricks in %d seconds. Nice." % [int(ch.target), secs]]
+				title = I18n.t("dare_won_title") % int(ch.reward)
+				lines = [I18n.t("dare_won_line") % [int(ch.target), secs]]
 				if more:
-					lines.append("Stay near %s, or come back later, for a harder one." % who)
+					lines.append(I18n.t("dare_harder") % who)
 				elif g != null:
-					lines.append("That was the last of %s's dares." % who)
+					lines.append(I18n.t("dare_last") % who)
 			else:
-				title = "DARE LOST"
-				lines = ["You landed %d of %d tricks." % [int(ch.count), int(ch.target)]]
+				title = I18n.t("dare_lost_title")
+				lines = [I18n.t("dare_lost_line") % [int(ch.count), int(ch.target)]]
 				if more:
-					lines.append("Stay near %s, or come back later, to try again." % who)
+					lines.append(I18n.t("dare_try_again") % who)
 	# no wider than the room between the corner cards, the text wrapped to it
 	var w := Kit.text_w(Kit.display(), title, 18) + 36.0
 	if String(ch.phase) == "live":
@@ -475,7 +472,7 @@ func _take_row(at: Vector2, col: Color, waiting: bool) -> float:
 			draw_rect(cap.grow(grow), Color(col.r, col.g, col.b, (0.22 - float(k) * 0.06) * (0.5 + 0.5 * pulse)))
 		draw_rect(cap.grow(2.5 + pulse * 1.0), col.lerp(Color.WHITE, 0.15 + 0.35 * pulse))
 		Kit.keycap(self, at, label, TAKE_PX, TAKE_CAP)
-		draw_string(Kit.body(), Vector2(cap.end.x + 12.0, at.y + TAKE_CAP * 0.5 + 6.0), DARE_TAKE,
+		draw_string(Kit.body(), Vector2(cap.end.x + 12.0, at.y + TAKE_CAP * 0.5 + 6.0), I18n.t("dare_take"),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Kit.INK)
 	else:
 		# pressed: the face sits down on its side, lit by the accent
@@ -487,7 +484,7 @@ func _take_row(at: Vector2, col: Color, waiting: bool) -> float:
 		var tw := Kit.text_w(f, label, TAKE_PX)
 		draw_string(f, Vector2(face.position.x + (w - tw) * 0.5, face.position.y + TAKE_CAP * 0.5 + float(TAKE_PX) * 0.36),
 			label, HORIZONTAL_ALIGNMENT_LEFT, -1, TAKE_PX, Kit.NAVY)
-		Kit.heading(self, Vector2(cap.end.x + 12.0, at.y + TAKE_CAP * 0.5 + 7.0), "DARE ON!", 18, col)
+		Kit.heading(self, Vector2(cap.end.x + 12.0, at.y + TAKE_CAP * 0.5 + 7.0), I18n.t("dare_on"), 18, col)
 	return at.y + TAKE_CAP + 12.0
 
 

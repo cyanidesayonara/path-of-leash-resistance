@@ -30,18 +30,24 @@ const HomeChase := preload("res://systems/home_chase.gd")
 const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
 
 const MAIN_ITEMS := ["play", "tutorial", "shop", "progress", "settings", "exit"]
-const MAIN_LABELS := {"play": "PLAY", "tutorial": "TUTORIAL", "shop": "WARDROBE",
-	"progress": "YOUR WALKS", "settings": "SETTINGS", "exit": "EXIT GAME"}
+# every name below is an I18n key; I18n.t gives the words
+const MAIN_LABELS := {"play": "menu_play", "tutorial": "menu_tutorial", "shop": "menu_shop",
+	"progress": "menu_progress", "settings": "menu_settings", "exit": "menu_exit"}
 # the first-time question's two answers, in list order
-const FIRST_OPTIONS := ["LEARN THE ROPES", "STRAIGHT TO THE WALKS"]
+const FIRST_OPTIONS := ["first_learn", "first_skip"]
 const DETAIL_ROWS := ["dog", "walker", "time", "weather"]
 const PAUSE_CELLS := ["resume", "walk", "restart", "settings", "select", "exit"]
-const PAUSE_LABELS := {"resume": "RESUME", "walk": "THIS WALK", "restart": "START AGAIN",
-	"settings": "SETTINGS", "select": "WALK SELECT", "exit": "EXIT GAME"}
+const PAUSE_LABELS := {"resume": "pause_resume", "walk": "pause_walk", "restart": "pause_restart",
+	"settings": "pause_settings", "select": "pause_select", "exit": "pause_exit"}
 const PAUSE_COLS := 2
 const SHOP_TABS := ["collar", "bandana", "coat", "stats"]
-const SHOP_TAB_NAMES := {"collar": "COLLARS", "bandana": "BANDANAS", "coat": "COATS", "stats": "TRAINING"}
-const STEP_NAMES := ["CHOOSE A WALK", "GET READY"]
+const SHOP_TAB_NAMES := {"collar": "shop_tab_collar", "bandana": "shop_tab_bandana", "coat": "shop_tab_coat",
+	"stats": "shop_tab_stats"}
+const STEP_NAMES := ["step_walk", "step_details"]
+const SETTING_KEYS := {"master": "setting_master", "sfx": "setting_sfx", "music": "setting_music",
+	"fullscreen": "setting_fullscreen", "goals": "setting_goals", "language": "setting_language",
+	"controls": "setting_controls", "free_play": "setting_free_play"}
+const STAT_KEYS := {"speed": "stat_speed", "plant": "stat_plant", "herd": "stat_herd", "agility": "stat_agility"}
 
 # Leaving the application is a desktop thing: a browser tab is closed by
 # the browser. `--no-exit` and tests set this to see the web layout anywhere.
@@ -74,30 +80,37 @@ static func screen(m: Node2D) -> String:
 # What the player can press on this screen, as [action, verb] pairs for the
 # prompt bar (ui_kit.gd). An optional third entry of false dims the item.
 static func prompts(m: Node2D, which := "") -> Array:
+	var out := _prompt_keys(m, which)
+	for p: Array in out:
+		p[1] = I18n.t("verb_" + String(p[1]))
+	return out
+
+
+static func _prompt_keys(m: Node2D, which: String) -> Array:
 	match which if which != "" else screen(m):
 		"title":
 			var out := [["up_down", "pick"], ["plant", "select"]]
 			if can_exit():
-				out.append(["back", "exit game"])
+				out.append(["back", "exit_game"])
 			return out
 		"confirm":
 			if String(m.confirm_id) == "basics":
-				return [["plant", "on to El Barri"], ["back", "teach me the tricks"]]
+				return [["plant", "to_barri"], ["back", "teach_tricks"]]
 			if String(m.confirm_id) == "first":
-				return [["up_down", "pick"], ["plant", "choose"], ["pee", "don't ask again"],
+				return [["up_down", "pick"], ["plant", "choose"], ["pee", "dont_ask"],
 					["back", "back"]]
 			return [["plant", "yes"], ["back", "cancel"]]
 		"walkcard":
 			return [["back", "back"]]
 		"walk":
 			var open := Game.is_unlocked(Game.level_id)
-			return [["left_right", "browse"], ["up_down", "chapter"], ["plant", "choose", open], ["pee", "wardrobe"],
-				["back", "main menu"]]
+			return [["left_right", "browse"], ["up_down", "chapter"], ["plant", "choose_walk", open], ["pee", "wardrobe"],
+				["back", "main_menu"]]
 		"details":
 			var out := [["up_down", "pick"], ["left_right", "change"]]
 			if DETAIL_ROWS[clampi(int(m.details_idx), 0, DETAIL_ROWS.size() - 1)] == "walker":
-				out.append(["pee", "new look"])
-			out.append_array([["plant", "let's go"], ["back", "back"]])
+				out.append(["pee", "new_look"])
+			out.append_array([["plant", "lets_go"], ["back", "back"]])
 			return out
 		"shop":
 			var it: Dictionary = m.shop_items[m.shop_idx]
@@ -107,7 +120,7 @@ static func prompts(m: Node2D, which := "") -> Array:
 				verb = "wearing"
 			elif st != "owned":
 				verb = "buy"
-			return [["left_right", "tab"], ["up_down", "browse"],
+			return [["left_right", "tab"], ["up_down", "browse_list"],
 				["plant", verb, st == "owned" or st == "afford"], ["back", "back"]]
 		"progress":
 			return [["left_right", "chapter"], ["back", "back"]]
@@ -121,21 +134,21 @@ static func prompts(m: Node2D, which := "") -> Array:
 		"pause":
 			return [["move", "pick"], ["plant", "select"], ["back", "resume"]]
 		"results":
-			return end_prompts(m)
+			return _end_prompt_keys(m)
 		"notice":
-			return end_prompts(m)
+			return _end_prompt_keys(m)
 	return []
 
 
-static func end_prompts(m: Node2D) -> Array:
+static func _end_prompt_keys(m: Node2D) -> Array:
 	if m.tutorial_mode:
-		return [["plant", "on to El Barri"], ["back", "walk select"], ["restart", "practice again"]]
+		return [["plant", "to_barri"], ["back", "walk_select"], ["restart", "practice_again"]]
 	if m.finished:
-		return [["restart", "walk it again"], ["back", "walk select"]]
+		return [["restart", "walk_again"], ["back", "walk_select"]]
 	# lost on the walk home with a checkpoint held: retry picks up from it
 	if HomeChase.can_continue(m):
-		return [["restart", "continue"], ["back", "walk select"]]
-	return [["restart", "try again"], ["back", "walk select"]]
+		return [["restart", "continue"], ["back", "walk_select"]]
+	return [["restart", "try_again"], ["back", "walk_select"]]
 
 
 # BACK, the same on every screen: the bark action or the pause action.
@@ -158,8 +171,16 @@ static func main_ids(m: Node2D = null) -> Array:
 static func main_labels(m: Node2D = null) -> Array:
 	var out := []
 	for id: String in main_ids(m):
-		out.append(MAIN_LABELS[id])
+		out.append(I18n.t(MAIN_LABELS[id]))
 	return out
+
+
+static func first_options() -> Array:
+	return FIRST_OPTIONS.map(func(k: String) -> String: return I18n.t(k))
+
+
+static func step_names() -> Array:
+	return STEP_NAMES.map(func(k: String) -> String: return I18n.t(k))
 
 
 static func main_move(m: Node2D, dir: int) -> void:
@@ -235,7 +256,7 @@ static func walk_info(m: Node2D) -> Dictionary:
 		"chapter_walks": chs[ci]}
 	if sel == "tutorial":
 		# the gloss on the ground already says what it is for
-		info.lines = ["About three minutes, nothing to get in the way. No stars, no score."]
+		info.lines = [I18n.t("walk_tutorial_line")]
 		return info
 	if info.locked:
 		var ch := Game.chase_gate_needed(sel)
@@ -244,13 +265,13 @@ static func walk_info(m: Node2D) -> Dictionary:
 			info["gate"] = int(Game.STAR_GATE.get(sel, 0))
 			info["have"] = Game.total_stars()
 			var ch_name: String = Game.LEVEL_NAMES.get(ch, ch)
-			info.lines = ["Finish %s to open this walk." % ch_name]
+			info.lines = [I18n.t("walk_chase_gate") % ch_name]
 			return info
 		var gate := int(Game.STAR_GATE.get(sel, 0))
 		info["gate"] = gate
 		info["have"] = Game.total_stars()
-		info.lines = ["Earn %d more star%s to open this walk." % [gate - Game.total_stars(),
-			"" if gate - Game.total_stars() == 1 else "s"]]
+		var short := gate - Game.total_stars()
+		info.lines = [I18n.t("walk_star_gate_one" if short == 1 else "walk_star_gate_other") % short]
 		return info
 	info["stars"] = Game.stars(sel)
 	info["goals"] = Game.goals_count(sel)
@@ -259,9 +280,9 @@ static func walk_info(m: Node2D) -> Dictionary:
 		info["free_play"] = true
 	info["sky"] = sky_line(sel)
 	if Game.records.has(sel) and int(Game.records[sel].bones) > 0:
-		info["best"] = "Best: %d bones in %s" % [int(Game.records[sel].bones), clock(float(Game.records[sel].time))]
+		info["best"] = I18n.t("walk_best") % [int(Game.records[sel].bones), clock(float(Game.records[sel].time))]
 	else:
-		info["best"] = "Not walked yet"
+		info["best"] = I18n.t("walk_not_walked")
 	return info
 
 
@@ -272,7 +293,7 @@ static func sky_line(lv: String) -> String:
 		return ""
 	var w := String(Game.WALK_WEATHER.get(lv, sky[0]))
 	var h := String(Game.WALK_HOUR.get(lv, sky[1]))
-	return "%s, %s" % [h, String(Game.WEATHER_NAMES[w]).to_lower()]
+	return "%s, %s" % [I18n.t("hour_" + h).to_lower(), I18n.t("weather_" + w).to_lower()]
 
 
 static func clock(secs: float) -> String:
@@ -288,18 +309,22 @@ static func details_rows(m: Node2D) -> Array:
 	if not d_unlocked:
 		var req := int(Game.dog_data().get("stars", 0))
 		d_name += " (%d*)" % req
+	var trait_key := "dog_trait_" + Game.dog
+	var d_trait: String = I18n.t(trait_key) if I18n.has(trait_key) else Game.dog_trait()
 	return [
-		{"id": "dog", "name": "YOUR DOG", "value": d_name, "fixed": false,
-			"trait": Game.dog_trait().to_upper(), "unlocked": d_unlocked},
-		{"id": "walker", "name": "YOUR HUMAN", "value": "HIM" if Game.owner_id == "him" else "HER", "fixed": false},
-		{"id": "time", "name": "TIME", "value": String(Game.HOUR_NAMES[Game.hour]),
+		{"id": "dog", "name": I18n.t("details_dog"), "value": d_name, "fixed": false,
+			"trait": d_trait.to_upper(), "unlocked": d_unlocked},
+		{"id": "walker", "name": I18n.t("details_walker"),
+			"value": I18n.t("details_him" if Game.owner_id == "him" else "details_her"), "fixed": false},
+		{"id": "time", "name": I18n.t("details_time"), "value": I18n.t("hour_" + Game.hour),
 			"fixed": Game.walk_sets_hour(Game.level_id)},
-		{"id": "weather", "name": "WEATHER", "value": String(Game.WEATHER_NAMES[Game.weather]),
+		{"id": "weather", "name": I18n.t("details_weather"), "value": I18n.t("weather_" + Game.weather),
 			"fixed": Game.walk_sets_weather(Game.level_id)},
 		# the campaign walks a walk in its own sky; a finished one can be
 		# walked free, at any time and in any weather, for no stars
-		{"id": "mode", "name": "WALK", "value": "FREE WALK" if Game.is_free_walk(Game.level_id) else "CAMPAIGN",
-			"fixed": not Game.can_free_walk(Game.level_id), "hint": "finish it first"},
+		{"id": "mode", "name": I18n.t("details_mode"),
+			"value": I18n.t("details_free_walk" if Game.is_free_walk(Game.level_id) else "details_campaign"),
+			"fixed": not Game.can_free_walk(Game.level_id), "hint": I18n.t("details_finish_first")},
 	]
 
 
@@ -341,8 +366,10 @@ static func new_look(m: Node2D) -> void:
 
 # The controls, for the getting-ready card: [action, what it does].
 static func controls() -> Array:
-	return [["move", "move"], ["plant", "dig in"], ["pee", "pee"], ["poop", "poop"],
-		["bark", "bark"], ["pickup", "pick up"], ["turbo", "zoomies"], ["pause", "pause"]]
+	var out := []
+	for a: String in ["move", "plant", "pee", "poop", "bark", "pickup", "turbo", "pause"]:
+		out.append([a, I18n.t("ctl_" + a)])
+	return out
 
 
 static func start_walk(m: Node2D) -> void:
@@ -529,7 +556,7 @@ static func pause_ids(m: Node2D) -> Array:
 static func pause_labels(m: Node2D) -> Array:
 	var out := []
 	for id: String in pause_ids(m):
-		out.append(PAUSE_LABELS[id])
+		out.append(I18n.t(PAUSE_LABELS[id]))
 	return out
 
 
@@ -571,10 +598,10 @@ static func walk_card(m: Node2D) -> Dictionary:
 		var st: Dictionary = TutorialSteps.step(m.tut_step)
 		# the free practice at the end is not a lesson
 		if String(st.id) != "" and not TutorialSteps.is_free(int(m.tut_step)):
-			out.lesson = "Lesson %d of %d: %s" % [int(m.tut_step) + 1, TutorialSteps.lesson_count(),
+			out.lesson = I18n.t("walkcard_lesson") % [int(m.tut_step) + 1, TutorialSteps.lesson_count(),
 				String(st.title)]
 		elif String(st.id) != "":
-			out.lesson = "Free practice: %s" % String(st.title)
+			out.lesson = I18n.t("walkcard_free_practice") % String(st.title)
 		return out
 	for q: Dictionary in m.active_quests:
 		var target := int(q.target)
@@ -606,12 +633,7 @@ static var quit_hook := Callable()
 # walk on the walk select) can be checked without the reload
 static var reload_hook := Callable()
 
-const CONFIRMS := {
-	"restart": {"title": "START AGAIN", "body": "Start this walk again?"},
-	"exit": {"title": "EXIT GAME", "body": "Quit the game?"},
-	"first": {"title": "FIRST TIME?", "body": "A three-minute walk that shows you the ropes."},
-	"basics": {"title": "THAT'S THE BASICS", "body": "Enough for any walk. The tricks are a bonus.\nOne rule: keep your human on their feet.\nThree cracks and the phone is gone."},
-}
+const CONFIRMS := ["restart", "exit", "first", "basics"]
 
 
 static func open_confirm(m: Node2D, which: String) -> void:
@@ -620,7 +642,10 @@ static func open_confirm(m: Node2D, which: String) -> void:
 
 
 static func confirm_card(m: Node2D) -> Dictionary:
-	return CONFIRMS.get(String(m.confirm_id), {"title": "", "body": ""})
+	var id := String(m.confirm_id)
+	if not id in CONFIRMS:
+		return {"title": "", "body": ""}
+	return {"title": I18n.t("confirm_%s_title" % id), "body": I18n.t("confirm_%s_body" % id)}
 
 
 static func confirm_cancel(m: Node2D) -> void:
@@ -806,17 +831,20 @@ static func tick_shop(m: Node2D) -> void:
 
 
 static func shop_data(m: Node2D, kind: String, key: String) -> Dictionary:
+	var d: Dictionary
 	match kind:
-		"collar": return Game.COLLARS[key]
-		"coat": return Game.COATS[key]
+		"collar": d = Game.COLLARS[key]
+		"coat": d = Game.COATS[key]
 		"stats":
-			match key:
-				"speed": return {"name": "Sprint Speed", "cost": Game.STAT_UPGRADE_COST}
-				"plant": return {"name": "Plant Grip", "cost": Game.STAT_UPGRADE_COST}
-				"herd": return {"name": "Human Influence", "cost": Game.STAT_UPGRADE_COST}
-				"agility": return {"name": "Quick Feet", "cost": Game.STAT_UPGRADE_COST}
-				_: return {"name": key.capitalize(), "cost": Game.STAT_UPGRADE_COST}
-		_: return Game.BANDANAS[key]
+			var nm: String = I18n.t(STAT_KEYS[key]) if STAT_KEYS.has(key) else key.capitalize()
+			return {"name": nm, "cost": Game.STAT_UPGRADE_COST}
+		_: d = Game.BANDANAS[key]
+	var name_key := "%s_%s" % [kind if kind != "" else "bandana", key]
+	if not I18n.has(name_key):
+		return d
+	d = d.duplicate()
+	d.name = I18n.t(name_key)
+	return d
 
 
 static func equip(m: Node2D, kind: String, key: String) -> void:
@@ -947,7 +975,7 @@ static func progress_rows(m: Node2D) -> Array:
 		row["goals_total"] = (m.LEVEL_GOAL_IDS.get(lv, []) as Array).size()
 		row["best"] = ""
 		if Game.records.has(lv) and int(Game.records[lv].get("bones", 0)) > 0:
-			row["best"] = "%d bones  %s" % [int(Game.records[lv].bones), clock(float(Game.records[lv].time))]
+			row["best"] = I18n.t("progress_best") % [int(Game.records[lv].bones), clock(float(Game.records[lv].time))]
 		out.append(row)
 	return out
 
@@ -1012,15 +1040,17 @@ static func settings_rows(m: Node2D) -> Array:
 			"controls":
 				v = float(Game.CONTROL_LAYOUTS.find(Game.control_layout))
 				kind = "choice"
-		var row := {"name": m.SETTING_NAMES[k], "kind": kind, "v": v}
+		var row := {"name": I18n.t(SETTING_KEYS[k]) if SETTING_KEYS.has(k) else String(m.SETTING_NAMES[k]),
+			"kind": kind, "v": v}
 		if k == "language":
 			row.text = String(Game.LANGUAGE_NAMES[Game.language])
 		elif k == "controls":
 			if Game.rebind_step >= 0 and Game.rebind_step < Game.REBIND_ACTIONS.size():
 				var act := String(Game.REBIND_ACTIONS[Game.rebind_step])
-				row.text = "PRESS FOR %s..." % String(Game.REBIND_NAMES.get(act, act.to_upper()))
+				var act_name: String = I18n.t("rebind_" + act) if I18n.has("rebind_" + act) else act.to_upper()
+				row.text = I18n.t("rebind_press") % act_name
 			else:
-				var base_txt := String(Game.CONTROL_LAYOUT_NAMES[Game.control_layout])
+				var base_txt := I18n.t("layout_" + Game.control_layout)
 				if not Game.key_binds.is_empty() or not Game.pad_binds.is_empty():
 					base_txt += " *"
 				row.text = base_txt
@@ -1141,6 +1171,12 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 			var i := Game.LANGUAGES.find(Game.language)
 			Game.language = Game.LANGUAGES[wrapi(i + dir, 0, Game.LANGUAGES.size())]
 			Sfx.play("ui")
+			# the menus read the table every frame; the labels set once, the
+			# banner and the sign glosses are re-filled here
+			Tips.refill(m)
+			if m.started:
+				m._update_hud()
+			m.build_signs()
 			m.queue_redraw()
 		"controls":
 			var ci := Game.CONTROL_LAYOUTS.find(Game.control_layout)

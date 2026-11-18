@@ -130,18 +130,19 @@ const GRADE := {
 
 # In the dog's own voice, because that gimmick is doing a lot of work for this
 # game and a mood is exactly the place for it.
+# (I18n keys, here and in BADGE)
 const SAID := {
-	M.SCARED: "SCARED! YOUR NOSE STOPS WORKING",
-	M.BARKY: "BARKY! YOU PULL HARDER",
-	M.ZOOMIES: "ZOOMIES! HARD TO STEER",
-	M.TIRED: "TIRED! EAT, REST OR FIND SHADE",
+	M.SCARED: "mood_said_scared",
+	M.BARKY: "mood_said_barky",
+	M.ZOOMIES: "mood_said_zoomies",
+	M.TIRED: "mood_said_tired",
 }
 # and a short badge for the vitals panel, where there is no room for a sentence
 const BADGE := {
-	M.SCARED: "SCARED",
-	M.BARKY: "BARKY",
-	M.ZOOMIES: "ZOOMIES",
-	M.TIRED: "TIRED",
+	M.SCARED: "mood_scared",
+	M.BARKY: "mood_barky",
+	M.ZOOMIES: "mood_zoomies",
+	M.TIRED: "mood_tired",
 }
 # the colour the line and the badge are said in, pulled from each mood's own
 # grade so the words agree with the picture behind them
@@ -305,7 +306,7 @@ func grade() -> Dictionary:
 
 
 func badge() -> String:
-	return String(BADGE.get(active, ""))
+	return I18n.t(BADGE[active]) if BADGE.has(active) else ""
 
 
 func tint() -> Color:
@@ -320,4 +321,4 @@ func take_onset() -> String:
 	_last_said = active
 	if active == M.HAPPY:
 		return ""
-	return String(SAID.get(active, ""))
+	return I18n.t(SAID[active]) if SAID.has(active) else ""

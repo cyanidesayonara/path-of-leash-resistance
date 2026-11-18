@@ -662,7 +662,7 @@ static func _start_leave(m: Node2D, at: Vector2, r: float, t: float, pay: int, l
 	m.human.notice(line, 1.3)
 	m.human.glance_t = maxf(float(m.human.glance_t), 2.2)
 	if m.has_method("owner_news"):
-		m.owner_news("YOUR HUMAN SAYS LEAVE IT")
+		m.owner_news(I18n.t("owner_leave_it"))
 
 
 # Floor food and your human: "Leave it!" as she heads for a pintxo, and what
@@ -789,9 +789,9 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 static func idle_status(m: Node2D) -> String:
 	for w: TrayRun in m.blai_waiters:
 		if w.st == TrayRun.St.WOBBLE and m.dog.global_position.distance_to(w.pos) < 300.0:
-			return "THE TRAY IS GOING! GET UNDER IT"
+			return I18n.t("walk_blai_tray")
 	if not m.blai_leave.is_empty():
-		return "LEAVE IT! YOUR HUMAN IS WATCHING"
+		return I18n.t("walk_blai_leave")
 	return ""
 
 

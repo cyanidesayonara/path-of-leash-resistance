@@ -6258,13 +6258,13 @@ func _freedom_hint() -> String:
 			"dig": digs_left = true
 			"shrub", "post", "rock", "driftwood", "tyre", "planter", "log": sniffs_left = true
 	if digs_left:
-		hints.append("DIG FOR TREASURE WHERE IT SMELLS")
+		hints.append(I18n.t("hint_dig"))
 	if drunk_amount < DRINK_ENOUGH:
-		hints.append("HAVE A LONG DRINK AT THE WATER")
+		hints.append(I18n.t("hint_drink"))
 	if sniffs_left:
-		hints.append("SNIFF OUT WHAT'S LYING AROUND")
+		hints.append(I18n.t("hint_sniff"))
 	hints.append_array(FreedomGames.hints(self))
-	hints.append("BACK OUT THROUGH THE GATE, THEN HOME")
+	hints.append(I18n.t("hint_gate"))
 	return hints[int(elapsed / 4.0) % hints.size()]
 
 
@@ -6278,42 +6278,42 @@ func _update_hud() -> void:
 		var dp := dog.global_position
 		if not romp_done and elapsed - freedom_at > 2.0 and dp.y > GATE_Y - 70.0 				and dp.x > gate_l and dp.x < gate_r and dog.velocity.y > 40.0:
 			# heading back out with the round still on: say so before it is lost
-			hud_status = "LEAVING ALREADY? FETCH ISN'T DONE"
+			hud_status = I18n.t("hud_leaving")
 		elif FreedomGames.banner(self) != "":
 			hud_status = FreedomGames.banner(self)
 		elif romp_done:
 			hud_status = _freedom_hint()
 		else:
-			hud_status = "FETCH! BRING IT BACK  %d/%d   %ds" % [romp_catches, romp_target, int(ceil(romp_timer))]
+			hud_status = I18n.t("hud_fetch") % [romp_catches, romp_target, int(ceil(romp_timer))]
 	elif phase == "home":
 		if chase_active and chase_sweeper != null:
 			hud_status = HomeChase.banner(self)
 		elif tofu_quest_active and not tofu_home:
-			hud_status = "GET THE CAT HOME! FOLLOW HER"
+			hud_status = I18n.t("hud_cat_home")
 		else:
-			hud_status = "HEAD HOME"
+			hud_status = I18n.t("hud_head_home")
 	elif poop_state == 1:
 		if not walk_has_good_spots():
-			hud_status = Prompts.fill("NATURE CALLS! STAND STILL, HOLD {poop}")
+			hud_status = Prompts.fill(I18n.t("hud_nature_hold"))
 		elif poop_spot_good(dog.global_position):
-			hud_status = Prompts.fill("GOOD SPOT! STAND STILL, HOLD {poop}")
+			hud_status = Prompts.fill(I18n.t("hud_good_spot"))
 		else:
-			hud_status = "NATURE CALLS! FIND GRASS OR A TREE"
+			hud_status = I18n.t("hud_nature_find")
 	elif poop_state >= 3:
-		hud_status = "UH OH..."
+		hud_status = I18n.t("hud_uh_oh")
 	elif carry_state == 0 and carry_pickup.x < INF and dog.global_position.distance_to(carry_pickup) < 45.0:
-		hud_status = Prompts.fill("{pickup} PICK UP %s" % carry_item.to_upper())
+		hud_status = Prompts.fill(I18n.t("hud_pick_up") % I18n.of_english(carry_item).to_upper())
 	elif call_active:
 		# NOT "they are on the phone": he is on the phone for the whole walk, so
 		# saying so is never news. What is news is that he has stopped MOVING,
 		# which is the part you can actually spend.
-		hud_status = "LOOSE LEASH! %ds LEFT" % int(ceil(human.call_left()))
+		hud_status = I18n.t("hud_loose_leash") % int(ceil(human.call_left()))
 	elif walk_mod != null and walk_mod.has_method("idle_status") and walk_mod.idle_status(self) != "":
 		hud_status = walk_mod.idle_status(self)
 	elif pee >= 0.999:
-		hud_status = "BURSTING! GO MARK A SPOT"
+		hud_status = I18n.t("hud_bursting")
 	elif pee <= 0.02:
-		hud_status = "THIRSTY! FIND A FOUNTAIN"
+		hud_status = I18n.t("hud_thirsty")
 	if phase == "out" and walk_mod != null and walk_mod.has_method("urgent_status"):
 		var urgent: String = walk_mod.urgent_status(self)
 		if urgent != "":
@@ -6329,11 +6329,11 @@ func _update_hud() -> void:
 	# name (the scrapyard's "GO SLOW" is set before you have set off).
 	if match_day != null and phase == "out" and poop_state == 0 and not call_active:
 		if match_day.phase == MatchDay.Ph.RUSH:
-			hud_status = "KICK-OFF SOON"
+			hud_status = I18n.t("hud_kickoff")
 	if march != null and march.banner != "":
-		hud_status = march.banner
+		hud_status = I18n.of_english(march.banner)
 	if match_day != null and match_day.phase == MatchDay.Ph.FULLTIME and not match_day.outflow_due():
-		hud_status = "FULL TIME! THE CROWD IS COMING"
+		hud_status = I18n.t("hud_fulltime")
 	if feed != null:
 		# a first-time tip takes the banner while it is up
 		if tip_t > 0.0 and tip_text != "":
@@ -6434,9 +6434,9 @@ func _refill_zoomies(pts: int) -> void:
 # from what is near her (the same spots entities/dare_marks.gd rings).
 func dare_hint() -> String:
 	if dare_last_t > 0.0 and dare_last != "":
-		return "%s counts!" % dare_last.capitalize()
+		return I18n.t("dare_counts") % dare_last.capitalize()
 	if human.is_whirling() or whirl_arm > 0.0:
-		return "Keep pulling: your human swings round and flies."
+		return I18n.t("dare_hint_whirl")
 	var at: Vector2 = dog.global_position
 	var rail := INF
 	for r: Dictionary in rails:
@@ -6447,10 +6447,10 @@ func dare_hint() -> String:
 		if kinds[i] == leash.K_POLE:
 			pole = minf(pole, leash.poles[i].distance_to(at))
 	if rail < 160.0 and rail < pole:
-		return Prompts.fill("Hold {turbo} and run along the marked ledge to grind it.")
+		return Prompts.fill(I18n.t("dare_hint_grind"))
 	if pole < INF:
-		return Prompts.fill("Hold {turbo} and run round a ringed pole or tree.")
-	return Prompts.fill("Hold {turbo} and find a pole to run round.")
+		return Prompts.fill(I18n.t("dare_hint_pole"))
+	return Prompts.fill(I18n.t("dare_hint_find"))
 
 
 # What a dare pays.
@@ -6782,7 +6782,7 @@ func _shot_menu(which: String) -> void:
 			MenuFlow.open_basics(self)
 		"notice":
 			_skip_title()
-			_death("OFF THE EDGE\n\nYou went over, and your human went with you.", "edge")
+			_death(I18n.t("death_edge"), "edge")
 
 
 # Straight into the walk, as if SPACE had been pressed on the title. For the
@@ -6854,14 +6854,17 @@ func _process(_delta: float) -> void:
 				for i in range(rr.size()):
 					rr[i]["state"] = [UiIcons.Check.DONE_NOW, UiIcons.Check.DONE_BEFORE,
 						UiIcons.Check.PARTIAL, UiIcons.Check.OPEN][i % 4]
+				# the English sweep's baseline reads "best combo" in lower case here
+				var combo_line := "best combo x6    style 412" if I18n.language == "en" \
+					else I18n.t("results_best_combo") % [6, 412, ""]
 				results = {
-					"title": "GOOD DOG.", "stars": 2, "rating": "...well. A dog, anyway.",
+					"title": I18n.t("results_good_dog"), "stars": 2, "rating": I18n.t("results_rating_none"),
 					"rows": rr, "bones": 148, "phone": 2, "time": 137, "goal_bones": 30,
 					"lines": [
-						"+1 STAR   NEW BONES RECORD",
-						"7/12 goals here    9 stars in all    1240 bones banked",
-						"best combo x6    style 412",
-						"3 spots over-marked. They will know.",
+						I18n.t("results_star_one") % 1 + "   " + I18n.t("results_bones_record"),
+						I18n.t("results_tally") % [7, 12, 9, 1240],
+						combo_line,
+						I18n.t("results_overmark_other") % 3,
 					],
 					"prompt": "press  {restart}  for another walk",
 				}
@@ -10760,19 +10763,19 @@ func _hazards(delta: float) -> void:
 		return
 	for m in manholes:
 		if human.global_position.distance_to(m) < 18.0 and not human.is_fallen():
-			_death("YOUR HUMAN WENT DOWN THE MANHOLE\n\nThe phone gets a signal down there.\nThe walk does not.", "manhole")
+			_death(I18n.t("death_human_manhole"), "manhole")
 			return
 		# the dog gets a teeter first: a brink is a skill moment, not an
 		# instant punishment
 		if dog.global_position.distance_to(m) < 22.0:
-			_start_teeter("hole", m, "%s WENT DOWN THE MANHOLE\n\nAll fine. The walk is very over." % Game.dog_name().to_upper())
+			_start_teeter("hole", m, I18n.t("death_dog_manhole") % Game.dog_name().to_upper())
 			return
 	for c in cellars:
 		if c.has_point(human.global_position):
-			_death("YOUR HUMAN FELL IN THE CELLAR\n\nRight onto the delivery. You did warn them,\nin the only language you have.", "cellar")
+			_death(I18n.t("death_human_cellar"), "cellar")
 			return
 		if c.grow(6.0).has_point(dog.global_position):
-			_start_teeter("hole", c.get_center(), "%s FELL INTO THE CELLAR\n\nFound the sausages. The walk is still over." % Game.dog_name().to_upper())
+			_start_teeter("hole", c.get_center(), I18n.t("death_dog_cellar") % Game.dog_name().to_upper())
 			return
 
 
@@ -12172,7 +12175,7 @@ func crack_phone(pos: Vector2) -> void:
 	if phone_hp > 0:
 		Tips.show(self, "crack")
 	if phone_hp <= 0:
-		_death("PHONE SMASHED\n\nThree cracks and it is gone. Your human is inconsolable,\nand blaming the one member of the household who cannot answer back.", "phone")
+		_death(I18n.t("death_phone"), "phone")
 
 
 func close_call(pos: Vector2) -> void:

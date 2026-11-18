@@ -596,34 +596,41 @@ static func banner(m: Node2D) -> String:
 	var left := int(ceil(maxf(float(m.chase_phase_t), 0.0)))
 	match String(m.chase_phase):
 		"warning":
-			return String(_behavior(m, held_profile(m)).get("warning_banner", "HERE IT COMES! HEAD FOR HOME"))
+			return _line(m, "warning_banner", "chase_warning")
 		"head_start":
-			return "HEAD START! GO  %d" % left
+			return I18n.t("chase_head_start") % left
 		"hold":
 			if String(m.chase_kind) == "flood":
-				return "IT'S HOLDING! GO  %d" % left
-			return String(_behavior(m, held_profile(m)).get("hold_banner", "IT'S STILL STUCK! GO  %d")) % left
+				return I18n.t("chase_flood_hold") % left
+			return _line(m, "hold_banner", "chase_hold") % left
 	if sweeper.jammed():
 		if String(m.chase_kind) == "flood":
 			if sweeper.front_y < LevelBuild.BESOS_JAM_Y - 200.0:
-				return "WEIR HOLDING! RUN!"
-			return "IT'S HOLDING! CROSS THE APRON"
-		return String(_behavior(m, held_profile(m)).get("jammed_banner", "IT'S STUCK! CATCH YOUR BREATH"))
+				return I18n.t("chase_weir")
+			return I18n.t("chase_apron")
+		return _line(m, "jammed_banner", "chase_jammed")
 	if m.chase_kind == "both":
-		return "RUN HOME TOGETHER!"
+		return I18n.t("chase_both")
 	if m.chase_kind == "bolt":
-		return "RUNNING! KEEP UP"
+		return I18n.t("chase_bolt")
 	if m.chase_kind == "flood":
-		return "RUN! STAY OUT OF THE DEEP"
+		return I18n.t("chase_flood_run")
 	if sweeper.has_method("rocket_warning") and bool(sweeper.call("rocket_warning")):
-		return String(_behavior(m, held_profile(m)).get("rocket_banner", "OUT OF THE RING"))
+		return _line(m, "rocket_banner", "chase_rocket")
 	if sweeper.has_method("suitcase_warning") and bool(sweeper.call("suitcase_warning")):
-		return String(_behavior(m, held_profile(m)).get("suitcase_banner", "SUITCASE! STEP CLEAR"))
+		return _line(m, "suitcase_banner", "chase_suitcase")
 	if sweeper.has_method("snowball_warning") and bool(sweeper.call("snowball_warning")):
-		return String(_behavior(m, held_profile(m)).get("snowball_banner", "SNOWBALL! STEP CLEAR"))
+		return _line(m, "snowball_banner", "chase_snowball")
 	if sweeper.has_method("boulder_warning") and bool(sweeper.call("boulder_warning")):
-		return String(_behavior(m, held_profile(m)).get("boulder_banner", "BOULDER! STEP CLEAR"))
-	return String(_behavior(m, held_profile(m)).get("run_banner", "RUN! DON'T LET IT CATCH YOU"))
+		return _line(m, "boulder_banner", "chase_boulder")
+	return _line(m, "run_banner", "chase_run")
+
+
+# One of the threat's banners in the player's language: its profile's own
+# words, or the shared default (an I18n key) when it has none.
+static func _line(m: Node2D, field: String, fallback: String) -> String:
+	var b: Dictionary = _behavior(m, held_profile(m))
+	return I18n.of_english(String(b[field])) if b.has(field) else I18n.t(fallback)
 
 
 # The end card's retry is "continue": the walk was lost on the home leg, to
@@ -722,9 +729,9 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.float_text(m.dog.global_position, "close shave! +%d" % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
 		m._slowmo()
 	if sweeper.caught(m.human.global_position):
-		_catch(m, String(_behavior(m, held_profile(m)).get("caught_human", "")), "human")
+		_catch(m, I18n.of_english(String(_behavior(m, held_profile(m)).get("caught_human", ""))), "human")
 	elif sweeper.caught(m.dog.global_position):
-		_catch(m, String(_behavior(m, held_profile(m)).get("caught_dog", "")), "dog")
+		_catch(m, I18n.of_english(String(_behavior(m, held_profile(m)).get("caught_dog", ""))), "dog")
 
 
 # How far the camera leans back up the street this frame: just enough to bring

@@ -40,9 +40,11 @@ func _run() -> void:
 	_check(not T.show(m, "teeter"), "no tips in a headless run")
 	T.force_headless = true
 
-	for id: String in T.TEXT:
-		var raw := String(T.TEXT[id])
-		_check(raw == raw.to_upper() or raw.contains("{"), "tip '%s' is a banner: capitals" % id)
+	var I18n: GDScript = load("res://hud/i18n.gd")
+	for id: String in T.IDS:
+		for lang: String in I18n.LANGS:
+			var raw := String(I18n.T["tip_" + id][lang])
+			_check(raw == raw.to_upper() or raw.contains("{"), "tip '%s' is a banner in %s: capitals" % [id, lang])
 	_check(T.show(m, "teeter"), "a new tip shows")
 	_check(m.tip_t > 0.0 and m.feed.banner_text() == m.tip_text if m.feed.has_method("banner_text") else m.tip_t > 0.0,
 		"it takes the banner")

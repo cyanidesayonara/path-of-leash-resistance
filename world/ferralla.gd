@@ -476,7 +476,7 @@ static func draw_log_prop(_m: Node2D, c: Object, p: Vector2) -> void:
 
 
 static func idle_status(_m: Node2D) -> String:
-	return "GO SLOW! SLOW IS QUIET"
+	return I18n.t("walk_ferralla_slow")
 
 
 # a stack of old tyres, the scrapyard's stand-in for a hydrant

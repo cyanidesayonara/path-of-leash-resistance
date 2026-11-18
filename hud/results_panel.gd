@@ -119,11 +119,11 @@ func _draw() -> void:
 	for i in range(3):
 		Icons.draw_phone_pip(self, Vector2(px + float(i) * 13.0, y - 13.0), 15.0,
 			i < phone_hp)
-	draw_string(f, Vector2(px + 48.0, y), "phone", HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
+	draw_string(f, Vector2(px + 48.0, y), I18n.t("results_phone"), HORIZONTAL_ALIGNMENT_LEFT, -1, 15,
 		Kit.INK_DIM)
 	draw_string(f, Vector2(0, y), "%ds" % time_sec, HORIZONTAL_ALIGNMENT_CENTER, W, 19,
 		Kit.INK)
-	draw_string(f, Vector2(-PAD, y), "+%d bones from goals" % g_bones,
+	draw_string(f, Vector2(-PAD, y), I18n.t("results_goal_bones") % g_bones,
 		HORIZONTAL_ALIGNMENT_RIGHT, W, 16, Kit.INK_SOFT)
 	y += 28.0
 	for line: String in extras:

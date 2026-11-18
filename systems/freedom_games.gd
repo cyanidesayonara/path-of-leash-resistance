@@ -376,43 +376,43 @@ static func banner(m: Node2D) -> String:
 		# the meter over the two of them says who is winning; the banner says
 		# what to do about the other dog's rhythm right now
 		if m.tug.phase == RopeTug.P.REST:
-			return "IT'S TIRED! PULL AWAY NOW"
-		return Prompts.fill("HOLD ON! {plant} DIG IN")
+			return I18n.t("fg_tired")
+		return Prompts.fill(I18n.t("fg_hold"))
 	if m.agility != null and m.agility.running:
-		return "AGILITY  %.1fS  %s" % [m.agility.t, _next_name(m.agility)]
+		return I18n.t("fg_agility") % [m.agility.t, _next_name(m.agility)]
 	if is_instance_valid(m.frisbee):
 		if m.frisbee.in_air():
-			return "CATCH IT IN THE AIR! SPRINT TO LEAP"
+			return I18n.t("fg_leap")
 		if m.frisbee.is_carried():
-			return "FRISBEE! BRING IT BACK"
-		return "FRISBEE!  %d TO GO" % m.frisbee.throws_left
+			return I18n.t("fg_frisbee_back")
+		return I18n.t("fg_frisbee_left") % m.frisbee.throws_left
 	if m.rope_carry_t > 0.0:
-		return "SHOW IT OFF"
+		return I18n.t("fg_show")
 	if m.wave_game != null and not m.wave_game.done \
 			and m.dog.global_position.x - m.beach_shore_x(m.dog.global_position.y) < 320.0:
-		return "CHASE THE WAVE OUT, THEN RUN FOR IT!"
+		return I18n.t("fg_wave")
 	if m.pigeon_game != null and m.pigeon_game.active() \
 			and m.dog.global_position.distance_to(m.pigeon_game.at) < 360.0:
-		return Prompts.fill("PIGEONS! CREEP UP, THEN {bark} BARK")
+		return Prompts.fill(I18n.t("fg_pigeons"))
 	if m.squirrel_game != null and m.squirrel_game.banner(m) != "":
 		return m.squirrel_game.banner(m)
 	var fd: Node2D = m.tug_dog
 	if is_instance_valid(fd) and fd.rope and fd.state == fd.S.OFFER \
 			and fd.global_position.distance_to(m.dog.global_position) < 160.0:
-		return "A ROPE! GRAB THE END"
+		return I18n.t("fg_rope")
 	return ""
 
 
 static func _next_name(ag: AgilityCourse) -> String:
 	var p := ag.next_part()
 	if p.is_empty():
-		return "TO THE FINISH!"
+		return I18n.t("fg_finish")
 	match int(p["kind"]):
-		AgilityCourse.E.JUMP: return "OVER THE JUMP!"
-		AgilityCourse.E.WEAVE: return "WEAVE: FOLLOW THE CHALK"
-		AgilityCourse.E.TABLE: return Prompts.fill("ON THE TABLE, {plant} SIT TIGHT")
-		AgilityCourse.E.TUNNEL: return "THROUGH THE TUNNEL"
-	return "TO THE FINISH!"
+		AgilityCourse.E.JUMP: return I18n.t("fg_jump")
+		AgilityCourse.E.WEAVE: return I18n.t("fg_weave")
+		AgilityCourse.E.TABLE: return Prompts.fill(I18n.t("fg_table"))
+		AgilityCourse.E.TUNNEL: return I18n.t("fg_tunnel")
+	return I18n.t("fg_finish")
 
 
 # the rotating hints after fetch: what there still is to play
@@ -420,12 +420,12 @@ static func hints(m: Node2D) -> Array[String]:
 	var out: Array[String] = []
 	if m.agility != null:
 		if Game.agility_best > 0.0:
-			out.append("AGILITY BEST %.1fS. BEAT IT AT THE GREEN FLAGS" % Game.agility_best)
+			out.append(I18n.t("fg_hint_best") % Game.agility_best)
 		else:
-			out.append("RUN THE AGILITY COURSE FROM THE GREEN FLAGS")
+			out.append(I18n.t("fg_hint_run"))
 	var fd: Node2D = m.tug_dog
 	if is_instance_valid(fd) and fd.rope:
-		out.append("SOMEONE HAS A ROPE. TUG OF WAR?")
+		out.append(I18n.t("fg_hint_tug"))
 	return out
 
 

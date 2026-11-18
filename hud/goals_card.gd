@@ -122,10 +122,10 @@ func _draw() -> void:
 	var head_col := Kit.LEAF if all_done else Kit.INK
 	if bool(data.peeking):
 		head_col = Kit.SAFFRON
-	draw_string(f, Vector2(PAD, PAD + 10.0), "GOALS  %d/%d" % [int(data.done), int(data.total)],
+	draw_string(f, Vector2(PAD, PAD + 10.0), I18n.t("goals_heading") % [int(data.done), int(data.total)],
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 15, head_col)
 	if all_done and open:
-		draw_string(f, Vector2(PAD + 108.0, PAD + 10.0), "ALL CLEAR",
+		draw_string(f, Vector2(PAD + 108.0, PAD + 10.0), I18n.t("goals_all_clear"),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Kit.LEAF)
 
 	# key / button prompt pill
@@ -209,8 +209,8 @@ func _draw() -> void:
 				HORIZONTAL_ALIGNMENT_RIGHT, COUNT_W, 13, Kit.INK_SOFT)
 		y += row_h
 	if folded > 0:
-		draw_string(f, Vector2(TEXT_X, y + 11.0), "+ %d done" % folded,
+		draw_string(f, Vector2(TEXT_X, y + 11.0), I18n.t("goals_folded_done") % folded,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_MUTE)
 	elif extra > 0:
-		draw_string(f, Vector2(TEXT_X, y + 11.0), "+ %d more" % extra,
+		draw_string(f, Vector2(TEXT_X, y + 11.0), I18n.t("goals_more") % extra,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_FAINT)
