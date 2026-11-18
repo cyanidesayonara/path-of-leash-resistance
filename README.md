@@ -79,32 +79,32 @@ you want to go; constant hauling wears their patience down until they say
 | El Diluvi | the downpour |
 | El Besòs | the river park |
 | La Ciutadella | the waterfall cascade and El Mamut |
-| Platja de Llevant | the dog beach at the far end of the coast |
-| L'Eixample | the grid of cut corners round the basilica |
+| Platja de Llevant | the dog beach at the coast's end |
+| L'Eixample | the grid of cut corners |
 | El Tibidabo | the mountain road |
 | El Veterinari | the clinic escape |
-| Sarrià | the village the city swallowed, at first light |
+| Sarrià | the village the city swallowed |
 | El Bosc | the forest |
 | Els Àngels | the skate plaza |
 | La Castanyada | the chestnut festival |
 | Els Senglars | the wild boar trail |
 | El Mosaic | the tiled terraces |
 | La Superilla | the superblock play streets |
-| El Metro | down out of the rain and one stop on the metro, at rush hour |
+| El Metro | rush hour, one stop on the metro |
 | L'Estació | the train station |
 | Els Búnquers | the overlook above the city |
 | Plaça Reial | the arcaded square |
-| La Cremada | Badalona's devil night and the Dimoni float |
+| La Cremada | Badalona's devil-burning night |
 | El Fòrum | the seaside esplanade |
-| La Diagonal | the avenue that cuts the grid, and the tram that rides it |
-| Carrer de Blai | the pintxos street, where everything on the floor is food |
+| La Diagonal | the avenue that cuts the grid |
+| Carrer de Blai | pintxos, and food on the floor |
 | La Carretera de les Aigües | the hillside hike |
 | Festa de Gràcia | the decorated festival street |
 | El Laberint d'Horta | the cypress maze |
 | El Port | the fishing wharf |
 | Plaça d'Espanya | the fountain avenue |
 | El Poble Espanyol | the walled village of copied towns |
-| L'Aeroport | Terminal 1's long pier, with airport security on your tail |
+| L'Aeroport | airport security on your tail |
 | Les Obres | the work site |
 | Dia de Partit | match day |
 | La Ferralla | the junkyard |

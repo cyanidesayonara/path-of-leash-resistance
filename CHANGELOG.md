@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Labels: no shimmer, Diagonal between its bike lanes, shorter glosses
+
+- The walks' names (`world/sign_layer.gd`) are painted at twice their size into an offscreen texture each and drawn smoothed. Painted straight onto the world, their hundreds of small hard-edged pieces (the world has no 2D antialiasing) snapped from pixel to pixel as the camera slid by fractions of one, and the names shimmered whenever it moved, Montjuïc's cacti worst of all. The offscreen pass runs only when the picture changes, as the canvas already did.
+- La Diagonal's name and gloss lie across the promenade like every walk's, but centred between the two bike lanes and fitted inside them, and a little nearer so the turned camera does not put them under the top bar (`Diagonal.name_place`, read by `main.name_place`).
+- El Gòtic's name no longer lies on a sewer grate: the alley's grates skip the name's and gloss's band.
+- Every walk's gloss is a short line now: at most 32 characters in English and 36 in Catalan and Spanish (`Game.GLOSS_MAX`, `GLOSS_MAX_LONG`), the long ones rewritten in all three languages. `tests/test_gloss_length.gd` holds them to it. README's walk table follows.
+
 ## 2026-11-18 - Weather presets, two more times of day, and wind with real power
 
 - WEATHER on GET READY (a free walk) picks from eight skies: clear, breeze, fog, drizzle, downpour, storm, gale and snow (`Game.SKIES`). Each is one of the four kinds the rules have always read (`Game.weather`: clear, rain, wind, snow) at its own strength of rain, wind and fog (`Game.SKY`). Who is out, slick paving, ice and puddles are unchanged; a fog keeps the sunbathers in, and a breeze furls the beach parasols and sends the napkins flying.
