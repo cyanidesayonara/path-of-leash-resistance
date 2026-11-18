@@ -289,3 +289,21 @@ static func blowing_napkins(weather: String, _hour: String) -> bool:
 # Kitesurfing wings and wind banners are out on the sand in dry daylight.
 static func kites_out(weather: String, hour: String) -> bool:
 	return (weather == "wind" or weather == "clear") and hour != "night"
+
+
+# Camí de Ronda: cove bathers only go down to the shingle on dry days or dusk;
+# rain, snow and night keep the water empty.
+static func coastal_bathers(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and (hour == "day" or hour == "dusk")
+
+
+# Coastal cliff-path hikers and lookout walkers (Camí de Ronda): steadier in
+# clear daylight, fewer when the tramuntana blows hard, none in snow.
+const COASTAL_HIKER_FILL := {"dawn": 0.25, "day": 0.75, "dusk": 0.55, "night": 0.15}
+
+
+static func coastal_hikers(weather: String, hour: String) -> float:
+	if weather == "rain" or weather == "snow":
+		return 0.0
+	var base := float(COASTAL_HIKER_FILL.get(hour, 0.4))
+	return base * 0.65 if weather == "wind" else base

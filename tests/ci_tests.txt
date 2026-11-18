@@ -793,3 +793,5 @@
 
 # Sitges walk: layout, wave telegraph, wind & church bell
 --headless --path . --script res://tests/test_sitges.gd
+# Camí de Ronda cliff path walk test
+--headless --path . --script res://tests/test_ronda.gd

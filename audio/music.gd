@@ -188,6 +188,10 @@ const STYLES := {
 	# through the orange-tree gardens at dusk
 	"santpau": {"bpm": 108, "key": 2, "lead": "guitar", "lead2": ["vibes", 12], "comp": "arp",
 		"bass": "walk", "drums": "brushsoft", "swing": 0.04, "verb": 0.34},
+	# Camí de Ronda: bright sunlit coastal guitar and marimba over a brisk
+	# Costa Brava sea breeze
+	"ronda": {"bpm": 124, "key": 7, "minor": false, "lead": "guitar", "lead2": ["marimba", 12], "comp": "arp",
+		"bass": "walk", "drums": "shaker", "swing": 0.06, "verb": 0.26},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
@@ -563,6 +567,13 @@ const DARES := {
 			[4, 0.5, 78], [4.5, 0.5, 81], [5, 0.5, 86], [5.5, 0.5, 81], [6, 1, 78], [7, 1, 74],
 			[8, 0.5, 76], [8.5, 0.5, 79], [9, 0.5, 83], [9.5, 0.5, 79], [10, 1, 83], [11, 1, 79],
 			[12, 0.5, 84], [12.5, 0.5, 83], [13, 0.5, 81], [13.5, 0.5, 79], [14, 2, 79]]},
+	# the snorkeler: brisk cove guitar and marimba hopping between headlands
+	"snorkeler": {"bpm": 134, "lead": "guitar", "lead2": ["marimba", 12], "comp": "arp", "bass": "walk",
+		"drums": "shaker", "verb": 0.24, "chords": [[67, "maj"], [64, "min7"], [60, "maj7"], [62, "maj"]],
+		"mel": [[0, 0.5, 79], [0.5, 0.5, 83], [1, 1, 86], [2, 0.5, 84], [2.5, 0.5, 83], [3, 1, 79],
+			[4, 0.5, 76], [4.5, 0.5, 79], [5, 1, 83], [6, 1, 81], [7, 1, 79],
+			[8, 0.5, 76], [8.5, 0.5, 79], [9, 0.5, 84], [9.5, 0.5, 88], [10, 1, 86], [11, 1, 83],
+			[12, 0.5, 81], [12.5, 0.5, 79], [13, 0.5, 78], [13.5, 0.5, 76], [14, 2, 74]]},
 }
 
 # --- the score: what plays when ---------------------------------------------

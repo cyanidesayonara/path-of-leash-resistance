@@ -29,7 +29,7 @@ const Letters := preload("res://world/sign_letters.gd")
 
 # the material per walk; a walk not listed keeps main.gd's drawn styles
 const MATERIALS := {
-	"barri": "leaves", "diagonal": "papers", "metro": "brollies", "blai": "pintxos", "santpau": "oranges", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
+	"barri": "leaves", "diagonal": "papers", "metro": "brollies", "blai": "pintxos", "santpau": "oranges", "ronda": "floats", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
@@ -73,6 +73,7 @@ const FEEL := {
 	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
 	"pintxos": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"oranges": {"spacing": 0.14, "r": 0.075, "drag": 1.1, "take": 1.1, "roll": true},
+	"floats": {"spacing": 0.14, "r": 0.08, "drag": 1.3, "take": 1.15, "roll": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
@@ -537,6 +538,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_pintxos(c, sign, h)
 		"oranges":
 			_oranges(c, sign, h)
+		"floats":
+			_floats(c, sign, h)
 		"brollies":
 			_brollies(c, sign, h)
 		"pastries":
@@ -1065,6 +1068,33 @@ static func _oranges(c: Object, sign: Dictionary, _h: float) -> void:
 		c.draw_circle(p - Vector2(r * 0.35, r * 0.35), r * 0.26, Color(1.0, 0.78, 0.36))
 		if v > 0.4:
 			c.draw_line(p, p + ax * (r * 1.3), Color(0.24, 0.46, 0.20), maxf(1.4, r * 0.32))
+
+
+const FLOAT_COLS: Array[Color] = [
+	Color(0.80, 0.42, 0.22),  # terracotta net float
+	Color(0.18, 0.62, 0.60),  # sea-glass turquoise float
+	Color(0.88, 0.66, 0.24),  # painted saffron buoy
+	Color(0.76, 0.62, 0.42),  # weathered cork float
+]
+
+
+static func _floats(c: Object, sign: Dictionary, _h: float) -> void:
+	# Mediterranean fishing floats and cork bobbins washed up from the coves
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.r) * 1.08, Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var v := float(pc["var"])
+		var col := FLOAT_COLS[int(v * 99.0) % FLOAT_COLS.size()]
+		c.draw_circle(p, r, col.darkened(0.28))
+		c.draw_circle(p - Vector2(r * 0.14, r * 0.14), r * 0.78, col)
+		c.draw_line(p - ax * (r * 0.7), p + ax * (r * 0.7), Color(0.24, 0.18, 0.12, 0.55), maxf(1.0, r * 0.22))
+		c.draw_circle(p - Vector2(r * 0.34, r * 0.34), r * 0.25, col.lightened(0.45))
+		if v > 0.55:
+			c.draw_line(p + ax * (r * 0.75), p + ax * (r * 1.35), Color(0.76, 0.68, 0.52), maxf(1.1, r * 0.24))
 
 
 # a croissant's three lobes along its curve, and their bake from the

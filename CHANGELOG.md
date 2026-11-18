@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-17 - New walk: Camí de Ronda
+
+- Added Camí de Ronda (`ronda`, `systems/ronda.gd`), the 43rd walk of the campaign: the old smugglers' and coastguards' footpath along the Costa Brava cliffs near Calella de Palafrugell and Llafranc on a tramuntana day (`["wind", "day"]`), starting in the fishing village's arched colonnades (*les voltes*), climbing stone steps around two headlands with a dry-stone parapet and wooden rail beside turquoise coves and *llaguts* below, dropping through an umbrella-pine wood, and ending off the leash on Cala del Pinar. No chase, no boss; placed right after Les Obres (`site`) in the carousel (`STAR_GATE` 47, `CHASE_GATE` `"boars"`), with its name laid in Mediterranean fishing floats (`"floats"` in `world/world_sign.gd`) and the gloss "The cliff path".
+- Cliffs, pines, sea, and wind: rocky cliff edge solids block both walkers and the verlet leash (`add_cliff_rope` in `m.rope_rects`), while the dry-stone walls, rail posts, boulders, and umbrella pine trunks wrap the rope (`is_lamp` returns false for non-lamp poles, `deco_pole_count` set after appending corridor poles). `ShapeBatch` bands fade the turquoise coves into deep Mediterranean water with craggy sea stacks, whitecaps, swaying pine crowns overhead, and wind-blown hats and tourist maps skimming along the path (`Outdoors.coastal_bathers` and `Outdoors.coastal_hikers`).
+- Signature live event: telegraphed tramuntana gusts (`1.25 s` warning where the pines ahead bow and dust and needles whip along the trail before the gust shoves seaward). Planting on the landward side anchors your human on the leash for a save and a shout; otherwise they stagger toward the cliff rail with their phone at risk. Nobody ever goes over the edge.
+- Dare-giver, music, and goals: the snorkeler perched on a cove boulder (`"snorkeler"` in `entities/challenger.gd`, animated cast in `entities/challenger_cast.gd` with mask and kicking yellow fins, five lines, `dare_snorkeler` and `ronda` music in `audio/music.gd`), hand-authored off-leash props (`FREEDOM_PROPS["ronda"]`), Tony Hawk clock/jamón targets, and goals `ronda_gust`, `ronda_coves`, and `ronda_boats`.
+- Tests and tooling: added `tests/test_ronda.gd` in `tests/ci_tests.txt`, registered `ronda` in `test_walk_hooks`, `test_npc_clear_of_solids`, `test_outdoors`, `tools/shot_sweep.sh`, `tools/surface_map.sh`, and `tools/behaviour_snapshot.sh`, and committed Godot `.gd.uid` metadata.
+
 ## 2026-11-17 - New walk: Sitges
 
 - Added **Sitges** (`sitges`, 39th campaign walk, right after El Poble Espanyol in the carousel, star gate 47, chase tier `cremada`, campaign sky `["wind", "day"]`, Catalan gloss *"The town by the sea"*):
