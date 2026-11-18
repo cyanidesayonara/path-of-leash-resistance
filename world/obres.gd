@@ -11,6 +11,10 @@ extends RefCounted
 # Also the walk's module (main.WALK_MODULES): the works over the paving,
 # the digger, the worker and the conduit bundles are its hooks, below.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_log_prop", "draw_performer", "draw_top", "draw_van"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const SHADOW := Color(0.05, 0.05, 0.08, 0.22)

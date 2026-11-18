@@ -7,6 +7,10 @@ extends RefCounted
 # La Punta and Sant Bartomeu i Santa Tecla on its rock above the sea, then
 # down onto Platja de la Fragata off the leash.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "takes_prints", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Panot := preload("res://world/panot.gd")

@@ -28,6 +28,10 @@ extends RefCounted
 # on the stairs (tick, _apply_light). Rain shows at the two entrances and in
 # the wet footprints tracked into the hall.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const EventFeed := preload("res://hud/event_feed.gd")

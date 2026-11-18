@@ -9,6 +9,10 @@ extends RefCounted
 # rollerbladers along the bike lane, to the palisade fence of Platja dels
 # Gossos where she goes off the leash into the surf.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_espigo", "draw_overhead", "rider_lane", "surface", "takes_prints"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")

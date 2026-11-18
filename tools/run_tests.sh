@@ -6,7 +6,9 @@
 #
 #   GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/run_tests.sh [FILTER]
 #
-# The tests are the lines of tests/ci_tests.txt, so this is always CI's list.
+# The tests are the lines of tests/ci_tests.txt and of each tests/ci.d/*.txt
+# (one file per walk or feature, so PRs side by side do not edit one list),
+# so this is always CI's list.
 # FILTER is a substring of an item's name (`leash`, `test_saves`, `walk market`).
 # Every test goes through tools/godot_ci.sh, so a SCRIPT ERROR fails it as in CI.
 #
@@ -42,7 +44,7 @@ items() {
   awk 'BEGIN { c = 5 }
     /^# cost [0-9]+/ { c = $3; next }
     /^#/ || /^[[:space:]]*$/ { next }
-    { sub(/\r$/, ""); printf "%d\ttest\t%s\n", c, $0; c = 5 }' tests/ci_tests.txt
+    { sub(/\r$/, ""); printf "%d\ttest\t%s\n", c, $0; c = 5 }' tests/ci_tests.txt $(ls tests/ci.d/*.txt 2>/dev/null)
   if [ "${WALKS}" = 1 ]; then
     for lv in $(levels) tutorial; do
       printf '21\twalk\t%s\n' "${lv}"

@@ -26,6 +26,10 @@ extends RefCounted
 # Past the gate the bridge ends in the jet's cabin, which is the off-leash
 # space (systems/aeroport_cabin.gd). The picture is systems/aeroport_art.gd.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_gate", "draw_live", "draw_overhead", "draw_park_prop", "draw_scenery", "is_lamp", "on_bark", "surface", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const AeroportThreat := preload("res://entities/aeroport_threat.gd")
 const Surfaces := preload("res://world/surfaces.gd")

@@ -12,55 +12,9 @@ extends SceneTree
 # drawer was draw_ground(m, b, vt, vb) until #348 renamed it. So each walk
 # also declares the hooks its module means to answer, and a hook-named
 # function outside that list fails. A new hook in a module is a new entry
-# here, made on purpose.
-const HOOKS := {
-	"street": ["build_layer", "draw_grove", "draw_yard", "surface", "tick"],
-	"montjuic": ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "grass_blocked", "surface", "tick"],
-	"guell": ["cam_lean", "draw_bollard", "draw_clearing", "draw_column", "draw_live", "hush_banner", "idle_status", "on_bark", "surface", "tick", "tick_crowd", "urgent_status"],
-	"scrap": ["draw_bollard", "draw_column", "draw_grove", "draw_live", "draw_log_prop", "draw_overhead", "draw_top", "draw_van", "draw_verge", "draw_yard", "idle_status"],
-	"trail": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked"],
-	"station": ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_log_prop", "draw_overhead", "draw_van", "on_bark", "surface", "tick"],
-	"barri": ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_overhead", "draw_performer", "grass_blocked", "night_fronts", "night_lights", "surface", "tree_kind"],
-	"oldtown": ["build_layer", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "night_fronts", "on_bark", "surface", "tick"],
-	"partit": ["draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_van", "night_fronts"],
-	"port": ["cam_lean", "draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
-	"reial": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "night_fronts", "night_lights", "surface", "tick"],
-	"vet": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
-	"tibidabo": ["build_layer", "draw_edge_layer", "draw_grove", "draw_live", "draw_overhead", "night_lights", "surface", "tick"],
-	"beach": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_parasol", "on_bark", "surface", "takes_prints", "tick"],
-	"rain": ["draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_over_walkway", "surface"],
-	"market": ["draw_column", "draw_live", "draw_overhead", "draw_stall", "draw_van", "surface"],
-	"site": ["draw_log_prop", "draw_performer", "draw_top", "draw_van"],
-	"besos": ["draw_bollard", "draw_over_walkway", "night_lights"],
-	"park": ["draw_edge_layer", "draw_grove", "draw_live", "draw_over_walkway", "draw_path_edges", "draw_threshold", "grass_blocked", "night_lights", "surface"],
-	"neteja": ["draw_grove", "draw_live", "night_lights", "surface"],
-	"spook": ["draw_live", "draw_overhead", "draw_yard"],
-	"aigues": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "rider_lane", "tick", "tree_kind"],
-	"horta": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "tick", "tree_kind"],
-	"llevant": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_espigo", "draw_overhead", "rider_lane", "surface", "takes_prints"],
-	"boars": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "grass_blocked", "tick", "tree_kind"],
-	"gracia": ["draw_live", "draw_overhead", "draw_scenery", "on_bark", "tick"],
-	"carmel": ["draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "takes_prints", "tick"],
-	"superilla": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
-	"forum": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick"],
-	"espanya": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
-	"blai": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_performer", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
-	"santpau": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_performer", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
-	"sitges": ["draw_bin", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "takes_prints", "tick", "tree_kind"],
-	"ronda": ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
-	"metro": ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
-	"sarria": ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_grove", "draw_live", "draw_overhead", "idle_status", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"],
-	"diagonal": ["draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "grass_blocked", "idle_status", "is_lamp", "name_place", "on_bark", "rider_lane", "surface", "tick", "tree_kind"],
-	"eixample": ["draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_grove", "draw_live", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"],
-	"angels": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick", "tree_kind"],
-	"poble": ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick"],
-	"cremada": ["draw_live", "draw_overhead", "draw_scenery", "on_bark", "tick"],
-	"aeroport": ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_gate", "draw_live", "draw_overhead", "draw_park_prop", "draw_scenery", "is_lamp", "on_bark", "surface", "tick"],
-	"montserrat": ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_overhead", "draw_snack", "is_lamp", "on_bark", "surface", "tick", "tree_kind"],
-	"molina": ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind"],
-	"ciutadella": ["cam_lean", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "grass_blocked", "hush_banner", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind", "urgent_status"],
-	"raval": ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "night_fronts", "on_bark", "surface", "tick", "urgent_status"],
-}
+# in the module, made on purpose: each walk module has its own
+# `const HOOKS := [...]`, so walks polished side by side do not edit one
+# shared list.
 
 var checks := 0
 var failures: Array[String] = []
@@ -94,10 +48,11 @@ func _run() -> void:
 	_check(hooks.size() >= 20, "main's hooks are found (%d)" % hooks.size())
 	var main_script: GDScript = load("res://main.gd")
 	var mods: Dictionary = main_script.get_script_constant_map()["WALK_MODULES"]
-	_check(mods.size() == HOOKS.size(), "every walk module declares its hooks here (%d modules, %d declared)" % [mods.size(), HOOKS.size()])
 	for walk: String in mods:
 		var mod: GDScript = mods[walk]
-		var meant: Array = HOOKS.get(walk, [])
+		var consts := mod.get_script_constant_map()
+		_check(consts.has("HOOKS"), "%s's module declares its hooks (const HOOKS)" % walk)
+		var meant: Array = consts.get("HOOKS", [])
 		var found := {}
 		for meth: Dictionary in mod.get_script_method_list():
 			var name: String = meth["name"]

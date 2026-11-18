@@ -8,6 +8,10 @@ extends RefCounted
 # candy, the roaster's queue and the braziers' and sacks' props stay in
 # main: they are the walk's rules and shared prop loops, not its picture.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_live", "draw_overhead", "draw_yard"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 

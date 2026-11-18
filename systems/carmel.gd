@@ -21,6 +21,10 @@ extends RefCounted
 # - The sunset mirador: standing still at the overlook with your human triggers the view goal.
 # - Live event: El Guitarrista del Carmel (systems/guitarrista.gd) playing sunset rumba.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_conveyor", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "takes_prints", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 # the overhead layer redraws this walk at 30 fps: its overhead follows the camera
 const OVERHEAD_FOLLOWS_CAMERA := true

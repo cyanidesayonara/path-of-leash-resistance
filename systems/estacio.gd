@@ -7,6 +7,10 @@ extends RefCounted
 # train, the luggage and trolleys, the commuter waves, the hall's pillars, the
 # goods yard off leash and the running lines past its wall.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bench", "draw_bin", "draw_bollard", "draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_log_prop", "draw_overhead", "draw_van", "on_bark", "surface", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")

@@ -1,5 +1,9 @@
 extends RefCounted
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["build_layer", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "night_fronts", "on_bark", "surface", "tick"]
+
+
 const EventFeed := preload("res://hud/event_feed.gd")
 const Gotic := preload("res://world/gotic.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")

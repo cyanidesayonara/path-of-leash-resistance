@@ -8,6 +8,10 @@ extends RefCounted
 # (entities/correfoc_threat.gd); it stops at the stage and the churro stand
 # (home_chase.GRACIA_BANDS).
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_live", "draw_overhead", "draw_scenery", "on_bark", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const CastellCycle := preload("res://systems/castell_cycle.gd")
 

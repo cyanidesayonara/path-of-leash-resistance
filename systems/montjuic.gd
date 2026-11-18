@@ -1,6 +1,10 @@
 class_name Montjuic
 extends RefCounted
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "grass_blocked", "surface", "tick"]
+
+
 const EventFeed := preload("res://hud/event_feed.gd")
 const CableCar := preload("res://systems/cable_car.gd")
 const Detour := preload("res://systems/detour.gd")

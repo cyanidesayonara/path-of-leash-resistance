@@ -8,6 +8,10 @@ extends RefCounted
 # on the sand and the recycling stations. The dog beach past the gate is the
 # beach freedom kind, which other walks share, so it stays in main.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_parasol", "on_bark", "surface", "takes_prints", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")

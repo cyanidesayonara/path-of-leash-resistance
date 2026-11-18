@@ -26,6 +26,10 @@ extends RefCounted
 # Then your human says leave the rest. The placeta's waiter's tray goes on
 # its own the first time she passes (a chair leg), so every walk sees it.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_performer", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Panot := preload("res://world/panot.gd")

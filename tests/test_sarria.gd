@@ -244,7 +244,7 @@ func _run() -> void:
 			flags += Vector2(90.0, 0.0)
 	_check(m.surface_at(flags) == Surf.S.PAVEMENT, "Sant Vicenç's flags handle as paving (%s)" % flags)
 	_check(not pits.is_empty() and m.surface_at(pits[0] + Vector2(8.0, 0.0)) == Surf.S.GRASS, "a tree pit there is soft")
-	_check("sarria" in m.SOFT_WEAR, "its worn patch is soft at the edge")
+	_check(m.soft_wear, "its worn patch is soft at the edge")
 	_check(m.walk_mod.has_method("draw_grove"), "its trees stand in their pits without forest roots")
 	var street_l: Array[Vector3] = m.street_night_lights()
 	var lights: Array[Vector3] = m.night_lights()

@@ -9,6 +9,10 @@ extends RefCounted
 # Gràcies central fountain, late-night arcade bar terraces, buskers, and
 # street sellers with goods on a blanket who fold up and run at the whistle.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "night_fronts", "night_lights", "surface", "tick"]
+
+
 const NightFronts := preload("res://world/night_fronts.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")

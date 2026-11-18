@@ -8,6 +8,12 @@ extends RefCounted
 # river's water and depth (LevelBuild.besos_water_rect, besos_deep_rect)
 # and the clearing past the gate stay where they are.
 
+# its off-leash area's worn patch is soft at the edge (main.soft_wear)
+const SOFT_WEAR := true
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_over_walkway", "night_lights"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Stones := preload("res://world/stones.gd")

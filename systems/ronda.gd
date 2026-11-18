@@ -21,6 +21,10 @@ extends RefCounted
 # rail and their phone is at risk unless the dog plants on the landward side
 # to anchor them on the leash. Nobody ever goes over the cliff edge.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const EdgePath := preload("res://world/edge_path.gd")

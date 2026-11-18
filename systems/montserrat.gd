@@ -17,6 +17,10 @@ extends RefCounted
 # On the way home the goat herd (entities/goat_threat.gd) comes down after
 # them, kicking boulders loose.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_overhead", "draw_snack", "is_lamp", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")

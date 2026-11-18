@@ -6,6 +6,10 @@ extends RefCounted
 # serpentine bench, the hypostyle hall and viaduct columns, the hilltop
 # off-leash space, the gate queue and the posers at the salamander.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["cam_lean", "draw_bollard", "draw_clearing", "draw_column", "draw_live", "hush_banner", "idle_status", "on_bark", "surface", "tick", "tick_crowd", "urgent_status"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 

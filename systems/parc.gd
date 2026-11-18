@@ -8,6 +8,10 @@ extends RefCounted
 # off. The bandstand's roof on the overhead layer and the walk's pace stay
 # in main.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_edge_layer", "draw_grove", "draw_live", "draw_over_walkway", "draw_path_edges", "draw_threshold", "grass_blocked", "night_lights", "surface"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")

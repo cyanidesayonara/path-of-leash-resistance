@@ -328,6 +328,7 @@ var lvl := "street":
 		lvl = v
 		walk_mod = WALK_MODULES.get(v)
 		walk_surface = walk_mod != null and walk_mod.has_method("surface")
+		soft_wear = walk_mod != null and bool(walk_mod.get_script_constant_map().get("SOFT_WEAR", false))
 # The walks laid out in their own module (systems/*.gd). Main calls their
 # hooks through walk_mod by what the module defines, not by the walk's name:
 # build_layer, draw_edge_layer, draw_ground, draw_overhead, draw_freedom,
@@ -411,6 +412,10 @@ const WALK_MODULES := {
 	"spook": preload("res://systems/castanyada.gd"),
 }
 var walk_mod: GDScript = null
+# whether this walk's off-leash area draws its worn patch soft at the edge: a
+# walk module says so with `const SOFT_WEAR := true`; the rest keep the flat
+# disc until they are polished
+var soft_wear := false
 var walk_surface := false
 var lane_ys: Array[float] = []
 var pond := Rect2()
@@ -5133,22 +5138,13 @@ func _freedom_sign(c: Object, r: Rect2, txt: String, gloss := "") -> void:
 			14, Color(0.9, 0.9, 0.82, 0.8))
 
 
-# the walks whose off-leash area draws its worn patch soft at the edge, one to
-# a line so walks added side by side do not collide; the rest keep the flat
-# disc until they are polished
-const SOFT_WEAR: Array[String] = [
-	"neteja",
-	"besos",
-	"sarria",
-	"tibidabo",
-]
 
 
 # the patch worn into the middle of a yard, a clearing or a plaça: a flat
-# disc, or on a SOFT_WEAR walk a gradient a little wider and denser at its
+# disc, or on a soft_wear walk a gradient a little wider and denser at its
 # heart, so it reads the same size and weight without an edge
 func _worn_patch(c: Object, at: Vector2, radius: float, col: Color) -> void:
-	if lvl in SOFT_WEAR:
+	if soft_wear:
 		c.glow(at, radius * 1.4, Color(col.r, col.g, col.b, minf(1.0, col.a * 1.15)), 0.3)
 	else:
 		c.draw_circle(at, radius, col)

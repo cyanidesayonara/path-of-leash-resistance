@@ -8,6 +8,10 @@ extends RefCounted
 # terrats beyond. The wet meter itself (main._tick_wet) and the shelters
 # stay in main: they are the walk's rules, not its picture.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_over_walkway", "surface"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Panot := preload("res://world/panot.gd")

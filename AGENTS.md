@@ -67,6 +67,12 @@ path-of-leash-resistance/
   godot/, build/       # local editor and export output (gitignored)
 ```
 
+A walk module declares what main asks of it in its own file, never in a
+shared list, so walks polished side by side touch different files: the hooks
+it answers (`const HOOKS := [...]`, held to its functions by
+`tests/test_walk_hooks.gd`) and a soft worn patch past its gate
+(`const SOFT_WEAR := true`, read into `main.soft_wear`).
+
 The split-out modules (`systems/goals.gd`, `hud/hud_build.gd`,
 `world/level_build.gd`, ...) are static functions over main's state: the
 state stays on main, and main.gd keeps a same-name forwarder for every
@@ -237,8 +243,9 @@ the code). A filter picks tests by path; TIMEOUT sets seconds per test:
 ```
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/run_tests.sh [leash]
 ```
-The list is `tests/ci_tests.txt`: a new test is a line there, never a step
-in ci.yml (give it `# cost N` above it if it takes 10 s or more on CI).
+The list is `tests/ci_tests.txt` plus every `tests/ci.d/*.txt`: a new test is
+a line in its walk's or feature's own file there (`tests/ci.d/WALK_ID.txt`,
+see its README), never a step in ci.yml (give it `# cost N` above it if it takes 10 s or more on CI).
 `WALKS=1` adds what CI also runs on every walk in `Game.LEVELS` (selftest,
 1800 frames) and the four street autowalks. CI splits all of it by cost
 into eight `shard K/8` jobs that run side by side (`SHARD=K/8`; `DRY=1`

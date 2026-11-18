@@ -19,6 +19,10 @@ extends RefCounted
 #      event: the parakeets mob your human's croissant; bark them off.
 #   7. The dog area past the gate, off the leash.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["cam_lean", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "grass_blocked", "hush_banner", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind", "urgent_status"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const BossMamut := preload("res://systems/boss_mamut.gd")

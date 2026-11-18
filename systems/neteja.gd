@@ -7,6 +7,12 @@ extends RefCounted
 # Gòtic's roofs (world/gotic.gd) over shops with their shutters still down.
 # The sweeper, the chase home and the suds round the bollards stay in main.
 
+# its off-leash area's worn patch is soft at the edge (main.soft_wear)
+const SOFT_WEAR := true
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_grove", "draw_live", "night_lights", "surface"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Gotic := preload("res://world/gotic.gd")
