@@ -21,6 +21,10 @@ extends RefCounted
 # - Signature live event: El Skater de l'Esplanada (ForumSkater) cruising across
 #   the open pavement practicing an ollie.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 # a bump costs your human this much of their patience (0..1, entities/human.gd)
 const BUMP_PATIENCE := 0.08

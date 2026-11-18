@@ -8,6 +8,10 @@ extends RefCounted
 # in. On the way home the sounder comes down the trail after you; the
 # dumpsters are where it stops to feed (home_chase.BOAR_BANDS).
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "grass_blocked", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 

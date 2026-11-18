@@ -21,6 +21,10 @@ extends RefCounted
 #      walls with gnarled olive trees, dry-stone walls, a low crenellated parapet,
 #      and a daytime panoramic view of Barcelona and the sea below (y = -5000 .. -5620)
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const PobleBalcony := preload("res://systems/poble_balcony.gd")

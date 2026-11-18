@@ -8,6 +8,10 @@ extends RefCounted
 # Everything here is static; what is solid is listed by solids(), which
 # level_build turns into bodies and bypasser blockers.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_column", "draw_live", "draw_overhead", "draw_stall", "draw_van", "surface"]
+
+
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)

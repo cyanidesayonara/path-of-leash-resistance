@@ -19,6 +19,10 @@ extends RefCounted
 # - Signature live event: El Bufador de Bombolles (EspanyaBubble) releasing giant
 #   shimmering soap bubbles across the avenue.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const EspanyaBubble := preload("res://systems/espanya_bubble.gd")

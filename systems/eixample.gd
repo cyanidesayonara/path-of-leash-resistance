@@ -20,6 +20,10 @@ extends RefCounted
 # Live event: the tour group following its guide's umbrella across the last
 # cross street (systems/eixample_tour.gd).
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_grove", "draw_live", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Panot := preload("res://world/panot.gd")

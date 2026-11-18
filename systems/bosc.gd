@@ -6,6 +6,10 @@ extends RefCounted
 # and its stepping stones, the fallen logs, the trail's ragged edges, the
 # way markers, the forest spring and the bocadillos.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 
 # A half-eaten bocadillo in its foil, dropped off someone's picnic.

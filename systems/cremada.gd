@@ -16,6 +16,10 @@ extends RefCounted
 # home_chase.CREMADA_BANDS). He wedges in the underpass, then on the fiesta
 # arch: the two respites.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_live", "draw_overhead", "draw_scenery", "on_bark", "tick"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const DimoniThreat := preload("res://entities/dimoni_threat.gd")
 const Outdoors := preload("res://systems/outdoors.gd")

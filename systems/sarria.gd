@@ -20,6 +20,12 @@ extends RefCounted
 # crates, the shutters, the sweeper, the joggers and the gardener each have
 # their rule there.
 
+# its off-leash area's worn patch is soft at the edge (main.soft_wear)
+const SOFT_WEAR := true
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_grove", "draw_live", "draw_overhead", "idle_status", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EdgePath := preload("res://world/edge_path.gd")
 const NightFronts := preload("res://world/night_fronts.gd")

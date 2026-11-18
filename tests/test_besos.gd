@@ -91,7 +91,7 @@ func _run() -> void:
 				west_wall += 1
 	_check(east_wall == 0, "no wall lamp on the riverbank, which has no wall (%d)" % east_wall)
 	_check(west_wall > 0, "the flood wall keeps its lamps (%d)" % west_wall)
-	_check("besos" in m.SOFT_WEAR, "the meadow's trodden earth is soft at its edge")
+	_check(m.soft_wear, "the meadow's trodden earth is soft at its edge")
 
 	await physics_frame
 	HomeChase.begin(m)

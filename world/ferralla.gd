@@ -10,6 +10,10 @@ extends RefCounted
 # Draw-only apart from the yard's wreck (yard_wreck), and every variation is a
 # hash of position, so a walk looks the same every run.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_column", "draw_grove", "draw_live", "draw_log_prop", "draw_overhead", "draw_top", "draw_van", "draw_verge", "draw_yard", "idle_status"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const SHADOW := Color(0.05, 0.05, 0.08, 0.24)
 

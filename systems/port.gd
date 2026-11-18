@@ -7,6 +7,10 @@ extends RefCounted
 # bollards with taut ropes, fish market ice crates, wheeling harbour gulls,
 # and moored fishing boats rocking gently in the Mediterranean harbor basin.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["cam_lean", "draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"]
+
+
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")

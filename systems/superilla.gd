@@ -20,6 +20,10 @@ extends RefCounted
 # - Signature live event: El Patí de Càrrega - a front-loading family cargo trike
 #   gliding along the green cycle lane, ringing a cheerful bell ("ding-ding!").
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const Panot := preload("res://world/panot.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")

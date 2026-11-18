@@ -62,7 +62,7 @@ func _run() -> void:
 	_check(m.surface_at(flags) == S.PAVEMENT, "the plaça's flags handle as paving (%s)" % flags)
 	_check(m.surface_at(pits[0] + Vector2(8.0, 0.0)) == S.GRASS, "a plane tree's pit is soft")
 	_check(m.surface_at(Vector2(640.0, m.GATE_Y + 300.0)) != S.GRASS, "the street short of the gate is not grass")
-	_check("neteja" in m.SOFT_WEAR, "the plaça's worn patch is soft at its edge")
+	_check(m.soft_wear, "the plaça's worn patch is soft at its edge")
 	_check(m.walk_mod.has_method("draw_grove"), "the plaça's trees stand in their pits without forest roots")
 	# after dark: the street's lamps, and wall lamps on the plaça's house fronts
 	var street: Array[Vector3] = m.street_night_lights()

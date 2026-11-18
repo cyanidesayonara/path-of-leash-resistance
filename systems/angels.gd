@@ -19,6 +19,10 @@ extends RefCounted
 # - Signature live event: AngelsSkate (systems/angels_skate.gd) — a skater bails
 #   with a 0.8 s "Board!" warning and their runaway board shoots across the plaza.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const AngelsSkate := preload("res://systems/angels_skate.gd")

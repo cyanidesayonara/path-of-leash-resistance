@@ -16,6 +16,10 @@ extends RefCounted
 # rails aside. It brakes for your human, never hits them. Beyond the walls:
 # the side roads, then the blocks, cut off by the avenue.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "grass_blocked", "idle_status", "is_lamp", "name_place", "on_bark", "rider_lane", "surface", "tick", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const EventFeed := preload("res://hud/event_feed.gd")

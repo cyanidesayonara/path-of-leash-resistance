@@ -11,6 +11,10 @@ extends RefCounted
 # - Caricaturist and painter pitches with easels, palettes, and sketch clotheslines
 # - Living statues on weathered stone pedestals with tipping coin dishes
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["build_layer", "draw_grove", "draw_yard", "surface", "tick"]
+
+
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 const Detour := preload("res://systems/detour.gd")
 const Surfaces := preload("res://world/surfaces.gd")

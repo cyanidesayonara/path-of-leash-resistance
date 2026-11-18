@@ -21,6 +21,10 @@ extends RefCounted
 # it comes down after them, rolling snowballs ahead of its blade. It wedges in
 # the ski-hire rack, then at the chairlift's queue barriers.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind"]
+
+
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")

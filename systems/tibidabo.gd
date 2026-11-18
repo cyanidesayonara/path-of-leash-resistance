@@ -11,6 +11,12 @@ extends RefCounted
 # signal at the road's edge flashes while the carriage is near it. The summit
 # has pennant bunting and a cotton candy cart with the prize.
 
+# its off-leash area's worn patch is soft at the edge (main.soft_wear)
+const SOFT_WEAR := true
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["build_layer", "draw_edge_layer", "draw_grove", "draw_live", "draw_overhead", "night_lights", "surface", "tick"]
+
+
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")

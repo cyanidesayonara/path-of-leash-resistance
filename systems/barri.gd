@@ -7,6 +7,10 @@ extends RefCounted
 # pipica past the gate. The tutorial is laid out on El Barri (main.lvl is
 # "barri" there too), so every hook here also runs in the tutorial.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_overhead", "draw_performer", "grass_blocked", "night_fronts", "night_lights", "surface", "tree_kind"]
+
+
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")

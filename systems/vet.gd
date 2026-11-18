@@ -9,6 +9,10 @@ extends RefCounted
 # On the return leg, Millie panics at the consultation room threshold and bolts
 # south while clinic assistants with giant cones of shame give chase!
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"]
+
+
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")

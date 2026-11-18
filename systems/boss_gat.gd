@@ -31,6 +31,10 @@ extends RefCounted
 #   to fireworks. Your human, who has waited at HOLD_Y all this time, walks on
 #   into the plaça.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "night_fronts", "on_bark", "surface", "tick", "urgent_status"]
+
+
 const NightFronts := preload("res://world/night_fronts.gd")
 const Clay := preload("res://entities/clay.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")

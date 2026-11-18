@@ -23,6 +23,10 @@ extends RefCounted
 # (draw_edge_layer); the world pass only draws what moves (draw_live).
 # Static functions over main's state, like the other systems.
 
+# the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const HOOKS := ["draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_van", "night_fronts"]
+
+
 const NightFronts := preload("res://world/night_fronts.gd")
 const Panot := preload("res://world/panot.gd")
 const Letters := preload("res://world/sign_letters.gd")
