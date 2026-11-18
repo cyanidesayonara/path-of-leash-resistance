@@ -6,8 +6,8 @@ extends RefCounted
 # grit rushing. Then it shoves the dog and your human downwind for GUST_S,
 # swelling and dying; the leash bows with it and litter takes off
 # (entities/litter.gd reads wind_gust). A planted dog holds her ground. By the
-# sea the wind blows onshore: it comes off whichever side of the walk is
-# water. Montjuïc keeps its own hill wind (systems/montjuic.gd).
+# sea the wind blows onshore, off whichever side of the walk is water, and
+# carries spray instead of leaves (tick_sea). Montjuïc keeps its own hill wind (systems/montjuic.gd).
 #
 # The gust's state is main's (wind_warn, wind_gust, wind_dir, wind_next,
 # wind_rng), shared with Montjuïc's, so the overlay and the litter read one
@@ -54,7 +54,31 @@ static func _quiet(m: Node2D) -> bool:
 		or String(m.lvl) == "montjuic"
 
 
+# Whether the wind is coming in off the sea where she is: the overlay blows
+# spray instead of leaves then. Checked every SEA_CHECK_S, from the ground
+# alone (never wind_rng), for any sky with wind enough to show.
+const SEA_CHECK_S := 0.5
+const SEA_WIND_MIN := 0.3
+
+
+static func tick_sea(m: Node2D, delta: float) -> void:
+	if Game.wind_amount() < SEA_WIND_MIN:
+		m.wind_off_sea = false
+		return
+	m.sea_check_t = float(m.sea_check_t) - delta
+	if float(m.sea_check_t) > 0.0:
+		return
+	m.sea_check_t = SEA_CHECK_S
+	var y: float = m.dog.global_position.y
+	var off := sea_on(m, y, -1.0) != sea_on(m, y, 1.0)
+	m.wind_off_sea = off
+	if off:
+		# onshore, even in a breeze between gusts (no dice: the sea decides)
+		m.wind_dir = wind_dir(m, y)
+
+
 static func tick(m: Node2D, delta: float) -> void:
+	tick_sea(m, delta)
 	if not windy() or _quiet(m):
 		return
 	var wk := Game.wind_amount()

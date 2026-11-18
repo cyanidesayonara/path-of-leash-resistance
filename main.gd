@@ -30,6 +30,10 @@ var wind_next := 0.0
 var wind_warn := 0.0
 var wind_gust := 0.0
 var wind_dir := Vector2.RIGHT
+# the wind is coming in off the sea here (systems/gusts.gd, tick_sea): the
+# weather overlay blows spray, not leaves
+var wind_off_sea := false
+var sea_check_t := 0.0
 # Montjuic's telefèric (systems/cable_car.gd): the stations and the dropped
 # ticket, whether she has it, and the ride under way
 var cable_low := Vector2.ZERO
@@ -6765,6 +6769,7 @@ func _physics_process(delta: float) -> void:
 	if weather_fx != null:
 		weather_fx.push = Gusts.push(self)
 		weather_fx.wind_sign = 1.0 if wind_dir.x >= 0.0 else -1.0
+		weather_fx.sea = wind_off_sea
 	if walk_mod != null and walk_mod.has_method("tick"):
 		walk_mod.tick(self, delta)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
