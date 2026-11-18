@@ -362,8 +362,10 @@ func _draw_cards(vs: Vector2) -> void:
 		y += 80.0
 		# moving on is a button, so it goes in the prompt bar, as on every
 		# menu screen, and never into the lesson's sentence
-		# a question over the walk (THAT'S THE BASICS) has the bar to itself
-		if bool(main.get("tut_skippable")) and String(main.confirm_id) == "":
+		# a question over the walk (THAT'S THE BASICS) has the bar to itself,
+		# and so does a menu open over it (the pause grid has its own bar)
+		var menu_up: bool = bool(main.paused) or (main.menu_screen != null and main.menu_screen.visible)
+		if bool(main.get("tut_skippable")) and String(main.confirm_id) == "" and not menu_up:
 			Kit.prompt_bar(self, vs, [["skip", String(main.tut_skip_label)]])
 	if main.challenge_l != null and main.challenge_l.visible and main.challenge != null:
 		_dare_card(vs, y)

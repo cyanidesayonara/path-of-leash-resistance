@@ -162,8 +162,7 @@ func _main(vs: Vector2) -> void:
 	var h := pad * 2.0 + row_h * float(n)
 	var y0 := maxf(top, (top + bottom) * 0.5 - h * 0.5)
 	var r := Rect2(48.0, y0, MAIN_W, h)
-	Kit.card(self, r, acc)
-	Kit.mosaic(self, r)
+	Kit.mosaic_card(self, r, acc)
 	var f := Kit.display()
 	var px := 20 if row_h >= 40.0 else 17
 	var picked_i := clampi(int(main.main_idx), 0, n - 1)
@@ -607,8 +606,7 @@ func _pause(vs: Vector2) -> void:
 	var h := 110.0 + float(rows) * (PAUSE_CELL_H + PAUSE_GAP) + 14.0
 	var r := Rect2(vs.x * 0.5 - PAUSE_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, PAUSE_W, h)
 	_card_pop(r.get_center())
-	Kit.card(self, r, acc)
-	Kit.mosaic(self, r)
+	Kit.mosaic_card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), I18n.t("pause_title"), 30, acc,
 		HORIZONTAL_ALIGNMENT_CENTER, PAUSE_W)
 	var sub := "%s    %s" % [String(main._walk_name()), Flow.clock(float(main.elapsed))]

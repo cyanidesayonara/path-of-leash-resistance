@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - The trencadís strip is the card's top, and two fixes
+
+- The menus' trencadís strip (`UiKit.mosaic`) runs edge to edge now and rounds into the card's corners, so it is the card's top edge instead of a sticker on it. Cards that carry it (`UiKit.mosaic_card`: the main menu, the pause grid, the results) drop the accent line whose ends showed past the strip. Each shard is glazed a shade off its colour with a lit top edge, the white shards are toned down to a warm stone, and a dark seat runs under the strip.
+- Paused during a tutorial lesson, the lesson's "move on" prompt bar was drawn under the pause grid's own and the two overlapped. A menu open over the walk now has the prompt bar to itself (`event_feed._draw_cards`).
+- The title's lettering wears the theme: navy letters, LEASH in magenta to match the collar O, a cream keyline and a navy drop (`IntroTitle`).
+- The title's leash ran up only 80 units past the top of a 16:9 frame, so a taller window (the website's player) showed it ending in mid air. It now runs on up off the top of any screen.
+
 ## 2026-11-18 - Polish La Rambla
 
 - The Pipicà's trees were the forest's, whose roots run toward the walk's edge lines and read in a fenced lawn as sticks poking out of the crowns. They are the lawn's broadleaves now (`Rambla.draw_grove`, as El Parc's).
