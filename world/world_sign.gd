@@ -504,6 +504,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			var grow := clampf(u * 1.8, 0.0, 1.0)
 			pc.r = float(pc.r) * maxf(0.01, grow)
 			pc.len = float(pc.len) * grow
+	# what a hard-to-read material lies on (BACKINGS)
+	_backing(c, sign, h)
 	match String(sign.mat):
 		"leaves":
 			_leaves(c, sign, h)
@@ -778,6 +780,186 @@ static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
 		var q := r.position + Vector2(_h(i, key, 70.0) * r.size.x, _h(i, key, 71.0) * r.size.y)
 		var cr := maxf(1.6, h * (0.025 + 0.02 * _h(i, key, 72.0)))
 		c.draw_circle(q, cr, Color(0.30, 0.26, 0.16).lerp(Color(0.24, 0.30, 0.17), _h(i, key, 73.0)))
+
+
+# What a name lies on where its own material vanishes into the ground, the
+# way the place would show it: Tibidabo's bulbs on the fairground's marquee
+# board, La Castanyada's chestnuts on the seller's newspaper, and on a paved
+# walk a flat panel of the street's own tiles (TILE_TONES). Only where the
+# backing is a thing the place would have: a patch of darker ground under a
+# name reads as a stain, not a frame.
+# Round the strokes' extent, as a flower bed is (planter_rect).
+const BACKINGS := {"bulbs": "board", "chestnuts": "newspaper", "pastries": "tiles",
+	"bagtags": "tiles", "pebbles": "tiles", "pintxos": "tiles", "casings": "tiles", "cascade": "tiles",
+	"tickets": "tiles", "brollies": "tiles", "scarf": "tiles", "puddle": "tiles", "pegs": "tiles",
+	"fronds": "tiles", "seaglass": "tiles"}
+# a tile panel in the walk's own paving: [field, border course, joints], each
+# the street's tone a shade off so the panel lies in it, not on it
+const WARM_TILE := [Color(0.80, 0.73, 0.67), Color(0.70, 0.62, 0.57), Color(0.66, 0.59, 0.55)]
+const GRANITE_TILE := [Color(0.74, 0.73, 0.71), Color(0.62, 0.61, 0.60), Color(0.56, 0.55, 0.54)]
+# a dark slate for pieces lighter than their street, a pale terrazzo for
+# dark ones (the brollies' navy and red)
+const PALE_TILE := [Color(0.84, 0.83, 0.80), Color(0.72, 0.71, 0.68), Color(0.66, 0.65, 0.62)]
+const DARK_TILE := [Color(0.30, 0.31, 0.34), Color(0.24, 0.25, 0.28), Color(0.21, 0.22, 0.25)]
+const SANDSTONE_TILE := [Color(0.82, 0.76, 0.64), Color(0.70, 0.64, 0.54), Color(0.64, 0.58, 0.49)]
+const TILE_TONES := {
+	"pastries": WARM_TILE, "pintxos": DARK_TILE, "casings": GRANITE_TILE, "tickets": GRANITE_TILE,
+	"brollies": PALE_TILE, "scarf": GRANITE_TILE, "puddle": GRANITE_TILE, "pegs": DARK_TILE,
+	"cascade": SANDSTONE_TILE, "fronds": SANDSTONE_TILE,
+	# pale pieces want a darker field: the terminal's terrazzo, the river
+	# path's slate, Sitges' terracotta
+	"bagtags": [Color(0.46, 0.48, 0.52), Color(0.37, 0.39, 0.43), Color(0.33, 0.35, 0.39)],
+	"pebbles": [Color(0.24, 0.27, 0.30), Color(0.19, 0.22, 0.25), Color(0.17, 0.19, 0.22)],
+	"seaglass": [Color(0.66, 0.47, 0.38), Color(0.56, 0.39, 0.31), Color(0.50, 0.35, 0.28)],
+}
+# a backing sits a little tighter under the letters than a bed, clear of the
+# gloss below
+const BACKING_PAD := 0.30
+
+
+# a rounded rectangle's outline, clockwise from the top-left corner's start,
+# closed (the first point again at the end), turned `ang` round its centre
+static func _rr_loop(r: Rect2, rad: float, ang := 0.0) -> PackedVector2Array:
+	rad = clampf(rad, 0.0, minf(r.size.x, r.size.y) * 0.5)
+	var seg := 6
+	var out := PackedVector2Array()
+	var ks := [Vector2(r.end.x - rad, r.position.y + rad), r.end - Vector2(rad, rad),
+		Vector2(r.position.x + rad, r.end.y - rad), r.position + Vector2(rad, rad)]
+	for k in range(4):
+		for i in range(seg + 1):
+			var t := -PI * 0.5 + (float(k) + float(i) / float(seg)) * PI * 0.5
+			out.append((ks[k] as Vector2) + Vector2.from_angle(t) * rad)
+	out.append(out[0])
+	if ang != 0.0:
+		var ctr := r.get_center()
+		for i in range(out.size()):
+			out[i] = ctr + (out[i] - ctr).rotated(ang)
+	return out
+
+
+# a rounded rectangle, filled, its edge feathering out to nothing over
+# `feather`: a damp patch, a shadow. One gradient, no rings (ShapeBatch.band).
+static func _soft_rr(c: Object, r: Rect2, rad: float, feather: float, col: Color, ang := 0.0) -> void:
+	var inner := _rr_loop(r, rad, ang)
+	c.polygon(inner.slice(0, inner.size() - 1), col)
+	if feather <= 0.0:
+		return
+	var outer := _rr_loop(r.grow(feather), rad + feather, ang)
+	var pts := inner.duplicate()
+	pts.append_array(outer)
+	c.band(pts, inner.size(), col, PackedFloat32Array([1.0, 0.0]))
+
+
+static func _rr(c: Object, r: Rect2, rad: float, col: Color, ang := 0.0) -> void:
+	var loop := _rr_loop(r, rad, ang)
+	c.polygon(loop.slice(0, loop.size() - 1), col)
+
+
+# a point `u` (0..1) of the way round a rectangle's edge, clockwise from the top-left
+static func _perim(r: Rect2, u: float) -> Vector2:
+	var per := (r.size.x + r.size.y) * 2.0 * u
+	if per < r.size.x:
+		return Vector2(r.position.x + per, r.position.y)
+	if per < r.size.x + r.size.y:
+		return Vector2(r.end.x, r.position.y + per - r.size.x)
+	if per < r.size.x * 2.0 + r.size.y:
+		return Vector2(r.end.x - (per - r.size.x - r.size.y), r.end.y)
+	return Vector2(r.position.x, r.end.y - (per - r.size.x * 2.0 - r.size.y))
+
+
+# the shadow under something lying on the ground: soft, a little down-right
+static func _lying_shadow(c: Object, r: Rect2, rad: float, h: float, ang := 0.0) -> void:
+	_soft_rr(c, Rect2(r.position + Vector2(h * 0.05, h * 0.08), r.size), rad, h * 0.22,
+		Color(0.04, 0.04, 0.07, 0.26), ang)
+
+
+static func _backing(c: Object, sign: Dictionary, h: float) -> void:
+	var style := String(BACKINGS.get(String(sign.mat), ""))
+	if style == "" or bool(sign.get("bed_shared", false)):
+		return
+	var r := planter_rect(sign)
+	if r.size.x <= 0.0:
+		return
+	# tighter than a bed: the strokes' extent at BACKING_PAD
+	r = r.grow(-float(sign.h) * (PLANTER_PAD - BACKING_PAD))
+	var key: float = sign.key
+	match style:
+		"board":
+			# the fairground's marquee: a dark board in an old-gold frame, its
+			# bulbs evenly round the frame
+			var fr := maxf(4.0, h * 0.11)
+			var o := r.grow(fr)
+			_lying_shadow(c, o, h * 0.12, h)
+			_rr(c, o, h * 0.12, Color(0.50, 0.35, 0.17))
+			_rr(c, r, h * 0.06, Color(0.15, 0.09, 0.12))
+			var ring := r.grow(fr * 0.5)
+			var n := int((ring.size.x + ring.size.y) * 2.0 / (h * 0.34))
+			for i in range(n):
+				var q := _perim(ring, float(i) / float(n))
+				c.circle(q, fr * 0.34, Color(0.30, 0.20, 0.10))
+				c.circle(q, fr * 0.24, Color(1.0, 0.86, 0.56))
+		"tiles":
+			# flat in the pavement: a field of plain square tiles, a shade paler
+			# than the street, inside a border course of darker ones, the joints
+			# fine. Nothing raised, nothing casting a shadow.
+			var t := h * 0.95
+			var bw := maxf(4.0, h * 0.16)
+			var o := r.grow(bw)
+			var tones: Array = TILE_TONES.get(String(sign.mat), WARM_TILE)
+			var joint: Color = tones[2]
+			var edge: Color = tones[1]
+			var field: Color = tones[0]
+			c.rect(o, joint)
+			# the border course, tile by tile
+			var n := maxi(1, int(round(o.size.x / (bw * 3.0))))
+			var step := o.size.x / float(n)
+			for i in range(n):
+				var x := o.position.x + step * float(i)
+				for y in [o.position.y, r.end.y]:
+					c.rect(Rect2(x + 1.0, y + 1.0, step - 2.0, bw - 2.0),
+						edge.lerp(edge.lightened(0.05), _h(i, key, 95.0 + y)))
+			var m := maxi(1, int(round(r.size.y / (bw * 3.0))))
+			var vs := r.size.y / float(m)
+			for j in range(m):
+				var y2 := r.position.y + vs * float(j)
+				for x2 in [o.position.x, r.end.x]:
+					c.rect(Rect2(x2 + 1.0, y2 + 1.0, bw - 2.0, vs - 2.0),
+						edge.lerp(edge.lightened(0.05), _h(j, key, 97.0 + x2)))
+			# the field: whole squares, the last row and column cut to fit
+			var cols := maxi(1, int(round(r.size.x / t)))
+			var rows := maxi(1, int(round(r.size.y / t)))
+			var tw := r.size.x / float(cols)
+			var th := r.size.y / float(rows)
+			for j in range(rows):
+				for i in range(cols):
+					var k := j * cols + i
+					c.rect(Rect2(r.position.x + tw * float(i) + 0.8, r.position.y + th * float(j) + 0.8, tw - 1.6, th - 1.6),
+						field.lerp(field.lightened(0.05), _h(k, key, 99.0)))
+		"newspaper":
+			# the chestnut seller's newspaper: two sheets, a little crooked, the
+			# print faint so the chestnuts read over it
+			var under := Rect2(r.position + Vector2(h * 0.3, h * 0.12), r.size).grow(h * 0.05)
+			_lying_shadow(c, under, 2.0, h, 0.035)
+			_rr(c, under, 2.0, Color(0.80, 0.77, 0.69), 0.035)
+			_lying_shadow(c, r, 2.0, h, -0.015)
+			_rr(c, r, 2.0, Color(0.88, 0.85, 0.77), -0.015)
+			var ctr := r.get_center()
+			var ink := Color(0.50, 0.48, 0.44, 0.32)
+			var w := maxf(1.4, h * 0.03)
+			# a headline across the top, then columns of print
+			var hy := r.position.y + h * 0.22
+			c.line(ctr + (Vector2(r.position.x + h * 0.25, hy) - ctr).rotated(-0.015),
+				ctr + (Vector2(r.end.x - h * 0.25, hy) - ctr).rotated(-0.015), Color(ink, 0.45), h * 0.09)
+			var col_w := h * 1.1
+			var cx := r.position.x + h * 0.25
+			while cx + col_w * 0.6 < r.end.x:
+				var ly := hy + h * 0.2
+				while ly < r.end.y - h * 0.15:
+					var a2 := Vector2(cx, ly)
+					var b2 := Vector2(minf(cx + col_w * 0.85, r.end.x - h * 0.2), ly)
+					c.line(ctr + (a2 - ctr).rotated(-0.015), ctr + (b2 - ctr).rotated(-0.015), ink, w)
+					ly += h * 0.12
+				cx += col_w
 
 
 static func _flowerbed(c: Object, sign: Dictionary, h: float) -> void:

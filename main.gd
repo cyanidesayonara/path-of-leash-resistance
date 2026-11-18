@@ -5548,6 +5548,7 @@ func build_signs() -> void:
 		signs.append(WorldSign.build("LEASH RESISTANCE", Vector2(mid, START_Y - 172.0), 44.0, mat, 2.0, room))
 		for sg: Dictionary in signs:
 			sg.born = born
+		_share_bed(signs[0], signs[1])
 	else:
 		var name := _walk_name()
 		# the name stays on the path, inside its edges where the letters lie: a
@@ -5575,15 +5576,20 @@ func build_signs() -> void:
 	# and the small line no smaller than the cones can still spell
 	var ok := 30.0 * gk if mat == "cones" else 24.0
 	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), ok, mat, 12.0, gw))
-	# flowers are planted in a bed: the gate's two lines share one
-	if mat == "carnations":
-		var lower: Dictionary = signs[signs.size() - 2]
-		var upper: Dictionary = signs[signs.size() - 1]
-		var bed := WorldSign.planter_rect(upper).merge(WorldSign.planter_rect(lower))
-		# drawn by the lower line, which is drawn first, under both
-		upper.planter = bed
-		lower.planter = bed
-		upper.bed_shared = true
+	_share_bed(signs[signs.size() - 2], signs[signs.size() - 1])
+
+
+# Two lines of one name lie on one bed or backing (a flower bed, a tray, a
+# newspaper), not two boxes overlapping: drawn by `first`, which is drawn
+# first, under both.
+func _share_bed(first: Dictionary, second: Dictionary) -> void:
+	var mat := String(first.mat)
+	if mat != "carnations" and not WorldSign.BACKINGS.has(mat):
+		return
+	var bed := WorldSign.planter_rect(first).merge(WorldSign.planter_rect(second))
+	first.planter = bed
+	second.planter = bed
+	second.bed_shared = true
 
 
 func _tick_signs(delta: float) -> void:
