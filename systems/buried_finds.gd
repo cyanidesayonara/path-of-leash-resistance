@@ -177,6 +177,7 @@ static func tick(m: Node2D, delta: float) -> bool:
 
 static func _dug(m: Node2D, f: Dictionary) -> void:
 	f.dug = true
+	m.finds_dug = int(m.finds_dug) + 1
 	var new := Game.record_find(String(m.lvl), int(f.i))
 	m.bones += BONUS
 	Sfx.play("star", 0.85)

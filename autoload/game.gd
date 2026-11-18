@@ -815,6 +815,9 @@ var dog_upgrades: Dictionary = {}
 var training: Dictionary = {}
 # the buried finds each dog has dug up: dog -> walk -> [find index, ...]
 var finds_found: Dictionary = {}
+# the walks on which each dog has met her skill goal (systems/dog_skills.gd):
+# dog -> [walk, ...]
+var skills_done: Dictionary = {}
 
 
 func get_dog_stat(d: String, stat: String) -> int:
@@ -866,6 +869,25 @@ func record_find(lv: String, i: int, d := "") -> bool:
 	if not per.has(lv):
 		per[lv] = []
 	(per[lv] as Array).append(i)
+	training[key] = training_points(key) + 1
+	save_records()
+	return true
+
+
+# whether this dog has met her skill goal on this walk
+func skill_done(lv: String, d := "") -> bool:
+	return lv in (skills_done.get(d if d != "" else dog, []) as Array)
+
+
+# a skill goal met for the first time on this walk by this dog: a training
+# point for her. Says whether it was new.
+func record_skill(lv: String, d := "") -> bool:
+	var key := d if d != "" else dog
+	if skill_done(lv, key):
+		return false
+	if not skills_done.has(key):
+		skills_done[key] = []
+	(skills_done[key] as Array).append(lv)
 	training[key] = training_points(key) + 1
 	save_records()
 	return true
@@ -1243,6 +1265,9 @@ func _ready() -> void:
 		# --text-size=normal|large: the UI scale preset for this run, unsaved
 		if arg.begins_with("--text-size=") and arg.substr(12) in TEXT_SIZES:
 			text_size = arg.substr(12)
+		# --dog=NAME: walk that dog for this run, unsaved (screenshots, playtests)
+		if arg.begins_with("--dog=") and arg.substr(6) in DOG_KEYS:
+			dog = arg.substr(6)
 		# --look=him|her|N: your human as the default him or her, or the NEW
 		# LOOK the number seeds, for this run, unsaved (screenshots)
 		if arg.begins_with("--look="):
@@ -1381,6 +1406,7 @@ func load_records() -> void:
 	dog_upgrades = Dictionary(cf.get_value("player", "dog_upgrades", {}))
 	training = Dictionary(cf.get_value("player", "training", {}))
 	finds_found = Dictionary(cf.get_value("player", "finds_found", {}))
+	skills_done = Dictionary(cf.get_value("player", "skills_done", {}))
 	human_look = valid_human(cf.get_value("player", "human", default_human("him")))
 	vol_master = clampf(float(cf.get_value("settings", "vol_master", DEFAULT_VOL_MASTER)), 0.0, 1.0)
 	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", DEFAULT_VOL_SFX)), 0.0, 1.0)
@@ -1495,6 +1521,7 @@ func save_records() -> void:
 	cf.set_value("player", "dog_upgrades", dog_upgrades)
 	cf.set_value("player", "training", training)
 	cf.set_value("player", "finds_found", finds_found)
+	cf.set_value("player", "skills_done", skills_done)
 	cf.set_value("player", "human", human_look)
 	cf.set_value("settings", "vol_master", vol_master)
 	cf.set_value("settings", "vol_sfx", vol_sfx)

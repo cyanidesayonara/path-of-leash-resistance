@@ -168,6 +168,12 @@ func _draw() -> void:
 			txt_col = Kit.INK_MUTE
 		var target := int(row.target)
 		var open_row: bool = state != Icons.Check.DONE_NOW and state != Icons.Check.DONE_BEFORE
+		# the dog's own skill goal, under the walk's: set apart by a rule and
+		# her colour, and never part of the walk's count
+		if bool(row.get("skill", false)):
+			draw_line(Vector2(PAD, y - 3.0), Vector2(W - PAD, y - 3.0), Color(Kit.TURQUOISE, 0.35), 1.0)
+			if open_row:
+				txt_col = Kit.TURQUOISE
 		var letters: Array = row.get("letters", []) if open_row else []
 		var readout: String = String(row.get("readout", "")) if open_row else ""
 		var show_meter: bool = target > 1 and open_row and letters.is_empty()

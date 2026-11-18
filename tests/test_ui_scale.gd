@@ -61,8 +61,10 @@ func _run() -> void:
 	game.goals_expanded = true
 	m.goals_peek = 0.0
 	var opened: Dictionary = G.card_data(m)
-	_check((opened.rows as Array).size() == m.active_quests.size() and int(opened.extra) == 0,
-		"the opened list shows all %d goals (%d)" % [m.active_quests.size(), (opened.rows as Array).size()])
+	# the walk's goals and, under them, the dog's skill goal (systems/dog_skills.gd)
+	var want: int = m.active_quests.size() + (0 if (m.skill_quest as Dictionary).is_empty() else 1)
+	_check((opened.rows as Array).size() == want and int(opened.extra) == 0,
+		"the opened list shows all %d goals and the skill goal (%d)" % [m.active_quests.size(), (opened.rows as Array).size()])
 	# the goals that count up come first, as a group
 	var seen_single := false
 	var grouped := true

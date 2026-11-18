@@ -1335,6 +1335,7 @@ func on_leash_yank(dir: Vector2, dog_planted: bool, yank_speed: float) -> void:
 		telegraph_t = 0.0
 		bubble.visible = false
 		main.float_text(global_position, I18n.t("w_whoa_there"), Color(1, 1, 1), main.POP_SAY)
+		main.skill_stumbles += 1
 		main.on_stumble_save(global_position)
 
 

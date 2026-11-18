@@ -18,6 +18,7 @@ const Carmel := preload("res://systems/carmel.gd")
 const Eixample := preload("res://systems/eixample.gd")
 const Sarria := preload("res://systems/sarria.gd")
 const Ach := preload("res://systems/achievements.gd")
+const DogSkills := preload("res://systems/dog_skills.gd")
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
 	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
@@ -389,6 +390,11 @@ static func card_data(m: Node2D) -> Dictionary:
 				"state": UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN,
 			}))
 	var open_rows: Array = counting + once + keep
+	# the dog's skill goal (systems/dog_skills.gd): last of the open goals,
+	# outside the walk's done/total
+	var skill: Dictionary = DogSkills.card_row(m, UiIcons)
+	if not skill.is_empty():
+		open_rows.append(skill)
 	var rows: Array = open_rows + done_rows
 	var open: bool = Game.goals_expanded or m.goals_peek > 0.0
 	# A peek (a goal just moved) is brief, so it keeps the short list: with a

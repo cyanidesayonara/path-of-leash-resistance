@@ -227,6 +227,7 @@ const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const Gusts := preload("res://systems/gusts.gd")
 const BuriedFinds := preload("res://systems/buried_finds.gd")
+const DogSkills := preload("res://systems/dog_skills.gd")
 const SkyLook := preload("res://systems/sky.gd")
 const Outdoors := preload("res://systems/outdoors.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
@@ -553,6 +554,21 @@ var park_props: Array[Dictionary] = []
 # tick once the walk's ground and solids are all known
 var finds: Array = []
 var finds_built := false
+# finds dug up this walk, and the dog's skill goal and what she has done
+# toward it (systems/dog_skills.gd)
+var finds_dug := 0
+var skill_quest: Dictionary = {}
+var skill_done_run := false
+var skill_sprint_t := 0.0
+var skill_sprint_best := 0.0
+var skill_stumbles := 0
+var skill_herd_t := 0.0
+var skill_squeezes := 0
+var skill_squeeze_t := 0.0
+var skill_squeeze_at := Vector2.INF
+var skill_gaps_scanned := false
+var skill_scan_y := INF
+var skill_scan_spots: Array = []
 var digs_done := 0
 # the teeter: the moment before you fall in (see teeter.gd)
 var teeter: Node
@@ -6246,6 +6262,7 @@ func _goal_defs() -> Dictionary:
 
 func _build_quests() -> void:
 	Goals.build_quests(self)
+	DogSkills.build(self)
 
 
 func _quest_text(q: Dictionary) -> String:
@@ -11063,6 +11080,7 @@ func _pickups(delta: float) -> void:
 		BuriedFinds.build(self)
 	if phase != "freedom" and BuriedFinds.tick(self, delta):
 		digging_now = true
+	DogSkills.tick(self, delta)
 	var sniffing_now := false
 	var trough_drinking := false
 	for h in hydrants:
