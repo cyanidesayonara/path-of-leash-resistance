@@ -84,6 +84,19 @@ func _run() -> void:
 		if cn.position.distance_to(mh) < 60.0:
 			near += 1
 	_check(near == 2, "a storm drain has a cone at each open side (%d)" % near)
+	# El Porxo's court and porches handle as the paving they are drawn as; a
+	# tree's trunk stands in soft ground
+	var fr: Rect2 = m._freedom_rect()
+	for fx: float in [0.08, 0.25, 0.75, 0.92]:
+		var fp := Vector2(fr.position.x + fr.size.x * fx, fr.position.y + fr.size.y * 0.45)
+		var by_tree := false
+		for t: Vector2 in m.trees:
+			by_tree = by_tree or fp.distance_to(t) < m.walk_mod.PORXO_EARTH_R
+		if not by_tree:
+			_check(m.surface_at(fp) == m.Surfaces.S.PAVEMENT, "El Porxo at %s handles as paving (%d)" % [fp, m.surface_at(fp)])
+	for t: Vector2 in m.trees:
+		if t.y < m.GATE_Y - 40.0:
+			_check(m.surface_at(t) == m.Surfaces.S.GRASS, "the tree at %s stands in soft ground" % t)
 	m.queue_free()
 	await process_frame
 	await process_frame

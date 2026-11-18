@@ -11,6 +11,11 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Panot := preload("res://world/panot.gd")
+const Surfaces := preload("res://world/surfaces.gd")
+const PORXO_EARTH_R := 28.0          # the soft ground round a tree's trunk
+const RING_SEGS := 12
+const PORXO_PUDDLE_SEGS := 28
+const PILLAR_STONE := Color(0.58, 0.53, 0.47)
 
 # EL DILUVI: the arcade (a roof behind its pillars, arches between), the
 # awnings, the gutters running down both sides, and the owner's wet meter.
@@ -45,8 +50,9 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 		for ri: int in range(3):
 			var rph := fmod(t * 1.6 + float(ri) * 0.33 + pc.x * 0.05, 1.0)
 			var roff := Vector2(sin(float(ri) * 2.4 + pc.y) * prx * 0.4, cos(float(ri) * 2.1) * 8.0)
-			b.circle(pc + roff, 3.0 + rph * 14.0, Color(0.85, 0.92, 0.98, 0.35 * (1.0 - rph)))
-			b.circle(pc + roff, 1.5, Color(1.0, 1.0, 1.0, 0.55 * (1.0 - rph)))
+			_ring(b, pc + roff, 3.0 + rph * 14.0, 1.4, Color(0.85, 0.92, 0.98, 0.45 * (1.0 - rph)))
+			if rph < 0.25:
+				b.circle(pc + roff, 1.5, Color(1.0, 1.0, 1.0, 0.55 * (1.0 - rph * 4.0)))
 	# the awnings and the arcade's roof are overhead (draw_overhead_piece):
 	# here the shade each throws on the paving
 	for i in range(1, m.shelters.size()):
@@ -79,6 +85,20 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	if m.awning_dump != null:
 		m.awning_dump.draw(b, vt, vb)
 	b.flush(m._wc)
+
+
+# a ripple's ring on standing water: RING_SEGS quads round the centre, so a
+# drop's ring is a ring and not a growing disc
+static func _ring(b: ShapeBatch, c: Vector2, r: float, w: float, col: Color) -> void:
+	var prev_o := c + Vector2(r + w * 0.5, 0.0)
+	var prev_i := c + Vector2(maxf(r - w * 0.5, 0.0), 0.0)
+	for k in range(1, RING_SEGS + 1):
+		var d := Vector2.from_angle(TAU * float(k) / float(RING_SEGS))
+		var o := c + d * (r + w * 0.5)
+		var i := c + d * maxf(r - w * 0.5, 0.0)
+		b.quad(prev_o, o, i, prev_i, col)
+		prev_o = o
+		prev_i = i
 
 
 # a street-works board beside an open drain: a red and white striped plank,
@@ -165,12 +185,15 @@ static func _draw_porxo(m: Node2D, c: Object) -> void:
 	for gi in range(120):
 		var gp := Vector2(r.position.x + fmod(float(gi) * 197.0, r.size.x), r.position.y + fmod(float(gi) * 331.0, r.size.y))
 		b.circle(gp, 1.5, court.darkened(0.20))
-	b.circle(r.get_center() + Vector2(30.0, 40.0), 160.0, Color(0.40, 0.36, 0.30, 0.35))
+	# the court's low middle, where it stays wettest: darker toward its heart
+	b.glow(r.get_center() + Vector2(30.0, 40.0), 230.0, Color(0.40, 0.36, 0.30, 0.42), 0.25)
 	for pd: Array in [[Vector2(0.30, 0.55), 46.0, 24.0], [Vector2(0.58, 0.60), 60.0, 30.0], [Vector2(0.48, 0.80), 38.0, 20.0], [Vector2(0.78, 0.70), 50.0, 26.0]]:
 		var pc: Vector2 = r.position + r.size * (pd[0] as Vector2)
-		b.polygon(m.ellipse_pts(pc, float(pd[1]) + 5.0, float(pd[2]) + 4.0, 14), court.darkened(0.22))
-		b.polygon(m.ellipse_pts(pc, float(pd[1]), float(pd[2]), 14), Color(0.42, 0.50, 0.58, 0.85))
-		b.polygon(m.ellipse_pts(pc + Vector2(-float(pd[1]) * 0.3, -float(pd[2]) * 0.3), float(pd[1]) * 0.35, float(pd[2]) * 0.25, 10), Color(0.80, 0.86, 0.94, 0.22))
+		var rx: float = pd[1]
+		var ry: float = pd[2]
+		b.polygon(m.ellipse_pts(pc, rx + 5.0, ry + 4.0, PORXO_PUDDLE_SEGS), court.darkened(0.22))
+		b.polygon(m.ellipse_pts(pc, rx, ry, PORXO_PUDDLE_SEGS), Color(0.42, 0.50, 0.58, 0.85))
+		b.polygon(m.ellipse_pts(pc + Vector2(-rx * 0.3, -ry * 0.3), rx * 0.35, ry * 0.25, 16), Color(0.80, 0.86, 0.94, 0.22))
 	# the porch floors: west, north and east, terracotta tile in shade
 	var floor_col := Color(0.62, 0.40, 0.30)
 	var porches: Array[Rect2] = [
@@ -244,6 +267,20 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
 
 
+# El Porxo is paved and packed from wall to wall: past the gate it handles as
+# paving, bar the soft ground round its trees' trunks and its dig spots.
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y >= m.GATE_Y - 40.0:
+		return -1
+	for pp: Dictionary in m.park_props:
+		if String(pp.kind) in ["dig", "planter", "shrub"] and p.distance_to(pp.pos) < PORXO_EARTH_R:
+			return Surfaces.S.GRASS
+	for t: Vector2 in m.trees:
+		if p.distance_to(t) < PORXO_EARTH_R:
+			return Surfaces.S.GRASS
+	return Surfaces.S.PAVEMENT
+
+
 # El Porxo, past the gate
 static func draw_freedom_ground(m: Node2D, c: Object) -> void:
 	_draw_porxo(m, c)
@@ -286,8 +323,14 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 		m._draw_lamppost(p)
 		return
 	m.cast_shadow(wc, p, 12.0, 30.0, 0.2)
-	wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 22.0, 22.0), Color(0.55, 0.50, 0.45))
-	wc.draw_rect(Rect2(p.x - 11.0, p.y - 11.0, 8.0, 22.0), Color(0.64, 0.59, 0.53))
+	# the plinth, then the shaft: lit on the west face and shaded on the east,
+	# as the light falls, with a dressed edge along the top
+	wc.rect(Rect2(p.x - 14.0, p.y - 14.0, 28.0, 28.0), PILLAR_STONE.darkened(0.30))
+	wc.rect(Rect2(p.x - 13.0, p.y - 13.0, 26.0, 26.0), PILLAR_STONE.darkened(0.12))
+	wc.rect(Rect2(p.x - 10.0, p.y - 10.0, 20.0, 20.0), PILLAR_STONE)
+	wc.rect(Rect2(p.x - 10.0, p.y - 10.0, 7.0, 20.0), PILLAR_STONE.lightened(0.12))
+	wc.rect(Rect2(p.x + 3.0, p.y - 10.0, 7.0, 20.0), PILLAR_STONE.darkened(0.18))
+	wc.rect(Rect2(p.x - 10.0, p.y - 10.0, 20.0, 2.0), PILLAR_STONE.lightened(0.22))
 
 
 # The street is paved in panots de flor, the Barcelona pavement tile with a

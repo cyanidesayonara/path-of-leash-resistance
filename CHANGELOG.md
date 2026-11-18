@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish El Diluvi
+
+- El Porxo's court had a hard-edged flat disc for its wet middle; it is a soft gradient now (`ShapeBatch.glow`), and the court's puddles are smooth ellipses (28 segments, not 14).
+- The raindrops landing in the street's puddles were growing filled discs, which read as blobs; each is now a thin ring (`Diluvi._ring`, quads in the same batch), with a bright fleck only as it lands.
+- The arcade's pillars were flat grey squares. Each now stands on a plinth, lit on its west face and shaded on its east, with a dressed top edge.
+- El Porxo's porches and court handled as grass at their sides while drawn as paving (surface-check mismatches over the walk went from 1251 to 861; most of the rest is the dark crossing and rain-tinted paving read as water): `Diluvi.surface` makes it paving past the gate, bar the soft ground round its trees.
+- `tests/test_diluvi.gd` covers El Porxo's surface; `test_walk_hooks` lists the new hook.
+
 ## 2026-11-18 - Polish Montjuïc
 
 - The city below the rims read as a floor of tiles. Each Eixample block now casts a short shadow and catches the light on its north-west half, its courtyard is shaded under the inner wall, the streets between are a shade darker, and the hill throws a feathered shadow onto the city just past each rim (`_rim_shadow`, one band a side in the cached edge layer).
