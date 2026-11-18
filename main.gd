@@ -6972,6 +6972,13 @@ func _shot_menu(which: String) -> void:
 					details_idx = clampi(int(a.substr(11)), 0, MenuFlow.DETAIL_ROWS.size() - 1)
 			if which == "shop":
 				MenuFlow.open_shop(self)
+				# --shot-tab=collar|bandana|coat|stats opens that wardrobe tab
+				for a in OS.get_cmdline_user_args():
+					if a.begins_with("--shot-tab="):
+						var to := MenuFlow.SHOP_TABS.find(a.substr(11))
+						var from := MenuFlow.SHOP_TABS.find(MenuFlow.shop_tab_of(self))
+						if to >= 0 and from >= 0:
+							MenuFlow.shop_tab(self, to - from)
 			elif which == "progress":
 				MenuFlow.open_progress(self)
 				for a in OS.get_cmdline_user_args():

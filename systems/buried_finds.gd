@@ -185,7 +185,7 @@ static func _dug(m: Node2D, f: Dictionary) -> void:
 		m.feed.say(I18n.t("find_dug"), EventFeed.Tone.GOOD)
 		m.float_text(f.pos, I18n.t("find_score"), Color(0.55, 0.95, 0.9))
 	else:
-		m.float_text(f.pos, I18n.t("find_again"), Color(1, 0.9, 0.55))
+		m.float_text(f.pos, I18n.t("find_again") % BONUS, Color(1, 0.9, 0.55))
 	m._update_hud()
 
 
