@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish La Neteja
+
+- The plaça's worn patch was a hard-edged flat disc. It is drawn soft now, fading into the flags (La Neteja is on `main.SOFT_WEAR`).
+- The plaça handled as grass wall to wall but is paved. It is pavement now, soft only in its plane trees' pits (`Neteja.surface`, through `Surfaces.paved_past_gate`). Surface-check mismatches in the off-leash area went from 377 to 50, and at the shot before the gate from 99 to 36.
+- The plaça's plane trees drew the forest's roots, which poked out past their crowns like sticks. They stand in their pits as broadleaves now (`Neteja.draw_grove`, through `main.broadleaf_grove`).
+- After dark the plaça was unlit. Its house fronts carry wall lamps now, two down each side (`Neteja.night_lights`: the street's own lamps and `main.freedom_side_lamps`). The walk's own dawn is unchanged.
+- `tests/test_neteja_polish.gd` covers the paving, a tree pit, the street short of the gate, the soft wear, the trees and the wall lamps.
+
 ## 2026-11-18 - Polish El Barri
 
 - The pipicà's sauló was worn in two flat discs with a hard rim. They are gradients now, worn bare where the dogs run and inside the gate and fading into the packed ground (`Barri._draw_pipica`).

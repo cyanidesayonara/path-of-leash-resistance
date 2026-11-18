@@ -5053,6 +5053,7 @@ func _freedom_sign(c: Object, r: Rect2, txt: String, gloss := "") -> void:
 # a line so walks added side by side do not collide; the rest keep the flat
 # disc until they are polished
 const SOFT_WEAR: Array[String] = [
+	"neteja",
 ]
 
 

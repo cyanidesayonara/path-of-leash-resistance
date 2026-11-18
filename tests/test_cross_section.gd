@@ -19,6 +19,7 @@ const PAVED_FREEDOM: Array[String] = [
 	"barri",
 	"forum",
 	"market",
+	"neteja",
 	"oldtown",
 	"rain",
 	"sarria",
