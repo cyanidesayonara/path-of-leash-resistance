@@ -346,6 +346,7 @@ const DOGS := {
 		"speed_mult": 1.0,
 		"accel_mult": 1.0,
 		"plant_mult": 1.0,
+		"nose_mult": 1.3,
 	},
 	"pipa": {
 		"name": "Pipa",
@@ -800,11 +801,20 @@ func dog_desc(k := "") -> String:
 	return String(dog_data(k).get("desc", ""))
 
 
+# Training, as a skater's stats are: each dog has her own points to spend
+# (training_points), earned by what she finds on the walks
+# (systems/buried_finds.gd), and spends them on her own stats, a level at a
+# time. Level n costs n points, so a maxed stat is 15 and a maxed dog 75.
+# Each level is a small step: a maxed stat is about a fifth better, so a
+# trained dog is clearly better and still her breed.
 const MAX_STAT_POINTS := 5
-const STAT_UPGRADE_COST := 40
-const STAT_NAMES: Array[String] = ["speed", "plant", "herd", "agility"]
+const STAT_NAMES: Array[String] = ["speed", "plant", "herd", "agility", "nose"]
 
 var dog_upgrades: Dictionary = {}
+# training points not yet spent, per dog
+var training: Dictionary = {}
+# the buried finds each dog has dug up: dog -> walk -> [find index, ...]
+var finds_found: Dictionary = {}
 
 
 func get_dog_stat(d: String, stat: String) -> int:
@@ -812,21 +822,66 @@ func get_dog_stat(d: String, stat: String) -> int:
 	return int(du.get(stat, 0))
 
 
+func training_points(d := "") -> int:
+	return int(training.get(d if d != "" else dog, 0))
+
+
+# what the next level of a stat costs: the level it would reach
+func stat_cost(d: String, stat: String) -> int:
+	return get_dog_stat(d, stat) + 1
+
+
 func can_upgrade_stat(d: String, stat: String) -> bool:
 	if not is_dog_unlocked(d):
 		return false
-	return get_dog_stat(d, stat) < MAX_STAT_POINTS and total_bones >= STAT_UPGRADE_COST
+	return get_dog_stat(d, stat) < MAX_STAT_POINTS and training_points(d) >= stat_cost(d, stat)
 
 
 func upgrade_dog_stat(d: String, stat: String) -> bool:
 	if not can_upgrade_stat(d, stat):
 		return false
-	total_bones -= STAT_UPGRADE_COST
+	training[d] = training_points(d) - stat_cost(d, stat)
 	if not dog_upgrades.has(d):
 		dog_upgrades[d] = {}
 	dog_upgrades[d][stat] = get_dog_stat(d, stat) + 1
 	save_records()
 	return true
+
+
+# whether this dog has dug up this find on this walk
+func find_found(lv: String, i: int, d := "") -> bool:
+	var per: Dictionary = finds_found.get(d if d != "" else dog, {})
+	return i in (per.get(lv, []) as Array)
+
+
+# a find dug up for the first time by this dog: a training point for her.
+# Says whether it was new.
+func record_find(lv: String, i: int, d := "") -> bool:
+	var key := d if d != "" else dog
+	if find_found(lv, i, key):
+		return false
+	if not finds_found.has(key):
+		finds_found[key] = {}
+	var per: Dictionary = finds_found[key]
+	if not per.has(lv):
+		per[lv] = []
+	(per[lv] as Array).append(i)
+	training[key] = training_points(key) + 1
+	save_records()
+	return true
+
+
+func finds_count(d := "") -> int:
+	var n := 0
+	for lv: String in (finds_found.get(d if d != "" else dog, {}) as Dictionary):
+		n += (finds_found[d if d != "" else dog][lv] as Array).size()
+	return n
+
+
+# how far her nose reaches, against the breed's: each level of NOSE a tenth
+func dog_nose_mult(k := "") -> float:
+	var key := k if k != "" else dog
+	return float(dog_data(key).get("nose_mult", 1.0)) + float(get_dog_stat(key, "nose")) * 0.10
 
 
 func dog_speed_mult(k := "") -> float:
@@ -1324,6 +1379,8 @@ func load_records() -> void:
 	if not DOGS.has(dog):
 		dog = DEFAULT_DOG
 	dog_upgrades = Dictionary(cf.get_value("player", "dog_upgrades", {}))
+	training = Dictionary(cf.get_value("player", "training", {}))
+	finds_found = Dictionary(cf.get_value("player", "finds_found", {}))
 	human_look = valid_human(cf.get_value("player", "human", default_human("him")))
 	vol_master = clampf(float(cf.get_value("settings", "vol_master", DEFAULT_VOL_MASTER)), 0.0, 1.0)
 	vol_sfx = clampf(float(cf.get_value("settings", "vol_sfx", DEFAULT_VOL_SFX)), 0.0, 1.0)
@@ -1436,6 +1493,8 @@ func save_records() -> void:
 	cf.set_value("cosmetics", "coat", coat)
 	cf.set_value("player", "dog", dog)
 	cf.set_value("player", "dog_upgrades", dog_upgrades)
+	cf.set_value("player", "training", training)
+	cf.set_value("player", "finds_found", finds_found)
 	cf.set_value("player", "human", human_look)
 	cf.set_value("settings", "vol_master", vol_master)
 	cf.set_value("settings", "vol_sfx", vol_sfx)

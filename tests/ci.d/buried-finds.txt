@@ -1,0 +1,1 @@
+--headless --path . --script res://tests/test_buried_finds.gd

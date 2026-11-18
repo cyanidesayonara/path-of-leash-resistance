@@ -331,7 +331,7 @@ than the pair, to judge how a prop or a person is drawn
 (`--level=site --shot-y=-1200 --shot-zoom=2.5 --shot-cam=900,-1400` is the digger).
 `--shot-menu=main|walk|details|shop|progress|pause|walkcard|confirm|first|notice`
 opens that menu screen (`--shot-row=N` picks GET READY's row; 1 is YOUR
-HUMAN) (`main` is the main menu, as `--shot-title` also
+HUMAN; `--shot-tab=collar|bandana|coat|stats` the wardrobe's tab) (`main` is the main menu, as `--shot-title` also
 leaves it; `walkcard` is the pause menu's THIS WALK card, `confirm` its
 EXIT GAME question, `first` PLAY's first-time question). `--ui-scale=K` forces the small-screen interface factor (`hud/ui_scale.gd`;
 below a 0.78 frame scale the HUD and menus grow and the camera compensates,
