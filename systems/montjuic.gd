@@ -541,7 +541,7 @@ static func draw_road(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		b.rect(Rect2(pp.x - 3.0, pp.y, 6.0, 14.0), Color(0.25, 0.25, 0.27))
 		b.rect(Rect2(pp.x - 14.0, pp.y - 6.0, 28.0, 10.0), Color(0.12, 0.12, 0.13))
 		for k in range(2):
-			var on := warn > 0.0 and blink == k
+			var on := warn > 0.0 and (true if not Game.flashes else blink == k)
 			b.circle(pp + Vector2(-7.0 + 14.0 * float(k), -1.0), 4.0,
 				Color(1.0, 0.25, 0.2) if on else Color(0.35, 0.12, 0.10))
 

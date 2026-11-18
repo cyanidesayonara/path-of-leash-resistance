@@ -22,6 +22,10 @@ enum { KEYS, PAD, TOUCH }
 const NAMES := {
 	"move": ["WASD", "stick", "stick"],
 	"move_with": ["WASD", "the left stick", "the stick"],
+	"move_up": ["W", "stick", "stick"],
+	"move_down": ["S", "stick", "stick"],
+	"move_left": ["A", "stick", "stick"],
+	"move_right": ["D", "stick", "stick"],
 	"plant": ["SPACE", "A", "DIG"],
 	"bark": ["E", "B", "BARK"],
 	"pee": ["Q", "X", "PEE"],
@@ -141,6 +145,7 @@ static func note(event: InputEvent) -> bool:
 
 static func key_label(code: int) -> String:
 	match code:
+		KEY_ESCAPE: return "ESC"
 		KEY_SPACE: return "SPACE"
 		KEY_SHIFT: return "SHIFT"
 		KEY_CTRL: return "CTRL"
@@ -196,6 +201,14 @@ static func update_layout(layout: String, custom_keys: Dictionary = {}, custom_p
 		"arrows":
 			_layout_key_overrides["move"] = "ARROWS"
 			_layout_key_overrides["move_with"] = "the arrow keys"
+			_layout_key_overrides["move_up"] = "UP"
+			_layout_key_overrides["move_down"] = "DOWN"
+			_layout_key_overrides["move_left"] = "LEFT"
+			_layout_key_overrides["move_right"] = "RIGHT"
+			_layout_key_overrides["up_down"] = "UP / DOWN"
+			_layout_key_overrides["left_right"] = "LEFT / RIGHT"
+			_layout_key_overrides["left"] = "LEFT"
+			_layout_key_overrides["right"] = "RIGHT"
 			_layout_key_overrides["bark"] = "CTRL"
 			_layout_key_overrides["pee"] = "DEL"
 			_layout_key_overrides["poop"] = "END"
@@ -204,6 +217,14 @@ static func update_layout(layout: String, custom_keys: Dictionary = {}, custom_p
 		"compact":
 			_layout_key_overrides["move"] = "IJKL"
 			_layout_key_overrides["move_with"] = "IJKL"
+			_layout_key_overrides["move_up"] = "I"
+			_layout_key_overrides["move_down"] = "K"
+			_layout_key_overrides["move_left"] = "J"
+			_layout_key_overrides["move_right"] = "L"
+			_layout_key_overrides["up_down"] = "I / K"
+			_layout_key_overrides["left_right"] = "J / L"
+			_layout_key_overrides["left"] = "J"
+			_layout_key_overrides["right"] = "L"
 			_layout_key_overrides["plant"] = "SPACE"
 			_layout_key_overrides["bark"] = "O"
 			_layout_key_overrides["pee"] = "U"
@@ -223,4 +244,72 @@ static func update_layout(layout: String, custom_keys: Dictionary = {}, custom_p
 		_layout_key_overrides[act] = key_label(int(custom_keys[act]))
 	for act: String in custom_pads.keys():
 		_layout_pad_overrides[act] = pad_label(int(custom_pads[act]))
+	if custom_keys.has("move_left"):
+		_layout_key_overrides["left"] = _layout_key_overrides["move_left"]
+	if custom_keys.has("move_right"):
+		_layout_key_overrides["right"] = _layout_key_overrides["move_right"]
+	if custom_keys.has("move_up") or custom_keys.has("move_down"):
+		var mu := String(_layout_key_overrides.get("move_up", NAMES["move_up"][KEYS]))
+		var md := String(_layout_key_overrides.get("move_down", NAMES["move_down"][KEYS]))
+		_layout_key_overrides["up_down"] = "%s / %s" % [mu, md]
+	if custom_keys.has("move_left") or custom_keys.has("move_right"):
+		var ml := String(_layout_key_overrides.get("move_left", NAMES["move_left"][KEYS]))
+		var mr := String(_layout_key_overrides.get("move_right", NAMES["move_right"][KEYS]))
+		_layout_key_overrides["left_right"] = "%s / %s" % [ml, mr]
+	if custom_keys.has("move_up") or custom_keys.has("move_down") \
+			or custom_keys.has("move_left") or custom_keys.has("move_right"):
+		var mu := String(_layout_key_overrides.get("move_up", NAMES["move_up"][KEYS]))
+		var ml := String(_layout_key_overrides.get("move_left", NAMES["move_left"][KEYS]))
+		var md := String(_layout_key_overrides.get("move_down", NAMES["move_down"][KEYS]))
+		var mr := String(_layout_key_overrides.get("move_right", NAMES["move_right"][KEYS]))
+		var mv := "%s/%s/%s/%s" % [mu, ml, md, mr] \
+			if (mu.length() > 1 or ml.length() > 1 or md.length() > 1 or mr.length() > 1) \
+			else "%s%s%s%s" % [mu, ml, md, mr]
+		_layout_key_overrides["move"] = mv
+		_layout_key_overrides["move_with"] = mv
+	if custom_keys.has("share"):
+		_layout_key_overrides["skip"] = _layout_key_overrides["share"]
+	if custom_keys.has("pause"):
+		_layout_key_overrides["back"] = _layout_key_overrides["pause"]
+	if custom_pads.has("share"):
+		_layout_pad_overrides["skip"] = _layout_pad_overrides["share"]
+	if custom_pads.has("bark"):
+		_layout_pad_overrides["back"] = _layout_pad_overrides["bark"]
 	refresh()
+
+
+static func bound_key_label(action: String, custom_keys: Dictionary = {}) -> String:
+	if custom_keys.has(action):
+		return key_label(int(custom_keys[action]))
+	if InputMap.has_action(action):
+		for ev: InputEvent in InputMap.action_get_events(action):
+			if ev is InputEventKey:
+				var kev := ev as InputEventKey
+				var code := kev.physical_keycode if kev.physical_keycode != 0 else kev.keycode
+				if code != 0:
+					return key_label(code)
+	if _layout_key_overrides.has(action):
+		return String(_layout_key_overrides[action])
+	var names: Array = NAMES.get(action, [action.to_upper(), "", ""])
+	return String(names[KEYS])
+
+
+static func bound_pad_label(action: String, custom_pads: Dictionary = {}) -> String:
+	if custom_pads.has(action):
+		return pad_label(int(custom_pads[action]))
+	if InputMap.has_action(action):
+		for ev: InputEvent in InputMap.action_get_events(action):
+			if ev is InputEventJoypadButton:
+				return pad_label((ev as InputEventJoypadButton).button_index)
+		if action.begins_with("move_"):
+			for ev: InputEvent in InputMap.action_get_events(action):
+				if ev is InputEventJoypadMotion:
+					var ax := (ev as InputEventJoypadMotion).axis
+					if ax == JOY_AXIS_RIGHT_X or ax == JOY_AXIS_RIGHT_Y:
+						return "R stick"
+					return "L stick"
+	if _layout_pad_overrides.has(action):
+		return String(_layout_pad_overrides[action])
+	var names: Array = NAMES.get(action, ["", "stick", ""])
+	var p := String(names[PAD])
+	return p if p != "" else "-"

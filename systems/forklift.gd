@@ -255,7 +255,10 @@ func draw(_m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 
 	# 7. Flashing amber beacon on roof
 	var beacon_pos := draw_pos + Vector2(-8.0, 0.0)
-	var flash := 0.7 + 0.3 * sin(float(AnimClock.msec()) * 0.015)
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var flash := 0.85 if not flashes_on else 0.7 + 0.3 * sin(float(AnimClock.msec()) * 0.015)
 	b.circle(beacon_pos, 4.5, BEACON_AMBER * flash)
 	b.circle(beacon_pos, 2.0, Color(1.0, 0.95, 0.6))
 

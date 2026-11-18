@@ -160,6 +160,10 @@ static func slam(c: CanvasItem, t: float, word: String, centre: Vector2) -> void
 
 # the shake as the card lands
 static func card_camera(t: float) -> Array:
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	if _gm != null and not bool(_gm.screen_shake):
+		return [Vector2(640, 360), 1.0]
 	var k := 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.3)
 	return [Vector2(640, 360) + Vector2(sin(t * 91.0), sin(t * 67.0)) * 9.0 * k * k, 1.0]
 
@@ -167,4 +171,8 @@ static func card_camera(t: float) -> Array:
 # the fade in from the walk and the white flash into the card
 static func fades(c: CanvasItem, t_real: float) -> void:
 	IntroKit.fade(c, 1.0 - Anim.span(t_real, 0.0, 0.35))
-	IntroKit.fade(c, Anim.span(t_real, TITLE_AT - 0.15, TITLE_AT), Color(1.0, 0.95, 0.85))
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var card_col := Color(1.0, 0.95, 0.85) if flashes_on else Color(0.06, 0.07, 0.14)
+	IntroKit.fade(c, Anim.span(t_real, TITLE_AT - 0.15, TITLE_AT), card_col)

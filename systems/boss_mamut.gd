@@ -1188,7 +1188,10 @@ func _ensure_card() -> void:
 
 func _draw_card() -> void:
 	var vs: Vector2 = card.size
-	if screen_flash > 0.0:
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	if screen_flash > 0.0 and flashes_on:
 		card.draw_rect(Rect2(Vector2.ZERO, vs), Color(1.0, 0.97, 0.88, screen_flash * 0.55))
 	if card_t < CARD_FROM:
 		return
@@ -1468,7 +1471,11 @@ func draw_mamut(b: ShapeBatch, t: float) -> void:
 	if in_lake:
 		b.polygon(_ellipse(at, f, 92.0, 76.0, 20), Color(0.70, 0.86, 0.98, 0.35))
 	var c := at + lift
-	var stone := STONE.lerp(Color.WHITE, flash * 0.5)
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var hit_f := flash if flashes_on else 0.0
+	var stone := STONE.lerp(Color.WHITE, hit_f * 0.5)
 	# legs: the stone columns he stands on, seen from above as feet
 	if not sat:
 		for k in range(4):
@@ -1650,8 +1657,12 @@ func draw_health_bar(c: Object) -> void:
 	c.draw_rect(Rect2(bp, Vector2(bar_w, bar_h)), Color(0.10, 0.09, 0.08))
 	var hf := clampf(hp / max_hp, 0.0, 1.0)
 	if hf > 0.0:
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		var flashes_on := true if _gm == null else bool(_gm.flashes)
+		var hit_f := flash if flashes_on else 0.0
 		var fc := Color(0.96, 0.32, 0.22) if phase == 2 else Color(0.96, 0.74, 0.18)
-		fc = fc.lerp(Color.WHITE, flash * 0.7)
+		fc = fc.lerp(Color.WHITE, hit_f * 0.7)
 		var fill := Rect2(bp + Vector2(1, 1), Vector2((bar_w - 2.0) * hf, bar_h - 2.0))
 		c.draw_rect(fill, fc)
 		c.draw_rect(Rect2(fill.position, Vector2(fill.size.x, 2.0)), fc.lightened(0.35))

@@ -61,8 +61,11 @@ const CUES := [
 static func camera(t: float) -> Array:
 	if t >= TITLE_AT:
 		return FilmKit.card_camera(t)
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var shake_on := true if _gm == null else bool(_gm.screen_shake)
 	var shake := Vector2(sin(t * 89.0), sin(t * 67.0)) * 12.0 * (1.0 - Anim.span(t, FLASH_AT, FLASH_AT + 0.3)) \
-		if t >= FLASH_AT else Vector2.ZERO
+		if (t >= FLASH_AT and shake_on) else Vector2.ZERO
 	if t < HOP_START:
 		return [Vector2(640.0, 480.0), 1.1]
 	elif t < HUMAN_STOP:
@@ -282,7 +285,10 @@ static func _human(c: CanvasItem, t: float) -> void:
 	var hand := IntroKit.human(c, Vector2(hx, FEET), S, -1.0, Vector2.ONE, hpose, 0.0, FEET)
 
 	# Flash burst from phone
-	if t >= FLASH_AT and t < FLASH_AT + 0.4:
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	if flashes_on and t >= FLASH_AT and t < FLASH_AT + 0.4:
 		var f := Anim.span(t, FLASH_AT, FLASH_AT + 0.4)
 		var flash_pos := hand + Vector2(-12.0, -18.0)
 		c.draw_circle(flash_pos, 280.0 * (1.0 - f), Color(1.0, 0.98, 0.85, (1.0 - f) * 0.85))

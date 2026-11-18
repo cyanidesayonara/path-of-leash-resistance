@@ -485,7 +485,10 @@ static func _photographer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	c.draw_circle(tri + fd * 5.0, 1.8, Color(0.50, 0.66, 0.86))
 	# a shot every few seconds: the flash, bright and gone
 	var shot := fmod(t + s, 3.2)
-	if shot < 0.16:
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	if flashes_on and shot < 0.16:
 		c.draw_circle(tri + fd * 7.0, 6.0 + shot * 30.0, Color(1.0, 1.0, 0.94, 0.7 * (1.0 - shot / 0.16)))
 	_shoes(c, fd, side, Color(0.30, 0.28, 0.30))
 	_person(c, Vector2.ZERO, fd, coat, skin, Color(0.70, 0.20, 0.16), "long", "beanie", Color(0.92, 0.70, 0.20))

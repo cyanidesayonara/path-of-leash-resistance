@@ -181,7 +181,10 @@ static func draw(m: Node2D, v: Vector2, wc: Object = null) -> void:
 
 	# --- front face (bumper & headlamps) ---
 	wc.draw_colored_polygon(m.round_rect_pts(Rect2(v.x - 30.0, v.y - 69.0, 60.0, 8.0), 4.0), Color(0.36, 0.34, 0.33))
-	var is_flashing: bool = m.furgoneta_flash_t > 0.0
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var is_flashing: bool = m.furgoneta_flash_t > 0.0 and flashes_on
 	var flash_intensity: float = clampf(m.furgoneta_flash_t / 0.35, 0.0, 1.0)
 	for hx: float in [-21.0, 21.0]:
 		wc.draw_circle(v + Vector2(hx, -64.0), 4.6, Color(0.30, 0.28, 0.26))

@@ -63,7 +63,7 @@ const BAD_SOFT := Color("ff8a7c")
 const ACCENT := {
 	"title": SAFFRON, "walk": SAFFRON, "details": TURQUOISE,
 	"shop": TURQUOISE, "progress": TURQUOISE,
-	"settings": TURQUOISE, "pause": SAFFRON, "notice": MAGENTA,
+	"settings": TURQUOISE, "controls": TURQUOISE, "pause": SAFFRON, "notice": MAGENTA,
 	"results": SAFFRON,
 }
 
@@ -303,6 +303,52 @@ static func bar_width(items: Array) -> float:
 	return w
 
 
+static func _prompt_rows(avail_w: float, items: Array) -> Dictionary:
+	var gap := BAR_GAP
+	var w := bar_width(items)
+	if w <= avail_w or items.size() <= 1:
+		return {"rows": [items], "gap": gap, "widths": [w]}
+	var items_w := 0.0
+	for it: Array in items:
+		items_w += _item_w(it)
+	var min_gap := 12.0
+	var compact_gap := (avail_w - items_w) / float(items.size() - 1)
+	if compact_gap >= min_gap:
+		gap = minf(BAR_GAP, compact_gap)
+		return {"rows": [items], "gap": gap, "widths": [items_w + gap * float(items.size() - 1)]}
+	gap = 16.0
+	var rows: Array = []
+	var widths: Array = []
+	var cur: Array = []
+	var cw := 0.0
+	for it: Array in items:
+		var iw := _item_w(it)
+		var add := iw if cur.is_empty() else iw + gap
+		if not cur.is_empty() and cw + add > avail_w:
+			rows.append(cur)
+			widths.append(cw)
+			cur = [it]
+			cw = iw
+		else:
+			cur.append(it)
+			cw += add
+	if not cur.is_empty():
+		rows.append(cur)
+		widths.append(cw)
+	return {"rows": rows, "gap": gap, "widths": widths}
+
+
+static func prompt_bar_top(c: CanvasItem, vs: Vector2, items: Array) -> float:
+	var ins := UiScale.safe_insets(c.get_window() if c.is_inside_tree() else null)
+	if items.is_empty():
+		return vs.y - ins.w
+	var avail_w := maxf(200.0, vs.x - 48.0 - ins.x - ins.z)
+	var pr := _prompt_rows(avail_w, items)
+	var rc: int = (pr["rows"] as Array).size()
+	var row_step := BAR_CAP_H + 8.0
+	return vs.y - BAR_FROM_BOTTOM - ins.w - float(rc - 1) * row_step - 9.0
+
+
 # What this screen lets you do, as key caps and verbs, centred along the
 # bottom of the screen. Every screen puts it in the same place, so there is
 # one place to look. items: [[action, verb], ...]; an item with a third entry
@@ -311,19 +357,32 @@ static func bar_width(items: Array) -> float:
 static func prompt_bar(c: CanvasItem, vs: Vector2, items: Array, a := 1.0) -> void:
 	if items.is_empty():
 		return
-	var w := bar_width(items)
 	var ins := UiScale.safe_insets(c.get_window() if c.is_inside_tree() else null)
-	var y := vs.y - BAR_FROM_BOTTOM - ins.w
-	var back := Rect2((vs.x - w) * 0.5 - 18.0, y - 9.0, w + 36.0, BAR_CAP_H + 20.0)
+	var avail_w := maxf(200.0, vs.x - 48.0 - ins.x - ins.z)
+	var pr := _prompt_rows(avail_w, items)
+	var rows: Array = pr["rows"]
+	var widths: Array = pr["widths"]
+	var gap := float(pr["gap"])
+	var row_step := BAR_CAP_H + 8.0
+	var y_top := vs.y - BAR_FROM_BOTTOM - ins.w - float(rows.size() - 1) * row_step
+	var max_w := 0.0
+	for rw in widths:
+		max_w = maxf(max_w, float(rw))
+	var back_h := BAR_CAP_H + 20.0 + float(rows.size() - 1) * row_step
+	var back := Rect2((vs.x - max_w) * 0.5 - 18.0, y_top - 9.0, max_w + 36.0, back_h)
 	c.draw_rect(back, Color(NAVY_DEEP.r, NAVY_DEEP.g, NAVY_DEEP.b, 0.62 * a))
-	var x := (vs.x - w) * 0.5
-	for it: Array in items:
-		var on: bool = it.size() < 3 or bool(it[2])
-		var ia := a * (1.0 if on else 0.4)
-		x += keycap(c, Vector2(x, y), Prompts.key(String(it[0])), BAR_PX, BAR_CAP_H, ia) + 8.0
-		c.draw_string(body(), Vector2(x, y + BAR_CAP_H * 0.5 + float(BAR_PX) * 0.36), String(it[1]),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, BAR_PX, Color(INK.r, INK.g, INK.b, ia))
-		x += text_w(body(), String(it[1]), BAR_PX) + BAR_GAP
+	for r_i in range(rows.size()):
+		var row: Array = rows[r_i]
+		var rw := float(widths[r_i])
+		var x := (vs.x - rw) * 0.5
+		var y := y_top + float(r_i) * row_step
+		for it: Array in row:
+			var on: bool = it.size() < 3 or bool(it[2])
+			var ia := a * (1.0 if on else 0.4)
+			x += keycap(c, Vector2(x, y), Prompts.key(String(it[0])), BAR_PX, BAR_CAP_H, ia) + 8.0
+			c.draw_string(body(), Vector2(x, y + BAR_CAP_H * 0.5 + float(BAR_PX) * 0.36), String(it[1]),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, BAR_PX, Color(INK.r, INK.g, INK.b, ia))
+			x += text_w(body(), String(it[1]), BAR_PX) + gap
 
 
 # a small right-pointing chevron, centred on `at`

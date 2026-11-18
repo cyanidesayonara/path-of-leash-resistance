@@ -267,5 +267,9 @@ static func dots(c: CanvasItem, at: Vector2, t: float) -> void:
 
 static func fade(c: CanvasItem, a: float, col := Color.BLACK, size := Vector2(1280, 720)) -> void:
 	if a > 0.0:
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		if _gm != null and not bool(_gm.flashes) and col.get_luminance() > 0.6:
+			col = Color(0.06, 0.07, 0.14)
 		# far past the frame: scenes move a camera, and a fade covers the screen
 		c.draw_rect(Rect2(-3000, -3000, 7280, 6720), Color(col, clampf(a, 0.0, 1.0)))

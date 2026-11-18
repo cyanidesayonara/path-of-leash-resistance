@@ -1567,7 +1567,10 @@ func _pose(t: float) -> Dictionary:
 			o["bristle"] = 1.4
 			o["tail_wag"] = 1.6
 			o["tail_phase"] = t * 22.0
-			o["flash"] = maxf(flash, 0.35 + 0.35 * sin(t * 30.0))
+			var _ml := Engine.get_main_loop()
+			var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+			var flashes_on := true if _gm == null else bool(_gm.flashes)
+			o["flash"] = maxf(flash, 0.35 + 0.35 * sin(t * 30.0)) if flashes_on else 0.0
 		State.TAIL_WHIP:
 			# cocked to one side through the warning, then across in a blink
 			var cock := 1.0 - clampf(state_t / TAIL_WARN, 0.0, 1.0)
@@ -1727,7 +1730,10 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 	var happy: bool = o.get("happy", false)
 	var dazed: bool = o.get("dazed", false)
 	var mouth: float = o.get("mouth", 0.0)
-	var white: float = o.get("flash", 0.0)
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var white: float = float(o.get("flash", 0.0)) if flashes_on else 0.0
 	var step: float = o.get("step", -1.0)
 	var bristle: float = o.get("bristle", 0.0)
 	var x := Transform2D(f, f.orthogonal(), at)
@@ -2015,8 +2021,12 @@ func draw_health_bar(c: Object) -> void:
 	c.draw_rect(Rect2(bp, Vector2(bar_w, bar_h)), Color(0.10, 0.09, 0.08))
 	var hf := clampf(hp / max_hp, 0.0, 1.0)
 	if hf > 0.0:
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		var flashes_on := true if _gm == null else bool(_gm.flashes)
+		var hit_f := flash if flashes_on else 0.0
 		var fc := Color(0.96, 0.32, 0.22) if phase == 2 else Color(0.96, 0.74, 0.18)
-		fc = fc.lerp(Color.WHITE, flash * 0.7)
+		fc = fc.lerp(Color.WHITE, hit_f * 0.7)
 		var fill := Rect2(bp + Vector2(1, 1), Vector2((bar_w - 2.0) * hf, bar_h - 2.0))
 		c.draw_rect(fill, fc)
 		c.draw_rect(Rect2(fill.position, Vector2(fill.size.x, 2.0)), fc.lightened(0.35))

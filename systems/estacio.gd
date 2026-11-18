@@ -332,7 +332,7 @@ static func departures_board(m: Node2D, b: ShapeBatch, bd: Vector2) -> void:
 	var flash := false
 	if m.estacio_crowd != null and m.estacio_crowd.is_active():
 		active_row = m.estacio_crowd.called_row
-		flash = ((AnimClock.msec() / 240) % 2) == 0
+		flash = Game.flashes and ((AnimClock.msec() / 240) % 2) == 0
 	b.draw_string(m.font, Vector2(bd.x - 144.0, bd.y - 24.0), "SORTIDES", HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
 		Color(0.94, 0.96, 1.0))
 	b.draw_string(m.font, Vector2(bd.x + 40.0, bd.y - 24.0), "departures", HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
@@ -634,7 +634,7 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 	var vb := cy + 540.0
 	var b := ShapeBatch.new(c)
 	# platform indicator boards just past the ticket barriers
-	var flash: bool = m.estacio_crowd != null and m.estacio_crowd.is_active() and ((AnimClock.msec() / 240) % 2) == 0
+	var flash: bool = Game.flashes and m.estacio_crowd != null and m.estacio_crowd.is_active() and ((AnimClock.msec() / 240) % 2) == 0
 	var active_row: int = m.estacio_crowd.called_row if (m.estacio_crowd != null and m.estacio_crowd.is_active()) else -1
 	for i in range(m.LevelBuild.ESTACIO_PLATFORM_BOARDS.size()):
 		var pb: Vector2 = m.LevelBuild.ESTACIO_PLATFORM_BOARDS[i]

@@ -512,7 +512,10 @@ static func _draw_cannons(wc: ShapeBatch, lo: float, hi: float) -> void:
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	if m.lvl != "molina":
 		return
-	var flash := int(AnimClock.msec() / 180) % 2 == 0
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var flash := true if not flashes_on else int(AnimClock.msec() / 180) % 2 == 0
 	for i in range(CANNONS.size()):
 		var nz: Vector2 = CANNONS[i][0]
 		if nz.y < vt - 360.0 or nz.y > vb + 360.0:

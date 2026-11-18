@@ -483,19 +483,36 @@ const CONTROL_LAYOUT_NAMES := {
 	"southpaw": "SOUTHPAW",
 }
 var control_layout := "default"
-const REBIND_ACTIONS: Array[String] = ["plant", "pee", "poop", "bark", "pickup", "turbo"]
+const REBIND_ACTIONS: Array[String] = [
+	"move_up", "move_down", "move_left", "move_right",
+	"plant", "bark", "pee", "poop", "pickup", "turbo",
+	"goals", "restart", "share", "mute_music", "pause",
+]
 const REBIND_NAMES := {
+	"move_up": "MOVE UP",
+	"move_down": "MOVE DOWN",
+	"move_left": "MOVE LEFT",
+	"move_right": "MOVE RIGHT",
 	"plant": "DIG IN",
+	"bark": "BARK",
 	"pee": "PEE",
 	"poop": "POOP",
-	"bark": "BARK",
 	"pickup": "PICK UP",
 	"turbo": "ZOOMIES",
+	"goals": "GOALS",
+	"restart": "RESTART",
+	"share": "SHARE",
+	"mute_music": "MUTE MUSIC",
+	"pause": "PAUSE",
 }
 var key_binds: Dictionary = {}
 var pad_binds: Dictionary = {}
 var rebind_step := -1
 var rebind_wait_release := false
+var screen_shake := true
+var flashes := true
+const TEXT_SIZES: Array[String] = ["normal", "large"]
+var text_size := "normal"
 const LEVEL_SUBTITLES_CA := {
 	"tutorial": "Aprèn la corretja, truc a truc",
 	"barri": "El parquet del final del teu carrer",
@@ -958,15 +975,20 @@ func apply_settings() -> void:
 		DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
 	)
 	apply_control_layout()
+	if is_inside_tree():
+		var tree := get_tree()
+		var cur := tree.current_scene if tree != null else null
+		if cur != null and cur.is_node_ready() and cur.has_method("_apply_ui_scale"):
+			cur._apply_ui_scale()
 
 
 func apply_control_layout() -> void:
 	Prompts.update_layout(control_layout, key_binds, pad_binds)
 	if not InputMap.has_action("plant"):
 		return
-	var configurable := ["move_left", "move_right", "move_up", "move_down", "plant", "bark", "pee", "poop", "pickup", "turbo"]
-	for act in configurable:
-		InputMap.action_erase_events(act)
+	for act in REBIND_ACTIONS:
+		if InputMap.has_action(act):
+			InputMap.action_erase_events(act)
 
 	var sticks: Dictionary = {
 		"move_left": [JOY_AXIS_RIGHT_X if control_layout == "southpaw" else JOY_AXIS_LEFT_X, -1.0],
@@ -1049,6 +1071,16 @@ func apply_control_layout() -> void:
 			_add_pad_button("poop", JOY_BUTTON_Y)
 			_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
 			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
+	_add_key_events("goals", [KEY_TAB])
+	_add_pad_button("goals", JOY_BUTTON_DPAD_UP)
+	_add_key_events("restart", [KEY_R])
+	_add_pad_button("restart", JOY_BUTTON_START)
+	_add_key_events("share", [KEY_C])
+	_add_pad_button("share", JOY_BUTTON_DPAD_RIGHT)
+	_add_key_events("mute_music", [KEY_M])
+	_add_pad_button("mute_music", JOY_BUTTON_DPAD_DOWN)
+	_add_key_events("pause", [KEY_ESCAPE])
+	_add_pad_button("pause", JOY_BUTTON_BACK)
 	for act: String in key_binds.keys():
 		if InputMap.has_action(act):
 			_replace_key_events(act, int(key_binds[act]))
@@ -1100,6 +1132,7 @@ func clear_rebinds() -> void:
 	key_binds.clear()
 	pad_binds.clear()
 	apply_control_layout()
+	save_records()
 
 
 func _add_key_events(action: String, keys: Array) -> void:
@@ -1148,6 +1181,9 @@ func _ready() -> void:
 		# --lang=ca|es|en: the glosses in that language for this run, unsaved
 		if arg.begins_with("--lang=") and arg.substr(7) in LANGUAGES:
 			language = arg.substr(7)
+		# --text-size=normal|large: the UI scale preset for this run, unsaved
+		if arg.begins_with("--text-size=") and arg.substr(12) in TEXT_SIZES:
+			text_size = arg.substr(12)
 		# --look=him|her|N: your human as the default him or her, or the NEW
 		# LOOK the number seeds, for this run, unsaved (screenshots)
 		if arg.begins_with("--look="):
@@ -1221,6 +1257,9 @@ func _reset_persisted_state() -> void:
 	pad_binds = {}
 	goals_expanded = false
 	free_play = false
+	screen_shake = true
+	flashes = true
+	text_size = "normal"
 	ask_tutorial = true
 	tutorial_done = false
 	walks_lost = 0
@@ -1295,6 +1334,11 @@ func load_records() -> void:
 	pad_binds = (pb as Dictionary).duplicate() if pb is Dictionary else {}
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 	free_play = bool(cf.get_value("settings", "free_play", false))
+	screen_shake = bool(cf.get_value("settings", "screen_shake", true))
+	flashes = bool(cf.get_value("settings", "flashes", true))
+	text_size = String(cf.get_value("settings", "text_size", "normal"))
+	if not text_size in TEXT_SIZES:
+		text_size = "normal"
 	ask_tutorial = bool(cf.get_value("settings", "ask_tutorial", true))
 	tutorial_done = bool(cf.get_value("global", "tutorial_done", false))
 	walks_lost = int(cf.get_value("global", "walks_lost", 0))
@@ -1322,6 +1366,12 @@ func load_records() -> void:
 			continue
 		for st in (ups as Dictionary).keys():
 			ups[st] = clampi(int(ups[st]), 0, MAX_STAT_POINTS)
+	apply_control_layout()
+	if is_inside_tree():
+		var tree := get_tree()
+		var cur := tree.current_scene if tree != null else null
+		if cur != null and cur.is_node_ready() and cur.has_method("_apply_ui_scale"):
+			cur._apply_ui_scale()
 
 
 # A save from before the chase gates keeps every gated walk it had already
@@ -1387,6 +1437,9 @@ func save_records() -> void:
 	cf.set_value("settings", "pad_binds", pad_binds)
 	cf.set_value("settings", "goals_expanded", goals_expanded)
 	cf.set_value("settings", "free_play", free_play)
+	cf.set_value("settings", "screen_shake", screen_shake)
+	cf.set_value("settings", "flashes", flashes)
+	cf.set_value("settings", "text_size", text_size)
 	cf.set_value("settings", "ask_tutorial", ask_tutorial)
 	cf.set_value("global", "tutorial_done", tutorial_done)
 	cf.set_value("global", "walks_lost", walks_lost)

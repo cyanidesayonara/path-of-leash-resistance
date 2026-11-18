@@ -445,5 +445,8 @@ static func update_card(m: Node2D) -> void:
 	m.tut_skip_label = skip_label(int(m.tut_step))
 	m.tut_hint.text = Prompts.fill(String(st.body))
 	# a green flash of acknowledgement as each lesson lands
-	var glow: float = clampf(float(m.tut_flash), 0.0, 1.0)
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var glow: float = clampf(float(m.tut_flash), 0.0, 1.0) if flashes_on else 0.0
 	m.tut_label.modulate = Color(1, 1, 1).lerp(Color(0.6, 1.0, 0.65), glow)

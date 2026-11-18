@@ -1670,7 +1670,10 @@ func _ensure_card() -> void:
 
 func _draw_card() -> void:
 	var vs: Vector2 = card.size
-	if screen_flash > 0.0:
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	if screen_flash > 0.0 and flashes_on:
 		card.draw_rect(Rect2(Vector2.ZERO, vs), Color(1.0, 0.97, 0.88, screen_flash * 0.55))
 	if card_t < CARD_FROM:
 		return
@@ -2238,8 +2241,12 @@ func _draw_health_bar_rects(c: Object, at: Vector2) -> void:
 	c.draw_rect(Rect2(bar_pos, Vector2(bar_w, bar_h)), Color(0.10, 0.08, 0.07))
 	var hp_frac := clampf(hp / max_hp, 0.0, 1.0)
 	if hp_frac > 0.0:
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		var flashes_on := true if _gm == null else bool(_gm.flashes)
+		var hit_f := flash if flashes_on else 0.0
 		var fill_col := Color(0.96, 0.32, 0.22) if phase == 2 else Color(0.96, 0.74, 0.18)
-		fill_col = fill_col.lerp(Color.WHITE, flash * 0.7)
+		fill_col = fill_col.lerp(Color.WHITE, hit_f * 0.7)
 		var fill := Rect2(bar_pos + Vector2(1, 1), Vector2((bar_w - 2.0) * hp_frac, bar_h - 2.0))
 		c.draw_rect(fill, fill_col)
 		c.draw_rect(Rect2(fill.position, Vector2(fill.size.x, 2.0)), fill_col.lightened(0.35))
@@ -2268,9 +2275,13 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 	var at := ground - Vector2(0.0, hop_z)
 	# a hit lights his bronze; below half the metal runs hot
 	var hot := 0.12 if phase == 2 and hp > 0.0 else 0.0
-	var base := BRONZE_BASE.lerp(Color(0.62, 0.26, 0.14), hot).lerp(Color.WHITE, flash * 0.55)
-	var dark := BRONZE_DARK.lerp(Color.WHITE, flash * 0.4)
-	var lit := BRONZE_LIT.lerp(Color.WHITE, flash * 0.5)
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var hit_f := flash if flashes_on else 0.0
+	var base := BRONZE_BASE.lerp(Color(0.62, 0.26, 0.14), hot).lerp(Color.WHITE, hit_f * 0.55)
+	var dark := BRONZE_DARK.lerp(Color.WHITE, hit_f * 0.4)
+	var lit := BRONZE_LIT.lerp(Color.WHITE, hit_f * 0.5)
 	# the tumble at the start of a stun turns him a full circle; during an
 	# awning bounce he spins head-over-heels back into the rambla
 	var face := face_dir

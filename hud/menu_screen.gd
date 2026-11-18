@@ -24,6 +24,7 @@ extends Control
 const Kit := preload("res://hud/ui_kit.gd")
 const Icons := preload("res://hud/ui_icons.gd")
 const Flow := preload("res://hud/menu_flow.gd")
+const UiScale := preload("res://hud/ui_scale.gd")
 
 const MAIN_W := 300.0
 const MAIN_ROW_H := 44.0
@@ -66,7 +67,10 @@ func _process(delta: float) -> void:
 	_open_t = minf(1.0, _open_t + delta / OPEN_S)
 	if s == "shop":
 		_shop_t += delta
-		main.shop_preview.position = shop_rect().position + Vector2(218.0, 262.0)
+		var sl := shop_layout(get_viewport_rect().size)
+		var sk := float(sl.scale)
+		main.shop_preview.position = (sl.rect as Rect2).position + Vector2(218.0, 262.0) * sk
+		main.shop_preview.scale = Vector2(sk, sk)
 		var ang := -PI * 0.5 + sin(_shop_t * 0.85) * 0.68
 		main.shop_preview.facing = Vector2.from_angle(ang)
 		main.shop_preview.hip_dir = -main.shop_preview.facing.rotated(sin(_shop_t * 1.7) * 0.08)
@@ -74,6 +78,8 @@ func _process(delta: float) -> void:
 		main.shop_preview.hop = maxf(0.0, float(main.shop_preview.hop) - delta * 36.0)
 		main.shop_preview.bark_anim = maxf(0.0, float(main.shop_preview.bark_anim) - delta)
 		main.shop_preview.queue_redraw()
+	elif main.shop_preview != null:
+		main.shop_preview.scale = Vector2.ONE
 	# setting off: the screen that was up fades as the walk begins, rather
 	# than blinking out. The name stays behind; it is part of the ground.
 	if s == "walking" and _drawn in ["title", "walk", "details"]:
@@ -122,6 +128,8 @@ func _draw() -> void:
 			_shop(vs)
 		"progress":
 			_progress(vs)
+		"controls":
+			_controls(vs)
 		"pause":
 			_pause(vs)
 		"walkcard":
@@ -187,11 +195,12 @@ func _walk(vs: Vector2) -> void:
 	# opens it. One line, so it never repeats the name.
 	# It always sits in the same place, over the prompt bar at the foot of the
 	# screen, whichever walk is in view, with the walk dots above it.
-	var w := minf(560.0, vs.x - 48.0)
-	var shake: float = sin(float(main.locked_nudge) * 60.0) * 10.0 * (float(main.locked_nudge) / 0.35)
+	var w := minf(560.0, vs.x - 84.0)
+	var shake: float = sin(float(main.locked_nudge) * 60.0) * 10.0 * (float(main.locked_nudge) / 0.35) if Game.screen_shake else 0.0
 	# the chapter's heading and its walks on top, this walk's record under them
 	var h := 112.0
-	var top := vs.y - Kit.BAR_FROM_BOTTOM - 22.0 - h
+	var bar_top := Kit.prompt_bar_top(self, vs, Flow.prompts(main, "walk")) - 14.0
+	var top := bar_top - h
 	var r := Rect2(vs.x * 0.5 - w * 0.5 + shake, top, w, h)
 	Kit.card(self, r, Kit.accent("walk"), 12)
 	# browse arrows at its two ends: the name on the ground is left whole
@@ -286,15 +295,27 @@ func _chapter_strip(vs: Vector2, r: Rect2, info: Dictionary, shake: float) -> vo
 
 
 func _details(vs: Vector2) -> void:
-	_top(vs, 1)
 	var acc := Kit.accent("details")
 	var rows := Flow.details_rows(main)
 	var legend := Flow.controls()
+	var bar_top := Kit.prompt_bar_top(self, vs, Flow.prompts(main, "details")) - 14.0
+	var max_h := maxf(240.0, bar_top - 12.0)
+	var legend_rows := ceilf(float(legend.size()) / 2.0)
+	var legend_step := 26.0
 	var row_h := 43.0
-	var h := 62.0 + float(rows.size()) * row_h + 12.0 + ceilf(float(legend.size()) / 2.0) * 26.0 + 12.0
+	var h := 62.0 + float(rows.size()) * row_h + 12.0 + legend_rows * legend_step + 12.0
+	if h > max_h:
+		legend_step = 21.0
+		row_h = clampf(floor((max_h - 62.0 - 18.0 - legend_rows * legend_step) / float(maxi(rows.size(), 1))), 32.0, 43.0)
+		h = 62.0 + float(rows.size()) * row_h + 10.0 + legend_rows * legend_step + 8.0
 	# anchored over the prompt bar, like the walk select's card, so the walk's
 	# name and gloss on the ground above it are never under it
-	var r := Rect2(48.0, maxf(8.0, vs.y - Kit.BAR_FROM_BOTTOM - 22.0 - h), DETAILS_W, h)
+	var dw := minf(DETAILS_W, vs.x - 64.0)
+	var r := Rect2(48.0 if dw >= DETAILS_W else (vs.x - dw) * 0.5, maxf(10.0, bar_top - h), dw, h)
+	if r.position.y >= 62.0:
+		_top(vs, 1)
+	else:
+		Kit.purse(self, Vector2(vs.x - 40.0, 48.0), Game.total_stars(), Game.total_bones)
 	Kit.card(self, r, acc)
 	Kit.heading(self, r.position + Vector2(28.0, 42.0), I18n.t("details_title"), 24, acc)
 	var y := r.position.y + 62.0
@@ -302,18 +323,19 @@ func _details(vs: Vector2) -> void:
 	for i in range(rows.size()):
 		var row: Dictionary = rows[i]
 		var picked: bool = i == int(main.details_idx)
-		var rr := Rect2(r.position.x + 14.0, y, r.size.x - 28.0, 38.0)
+		var rr := Rect2(r.position.x + 14.0, y, r.size.x - 28.0, row_h - 5.0)
 		if picked:
 			draw_rect(rr, Kit.pick_fill(acc))
 			draw_rect(Rect2(rr.position, Vector2(4.0, rr.size.y)), acc)
 		var has_trait := row.has("trait")
+		var cy := rr.get_center().y
 		if has_trait and picked:
-			draw_string(f, Vector2(rr.position.x + 16.0, y + 16.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
+			draw_string(f, Vector2(rr.position.x + 16.0, cy - 3.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
 				-1, 12, Kit.INK_SOFT)
-			draw_string(Kit.body(), Vector2(rr.position.x + 16.0, y + 31.0), String(row.trait), HORIZONTAL_ALIGNMENT_LEFT,
+			draw_string(Kit.body(), Vector2(rr.position.x + 16.0, cy + 12.0), String(row.trait), HORIZONTAL_ALIGNMENT_LEFT,
 				-1, 11, Color(acc.r, acc.g, acc.b, 0.95))
 		else:
-			draw_string(f, Vector2(rr.position.x + 16.0, y + 25.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
+			draw_string(f, Vector2(rr.position.x + 16.0, cy + 5.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
 				-1, 15, Kit.INK_SOFT if picked else Kit.INK_FAINT)
 		var fixed := bool(row.fixed)
 		var val := String(row.value)
@@ -321,18 +343,18 @@ func _details(vs: Vector2) -> void:
 		var vw := Kit.text_w(f, val, 20)
 		var unlocked: bool = bool(row.get("unlocked", true))
 		var vcol: Color = Kit.INK_FAINT if (fixed or not unlocked) else (Kit.INK if picked else Kit.INK_SOFT)
-		draw_string(f, Vector2(vx - vw, y + 27.0), val, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, vcol)
+		draw_string(f, Vector2(vx - vw, cy + 7.0), val, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, vcol)
 		if fixed:
 			var why := String(row.get("hint", I18n.t("details_set_by_walk")))
-			draw_string(Kit.body(), Vector2(vx - vw - 12.0 - Kit.text_w(Kit.body(), why, 13), y + 26.0), why,
+			draw_string(Kit.body(), Vector2(vx - vw - 12.0 - Kit.text_w(Kit.body(), why, 13), cy + 6.0), why,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Kit.INK_FAINT)
 		elif not unlocked:
-			Kit.lock(self, Vector2(vx - vw - 18.0, y + 19.0), 12.0, Kit.INK_FAINT)
+			Kit.lock(self, Vector2(vx - vw - 18.0, cy), 12.0, Kit.INK_FAINT)
 		elif picked:
-			Kit.chevron(self, Vector2(vx - vw - 18.0, y + 19.0), 9.0, acc, true)
-			Kit.chevron(self, Vector2(vx + 16.0, y + 19.0), 9.0, acc)
+			Kit.chevron(self, Vector2(vx - vw - 18.0, cy), 9.0, acc, true)
+			Kit.chevron(self, Vector2(vx + 16.0, cy), 9.0, acc)
 		y += row_h
-	y += 4.0
+	y += 2.0
 	draw_line(Vector2(r.position.x + 28.0, y), Vector2(r.end.x - 28.0, y), Color(1, 1, 1, 0.1), 1.5)
 	y += 6.0
 	# the controls, once, where the player is already looking before the
@@ -340,9 +362,9 @@ func _details(vs: Vector2) -> void:
 	for i in range(legend.size()):
 		var it: Array = legend[i]
 		var cx := r.position.x + 28.0 + float(i % 2) * 180.0
-		var cy := y + float(i / 2) * 26.0
-		var kw := Kit.keycap(self, Vector2(cx, cy), Prompts.key(String(it[0])), 12, 19.0)
-		draw_string(Kit.body(), Vector2(cx + kw + 8.0, cy + 14.0), String(it[1]), HORIZONTAL_ALIGNMENT_LEFT,
+		var cy := y + float(i / 2) * legend_step
+		var kw := Kit.keycap(self, Vector2(cx, cy), Prompts.key(String(it[0])), 12, 18.0)
+		draw_string(Kit.body(), Vector2(cx + kw + 8.0, cy + 13.0), String(it[1]), HORIZONTAL_ALIGNMENT_LEFT,
 			-1, 13, Kit.INK_SOFT)
 	if r.end.x + 14.0 + PORTRAIT_W <= vs.x - 16.0:
 		_portrait(Rect2(r.end.x + 14.0, r.position.y, PORTRAIT_W, r.size.y), acc)
@@ -368,15 +390,29 @@ func _portrait(r: Rect2, acc: Color) -> void:
 	IntroKit.leash(self, m["ring"], hand, 30.0)
 
 
+func shop_layout(vs: Vector2) -> Dictionary:
+	var bar_top := Kit.prompt_bar_top(self, vs, Flow.prompts(main, "shop") if main != null else []) - 14.0
+	var avail_w := maxf(320.0, vs.x - 40.0)
+	var avail_h := maxf(220.0, bar_top - 14.0)
+	var k := minf(1.0, minf(avail_w / SHOP_W, avail_h / SHOP_H))
+	var w := SHOP_W * k
+	var h := SHOP_H * k
+	var x0 := (vs.x - w) * 0.5
+	var y0 := clampf(14.0 + (avail_h - h) * 0.5, 14.0, maxf(14.0, bar_top - h))
+	return {"rect": Rect2(x0, y0, w, h), "scale": k}
+
+
 func shop_rect() -> Rect2:
-	var vs := get_viewport_rect().size
-	var w := minf(SHOP_W, vs.x - 80.0)
-	return Rect2(vs.x * 0.5 - w * 0.5, vs.y * 0.5 - SHOP_H * 0.5 - 20.0, w, SHOP_H)
+	return shop_layout(get_viewport_rect().size).rect
 
 
 func _shop(vs: Vector2) -> void:
 	var acc := Kit.accent("shop")
-	var r := shop_rect()
+	var sl := shop_layout(vs)
+	var sr: Rect2 = sl.rect
+	var sk := float(sl.scale)
+	draw_set_transform(sr.position, 0.0, Vector2(sk, sk))
+	var r := Rect2(Vector2.ZERO, Vector2(SHOP_W, SHOP_H))
 	Kit.card(self, r, acc, 16)
 	Kit.heading(self, r.position + Vector2(36.0, 54.0), I18n.t("shop_title"), 30, acc)
 	var f := Kit.display()
@@ -423,7 +459,7 @@ func _shop(vs: Vector2) -> void:
 		"short":
 			note = I18n.t("shop_short_note") % [int(data.cost), int(data.cost) - Game.total_bones]
 			ncol = Kit.INK_FAINT
-	var shake: float = sin(float(main.locked_nudge) * 60.0) * 8.0 * (float(main.locked_nudge) / 0.35)
+	var shake: float = sin(float(main.locked_nudge) * 60.0) * 8.0 * (float(main.locked_nudge) / 0.35) if Game.screen_shake else 0.0
 	draw_string(Kit.body(), Vector2(r.position.x + 36.0 + shake, r.position.y + 482.0), note,
 		HORIZONTAL_ALIGNMENT_CENTER, 364.0, 16, ncol)
 	# the list for this tab
@@ -466,6 +502,7 @@ func _shop(vs: Vector2) -> void:
 				Icons.draw_bone(self, Vector2(right - Kit.text_w(f, cost, 17) - 18.0, y + 19.0), 9.0,
 					Color(ccol.r, ccol.g, ccol.b, 0.9))
 		y += SHOP_ROW_H
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 func _swatch(at: Vector2, kind: String, key: String, d: Dictionary) -> void:
@@ -599,26 +636,161 @@ func _progress(vs: Vector2) -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
+static func controls_layout(vs: Vector2, main_node: Node2D, win: Window = null) -> Dictionary:
+	var ins := UiScale.safe_insets(win)
+	var top_limit := maxf(12.0, ins.y + 8.0)
+	var items := Flow.prompts(main_node, "controls") if main_node != null else []
+	var bottom_limit := Kit.prompt_bar_top(main_node, vs, items) - 14.0 if (main_node != null and not items.is_empty()) else (vs.y - Kit.BAR_FROM_BOTTOM - ins.w - 14.0)
+	var avail_h := maxf(200.0, bottom_limit - top_limit)
+	var avail_w := maxf(300.0, vs.x - 28.0 - ins.x - ins.z)
+	var acts := Game.REBIND_ACTIONS.size()
+	var two_col := avail_w >= 680.0
+	var per_col := (acts + 1) / 2 if two_col else acts
+	var compact := avail_h < 420.0
+	var title_px := 22 if compact else 26
+	var title_y := 34.0 if compact else 42.0
+	var sub_y := 52.0 if compact else 64.0
+	var hdr_h := 56.0 if compact else 70.0
+	var gap_y := 6.0 if compact else 8.0
+	var rst_h := 28.0 if compact else 36.0
+	var foot_h := 8.0 if compact else 10.0
+	var row_h := clampf(floor((avail_h - hdr_h - gap_y - rst_h - foot_h) / float(maxi(per_col, 1))), 23.0, 40.0)
+	var h := hdr_h + float(per_col) * row_h + gap_y + rst_h + foot_h
+	var w := minf(900.0, avail_w) if two_col else minf(560.0, avail_w)
+	var x0 := clampf(ins.x + (vs.x - ins.x - ins.z - w) * 0.5, ins.x + 8.0, maxf(ins.x + 8.0, vs.x - ins.z - w - 8.0))
+	var y0 := clampf(top_limit + (avail_h - h) * 0.5, top_limit, maxf(top_limit, bottom_limit - h))
+	return {
+		"rect": Rect2(x0, y0, w, h),
+		"two_col": two_col,
+		"per_col": per_col,
+		"compact": compact,
+		"title_px": title_px,
+		"title_y": title_y,
+		"sub_y": sub_y,
+		"hdr_h": hdr_h,
+		"gap_y": gap_y,
+		"rst_h": rst_h,
+		"row_h": row_h,
+	}
+
+
+func _controls(vs: Vector2) -> void:
+	var acc := Kit.accent("controls")
+	var rows := Flow.controls_rows(main)
+	var lay := controls_layout(vs, main, get_window() if is_inside_tree() else null)
+	var acts := Game.REBIND_ACTIONS.size()
+	var two_col := bool(lay.two_col)
+	var per_col := int(lay.per_col)
+	var compact := bool(lay.compact)
+	var title_px := int(lay.title_px)
+	var title_y := float(lay.title_y)
+	var sub_y := float(lay.sub_y)
+	var hdr_h := float(lay.hdr_h)
+	var gap_y := float(lay.gap_y)
+	var rst_h := float(lay.rst_h)
+	var row_h := float(lay.row_h)
+	var r: Rect2 = lay.rect
+	var w := r.size.x
+	_card_pop(r.get_center())
+	Kit.card(self, r, acc, 16)
+	var pad_x := 28.0 if compact else 34.0
+	var f := Kit.display()
+	var body := Kit.body()
+	Kit.heading(self, r.position + Vector2(pad_x, title_y), I18n.t("controls_title"), title_px, acc)
+	var hint := I18n.t("controls_layout_hint") % I18n.t("layout_" + Game.control_layout)
+	var title_end := pad_x + Kit.text_w(f, I18n.t("controls_title"), title_px) + 18.0
+	draw_string(body, r.position + Vector2(title_end, title_y), hint, HORIZONTAL_ALIGNMENT_LEFT,
+		maxf(80.0, w * 0.45 - title_end), 14 if compact else 15, Kit.INK_SOFT)
+	var col_gap := 28.0
+	var col_w := (w - pad_x * 2.0 - col_gap) * 0.5 if two_col else (w - pad_x * 2.0)
+	var pad_slot_w := clampf(col_w * 0.24, 72.0, 106.0)
+	var key_slot_w := clampf(col_w * 0.24, 72.0, 106.0)
+	var col_count := 2 if two_col else 1
+	for c_i in range(col_count):
+		var cx := r.position.x + pad_x + float(c_i) * (col_w + col_gap)
+		var k_x := cx + col_w - pad_slot_w - key_slot_w
+		var p_x := cx + col_w - pad_slot_w
+		draw_string(f, Vector2(k_x, r.position.y + sub_y), I18n.t("controls_key"),
+			HORIZONTAL_ALIGNMENT_CENTER, key_slot_w, 11, Kit.INK_FAINT)
+		draw_string(f, Vector2(p_x, r.position.y + sub_y), I18n.t("controls_pad"),
+			HORIZONTAL_ALIGNMENT_CENTER, pad_slot_w, 11, Kit.INK_FAINT)
+	draw_line(r.position + Vector2(pad_x, hdr_h - 4.0), r.position + Vector2(w - pad_x, hdr_h - 4.0),
+		Color(1, 1, 1, 0.12), 1.5)
+	var row_px := 13 if row_h < 28.0 else (14 if row_h < 34.0 else 16)
+	var cap_px := 11 if row_h < 28.0 else (12 if row_h < 34.0 else 14)
+	var cap_h := clampf(row_h - 5.0, 18.0, 24.0)
+	for i in range(acts):
+		var row: Dictionary = rows[i]
+		var col := 0 if not two_col else (i / per_col)
+		var ri := i if not two_col else (i % per_col)
+		var cx := r.position.x + pad_x + float(col) * (col_w + col_gap)
+		var ry := r.position.y + hdr_h + float(ri) * row_h
+		var rr := Rect2(cx - 8.0, ry + 1.0, col_w + 16.0, row_h - 2.0)
+		var picked: bool = i == int(main.controls_idx)
+		var listening := bool(row.listening)
+		if listening:
+			draw_rect(rr, Color(Kit.SAFFRON.r, Kit.SAFFRON.g, Kit.SAFFRON.b, 0.18))
+			draw_rect(rr, Kit.SAFFRON, false, 1.8)
+		elif picked:
+			draw_rect(rr, Kit.pick_fill(acc))
+			draw_rect(Rect2(rr.position, Vector2(3.5, rr.size.y)), acc)
+		var k_x := cx + col_w - pad_slot_w - key_slot_w
+		var p_x := cx + col_w - pad_slot_w
+		var label_room := maxf(60.0, k_x - cx - 8.0)
+		var name_col := Kit.SAFFRON if listening else (Kit.INK if picked else Kit.INK_SOFT)
+		draw_string(f, Vector2(cx + 4.0, ry + row_h * 0.5 + float(row_px) * 0.36),
+			fit_text(f, String(row.name), row_px, label_room),
+			HORIZONTAL_ALIGNMENT_LEFT, label_room, row_px, name_col)
+		if listening:
+			var ltxt := fit_text(f, I18n.t("controls_listen"), cap_px, key_slot_w + pad_slot_w - 4.0)
+			draw_string(f, Vector2(k_x, ry + row_h * 0.5 + float(cap_px) * 0.36), ltxt,
+				HORIZONTAL_ALIGNMENT_CENTER, key_slot_w + pad_slot_w, cap_px, Kit.SAFFRON)
+		else:
+			var ktxt := String(row.key_txt)
+			var kw := Kit.keycap_w(ktxt, cap_px)
+			Kit.keycap(self, Vector2(k_x + (key_slot_w - kw) * 0.5, ry + (row_h - cap_h) * 0.5), ktxt, cap_px, cap_h)
+			var ptxt := String(row.pad_txt)
+			var pw := Kit.keycap_w(ptxt, cap_px)
+			Kit.keycap(self, Vector2(p_x + (pad_slot_w - pw) * 0.5, ry + (row_h - cap_h) * 0.5), ptxt, cap_px, cap_h, 0.85)
+	var rst: Dictionary = rows[acts]
+	var rst_y := r.position.y + hdr_h + float(per_col) * row_h + gap_y
+	var rst_r := Rect2(r.position.x + pad_x, rst_y, w - pad_x * 2.0, rst_h)
+	var rst_picked: bool = int(main.controls_idx) >= acts
+	draw_rect(rst_r, Kit.pick_fill(acc) if rst_picked else Color(1, 1, 1, 0.04))
+	draw_rect(rst_r, acc if rst_picked else Color(1, 1, 1, 0.14), false, 2.0 if rst_picked else 1.0)
+	if rst_picked:
+		Kit.chevron(self, Vector2(rst_r.position.x + 20.0, rst_r.get_center().y), 7.5, acc)
+	var rst_px := 14 if compact else 16
+	draw_string(f, Vector2(rst_r.position.x, rst_r.get_center().y + float(rst_px) * 0.36), String(rst.name),
+		HORIZONTAL_ALIGNMENT_CENTER, rst_r.size.x, rst_px, Kit.INK if rst_picked else Kit.INK_SOFT)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
 func _pause(vs: Vector2) -> void:
 	var acc := Kit.accent("pause")
 	var labels := Flow.pause_labels(main)
 	var rows := (labels.size() + Flow.PAUSE_COLS - 1) / Flow.PAUSE_COLS
-	var h := 110.0 + float(rows) * (PAUSE_CELL_H + PAUSE_GAP) + 14.0
-	var r := Rect2(vs.x * 0.5 - PAUSE_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, PAUSE_W, h)
+	var bar_top := Kit.prompt_bar_top(self, vs, Flow.prompts(main, "pause")) - 14.0
+	var avail_h := maxf(200.0, bar_top - 12.0)
+	var pw := minf(PAUSE_W, vs.x - 40.0)
+	var cell_h := clampf(floor((avail_h - 110.0 - 14.0) / float(maxi(rows, 1)) - PAUSE_GAP), 38.0, PAUSE_CELL_H)
+	var h := 110.0 + float(rows) * (cell_h + PAUSE_GAP) + 14.0
+	var py := clampf(vs.y * 0.5 - h * 0.5 - 20.0, 12.0, maxf(12.0, bar_top - h))
+	var r := Rect2(vs.x * 0.5 - pw * 0.5, py, pw, h)
 	_card_pop(r.get_center())
 	Kit.mosaic_card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 50.0), I18n.t("pause_title"), 30, acc,
-		HORIZONTAL_ALIGNMENT_CENTER, PAUSE_W)
+		HORIZONTAL_ALIGNMENT_CENTER, pw)
 	var sub := "%s    %s" % [String(main._walk_name()), Flow.clock(float(main.elapsed))]
 	draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 80.0), sub, HORIZONTAL_ALIGNMENT_CENTER,
-		PAUSE_W, 18, Kit.INK)
+		pw, 18, Kit.INK)
 	var f := Kit.display()
-	var cw := (PAUSE_W - 48.0 - PAUSE_GAP) * 0.5
+	var cw := (pw - 48.0 - PAUSE_GAP) * 0.5
 	for i in range(labels.size()):
 		var col := i % Flow.PAUSE_COLS
 		var row := i / Flow.PAUSE_COLS
 		var cell := Rect2(r.position.x + 24.0 + float(col) * (cw + PAUSE_GAP),
-			r.position.y + 100.0 + float(row) * (PAUSE_CELL_H + PAUSE_GAP), cw, PAUSE_CELL_H)
+			r.position.y + 100.0 + float(row) * (cell_h + PAUSE_GAP), cw, cell_h)
 		var picked: bool = i == int(main.pause_idx)
 		draw_rect(cell, Kit.pick_fill(acc) if picked else Color(1, 1, 1, 0.04))
 		draw_rect(cell, acc if picked else Color(1, 1, 1, 0.10), false, 2.0 if picked else 1.0)
@@ -695,20 +867,23 @@ func _confirm(vs: Vector2) -> void:
 	var opts: Array = Flow.first_options() if first else []
 	var extra := 16.0 + FIRST_ROW_H * float(opts.size()) + 44.0 if first else 0.0
 	var h := 150.0 + extra + 26.0 * float(lines.size() - 1)
-	var r := Rect2(vs.x * 0.5 - CONFIRM_W * 0.5, vs.y * 0.5 - h * 0.5 - 20.0, CONFIRM_W, h)
+	var bar_top := Kit.prompt_bar_top(self, vs, Flow.prompts(main, "confirm")) - 14.0
+	var cw := minf(CONFIRM_W, vs.x - 40.0)
+	var cy := clampf(vs.y * 0.5 - h * 0.5 - 20.0, 12.0, maxf(12.0, bar_top - h))
+	var r := Rect2(vs.x * 0.5 - cw * 0.5, cy, cw, h)
 	_card_pop(r.get_center())
 	Kit.card(self, r, acc)
 	Kit.heading(self, Vector2(r.position.x, r.position.y + 56.0), String(c.title), 28, acc,
-		HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W)
+		HORIZONTAL_ALIGNMENT_CENTER, cw)
 	for i in range(lines.size()):
 		draw_string(Kit.body(), Vector2(r.position.x, r.position.y + 100.0 + 26.0 * i), lines[i],
-			HORIZONTAL_ALIGNMENT_CENTER, CONFIRM_W, 19, Kit.INK_SOFT)
+			HORIZONTAL_ALIGNMENT_CENTER, cw, 19, Kit.INK_SOFT)
 	if first:
 		# the two answers, a list like the main menu's
 		var oy := r.position.y + 124.0 + 26.0 * float(lines.size() - 1)
 		var f := Kit.display()
 		for i in range(opts.size()):
-			var rr := Rect2(r.position.x + 28.0, oy + FIRST_ROW_H * float(i), CONFIRM_W - 56.0, FIRST_ROW_H - 6.0)
+			var rr := Rect2(r.position.x + 28.0, oy + FIRST_ROW_H * float(i), cw - 56.0, FIRST_ROW_H - 6.0)
 			var picked: bool = i == int(main.first_idx)
 			draw_rect(rr, Kit.pick_fill(acc) if picked else Color(1, 1, 1, 0.04))
 			draw_rect(rr, acc if picked else Color(1, 1, 1, 0.10), false, 2.0 if picked else 1.0)
@@ -721,7 +896,7 @@ func _confirm(vs: Vector2) -> void:
 		var label := I18n.t("confirm_dont_ask")
 		var tw: float = Kit.body().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		var box := 16.0
-		var x0 := r.position.x + CONFIRM_W * 0.5 - (box + 10.0 + tw) * 0.5
+		var x0 := r.position.x + cw * 0.5 - (box + 10.0 + tw) * 0.5
 		var by := oy + FIRST_ROW_H * float(opts.size()) + 12.0
 		Icons.draw_check(self, Vector2(x0, by), box,
 			Icons.Check.DONE_NOW if not Game.ask_tutorial else Icons.Check.OPEN)

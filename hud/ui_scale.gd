@@ -15,6 +15,9 @@ const REF := Vector2(1280.0, 720.0)
 # the frame scale below which the interface is enlarged, and the most it grows
 const MIN_FRAME := 0.78
 const MAX_FACTOR := 1.45
+# text size "large" lifts UI/HUD text one step across desktop and phone sizes
+const LARGE_MULT := 1.18
+const MAX_FACTOR_LARGE := 1.71
 
 # override for headless tests; negative X means query OS/cmdline normally
 static var test_safe_insets := Vector4(-1.0, -1.0, -1.0, -1.0)
@@ -72,12 +75,20 @@ static func apply_safe_area(m: Node2D) -> void:
 			m.goals_card.position.x = (vw if vw > 0.0 else REF.x) - 8.0 - ins.z - gw
 
 
+static func _text_size() -> String:
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	return String(_gm.text_size) if _gm != null and _gm.get("text_size") != null else "normal"
+
+
 # The content scale factor for a window of this size in logical pixels.
-static func factor_for(logical: Vector2) -> float:
+static func factor_for(logical: Vector2, text_size := "") -> float:
 	var s := minf(logical.x / REF.x, logical.y / REF.y)
-	if s <= 0.0 or s >= MIN_FRAME:
-		return 1.0
-	return clampf(MIN_FRAME / s, 1.0, MAX_FACTOR)
+	var base := 1.0 if (s <= 0.0 or s >= MIN_FRAME) else clampf(MIN_FRAME / s, 1.0, MAX_FACTOR)
+	var mode := _text_size() if text_size == "" else text_size
+	if mode == "large":
+		return clampf(base * LARGE_MULT, 1.0, MAX_FACTOR_LARGE)
+	return base
 
 
 # The window in logical pixels: the browser reports device pixels, and the
@@ -91,6 +102,8 @@ static func logical_size(win: Window) -> Vector2:
 static func apply(m: Node2D) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
+	if m == null or m.get("cam") == null or not m.is_inside_tree():
+		return
 	var win: Window = m.get_window()
 	var k := factor_for(logical_size(win))
 	for a in OS.get_cmdline_user_args():
@@ -103,3 +116,6 @@ static func apply(m: Node2D) -> void:
 	m.ui_scale = k
 	win.content_scale_factor = k
 	apply_safe_area(m)
+	if m.get("settings_panel") != null and m.settings_panel != null and m.settings_panel.has_method("_recentre"):
+		m.settings_panel._recentre()
+	m.queue_redraw()

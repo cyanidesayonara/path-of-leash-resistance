@@ -153,7 +153,10 @@ static func draw(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		var st := int(g["state"])
 		var lift := float(g["lift"])
 		var warning := st == State.WARN_DOWN or st == State.WARN_UP
-		var flash := fmod(t * 9.0, 2.0) < 1.0 if warning else true
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		var flashes_on := true if _gm == null else bool(_gm.flashes)
+		var flash := (true if not flashes_on else fmod(t * 9.0, 2.0) < 1.0) if warning else true
 
 		# Flush steel street housing plate
 		wc.rect(Rect2(pos - Vector2(PLATE_R, PLATE_R), Vector2(PLATE_R * 2.0, PLATE_R * 2.0)), Color(0.24, 0.25, 0.27))

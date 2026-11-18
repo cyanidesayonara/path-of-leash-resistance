@@ -807,3 +807,6 @@
 
 # Every menu and HUD string in all three languages, and none written straight to the screen
 --headless --path . --script res://tests/test_i18n.gd
+
+# Accessibility settings: screen shake, flashes, text size, control rebinding
+--rendering-method gl_compatibility --path . --script res://tests/test_accessibility.gd

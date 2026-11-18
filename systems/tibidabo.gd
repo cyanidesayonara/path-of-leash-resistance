@@ -309,12 +309,15 @@ static func draw_moving(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	if SIGNAL_POS.y > vt - 40.0 and SIGNAL_POS.y < vb + 40.0:
 		var lit := signal_lit(m)
 		var alt := fmod(AnimClock.msec() / 1000.0 * 3.0, 2.0) < 1.0
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		var flashes_on := true if _gm == null else bool(_gm.flashes)
 		var off := Color(0.35, 0.1, 0.1)
 		var on := Color(0.95, 0.2, 0.2)
 		b.circle(SIGNAL_POS + Shade.light * 3.0, 8.0, SHADOW)
 		b.circle(SIGNAL_POS, 7.0, Color(0.18, 0.18, 0.20))
-		b.circle(SIGNAL_POS + Vector2(-4, 0), 3.0, on if lit and alt else off)
-		b.circle(SIGNAL_POS + Vector2(4, 0), 3.0, on if lit and not alt else off)
+		b.circle(SIGNAL_POS + Vector2(-4, 0), 3.0, on if lit and (not flashes_on or alt) else off)
+		b.circle(SIGNAL_POS + Vector2(4, 0), 3.0, on if lit and (not flashes_on or not alt) else off)
 
 
 static func build_layer(m: Node2D) -> void:
