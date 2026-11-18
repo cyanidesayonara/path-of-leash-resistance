@@ -796,3 +796,6 @@
 --headless --path . --script res://tests/test_sitges.gd
 # Camí de Ronda cliff path walk test
 --headless --path . --script res://tests/test_ronda.gd
+
+# Every menu and HUD string in all three languages, and none written straight to the screen
+--headless --path . --script res://tests/test_i18n.gd
