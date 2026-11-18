@@ -209,6 +209,15 @@ func _run() -> void:
 			_check(side * (dog.global_position.x - wall_x) < 0.0, "and stays inside it at y=%.0f" % py)
 		py -= 50.0
 	_check(probes >= 30, "enough clear wall to probe (%d)" % probes)
+	# the plaça past the hall is paving wall to wall; its tree pits are earth
+	var S: Dictionary = load("res://world/surfaces.gd").S
+	for px: float in [180.0, 400.0, 640.0, 900.0, 1100.0]:
+		_check(m.surface_at(Vector2(px, m.GATE_Y - 330.0)) == S.PAVEMENT, "the plaça is paved at x=%.0f" % px)
+	for t: Vector2 in LevelBuild.placa_trees(m):
+		_check(m.surface_at(t + Vector2(10.0, 0.0)) == S.GRASS, "a plane tree's pit is earth at %s" % t)
+	# every wall stall is laid out as its trade, not a bare slab
+	for k: String in m.stall_kinds:
+		_check(k in ["fruit", "juice", "jamon", "fish", "olives", "sweets"], "a trade El Mercat draws: %s" % k)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])

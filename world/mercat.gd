@@ -9,7 +9,9 @@ extends RefCounted
 # level_build turns into bodies and bypasser blockers.
 
 const LevelBuild := preload("res://world/level_build.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
+const PLACA_EARTH_R := 28.0                      # a tree pit or planter's soft ground
 
 # along the hall's walls, in the stretches between the wall stalls:
 # [y, west wall?, kind]
@@ -69,6 +71,21 @@ static func solids(m: Node2D) -> Array[Rect2]:
 	for c: Vector2 in APPROACH_CRATES:
 		out.append(Rect2(c - APPROACH_CRATE_SIZE * 0.5, APPROACH_CRATE_SIZE))
 	return out
+
+
+# The plaça past the hall is paved stone from wall to wall, not the lawn a
+# park's dog run would be: only the earth of its tree pits, planters and
+# shrubs is soft. The hall itself falls through to main.
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y >= m.GATE_Y - 40.0:
+		return -1
+	for pp: Dictionary in m.park_props:
+		if String(pp.kind) in ["dig", "planter", "shrub"] and p.distance_to(pp.pos) < PLACA_EARTH_R:
+			return Surfaces.S.GRASS
+	for t: Vector2 in LevelBuild.placa_trees(m):
+		if p.distance_to(t) < PLACA_EARTH_R:
+			return Surfaces.S.GRASS
+	return Surfaces.S.PAVEMENT
 
 
 # --- drawing -----------------------------------------------------------------
@@ -327,6 +344,125 @@ static func draw_floor_drain(b: ShapeBatch, p: Vector2) -> void:
 		b.rect(Rect2(fr.position.x + 4.5 + float(k) * 5.0, fr.position.y + 4.0, 2.4, 24.0), Color(0.60, 0.62, 0.64))
 	b.line(fr.position + Vector2(0.0, 1.0), Vector2(fr.end.x, fr.position.y + 1.0), Color(1, 1, 1, 0.30), 2.0)
 	b.line(fr.position + Vector2(1.0, 0.0), Vector2(fr.position.x + 1.0, fr.end.y), Color(1, 1, 1, 0.22), 2.0)
+
+
+# A wall stall, its back to the hall wall and its counter to the aisle, laid
+# out as its trade, with its customers queueing at the counter. One batch.
+static func draw_stall(m: Node2D, st: Vector2, kind: String, i: int) -> void:
+	var b := ShapeBatch.new()
+	var r := Rect2(st.x - m.STALL_BODY_SIZE.x * 0.5, st.y - m.STALL_BODY_SIZE.y * 0.5, m.STALL_BODY_SIZE.x, m.STALL_BODY_SIZE.y)
+	var aisle_right := st.x < 640.0
+	m.box_shadow(b, r, 5.0, 12.0)
+	if kind == "fish":
+		draw_fish_counter(b, r, aisle_right, i)
+	else:
+		_counter(b, r, aisle_right, kind, i)
+	m._draw_browsers(b, r, i)
+	b.flush(m._wc)
+
+
+# the counter: a dark back shelf against the wall, the display, and a lit
+# lip along the customer's edge
+static func _counter(b: ShapeBatch, r: Rect2, aisle_right: bool, kind: String, i: int) -> void:
+	var wood := Color(0.50, 0.36, 0.24)
+	b.rect(r, wood.darkened(0.30))
+	b.rect(r.grow(-2.0), wood)
+	var shelf := Rect2(r.position.x + 2.0 if aisle_right else r.end.x - 18.0, r.position.y + 2.0, 16.0, r.size.y - 4.0)
+	b.rect(shelf, wood.darkened(0.42))
+	var disp := Rect2(shelf.end.x + 2.0 if aisle_right else r.position.x + 4.0, r.position.y + 4.0, r.size.x - 24.0, r.size.y - 8.0)
+	var lip_x: float = r.end.x - 3.0 if aisle_right else r.position.x + 1.0
+	match kind:
+		"fruit":
+			# raked crates, two rows of three, each its own fruit
+			for k in range(6):
+				var cr := Rect2(disp.position.x + float(k % 3) * disp.size.x / 3.0, disp.position.y + float(k / 3) * disp.size.y * 0.5,
+					disp.size.x / 3.0, disp.size.y * 0.5).grow(-1.0)
+				b.rect(cr, CRATE_WOOD.darkened(0.25))
+				var fc: Color = PRODUCE[(k + i) % PRODUCE.size()]
+				var fy := cr.position.y + 5.0
+				while fy < cr.end.y - 3.0:
+					var fx := cr.position.x + 5.0
+					while fx < cr.end.x - 3.0:
+						b.circle(Vector2(fx, fy), 3.4, fc)
+						b.circle(Vector2(fx - 1.0, fy - 1.1), 1.1, fc.lightened(0.35))
+						fx += 7.0
+					fy += 7.0
+			# the bottles of the wall shelf: oil and wine
+			for k in range(4):
+				b.circle(shelf.position + Vector2(8.0, 7.0 + float(k) * 13.0), 3.0, [Color(0.34, 0.46, 0.16), Color(0.42, 0.10, 0.14)][k % 2])
+		"juice":
+			# the juice bar: rows of cups in every colour on the ice, fruit halves behind
+			b.rect(disp, Color(0.86, 0.92, 0.94))
+			var juices := [Color(0.96, 0.42, 0.56), Color(0.98, 0.62, 0.16), Color(0.52, 0.78, 0.26), Color(0.86, 0.16, 0.22),
+				Color(0.98, 0.86, 0.30), Color(0.56, 0.26, 0.52)]
+			for k in range(15):
+				var cp := disp.position + Vector2(7.0 + float(k % 5) * (disp.size.x - 12.0) / 4.0, 8.0 + float(k / 5) * (disp.size.y - 14.0) / 2.0)
+				var jc: Color = juices[(k + i) % juices.size()]
+				b.circle(cp, 4.4, Color(0.96, 0.97, 0.98))
+				b.circle(cp, 3.4, jc)
+				b.circle(cp + Vector2(-1.0, -1.0), 1.0, jc.lightened(0.4))
+			for k in range(3):
+				var hp := shelf.position + Vector2(8.0, 9.0 + float(k) * 17.0)
+				b.circle(hp, 5.5, [Color(0.36, 0.24, 0.16), Color(0.30, 0.56, 0.22), Color(0.96, 0.56, 0.12)][k])
+				b.circle(hp, 3.6, [Color(0.96, 0.95, 0.90), Color(0.92, 0.32, 0.30), Color(0.99, 0.80, 0.40)][k])
+		"jamon":
+			# legs of ham hung along the wall, one on its stand being carved, and paper cones of slices
+			for k in range(4):
+				var hp := shelf.position + Vector2(8.0, 7.0 + float(k) * 14.0)
+				_ham(b, hp, Vector2.RIGHT if aisle_right else Vector2.LEFT, 0.7)
+			var board := Rect2(disp.position.x + 4.0, disp.position.y + 4.0, disp.size.x * 0.6, 18.0)
+			b.rect(board, Color(0.70, 0.52, 0.32))
+			_ham(b, board.get_center(), Vector2.LEFT if aisle_right else Vector2.RIGHT, 1.0)
+			for k in range(4):
+				var cp := Vector2(disp.position.x + 10.0 + float(k) * 14.0, disp.end.y - 12.0)
+				b.polygon(PackedVector2Array([cp + Vector2(-5.0, -5.0), cp + Vector2(5.0, -5.0), cp + Vector2(0.0, 7.0)]), Color(0.96, 0.94, 0.88))
+				b.circle(cp + Vector2(0.0, -3.5), 3.6, Color(0.76, 0.26, 0.26))
+		"olives":
+			# steel trays of olives, pickles and peppers, three by two
+			var olive := [Color(0.42, 0.50, 0.18), Color(0.14, 0.10, 0.12), Color(0.56, 0.62, 0.26), Color(0.62, 0.30, 0.38),
+				Color(0.80, 0.22, 0.14), Color(0.70, 0.66, 0.30)]
+			for k in range(6):
+				var tr := Rect2(disp.position.x + float(k % 3) * disp.size.x / 3.0, disp.position.y + float(k / 3) * disp.size.y * 0.5,
+					disp.size.x / 3.0, disp.size.y * 0.5).grow(-1.5)
+				b.rect(tr, Color(0.70, 0.73, 0.76))
+				b.rect(tr.grow(-1.5), olive[(k + i) % olive.size()].darkened(0.35))
+				for n in range(7):
+					var op := tr.position + Vector2(3.5 + fmod(float(n) * 7.3 + float(k) * 3.1, tr.size.x - 7.0), 3.5 + fmod(float(n) * 5.1, tr.size.y - 7.0))
+					b.circle(op, 2.3, olive[(k + i) % olive.size()])
+			for k in range(3):
+				b.circle(shelf.position + Vector2(8.0, 10.0 + float(k) * 17.0), 5.0, Color(0.88, 0.90, 0.86, 0.85))
+		_:
+			# sweets: trays of jellies and wrapped sweets, jars on the shelf
+			var sweet := [Color(0.98, 0.36, 0.52), Color(0.36, 0.72, 0.96), Color(0.98, 0.84, 0.24), Color(0.48, 0.82, 0.38),
+				Color(0.96, 0.56, 0.18), Color(0.70, 0.40, 0.86)]
+			b.rect(disp, Color(0.96, 0.94, 0.90))
+			for k in range(24):
+				var jit := Vector2(fmod(float(k) * 5.3, 3.0) - 1.5, fmod(float(k) * 3.7, 3.0) - 1.5)
+				var sp := disp.position + Vector2(5.0 + float(k % 6) * (disp.size.x - 10.0) / 5.0, 5.0 + float(k / 6) * (disp.size.y - 10.0) / 3.0) + jit
+				var sc: Color = sweet[(k * 5 + i) % sweet.size()]
+				if k % 3 == 0:
+					b.line(sp - Vector2(3.0, 0.0), sp + Vector2(3.0, 0.0), sc.darkened(0.2), 3.0)
+				b.circle(sp, 2.4, sc)
+			for k in range(3):
+				var jp := shelf.position + Vector2(8.0, 10.0 + float(k) * 17.0)
+				b.circle(jp, 6.0, Color(0.86, 0.92, 0.96, 0.8))
+				b.circle(jp, 4.0, sweet[(k * 2 + i) % sweet.size()])
+	b.line(Vector2(lip_x + 1.0, r.position.y + 2.0), Vector2(lip_x + 1.0, r.end.y - 2.0), Color(1, 1, 1, 0.24), 2.4)
+	b.line(Vector2(r.position.x + 2.0, r.end.y - 1.5), Vector2(r.end.x - 2.0, r.end.y - 1.5), Color(0, 0, 0, 0.26), 3.0)
+
+
+# a leg of ham from above: the dark cured skin, the fat, the hoof and its cord
+static func _ham(b: ShapeBatch, p: Vector2, dir: Vector2, s: float) -> void:
+	var n := dir.orthogonal()
+	var pts := PackedVector2Array()
+	for k in range(10):
+		var a := TAU * float(k) / 10.0
+		var along := cos(a) * 14.0 * s
+		var w := sin(a) * 6.0 * s * (0.55 + 0.45 * clampf(0.5 - along / (14.0 * s), 0.0, 1.0))
+		pts.append(p + dir * along + n * w)
+	b.polygon(pts, Color(0.46, 0.20, 0.14))
+	b.circle(p - dir * 4.0 * s, 3.4 * s, Color(0.86, 0.62, 0.54))
+	b.line(p + dir * 12.0 * s, p + dir * 17.0 * s, Color(0.24, 0.14, 0.10), 2.4 * s)
 
 
 # the fish counter: a steel counter with a glass guard along the customer's
