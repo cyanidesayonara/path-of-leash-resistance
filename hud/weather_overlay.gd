@@ -21,6 +21,31 @@ var mode := "clear":
 		_scatter()
 		queue_redraw()
 var night := false
+# the sky's strength (Game.SKY): how hard it rains and blows. A drizzle is
+# fewer, finer drops; a storm drives them sideways. A breeze on a clear day
+# is the wind's leaves and grit, thinned out.
+var rain_k := 1.0
+var wind_k := 0.0
+# a gust blowing now (main's wind_gust, 0 to 1) and which way the wind
+# blows across the screen (+1 left to right)
+var push := 0.0
+var wind_sign := 1.0
+
+
+# the walk's sky in one call: the mode, and a fresh scatter when only the
+# strength changed (a drizzle turning to a downpour is still "rain")
+func set_sky(kind: String, rain: float, wind: float) -> void:
+	var m := kind
+	if kind == "clear" and wind >= 0.3:
+		m = "wind"
+	var changed := not is_equal_approx(rain, rain_k) or not is_equal_approx(wind, wind_k)
+	rain_k = rain
+	wind_k = wind
+	if m != mode:
+		mode = m
+	elif changed:
+		_scatter()
+		queue_redraw()
 
 # per 1280x720 of view; scaled to the real view so a wide window is as wet
 const RAIN_N := 130
@@ -72,8 +97,8 @@ func _on_resized() -> void:
 func _count() -> int:
 	var area := clampf(view_size.x * view_size.y / (1280.0 * 720.0), 0.6, 1.8)
 	match mode:
-		"rain": return int(RAIN_N * area)
-		"wind": return int(GRIT_N * area) + LEAF_N
+		"rain": return int(RAIN_N * area * (0.35 + 0.65 * rain_k) * (1.0 + 0.4 * wind_k))
+		"wind": return int(GRIT_N * area * wind_k) + int(LEAF_N * (0.4 + 0.6 * wind_k))
 		"snow": return int(SNOW_N * area)
 	return 0
 
@@ -97,11 +122,17 @@ func _scatter() -> void:
 
 # the wind comes in gusts: a slow swell with a shorter flurry on top
 func gust() -> float:
-	return clampf(0.55 + 0.30 * sin(t * 0.61) + 0.25 * sin(t * 1.73 + 1.1) * sin(t * 0.37), 0.15, 1.1)
+	var own := clampf(0.55 + 0.30 * sin(t * 0.61) + 0.25 * sin(t * 1.73 + 1.1) * sin(t * 0.37), 0.15, 1.1)
+	return maxf(own * (0.5 + 0.5 * wind_k), 0.6 + push * 0.9)
 
 
 func _is_leaf(i: int) -> bool:
-	return mode == "wind" and i >= drops.size() - LEAF_N
+	return mode == "wind" and i >= drops.size() - int(LEAF_N * (0.4 + 0.6 * wind_k))
+
+
+# the slant the rain falls at: a little drift, driven over by a storm's wind
+func _rain_slant(g: float) -> float:
+	return (-0.16 + 0.85 * wind_k * g) * wind_sign if wind_k > 0.25 else -0.16
 
 
 func _process(delta: float) -> void:
@@ -114,27 +145,33 @@ func _process(delta: float) -> void:
 		var v: Vector2
 		match mode:
 			"rain":
-				v = Vector2(-90.0, 560.0) * (0.75 + z * 0.65)
+				var fall := 560.0 * (0.8 + 0.2 * rain_k)
+				v = Vector2(_rain_slant(g) * fall, fall) * (0.75 + z * 0.65)
 			"wind":
 				if _is_leaf(i):
-					v = Vector2(170.0 + 160.0 * g, 30.0 + 40.0 * sin(t * 2.1 + float(i)))
+					v = Vector2((170.0 + 160.0 * g) * wind_sign, 30.0 + 40.0 * sin(t * 2.1 + float(i)))
 					spin[i] += delta * (2.0 + z * 3.0) * g
 				else:
-					v = Vector2(240.0 + 220.0 * g, 30.0 * sin(t * 1.4 + float(i))) * (0.7 + z * 0.6)
+					v = Vector2((240.0 + 220.0 * g) * wind_sign, 30.0 * sin(t * 1.4 + float(i))) * (0.7 + z * 0.6)
 			_:
 				v = Vector2(sin(t * (0.9 + z * 0.6) + spin[i]) * (12.0 + z * 26.0), 26.0 + z * 64.0)
 		drops[i] += v * delta
 		var d := drops[i]
 		if d.y > view_size.y + 10.0 or d.x < -40.0 or d.x > view_size.x + 40.0:
 			if mode == "wind":
-				drops[i] = Vector2(-30.0, _rng.randf() * view_size.y)
+				drops[i] = Vector2(-30.0 if wind_sign > 0.0 else view_size.x + 30.0, _rng.randf() * view_size.y)
+			elif mode == "rain" and absf(_rain_slant(g)) > 0.3:
+				# driven rain comes in from the windward side too
+				var from_side := _rng.randf() < 0.5
+				var sx := -30.0 if wind_sign > 0.0 else view_size.x + 30.0
+				drops[i] = Vector2(sx, _rng.randf() * view_size.y) if from_side else Vector2(_rng.randf() * (view_size.x + 80.0) - 40.0, -10.0)
 			else:
 				drops[i] = Vector2(_rng.randf() * (view_size.x + 80.0) - 40.0, -10.0)
 			depth[i] = _rng.randf()
 	if mode == "rain":
 		for k in range(SPLASH_N):
 			splash_age[k] += delta
-		_splash_due += delta * SPLASH_RATE * clampf(view_size.x * view_size.y / (1280.0 * 720.0), 0.6, 1.8)
+		_splash_due += delta * SPLASH_RATE * (0.35 + 0.65 * rain_k) * clampf(view_size.x * view_size.y / (1280.0 * 720.0), 0.6, 1.8)
 		while _splash_due >= 1.0:
 			_splash_due -= 1.0
 			splash_at[_splash_next] = Vector2(_rng.randf() * view_size.x, _rng.randf() * view_size.y)
@@ -157,11 +194,13 @@ func _draw() -> void:
 func _draw_rain(b: ShapeBatch) -> void:
 	# lit from below by the street at night, so the near drops catch more
 	var col := Color(0.78, 0.84, 0.96) if night else Color(0.72, 0.80, 0.94)
+	var slant := _rain_slant(gust())
+	var fine := 0.6 + 0.4 * rain_k
 	for i in range(drops.size()):
 		var z := depth[i]
 		var d := drops[i]
-		var ln := 9.0 + z * 18.0
-		b.line(d, d + Vector2(-0.16, 1.0) * ln, Color(col.r, col.g, col.b, 0.14 + z * 0.34), 1.0 + z * 0.9)
+		var ln := (9.0 + z * 18.0) * fine * (1.0 + 0.5 * absf(slant))
+		b.line(d, d + Vector2(slant, 1.0).normalized() * ln, Color(col.r, col.g, col.b, (0.14 + z * 0.34) * fine), (1.0 + z * 0.9) * fine)
 	# where a drop hits: a ring opening out flat on the ground, and two flecks
 	for k in range(SPLASH_N):
 		var a := splash_age[k]
@@ -200,7 +239,7 @@ func _draw_wind(b: ShapeBatch) -> void:
 		else:
 			var wob := sin(t * 6.0 + float(i)) * 3.0
 			var ln := (12.0 + z * 22.0) * (0.6 + g * 0.6)
-			b.line(d, d + Vector2(ln, wob), Color(0.88, 0.82, 0.70, (0.14 + z * 0.30) * (0.5 + g * 0.6)), 1.2 + z)
+			b.line(d, d + Vector2(ln * wind_sign, wob), Color(0.88, 0.82, 0.70, (0.14 + z * 0.30) * (0.5 + g * 0.6)), 1.2 + z)
 
 
 func _draw_snow(b: ShapeBatch) -> void:

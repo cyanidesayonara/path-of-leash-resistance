@@ -87,6 +87,7 @@
 
 # A walk's own weather or hour never carries on to the next walk
 --headless --path . --script res://tests/test_walk_sky.gd
+--headless --path . --script res://tests/test_gusts.gd
 
 # Who is out follows the weather and the hour
 --headless --path . --script res://tests/test_outdoors.gd

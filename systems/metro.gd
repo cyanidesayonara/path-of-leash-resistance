@@ -572,7 +572,7 @@ static func _apply_light(m: Node2D, st: State) -> void:
 	var u := under_at(y)
 	if absf(u - st.under) > 0.002:
 		st.under = u
-		var sky := SkyLook.tint(m.lvl, Game.weather, Game.hour)
+		var sky := SkyLook.tint(m.lvl, Game.sky, Game.time)
 		m.night_cm.color = sky.lerp(UNDER_TINT, u)
 		if m.weather_fx != null:
 			m.weather_fx.modulate.a = 1.0 - u
@@ -580,8 +580,8 @@ static func _apply_light(m: Node2D, st: State) -> void:
 	var on := 1 if u > 0.5 else 0
 	if on != st.under_on:
 		st.under_on = on
-		var w: String = "clear" if on == 1 else Game.weather
-		var h: String = "day" if on == 1 else Game.hour
+		var w: String = "clear" if on == 1 else Game.sky
+		var h: String = "day" if on == 1 else Game.time
 		m.sky_mod = SkyLook.grade_mod(m.lvl, w, h)
 		if m.grade_rect != null and m.mood != null:
 			SkyLook.apply(m.grade_rect.material, SkyLook.compose(m.mood.grade(), m.sky_mod))

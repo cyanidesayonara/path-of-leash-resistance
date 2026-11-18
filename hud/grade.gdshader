@@ -57,7 +57,8 @@ uniform float world_t = 0.0;
 uniform vec3 sun_col = vec3(0.0);
 uniform vec3 sun_shade = vec3(0.0);
 uniform vec2 sun_dir = vec2(1.0, 0.0);
-// morning mist lying on the ground, 0 to 1: soft pale banks, world-locked
+// morning mist lying on the ground, 0 to 1: soft pale banks, world-locked;
+// above 1 it is a fog, an even veil over everything as well
 // and drifting slowly, thinnest in the middle of the screen
 uniform float mist = 0.0;
 
@@ -236,7 +237,11 @@ void fragment() {
 		float bank = smoothstep(0.38, 0.82, m1 * 0.65 + m2 * 0.35);
 		vec2 dm = uv - 0.5;
 		float edge = 0.45 + 0.55 * smoothstep(0.02, 0.22, dot(dm, dm));
-		col = mix(col, vec3(0.86, 0.85, 0.93), bank * edge * mist * 0.45);
+		col = mix(col, vec3(0.86, 0.85, 0.93), bank * edge * min(mist, 1.0) * 0.45);
+		// past 1, a fog: an even grey veil over everything as well as the
+		// banks, still thinnest where the play is
+		float veil = max(mist - 1.0, 0.0);
+		col = mix(col, vec3(0.84, 0.85, 0.88), veil * edge * 0.42);
 	}
 
 	// the mood's colour cast and its exposure, before the vignette so that

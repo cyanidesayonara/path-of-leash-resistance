@@ -1393,7 +1393,7 @@ func _draw_shapes() -> void:
 		var pt := AnimClock.msec() / 1000.0
 		var pulse := 0.9 + 0.1 * sin(pt * 6.1)
 		var lit := face_dir * 26.0
-		var sky := SkyLook.tint(Game.level_id, Game.weather, true)
+		var sky := SkyLook.tint(Game.level_id, Game.sky, true)
 		_b.glow(lit, 104.0, SkyLook.light(Color(0.66, 0.80, 1.0, 0.22 * pulse), sky), 0.1)
 	# contact shadow first, matching the dog's light direction. A fallen
 	# owner's shadow spreads out under them.

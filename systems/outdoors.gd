@@ -26,9 +26,10 @@ const PAIR_GAP_HOUR := {"dawn": 0.7, "day": 1.0, "dusk": 0.9, "night": 0.85}
 const PAIR_GAP_WEATHER := {"clear": 1.0, "wind": 1.0, "rain": 1.3, "snow": 1.2}
 
 
-# Dry, and the sun high enough to lie in.
+# Dry, and the sun high enough to lie in. A fog (Game.fog_amount, the sky's
+# strength beyond its kind) is no day for the beach either.
 static func fair(weather: String, hour: String) -> bool:
-	return (weather == "clear" or weather == "wind") and (hour == "day" or hour == "dusk")
+	return (weather == "clear" or weather == "wind") and (hour == "day" or hour == "dusk") and Game.fog_amount() < 0.5
 
 
 # Sunbathers and the towels they lie on, the beach parasols up over them,
@@ -278,12 +279,12 @@ static func wind_strength(weather: String) -> float:
 # furled in strong wind so they do not blow away, as well as in rain, snow,
 # at night, or at first light.
 static func beach_parasols_open(weather: String, hour: String) -> bool:
-	return weather == "clear" and (hour == "day" or hour == "dusk")
+	return weather == "clear" and (hour == "day" or hour == "dusk") and Game.wind_amount() < 0.5
 
 
 # Cafe napkins and loose papers lift and skitter across the promenade in wind.
 static func blowing_napkins(weather: String, _hour: String) -> bool:
-	return weather == "wind"
+	return weather == "wind" or Game.wind_amount() >= 0.5
 
 
 # Kitesurfing wings and wind banners are out on the sand in dry daylight.

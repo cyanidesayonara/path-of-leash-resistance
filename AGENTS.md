@@ -191,6 +191,18 @@ explain every changed snapshot line; this does not relax the refactor rule.
   floor is laid with these, never a copy of them; they stamp prebuilt
   triangles into the caller's cached batch, so tiles add no draw call.
   Test: `tests/test_panot.gd`.
+- **Skies and times** (`autoload/game.gd`, `systems/sky.gd`, `systems/gusts.gd`):
+  the player picks a sky (`Game.SKIES`: clear, breeze, fog, drizzle, rain
+  (DOWNPOUR), storm, wind (GALE), snow) and a time (`Game.TIMES`: dawn,
+  morning, day, dusk, evening, night). The rules never see them:
+  `Game.weather` is the sky's kind (clear, rain, wind or snow) and
+  `Game.hour` its hour (morning is day, evening is night), so every rule
+  reads four kinds and four hours. Only the look (`Sky.tint`, `Sky.grade_mod`,
+  the weather overlay) and the wind read the sky's strength
+  (`Game.rain_amount`, `wind_amount`, `fog_amount`). A sky of wind 0.5 or more
+  blows in gusts (`systems/gusts.gd`): telegraphed 0.8 s ahead, then a shove
+  downwind that a planted dog resists, a bowed leash and flying litter, off
+  the sea on a coastal walk. Test: `tests/test_gusts.gd`.
 - **Who is out** (`systems/outdoors.gd`): one rule per kind of passer-by or
   prop for the weather and the hour (sunbathers, picnics, the ice-cream cart,
   kids on scooters and beach parasols in fair weather by day only; crowd sizes
@@ -303,7 +315,7 @@ soon as it is written. Other shot flags: `--shot-title`, `--shot-results`,
 photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
-Each walk has its campaign sky (`Game.CAMPAIGN_SKY`: a weather and an hour, `dawn`, `day`, `dusk` or `night`); `--weather=W`, `--hour=H` and `--night` override it on every walk for the run. The hour's look is `systems/sky.gd`: a tint, a grade, and for dawn and dusk a low sun from one side of the screen and (dawn) a ground mist, both in `hud/grade.gdshader`; `Game.lamp_glow()` says how lit the lamps are. `--lang=ca|es|en` writes the walks' glosses in that language for the run
+Each walk has its campaign sky (`Game.CAMPAIGN_SKY`: a sky from `Game.SKIES` and a time from `Game.TIMES`); `--weather=W` (any sky, `storm` or `fog` included), `--hour=H` (any time) and `--night` override it on every walk for the run. The hour's look is `systems/sky.gd`: a tint, a grade, and for dawn and dusk a low sun from one side of the screen and (dawn) a ground mist, both in `hud/grade.gdshader`; `Game.lamp_glow()` says how lit the lamps are. `--lang=ca|es|en` writes the walks' glosses in that language for the run
 (the LANGUAGE setting, unsaved). `--look=him|her|N` draws your human as the
 default him or her, or the NEW LOOK that number seeds, for the run (unsaved). `--shot-goals` opens the goal list. `--shot-say` has your human and a passer-by speak at once. `--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
 magnifies the shot, and `--shot-cam=X,Y` points the camera at a spot rather

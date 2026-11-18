@@ -220,6 +220,7 @@ const BikeScript := preload("res://entities/bike.gd")
 const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
+const Gusts := preload("res://systems/gusts.gd")
 const SkyLook := preload("res://systems/sky.gd")
 const Outdoors := preload("res://systems/outdoors.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
@@ -6143,7 +6144,7 @@ func _build_hud() -> void:
 
 
 func _weather_tint() -> Color:
-	return SkyLook.tint(lvl, Game.weather, Game.hour)
+	return SkyLook.tint(lvl, Game.sky, Game.time)
 
 
 # the world's tint and the sky's grade, from the weather and the hour; again
@@ -6151,12 +6152,12 @@ func _weather_tint() -> Color:
 func apply_sky() -> void:
 	Shade.set_night(Game.night)
 	night_cm.color = _weather_tint()
-	sky_mod = SkyLook.grade_mod(lvl, Game.weather, Game.hour)
+	sky_mod = SkyLook.grade_mod(lvl, Game.sky, Game.time)
 	if grade_rect != null:
 		var g: Dictionary = mood.grade() if mood != null else {}
 		SkyLook.apply(grade_rect.material, SkyLook.compose(Mood.GRADE[Mood.M.HAPPY] if g.is_empty() else g, sky_mod))
 	if weather_fx != null:
-		weather_fx.mode = Game.weather
+		weather_fx.set_sky(Game.weather, Game.rain_amount(), Game.wind_amount())
 		weather_fx.night = Game.night
 
 
@@ -6556,6 +6557,11 @@ func _physics_process(delta: float) -> void:
 	if Game.weather == "wind":
 		dog.velocity += Vector2(46.0, 0) * delta
 		human.velocity += Vector2(70.0, 0) * delta
+	# a windy sky comes in telegraphed gusts that shove the pair downwind
+	Gusts.tick(self, delta)
+	if weather_fx != null:
+		weather_fx.push = Gusts.push(self)
+		weather_fx.wind_sign = 1.0 if wind_dir.x >= 0.0 else -1.0
 	if walk_mod != null and walk_mod.has_method("tick"):
 		walk_mod.tick(self, delta)
 	# the moving walkway (L'Estacio) and the escalators (Montjuic) move whoever
