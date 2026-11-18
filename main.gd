@@ -5402,6 +5402,9 @@ func _draw_dog_beach(c: Object) -> void:
 # the espigó: a breakwater of big rocks across the water at the gate line,
 # which is where the dog beach's bottom boundary runs (LevelBuild.build_walls)
 func _draw_espigo(c: Object) -> void:
+	if walk_mod != null and walk_mod.has_method("draw_espigo"):
+		walk_mod.draw_espigo(self, c)
+		return
 	var b := ShapeBatch.new()
 	var fy := GATE_Y - 30.0
 	var bx := FREEDOM_WALL_W - 10.0

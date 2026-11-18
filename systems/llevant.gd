@@ -12,11 +12,16 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
+const Stones := preload("res://world/stones.gd")
 
 const SAND_TO_X := 380.0
 const PERGOLA_RECT := Rect2(996.0, -1720.0, 184.0, 560.0)
 const GROIN_YS: Array[float] = [-2180.0, -3780.0]
 const DOG_SHOWER_RECT := Rect2(988.0, -3180.0, 148.0, 140.0)
+# the groins' and the espigó's granite, and the espigó's shadow in the water
+const ROCK_COLS: Array[Color] = [Color(0.58, 0.57, 0.54), Color(0.68, 0.67, 0.63),
+	Color(0.50, 0.49, 0.47), Color(0.62, 0.60, 0.56)]
+const ESPIGO_SHADOW := Color(0.10, 0.20, 0.26, 0.45)
 
 
 static func draw_edge_layer(_m: Node2D, _c: Object, _vt: float, _vb: float) -> void:
@@ -52,17 +57,7 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
 	for gy0: float in GROIN_YS:
 		if gy0 > vt - 80.0 and gy0 < vb + 80.0:
-			bg.rect(Rect2(-140.0, gy0 - 18.0, 420.0, 36.0), sh)
-			var rx := -130.0
-			var rk := 0
-			while rx < 270.0:
-				var rr := 14.0 + fmod(float(rk) * 5.3, 6.0)
-				var ry := gy0 + (-5.0 if rk % 2 == 0 else 5.0)
-				bg.circle(Vector2(rx, ry) + Shade.light * 3.0, rr, sh)
-				bg.circle(Vector2(rx, ry), rr, Color(0.58, 0.57, 0.54) if rk % 2 == 0 else Color(0.68, 0.67, 0.63))
-				bg.circle(Vector2(rx - 3.0, ry - 3.0), rr * 0.45, Color(0.78, 0.77, 0.73))
-				rx += 18.0
-				rk += 1
+			_rock_run(bg, Vector2(-130.0, gy0), Vector2(270.0, gy0), 11.0, sh, int(gy0))
 	bg.flush(wc)
 	# Seaward timber boardwalk (380..490), skate/bike lane (490..570), esplanade (570..980)
 	wc.draw_rect(Rect2(380.0, ftop, 110.0, bottom - ftop), Color(0.48, 0.30, 0.23))
@@ -176,6 +171,31 @@ static func takes_prints(m: Node2D, p: Vector2) -> bool:
 
 static func draw_bin(m: Node2D, c: Object, bn: Vector2) -> void:
 	Passeig._recycling_station(m, c, bn)
+
+
+# the espigó across the water at the gate line (main._draw_espigo's place):
+# tipped quarry stone like the groins, not a row of round pebbles
+static func draw_espigo(m: Node2D, c: Object) -> void:
+	var b := ShapeBatch.new()
+	var fy: float = m.GATE_Y - 30.0
+	_rock_run(b, Vector2(m.FREEDOM_WALL_W - 10.0, fy), Vector2(m.BEACH_GATE_SHORE_X + 10.0, fy), 15.0,
+		ESPIGO_SHADOW, 7)
+	b.flush(c)
+
+
+# a run of tipped rock from a to z: two staggered courses of angular stones
+# of every size, about r across, each with its shadow and a lit facet
+static func _rock_run(b: ShapeBatch, a: Vector2, z: Vector2, r: float, shadow: Color, salt: int) -> void:
+	var along := (z - a).normalized()
+	var across := along.orthogonal()
+	var n := int(a.distance_to(z) / (r * 1.25))
+	for k in range(n + 1):
+		for course in range(2):
+			var h := fmod(absf(sin(float(k * 2 + course) * 12.9898 + float(salt) * 0.123) * 43758.5453), 1.0)
+			var at := a.lerp(z, float(k) / float(maxi(1, n))) + along * (r * 0.6 * float(course)) \
+				+ across * (r * (0.5 if course == 0 else -0.45) + (h - 0.5) * r * 0.5)
+			var col: Color = ROCK_COLS[int(h * 97.0) % ROCK_COLS.size()]
+			Stones.lit_stone(b, at, r * (0.7 + h * 0.6), col, shadow, h)
 
 
 static func rider_lane(_m: Node2D, _up: bool) -> Dictionary:

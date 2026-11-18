@@ -594,6 +594,8 @@
 
 # Platja de Llevant beach surfer test
 --headless --path . --script res://tests/test_llevant_surfer.gd
+# Platja de Llevant's groins and espigó: runs of tipped rock
+--headless --path . --script res://tests/test_llevant.gd
 
 # Passeig Maritim kite flyer live event test
 --headless --fixed-fps 60 --path . --script res://tests/test_passeig_kite.gd
