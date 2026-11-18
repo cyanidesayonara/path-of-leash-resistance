@@ -143,10 +143,7 @@ static func draw_street(m: Node2D, vt: float, vb: float) -> void:
 		b.rect(Rect2(e2.y - 26.0, by + 10.0, 26.0, 78.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28))
 		b.rect(Rect2(e2.x, by + 84.0, e2.y - e2.x, 8.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.12))
 		# warm amber pool of light from the bridge lantern overhead
-		b.circle(Vector2(cx, by + 46.0), 56.0, Color(1.0, 0.82, 0.40, 0.08))
-		b.circle(Vector2(cx, by + 46.0), 38.0, Color(1.0, 0.86, 0.48, 0.12))
-		b.circle(Vector2(cx, by + 46.0), 22.0, Color(1.0, 0.90, 0.58, 0.16))
-		b.circle(Vector2(cx, by + 46.0), 10.0, Color(1.0, 0.95, 0.70, 0.22))
+		b.glow(Vector2(cx, by + 46.0), 60.0, Color(1.0, 0.88, 0.52, 0.55), 0.15)
 	b.flush(m._wc)
 
 
@@ -162,6 +159,11 @@ static func _draw_pots(m: Node2D, b: ShapeBatch, vt: float, vb: float, fp: Vecto
 		Vector2(m.walk_edges(-2250.0).y - 18.0, -2250.0),
 		Vector2(m.walk_edges(-3400.0).x + 18.0, -3400.0),
 		Vector2(m.walk_edges(-4200.0).y - 18.0, -4200.0),
+		# the last stretch before the plaça: a pair by each of its doors
+		Vector2(m.walk_edges(-4660.0).y - 18.0, -4660.0),
+		Vector2(m.walk_edges(-4710.0).y - 18.0, -4710.0),
+		Vector2(m.walk_edges(-4875.0).x + 18.0, -4875.0),
+		Vector2(m.walk_edges(-4925.0).x + 18.0, -4925.0),
 	]
 	for pp in pots:
 		if pp.y < vt - 30.0 or pp.y > vb + 30.0:

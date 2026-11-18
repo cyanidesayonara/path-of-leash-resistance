@@ -66,6 +66,12 @@ func _run() -> void:
 	_check(has_scooter, "a parked scooter is a toppleable object")
 	_check(not m.poles.has(sc), "a parked scooter is not a permanent rope anchor")
 	_check(m.wallcat_spots.size() == 6 and m.laundry_lines.size() >= 4, "cats on the ledges, laundry overhead")
+	# the plaça past the gate is paving wall to wall; its tree pits are earth
+	var S: Dictionary = load("res://world/surfaces.gd").S
+	for px: float in [180.0, 400.0, 640.0, 900.0, 1100.0]:
+		_check(m.surface_at(Vector2(px, m.GATE_Y - 330.0)) == S.PAVEMENT, "the plaça is paved at x=%.0f" % px)
+	for t: Vector2 in LevelBuild.placa_trees(m):
+		_check(m.surface_at(t + Vector2(10.0, 0.0)) == S.GRASS, "a plane tree's pit is earth at %s" % t)
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
