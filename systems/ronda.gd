@@ -619,9 +619,9 @@ static func _tick_wind_props(m: Node2D, delta: float, dp: Vector2, hp: Vector2) 
 static func idle_status(m: Node2D) -> String:
 	var st := String(m.ronda_gust.get("state", "idle"))
 	if st == "telegraph":
-		return "GUST COMING! PLANT ON THE LANDWARD SIDE"
+		return I18n.t("ronda_gust_coming")
 	if st == "blowing":
-		return "TRAMUNTANA! HOLD FAST LANDWARD"
+		return I18n.t("ronda_tramuntana")
 	return ""
 
 

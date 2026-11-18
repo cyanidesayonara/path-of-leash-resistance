@@ -237,7 +237,7 @@ func _chapter_strip(vs: Vector2, r: Rect2, info: Dictionary, shake: float) -> vo
 	var n := walks.size()
 	var f := Kit.display()
 	var head_y := r.position.y + 26.0
-	var title := "CHAPTER %d" % (ci + 1)
+	var title := I18n.t("menu_chapter") % (ci + 1)
 	var tw := Kit.text_w(f, title, 15)
 	var x := r.position.x + 28.0
 	draw_string(f, Vector2(x, head_y), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.SAFFRON)
@@ -537,8 +537,8 @@ func _progress(vs: Vector2) -> void:
 	Kit.purse(self, Vector2(r.end.x - 36.0, r.position.y + 42.0), Game.total_stars(), Game.total_bones)
 	var f := Kit.display()
 	# the page: this chapter's number and a tab for each, as on the walk select
-	var cx := r.position.x + 36.0 + Kit.text_w(f, "YOUR WALKS", 26) + 28.0
-	var ctitle := "CHAPTER %d" % (int(main.progress_chapter) + 1)
+	var cx := r.position.x + 36.0 + Kit.text_w(f, I18n.t("progress_title"), 26) + 28.0
+	var ctitle := I18n.t("menu_chapter") % (int(main.progress_chapter) + 1)
 	draw_string(f, Vector2(cx, r.position.y + 42.0), ctitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.SAFFRON)
 	cx += Kit.text_w(f, ctitle, 15) + 12.0
 	for k in range(Game.chapters().size()):

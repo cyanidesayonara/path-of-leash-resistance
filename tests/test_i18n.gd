@@ -256,7 +256,19 @@ func _sources() -> void:
 	# and a lone lower-case word handed to a draw or a label
 	var sink := RegEx.create_from_string("(draw_string|heading|_label|\\.text =|toast|set_text)\\(?")
 	var lone := RegEx.create_from_string("^[a-z]{3,}$")
-	for spec: String in SCANNED:
+	var placeholder := RegEx.create_from_string("%(\\.\\d+)?[dsf]")
+	var specs: Array = SCANNED.duplicate()
+	# every walk's own banner, wherever it is written
+	for dir: String in ["res://systems", "res://world"]:
+		for f in DirAccess.get_files_at(dir):
+			if not f.ends_with(".gd"):
+				continue
+			var src := FileAccess.get_file_as_string(dir.path_join(f))
+			for fn: String in ["idle_status", "urgent_status"]:
+				var spec := "%s::%s" % [dir.path_join(f), fn]
+				if src.contains("func %s(" % fn) and not specs.has(spec):
+					specs.append(spec)
+	for spec: String in specs:
 		var lines := _scan_lines(spec)
 		for i in range(lines.size()):
 			var line := String(lines[i]).strip_edges()
@@ -273,7 +285,7 @@ func _sources() -> void:
 						or line.contains("accent(\"%s\")" % s) or line.contains("\"%s\":" % s) \
 						or line.contains("[\"%s\"," % s) or s.contains("screen.orientation"):
 					continue
-				var words := sentence.search(s) != null or caps.search(s) != null \
+				var words := sentence.search(s) != null or caps.search(placeholder.sub(s, "", true)) != null \
 					or (sink.search(line) != null and lone.search(s) != null and s != "goal" and s != "mood")
 				_check(not words, "%s: '%s' is English straight to the screen; use I18n" % [spec, s])
 	_banner_sinks()

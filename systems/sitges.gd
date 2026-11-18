@@ -542,9 +542,9 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 static func idle_status(m: Node2D) -> String:
 	var w: Dictionary = m.sitges_wave
 	if str(w.get("state", "wait")) == "spray" and absf(m.dog.global_position.y - -2400.0) < 360.0:
-		return "WAVE INCOMING! GET INLAND!"
+		return I18n.t("sitges_wave")
 	if m.dog.global_position.y < PUNTA_Y0 and m.dog.global_position.y > PUNTA_Y1 and not m.sitges_church_barked:
-		return "SANT BARTOMEU: BARK FOR THE BELL!"
+		return I18n.t("sitges_bell")
 	return ""
 
 
