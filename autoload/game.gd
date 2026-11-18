@@ -195,11 +195,37 @@ const V2_CHASE_GATE := {"oldtown": "neteja", "montjuic": "neteja", "market": "ne
 const OLD_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 40, "boars": 41, "gracia": 42, "raval": 44}
 const OLD_CHASE_GATE := {"site": "besos", "spook": "besos", "scrap": "besos", "guell": "besos", "boars": "besos", "montjuic": "neteja", "partit": "neteja", "port": "neteja", "reial": "neteja", "vet": "neteja", "tibidabo": "vet", "aigues": "vet", "horta": "vet", "llevant": "vet", "gracia": "vet"}
 
+# The four kinds of weather the rules read (Game.weather): who is out, slick
+# paving, ice, puddles. Each sky the player can pick (SKIES) is one of these
+# kinds at its own strength of rain, wind and fog (SKY), which only the look
+# and the wind's push read.
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
-const WEATHER_NAMES := {"clear": "CLEAR", "rain": "RAIN", "wind": "WIND", "snow": "SNOW"}
-# the hour a walk is walked at, in the order TIME cycles them
+# the skies, in the order WEATHER cycles them
+const SKIES: Array[String] = ["clear", "breeze", "fog", "drizzle", "rain", "storm", "wind", "snow"]
+const SKY := {
+	"clear": {"kind": "clear", "rain": 0.0, "wind": 0.0, "fog": 0.0},
+	# sun and a fresh breeze off the sea: kites up, gusts now and then
+	"breeze": {"kind": "clear", "rain": 0.0, "wind": 0.55, "fog": 0.0},
+	"fog": {"kind": "clear", "rain": 0.0, "wind": 0.0, "fog": 1.0},
+	"drizzle": {"kind": "rain", "rain": 0.4, "wind": 0.1, "fog": 0.3},
+	"rain": {"kind": "rain", "rain": 1.0, "wind": 0.2, "fog": 0.0},
+	# a downpour driven sideways by a gale
+	"storm": {"kind": "rain", "rain": 1.0, "wind": 1.0, "fog": 0.15},
+	# a dry gale: the tramuntana
+	"wind": {"kind": "wind", "rain": 0.0, "wind": 1.0, "fog": 0.0},
+	"snow": {"kind": "snow", "rain": 0.0, "wind": 0.25, "fog": 0.15},
+}
+const WEATHER_NAMES := {"clear": "CLEAR", "breeze": "BREEZE", "fog": "FOG", "drizzle": "DRIZZLE", "rain": "DOWNPOUR",
+	"storm": "STORM", "wind": "GALE", "snow": "SNOW"}
+# The hours the rules read (Game.hour), and the times a walk is walked at
+# (TIMES), in the order TIME cycles them: morning is day to the rules, with
+# a low sun of its own; evening, the blue hour, is night to them, lamps lit
+# and everyone in, under a sky not yet dark.
 const HOURS: Array[String] = ["dawn", "day", "dusk", "night"]
-const HOUR_NAMES := {"dawn": "DAWN", "day": "DAY", "dusk": "DUSK", "night": "NIGHT"}
+const TIMES: Array[String] = ["dawn", "morning", "day", "dusk", "evening", "night"]
+const TIME_HOUR := {"dawn": "dawn", "morning": "day", "day": "day", "dusk": "dusk", "evening": "night", "night": "night"}
+const HOUR_NAMES := {"dawn": "DAWN", "morning": "MORNING", "day": "DAY", "dusk": "DUSK", "evening": "EVENING",
+	"night": "NIGHT"}
 
 # Some walks bring their own sky: El Diluvi is always a downpour, La
 # Castanyada always after dark, and the first walk a clear day. It holds for
@@ -213,16 +239,17 @@ const WALK_HOUR := {"spook": "night", "tutorial": "day"}
 # time and weather to the player, and records nothing (is_free_walk,
 # recording). The films agree: Festa de Gràcia and El Gat's are at night;
 # La Neteja is the street cleaning at first light, Els Búnquers the sunset
-# over the city. WALK_WEATHER and WALK_HOUR still win.
+# over the city. El Besòs floods in a storm, the fog sits on Tibidabo of a
+# morning, and the maze at Horta drips. WALK_WEATHER and WALK_HOUR still win.
 const CAMPAIGN_SKY := {
 	"barri": ["clear", "day"], "street": ["clear", "day"], "park": ["clear", "day"],
 	"beach": ["wind", "dawn"], "neteja": ["clear", "dawn"], "oldtown": ["clear", "day"],
 	"montjuic": ["clear", "day"], "market": ["clear", "day"], "rain": ["rain", "day"],
-	"besos": ["rain", "day"], "llevant": ["wind", "day"], "tibidabo": ["clear", "day"],
+	"besos": ["storm", "day"], "llevant": ["wind", "day"], "tibidabo": ["fog", "morning"],
 	"vet": ["clear", "day"], "trail": ["clear", "day"], "angels": ["clear", "day"], "spook": ["clear", "night"],
-	"boars": ["clear", "day"], "guell": ["clear", "day"], "superilla": ["clear", "day"], "metro": ["rain", "day"],
+	"boars": ["clear", "day"], "guell": ["clear", "day"], "superilla": ["clear", "morning"], "metro": ["rain", "day"],
 	"station": ["clear", "day"], "carmel": ["clear", "dusk"], "reial": ["clear", "night"],
-	"forum": ["wind", "day"], "aigues": ["clear", "day"], "horta": ["clear", "day"],
+	"forum": ["wind", "day"], "aigues": ["clear", "day"], "horta": ["drizzle", "day"],
 	"port": ["clear", "day"], "espanya": ["clear", "night"], "poble": ["clear", "day"], "ciutadella": ["clear", "day"], "cremada": ["clear", "night"], "aeroport": ["clear", "day"], "montserrat": ["clear", "day"], "site": ["clear", "day"],
 	"partit": ["clear", "night"], "scrap": ["clear", "day"], "gracia": ["clear", "night"],
 	"raval": ["clear", "night"], "eixample": ["clear", "day"], "diagonal": ["clear", "day"], "blai": ["clear", "night"],
@@ -389,14 +416,27 @@ var owner_id: String:
 	set(v):
 		if v != owner_id:
 			toggle_owner()
-var hour := "day"
+# the time the walk is walked at (TIMES); `hour` is what it is to the rules
+var time := "day"
+var hour: String:
+	get:
+		return String(TIME_HOUR.get(time, "day"))
+	set(v):
+		time = v if TIME_HOUR.has(v) else "day"
 # after dark: the lamps lit, the parasols furled, the phone a light
 var night: bool:
 	get:
 		return hour == "night"
 	set(v):
-		hour = "night" if v else "day"
-var weather := "clear"
+		time = "night" if v else "day"
+# the sky the walk is walked under (SKIES); `weather` is its kind to the rules.
+# Setting weather sets the sky, so "rain" is the downpour it always was.
+var sky := "clear"
+var weather: String:
+	get:
+		return String(SKY.get(sky, SKY.clear).kind)
+	set(v):
+		sky = v if SKY.has(v) else "clear"
 # [weather, hour] as the player picked them, while a walk with its own sky
 # has replaced them; empty otherwise
 var _held_sky: Array = []
@@ -585,7 +625,7 @@ func apply_walk_sky(lv: String) -> void:
 	var own_hour := walk_sets_hour(lv)
 	if own_weather or own_hour:
 		if _held_sky.is_empty():
-			_held_sky = [weather, hour]
+			_held_sky = [sky, time]
 		weather = _walk_weather(lv) if own_weather else String(_held_sky[0])
 		hour = _walk_hour(lv) if own_hour else String(_held_sky[1])
 	elif not _held_sky.is_empty():
@@ -636,19 +676,23 @@ func recording(lv: String) -> bool:
 
 
 func cycle_hour(dir := 1) -> void:
-	hour = HOURS[wrapi(HOURS.find(hour) + dir, 0, HOURS.size())]
+	time = TIMES[wrapi(TIMES.find(time) + dir, 0, TIMES.size())]
 	if not _held_sky.is_empty():
-		_held_sky[1] = hour
+		_held_sky[1] = time
 
 
 # How lit the street lamps are: full after dark, still on at first light and
 # coming on at dusk, off by day.
 func lamp_glow() -> float:
-	match hour:
-		"night": return 1.0
-		"dusk": return 0.55
-		"dawn": return 0.45
-	return 0.0
+	var g := 0.0
+	match time:
+		"night": g = 1.0
+		"evening": g = 0.75
+		"dusk": g = 0.55
+		"dawn": g = 0.45
+	# a dark sky by day brings the lamps on early
+	var gloom := maxf(fog_amount() * 0.5, rain_amount() * wind_amount() * 0.45)
+	return maxf(g, gloom)
 
 
 func collar_color() -> Color:
@@ -882,10 +926,22 @@ static func valid_human(v: Variant) -> Dictionary:
 
 
 func cycle_weather(dir: int) -> void:
-	var i := WEATHERS.find(weather)
-	weather = WEATHERS[wrapi(i + dir, 0, WEATHERS.size())]
+	sky = SKIES[wrapi(SKIES.find(sky) + dir, 0, SKIES.size())]
 	if not _held_sky.is_empty():
-		_held_sky[0] = weather
+		_held_sky[0] = sky
+
+
+# how hard it rains, how hard the wind blows, how thick the fog, 0 to 1
+func rain_amount() -> float:
+	return float(SKY.get(sky, SKY.clear).rain)
+
+
+func wind_amount() -> float:
+	return float(SKY.get(sky, SKY.clear).wind)
+
+
+func fog_amount() -> float:
+	return float(SKY.get(sky, SKY.clear).fog)
 
 
 func apply_settings() -> void:
@@ -1104,13 +1160,13 @@ func _ready() -> void:
 				level_id = lv
 		elif arg.begins_with("--weather="):
 			var w := arg.trim_prefix("--weather=")
-			if w in WEATHERS:
-				weather = w
+			if w in SKIES:
+				sky = w
 				sky_from_args = true
 		elif arg.begins_with("--hour="):
 			var h := arg.trim_prefix("--hour=")
-			if h in HOURS:
-				hour = h
+			if h in TIMES:
+				time = h
 				sky_from_args = true
 		elif arg == "--night":
 			# after dark, as the title's TIME toggle would set it - for

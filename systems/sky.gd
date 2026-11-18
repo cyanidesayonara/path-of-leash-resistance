@@ -79,41 +79,125 @@ const GRADE_DUSK := {
 }
 
 
-# the hour as a string; true and false still mean night and day
+# The skies (Game.SKIES) beyond the four kinds: a grade of their own, laid
+# over the kind's at the sky's strength.
+const FOG := Color(0.93, 0.94, 0.96)
+const STORM := Color(0.86, 0.88, 0.94)
+# The blue hour: the sun gone, the sky still lit, deeper and bluer than dusk
+# and brighter than night, the lamps already on. Morning: a low, clean sun
+# from the east side of the screen, warm but not gold, the mist burned off.
+const EVENING := Color(0.72, 0.72, 0.92)
+const MORNING := Color(1.0, 0.98, 0.94)
+# fog: colour and contrast drain, the whole street lifts toward a pale grey,
+# and the banks of mist lie over everything
+const GRADE_FOG := {
+	"k_sat": 0.80, "k_con": 0.84, "k_exp": 1.03, "add_vig": 0.06, "add_lift": 0.07,
+	"k_tint": Vector3(0.99, 1.0, 1.02), "k_cool": Vector3(0.98, 1.0, 1.04), "k_warm": Vector3.ONE, "wet": 0.3,
+	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 1.7,
+}
+# a storm on top of the rain: darker, heavier at the edges
+const GRADE_STORM := {
+	"k_sat": 0.92, "k_con": 1.04, "k_exp": 0.90, "add_vig": 0.10, "add_lift": 0.0,
+	"k_tint": Vector3(0.98, 0.99, 1.03), "k_cool": Vector3(0.96, 0.99, 1.06), "k_warm": Vector3.ONE, "wet": 1.0,
+	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 0.0,
+}
+const GRADE_MORNING := {
+	"k_sat": 1.0, "k_con": 1.02, "k_exp": 1.01, "add_vig": 0.04, "add_lift": 0.0,
+	"k_tint": Vector3.ONE, "k_cool": Vector3(0.97, 0.99, 1.05), "k_warm": Vector3(1.05, 1.02, 0.95), "wet": 0.0,
+	"sun": Vector3(0.20, 0.15, 0.06), "shade": Vector3(0.05, 0.05, 0.02), "sun_dir": Vector2(-1.0, 0.35), "mist": 0.0,
+}
+const GRADE_EVENING := {
+	"k_sat": 0.92, "k_con": 1.04, "k_exp": 1.02, "add_vig": 0.10, "add_lift": 0.02,
+	"k_tint": Vector3.ONE, "k_cool": Vector3(0.94, 0.98, 1.10), "k_warm": Vector3(1.10, 1.0, 0.88), "wet": 0.0,
+	"sun": Vector3(0.16, 0.04, 0.12), "shade": Vector3(0.05, 0.06, 0.0), "sun_dir": Vector2(1.0, -0.2), "mist": 0.0,
+}
+const GameScript := preload("res://autoload/game.gd")
+
+
+# the time as a string; true and false still mean night and day
 static func _hour(hour: Variant) -> String:
 	if hour is bool:
 		return "night" if hour else "day"
 	return String(hour)
 
 
+# a sky's entry (Game.SKY); a kind's name is its own sky
+static func _sky(weather: String) -> Dictionary:
+	return GameScript.SKY.get(weather, GameScript.SKY.clear)
+
+
+# a grade at a fraction of its strength: every change eased back toward none
+static func _scaled(g: Dictionary, k: float) -> Dictionary:
+	var o := {}
+	for key: String in g:
+		var v: Variant = g[key]
+		var none: Variant = NONE[key]
+		if v is float:
+			o[key] = lerpf(float(none), float(v), k)
+		elif v is Vector3 or v is Vector2:
+			o[key] = none.lerp(v, k)
+		else:
+			o[key] = v
+	return o
+
+
+# how strongly the sky shows its kind's look: a drizzle is a light rain, a
+# breeze a soft wind
+static func _kind_k(sky: Dictionary) -> float:
+	match String(sky.kind):
+		"rain": return clampf(0.35 + 0.65 * float(sky.rain), 0.0, 1.0)
+		"wind": return float(sky.wind)
+	return 1.0
+
+
 static func tint(lvl: String, weather: String, hour: Variant) -> Color:
 	var c := Color.WHITE
 	match _hour(hour):
 		"night": c = STATION_NIGHT if lvl == "station" else NIGHT
+		"evening": c = STATION_NIGHT if lvl == "station" else EVENING
 		"dawn": c = DAWN
+		"morning": c = MORNING
 		"dusk": c = DUSK
-	match weather:
-		"rain": c = c * RAIN
-		"wind": c = c * WIND
+	var sk := _sky(weather)
+	var k := _kind_k(sk)
+	match String(sk.kind):
+		"rain": c = c * Color.WHITE.lerp(RAIN, k)
+		"wind": c = c * Color.WHITE.lerp(WIND, k)
 		"snow": c = c * SNOW
+	if weather == "storm":
+		c = c * STORM
+	if float(sk.fog) > 0.0:
+		c = c * Color.WHITE.lerp(FOG, float(sk.fog))
 	return c
 
 
-# the weather's and the hour's changes to the grade, combined. Under rain or
-# snow the low sun is behind the cloud: most of its side light goes.
+# the weather's and the hour's changes to the grade, combined. Under rain,
+# snow, fog or a storm the low sun is behind the cloud: most of its side light
+# goes.
 static func grade_mod(lvl: String, weather: String, hour: Variant) -> Dictionary:
 	var out: Dictionary = NONE.duplicate()
-	match weather:
-		"rain": out = _stack(out, GRADE_RAIN)
-		"wind": out = _stack(out, GRADE_WIND)
+	var sk := _sky(weather)
+	var k := _kind_k(sk)
+	match String(sk.kind):
+		"rain": out = _stack(out, _scaled(GRADE_RAIN, k))
+		"wind": out = _stack(out, _scaled(GRADE_WIND, k))
 		"snow": out = _stack(out, GRADE_SNOW)
+	if weather == "storm":
+		out = _stack(out, GRADE_STORM)
+	var fog := float(sk.fog)
+	if fog > 0.0:
+		out = _stack(out, _scaled(GRADE_FOG, fog))
 	match _hour(hour):
 		"night": out = _stack(out, GRADE_STATION_NIGHT if lvl == "station" else GRADE_NIGHT)
+		"evening": out = _stack(out, GRADE_STATION_NIGHT if lvl == "station" else GRADE_EVENING)
 		"dawn": out = _stack(out, GRADE_DAWN)
+		"morning": out = _stack(out, GRADE_MORNING)
 		"dusk": out = _stack(out, GRADE_DUSK)
-	if weather == "rain" or weather == "snow":
-		out["sun"] = (out["sun"] as Vector3) * 0.3
-		out["shade"] = (out["shade"] as Vector3) * 0.3
+	var cloud := 1.0 if String(sk.kind) == "rain" or String(sk.kind) == "snow" else fog
+	if cloud > 0.0:
+		var keep := lerpf(1.0, 0.3, cloud)
+		out["sun"] = (out["sun"] as Vector3) * keep
+		out["shade"] = (out["shade"] as Vector3) * keep
 	return out
 
 

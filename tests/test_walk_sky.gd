@@ -97,13 +97,24 @@ func _run() -> void:
 	_check(not bool(_row(m, "mode").fixed) and String(_row(m, "mode").value) == "FREE WALK", "the row says FREE WALK")
 	_check(not game.recording("barri"), "a free walk records nothing")
 	_check(not game.mark_goal("barri", "mark"), "a free walk marks no goal")
-	# TIME cycles the four hours, dawn to night and round again
+	# TIME cycles the six times, dawn to night and round again; morning is day
+	# to the rules and evening is night
 	var seen: Array[String] = []
-	for i in game.HOURS.size():
+	var as_hours: Array[String] = []
+	for i in game.TIMES.size():
 		game.cycle_hour(1)
-		seen.append(game.hour)
-	_check(seen == ["dusk", "night", "dawn", "day"], "TIME cycles every hour (%s)" % [seen])
-	game.cycle_hour(2)
+		seen.append(game.time)
+		as_hours.append(game.hour)
+	_check(seen == ["dusk", "evening", "night", "dawn", "morning", "day"], "TIME cycles every time (%s)" % [seen])
+	_check(as_hours == ["dusk", "night", "night", "dawn", "day", "day"], "each a rules hour (%s)" % [as_hours])
+	# WEATHER cycles every sky, and each sky is one of the four kinds
+	var skies: Array[String] = []
+	for i in game.SKIES.size():
+		game.cycle_weather(1)
+		skies.append(game.sky)
+		_check(game.weather in game.WEATHERS, "%s is a kind the rules know (%s)" % [game.sky, game.weather])
+	_check(skies.size() == game.SKIES.size() and skies[skies.size() - 1] == "snow", "WEATHER comes round to snow again (%s)" % [skies])
+	game.cycle_hour(3)
 	m = await _load("market")
 	_check(_sky() == "clear/day", "the next unfinished walk is the campaign's again (%s)" % _sky())
 	m = await _load("barri")
@@ -137,7 +148,7 @@ func _run() -> void:
 	# the walk card says how the campaign walks it
 	_check(Flow.sky_line("espanya") == "night, clear", "the card: Plaça d'Espanya at night (%s)" % Flow.sky_line("espanya"))
 	_check(Flow.sky_line("neteja") == "dawn, clear", "the card: La Neteja at dawn (%s)" % Flow.sky_line("neteja"))
-	_check(Flow.sky_line("rain") == "day, rain", "the card: El Diluvi in the rain (%s)" % Flow.sky_line("rain"))
+	_check(Flow.sky_line("rain") == "day, downpour", "the card: El Diluvi in a downpour (%s)" % Flow.sky_line("rain"))
 
 	_check(not "daily" in game.CAROUSEL, "the walk select has no Daily Walk")
 	_check(not game.LEVEL_NAMES.has("daily"), "and no name for one")

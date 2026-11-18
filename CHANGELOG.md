@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Weather presets, two more times of day, and wind with real power
+
+- WEATHER on GET READY (a free walk) picks from eight skies: clear, breeze, fog, drizzle, downpour, storm, gale and snow (`Game.SKIES`). Each is one of the four kinds the rules have always read (`Game.weather`: clear, rain, wind, snow) at its own strength of rain, wind and fog (`Game.SKY`). Who is out, slick paving, ice and puddles are unchanged; a fog keeps the sunbathers in, and a breeze furls the beach parasols and sends the napkins flying.
+- The look follows the strength (`Sky.tint`, `Sky.grade_mod`, the weather overlay): a drizzle is fewer, finer drops; a storm is darker, its rain driven sideways by the wind; a fog drains the colour and lays an even veil over the street, thinnest where the play is (`grade.gdshader`'s mist above 1). Lamps come on early under a fog or a storm.
+- TIME picks from six times (`Game.TIMES`): dawn, MORNING (day to the rules, with a clean low sun and no mist), day, dusk, EVENING (the blue hour: night to the rules, lamps lit and everyone in, under a sky not yet dark) and night.
+- Wind with real power (`systems/gusts.gd`): under a breeze, a storm or a gale the wind comes in gusts, telegraphed 0.8 s ahead by a whoosh and the leaves rushing, then a shove downwind on the dog and, less, your human. A planted dog holds her ground; the leash bows and litter takes off. By the sea the wind blows off the water. Montjuïc keeps its own hill wind.
+- New campaign skies: El Besòs floods in a storm, Tibidabo is a foggy morning, Horta's maze drips in a drizzle, and La Superilla is walked in the morning.
+- `tests/test_gusts.gd`: no gusts on a calm day or the moment a walk starts, the telegraph pushes nobody, the gust carries dog and human downwind and bows the leash, a planted dog barely moves, a breeze is softer than a gale, and the beach's wind blows off the sea. `test_walk_sky` cycles every time and sky.
+
 ## 2026-11-18 - The trencadís strip is the card's top, and two fixes
 
 - The menus' trencadís strip (`UiKit.mosaic`) runs edge to edge now and rounds into the card's corners, so it is the card's top edge instead of a sticker on it. Cards that carry it (`UiKit.mosaic_card`: the main menu, the pause grid, the results) drop the accent line whose ends showed past the strip. Each shard is glazed a shade off its colour with a lit top edge, the white shards are toned down to a warm stone, and a dark seat runs under the strip.

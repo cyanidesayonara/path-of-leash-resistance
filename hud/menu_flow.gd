@@ -316,9 +316,9 @@ static func details_rows(m: Node2D) -> Array:
 			"trait": d_trait.to_upper(), "unlocked": d_unlocked},
 		{"id": "walker", "name": I18n.t("details_walker"),
 			"value": I18n.t("details_him" if Game.owner_id == "him" else "details_her"), "fixed": false},
-		{"id": "time", "name": I18n.t("details_time"), "value": I18n.t("hour_" + Game.hour),
+		{"id": "time", "name": I18n.t("details_time"), "value": I18n.t("hour_" + Game.time),
 			"fixed": Game.walk_sets_hour(Game.level_id)},
-		{"id": "weather", "name": I18n.t("details_weather"), "value": I18n.t("weather_" + Game.weather),
+		{"id": "weather", "name": I18n.t("details_weather"), "value": I18n.t("weather_" + Game.sky),
 			"fixed": Game.walk_sets_weather(Game.level_id)},
 		# the campaign walks a walk in its own sky; a finished one can be
 		# walked free, at any time and in any weather, for no stars
