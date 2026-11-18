@@ -11,8 +11,6 @@ extends RefCounted
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
-const PLACA_EARTH_R := 28.0                      # a tree pit or planter's soft ground
-
 # along the hall's walls, in the stretches between the wall stalls:
 # [y, west wall?, kind]
 const WALL_DRESSING: Array = [
@@ -77,15 +75,7 @@ static func solids(m: Node2D) -> Array[Rect2]:
 # park's dog run would be: only the earth of its tree pits, planters and
 # shrubs is soft. The hall itself falls through to main.
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.y >= m.GATE_Y - 40.0:
-		return -1
-	for pp: Dictionary in m.park_props:
-		if String(pp.kind) in ["dig", "planter", "shrub"] and p.distance_to(pp.pos) < PLACA_EARTH_R:
-			return Surfaces.S.GRASS
-	for t: Vector2 in LevelBuild.placa_trees(m):
-		if p.distance_to(t) < PLACA_EARTH_R:
-			return Surfaces.S.GRASS
-	return Surfaces.S.PAVEMENT
+	return Surfaces.paved_past_gate(m, p, LevelBuild.placa_trees(m))
 
 
 # --- drawing -----------------------------------------------------------------
