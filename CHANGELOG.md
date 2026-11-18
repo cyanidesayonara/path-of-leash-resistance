@@ -8,7 +8,7 @@ Append-only session history, newest first.
 - The delivery van that waits at the retractable bollards was a cream box with a windscreen: it has a bonnet, mirrors, roof ribs, a stripe down each flank, the back doors' seam and lamps at both ends now (`PilonesRetractils._draw_delivery_van`).
 - The Pont del Bisbe's lantern lit the alley with four stacked flat discs that read as rings; it is one soft gradient now (`ShapeBatch.glow`).
 - The last stretch before the plaça was bare flagstones: a pair of geranium pots by each of its doors, like the rest of the alley.
-- `tests/test_gotic.gd` covers the plaça's surface; `test_walk_hooks` lists the new hook.
+- `tests/test_gotic.gd` covers the plaça's surface; `test_walk_hooks` lists the new hook, and `test_cross_section` lists El Gòtic among the walks whose off-leash area is paved.
 
 ## 2026-11-18 - Polish El Mercat
 
