@@ -2,6 +2,11 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - One helper for the ground past the gate
+
+- Four walk polishes each wrote their own copy of one surface hook: the off-leash area paved wall to wall, soft only round its trees, planters, shrubs and dig spots. It is one helper now, `Surfaces.paved_past_gate(m, p, trees, earth_r)`, beside `Surfaces.lawn_past_gate(m, p)` for a lawn wall to wall. Both answer -1 short of the line 40 past the gate, so a walk's `surface` hook returns them as they stand. El Parc's hook calls the lawn one; nothing plays or draws differently.
+- `tests/test_surface_helpers.gd` covers both.
+
 ## 2026-11-18 - The bosses look like their films in the walk
 
 - Els Senglars' stampede (`entities/boar_threat.gd`): the boars were round dark blobs with a row of grey dots. Each is now the film's sow from above: a heavy wedge, all shoulders, with the hackles raised in a ragged crest down the spine (grizzled tips that lift with her stride), grizzled hair swept back along the flanks, ears flat back, curved pointed tusks hooking out of the jaw, and red eyes glowing under a heavy scowl. Piglets keep their stripes on the same body.

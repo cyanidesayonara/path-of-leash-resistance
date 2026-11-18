@@ -503,9 +503,7 @@ static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
 # past the gate the dog park is lawn all the way across: the path's fill
 # stops 40 past the gate, so its handling must stop there too
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.y < m.GATE_Y - 40.0:
-		return Surfaces.S.GRASS
-	return -1
+	return Surfaces.lawn_past_gate(m, p)
 
 
 # after dark the light comes from the park's own green lamps, not from the

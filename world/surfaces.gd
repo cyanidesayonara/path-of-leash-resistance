@@ -100,3 +100,35 @@ static func scent_mult(s: int) -> float:
 
 static func surface_name(s: int) -> String:
 	return String(feel(s)["name"])
+
+
+# --- the ground past the gate, for a walk's surface hook ----------------------
+# The walk's path fill stops 40 past the gate, so its handling stops there too:
+# short of that line these answer -1 and main decides, so a walk's hook can
+# return them as they stand.
+
+# soft ground on a paved off-leash area: the earth round a tree, a planter, a
+# shrub or a dig spot
+const PAVED_EARTH_R := 28.0
+const SOFT_PROPS: Array[String] = ["dig", "planter", "shrub"]
+
+
+# an off-leash area paved wall to wall (a plaça, an esplanade, a courtyard):
+# pavement, bar the earth round `trees` and the soft props
+static func paved_past_gate(m: Node2D, p: Vector2, trees: Array, earth_r := PAVED_EARTH_R) -> int:
+	if p.y >= m.GATE_Y - 40.0:
+		return -1
+	for pp: Dictionary in m.park_props:
+		if String(pp.kind) in SOFT_PROPS and p.distance_to(pp.pos) < earth_r:
+			return S.GRASS
+	for t: Vector2 in trees:
+		if p.distance_to(t) < earth_r:
+			return S.GRASS
+	return S.PAVEMENT
+
+
+# an off-leash area that is lawn wall to wall
+static func lawn_past_gate(m: Node2D, p: Vector2) -> int:
+	if p.y < m.GATE_Y - 40.0:
+		return S.GRASS
+	return -1

@@ -745,6 +745,8 @@
 
 # Ground surface test
 --headless --path . --script res://tests/test_surfaces.gd
+# The shared ground-past-the-gate helpers a walk's surface hook returns
+--headless --path . --script res://tests/test_surface_helpers.gd
 
 # Natural terrain test
 --headless --path . --script res://tests/test_terrain.gd
