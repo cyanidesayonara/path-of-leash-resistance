@@ -156,9 +156,12 @@ static func _sweeper(c: CanvasItem, x: float, t: float) -> void:
 	c.draw_rect(Rect2(x - 160.0, g - 150.0, 150.0, 22.0), TRIM)
 	# the strobe bar on the roof, its two ambers alternating, as in the walk
 	c.draw_rect(Rect2(x - 128.0, g - 288.0, 92.0, 10.0), INK)
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
 	var on := fposmod(t, 0.5) < 0.25
 	for k in range(2):
-		var lit := on if k == 0 else not on
+		var lit := true if not flashes_on else (on if k == 0 else not on)
 		var sp := Vector2(x - 112.0 + float(k) * 60.0, g - 298.0)
 		if lit:
 			c.draw_circle(sp, 46.0, Color(1.0, 0.70, 0.18, 0.30))

@@ -535,7 +535,9 @@ func layout(vs: Vector2) -> Array[Dictionary]:
 		var rise: float = minf(t, SHOW_S) * RISE
 		# the punch: oversized for a moment as it lands, then settles
 		var punch: float = 1.0
-		if t < PUNCH_S:
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		if t < PUNCH_S and (_gm == null or bool(_gm.screen_shake)):
 			punch = lerpf(PUNCH, 1.0, t / PUNCH_S)
 		var col: Color = TONE_COL.get(int(l["tone"]), TONE_COL[Tone.PLAIN])
 		out.append({"text": String(l["text"]), "size": SIZE_SAY, "outline": OUTLINE_SAY,

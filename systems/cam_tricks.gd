@@ -33,7 +33,10 @@ static func tick(m: Node2D, delta: float) -> void:
 	var enr_v: Variant = boss.get("enraged") if boss != null else null
 	var ph_v: Variant = boss.get("phase") if boss != null else null
 	var enraged := boss != null and ((enr_v != null and bool(enr_v)) or (ph_v != null and int(ph_v) >= 2))
-	if enraged and not bool(m._boss_was_enraged):
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var shake_on := true if _gm == null else bool(_gm.screen_shake)
+	if enraged and not bool(m._boss_was_enraged) and shake_on:
 		if float(m.cam_tilt_t) <= 0.0:
 			m._cam_tilt_base_rot = m.cam.rotation
 			m._cam_tilt_base_ignore = m.cam.ignore_rotation
@@ -50,14 +53,19 @@ static func tick(m: Node2D, delta: float) -> void:
 
 	# Brief dutch tilt on enrage only; always returns cleanly to base rotation
 	if float(m.cam_tilt_t) > 0.0:
-		m.cam_tilt_t = maxf(0.0, float(m.cam_tilt_t) - dt)
-		if float(m.cam_tilt_t) <= 0.0:
+		if not shake_on:
+			m.cam_tilt_t = 0.0
 			m.cam.rotation = float(m._cam_tilt_base_rot)
 			m.cam.ignore_rotation = bool(m._cam_tilt_base_ignore)
 		else:
-			m.cam.ignore_rotation = false
-			var u := 1.0 - float(m.cam_tilt_t) / TILT_SECS
-			m.cam.rotation = float(m._cam_tilt_base_rot) + sin(u * PI) * deg_to_rad(TILT_DEG) * float(m._cam_tilt_dir)
+			m.cam_tilt_t = maxf(0.0, float(m.cam_tilt_t) - dt)
+			if float(m.cam_tilt_t) <= 0.0:
+				m.cam.rotation = float(m._cam_tilt_base_rot)
+				m.cam.ignore_rotation = bool(m._cam_tilt_base_ignore)
+			else:
+				m.cam.ignore_rotation = false
+				var u := 1.0 - float(m.cam_tilt_t) / TILT_SECS
+				m.cam.rotation = float(m._cam_tilt_base_rot) + sin(u * PI) * deg_to_rad(TILT_DEG) * float(m._cam_tilt_dir)
 
 	# Cinema letterbox bars during boss reveal cards
 	var revealing: bool = m.walk_mod != null and m.walk_mod.has_method("hush_banner") and bool(m.walk_mod.hush_banner(m))

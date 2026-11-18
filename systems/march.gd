@@ -119,7 +119,10 @@ func draw(b: ShapeBatch) -> void:
 		var bike := Vector2(foot.get_center().x, foot.end.y + 28.0)
 		b.circle(bike + Vector2(2.0, 4.0), 10.0, Color(0, 0, 0, 0.2))
 		b.rect(Rect2(bike.x - 7.0, bike.y - 16.0, 14.0, 28.0), Color(0.12, 0.13, 0.16))
-		var blink := 0.55 + 0.45 * sin(AnimClock.msec() * 0.02)
+		var _ml := Engine.get_main_loop()
+		var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+		var flashes_on := true if _gm == null else bool(_gm.flashes)
+		var blink := 0.85 if not flashes_on else 0.55 + 0.45 * sin(AnimClock.msec() * 0.02)
 		b.circle(bike + Vector2(0.0, -18.0), 4.0, Color(0.25, 0.55, 1.0, blink))
 		for i in 6:
 			var p := Vector2(foot.position.x + 28.0 + float(i % 3) * 42.0, foot.position.y + 50.0 + float(i / 3) * 80.0)

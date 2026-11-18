@@ -28,6 +28,7 @@ const TutorialSteps := preload("res://systems/tutorial.gd")
 const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
+const UiScale := preload("res://hud/ui_scale.gd")
 
 const MAIN_ITEMS := ["play", "tutorial", "shop", "progress", "settings", "exit"]
 # every name below is an I18n key; I18n.t gives the words
@@ -44,20 +45,27 @@ const SHOP_TABS := ["collar", "bandana", "coat", "stats"]
 const SHOP_TAB_NAMES := {"collar": "shop_tab_collar", "bandana": "shop_tab_bandana", "coat": "shop_tab_coat",
 	"stats": "shop_tab_stats"}
 const STEP_NAMES := ["step_walk", "step_details"]
-const SETTING_KEYS := {"master": "setting_master", "sfx": "setting_sfx", "music": "setting_music",
+const SETTING_KEYS := {
+	"master": "setting_master", "sfx": "setting_sfx", "music": "setting_music",
 	"fullscreen": "setting_fullscreen", "goals": "setting_goals", "language": "setting_language",
-	"controls": "setting_controls", "free_play": "setting_free_play"}
+	"controls": "setting_controls", "screen_shake": "setting_screen_shake",
+	"flashes": "setting_flashes", "text_size": "setting_text_size",
+	"free_play": "setting_free_play",
+}
 const STAT_KEYS := {"speed": "stat_speed", "plant": "stat_plant", "herd": "stat_herd", "agility": "stat_agility"}
 
 # Leaving the application is a desktop thing: a browser tab is closed by
 # the browser. `--no-exit` and tests set this to see the web layout anywhere.
 static var exit_hidden := false
 static var back_requested := false
+static var _rebind_consumed_frame := -1
 
 
 # --- which screen is up ---------------------------------------------------
 
 static func screen(m: Node2D) -> String:
+	if m.in_controls:
+		return "controls"
 	if m.in_settings:
 		return "settings"
 	if m.confirm_id != "":
@@ -125,12 +133,16 @@ static func _prompt_keys(m: Node2D, which: String) -> Array:
 		"progress":
 			return [["left_right", "chapter"], ["back", "back"]]
 		"settings":
-			if Game.rebind_step >= 0:
-				return [["back", "cancel"]]
 			var keys := settings_keys(m)
 			if m.settings_idx >= 0 and m.settings_idx < keys.size() and String(keys[m.settings_idx]) == "controls":
 				return [["up_down", "pick"], ["left_right", "layout"], ["plant", "rebind"], ["back", "back"]]
 			return [["up_down", "pick"], ["left_right", "change"], ["back", "back"]]
+		"controls":
+			if Game.rebind_step >= 0:
+				return [["back", "cancel"]]
+			if int(m.controls_idx) >= Game.REBIND_ACTIONS.size():
+				return [["up_down", "pick"], ["plant", "reset"], ["back", "back"]]
+			return [["up_down", "pick"], ["left_right", "pick"], ["plant", "rebind"], ["back", "back"]]
 		"pause":
 			return [["move", "pick"], ["plant", "select"], ["back", "resume"]]
 		"results":
@@ -1011,8 +1023,8 @@ static func settings_keys(m: Node2D) -> Array:
 	# the browser owns the window, so offering a fullscreen toggle there
 	# would be a button that lies
 	if OS.has_feature("web"):
-		return ["master", "sfx", "music", "language", "controls", "goals", "free_play"]
-	return ["master", "sfx", "music", "language", "controls", "fullscreen", "goals", "free_play"]
+		return ["master", "sfx", "music", "language", "controls", "screen_shake", "flashes", "text_size", "goals", "free_play"]
+	return ["master", "sfx", "music", "language", "controls", "screen_shake", "flashes", "text_size", "fullscreen", "goals", "free_play"]
 
 
 static func settings_rows(m: Node2D) -> Array:
@@ -1028,12 +1040,21 @@ static func settings_rows(m: Node2D) -> Array:
 			"fullscreen":
 				v = 1.0 if Game.fullscreen else 0.0
 				kind = "toggle"
+			"screen_shake":
+				v = 1.0 if Game.screen_shake else 0.0
+				kind = "toggle"
+			"flashes":
+				v = 1.0 if Game.flashes else 0.0
+				kind = "toggle"
 			"goals":
 				v = 1.0 if Game.goals_expanded else 0.0
 				kind = "toggle"
 			"free_play":
 				v = 1.0 if Game.free_play else 0.0
 				kind = "toggle"
+			"text_size":
+				v = float(Game.TEXT_SIZES.find(Game.text_size))
+				kind = "choice"
 			"language":
 				v = float(Game.LANGUAGES.find(Game.language))
 				kind = "choice"
@@ -1044,17 +1065,38 @@ static func settings_rows(m: Node2D) -> Array:
 			"kind": kind, "v": v}
 		if k == "language":
 			row.text = String(Game.LANGUAGE_NAMES[Game.language])
+		elif k == "text_size":
+			row.text = I18n.t("text_" + Game.text_size)
 		elif k == "controls":
-			if Game.rebind_step >= 0 and Game.rebind_step < Game.REBIND_ACTIONS.size():
-				var act := String(Game.REBIND_ACTIONS[Game.rebind_step])
-				var act_name: String = I18n.t("rebind_" + act) if I18n.has("rebind_" + act) else act.to_upper()
-				row.text = I18n.t("rebind_press") % act_name
-			else:
-				var base_txt := I18n.t("layout_" + Game.control_layout)
-				if not Game.key_binds.is_empty() or not Game.pad_binds.is_empty():
-					base_txt += " *"
-				row.text = base_txt
+			var base_txt := I18n.t("layout_" + Game.control_layout)
+			if not Game.key_binds.is_empty() or not Game.pad_binds.is_empty():
+				base_txt += " *"
+			row.text = base_txt
 		out.append(row)
+	return out
+
+
+static func controls_rows(m: Node2D) -> Array:
+	var out := []
+	for i in range(Game.REBIND_ACTIONS.size()):
+		var act := String(Game.REBIND_ACTIONS[i])
+		var act_name: String = I18n.t("rebind_" + act) if I18n.has("rebind_" + act) else String(Game.REBIND_NAMES.get(act, act.to_upper()))
+		out.append({
+			"kind": "action",
+			"action": act,
+			"name": act_name,
+			"key_txt": Prompts.bound_key_label(act, Game.key_binds),
+			"pad_txt": Prompts.bound_pad_label(act, Game.pad_binds),
+			"listening": Game.rebind_step == i,
+		})
+	out.append({
+		"kind": "reset",
+		"action": "reset",
+		"name": I18n.t("controls_reset"),
+		"key_txt": "",
+		"pad_txt": "",
+		"listening": false,
+	})
 	return out
 
 
@@ -1070,13 +1112,20 @@ static func check_settings_roundtrip(m: Node2D) -> Array:
 	var p: Array = []
 	var was_persist := Game.persist
 	Game.persist = true
-	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.free_play, Game.control_layout]
+	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.free_play,
+		Game.control_layout, Game.screen_shake, Game.flashes, Game.text_size,
+		Game.key_binds.duplicate(), Game.pad_binds.duplicate()]
 	Game.vol_master = 0.3
 	Game.vol_sfx = 0.1
 	Game.vol_music = 0.7
 	Game.fullscreen = true
 	Game.free_play = true
 	Game.control_layout = "arrows"
+	Game.screen_shake = false
+	Game.flashes = false
+	Game.text_size = "large"
+	Game.key_binds = {"poop": KEY_V, "pause": KEY_P}
+	Game.pad_binds = {"pickup": JOY_BUTTON_Y}
 	Game.save_records()
 	Game.vol_master = 0.0
 	Game.vol_sfx = 0.0
@@ -1084,18 +1133,31 @@ static func check_settings_roundtrip(m: Node2D) -> Array:
 	Game.fullscreen = false
 	Game.free_play = false
 	Game.control_layout = "default"
+	Game.screen_shake = true
+	Game.flashes = true
+	Game.text_size = "normal"
+	Game.key_binds = {}
+	Game.pad_binds = {}
 	Game.load_records()
 	if not (is_equal_approx(Game.vol_master, 0.3) and is_equal_approx(Game.vol_sfx, 0.1)
 			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen and Game.free_play
-			and Game.control_layout == "arrows"):
-		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s %s)"
-			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.control_layout])
+			and Game.control_layout == "arrows" and not Game.screen_shake and not Game.flashes
+			and Game.text_size == "large" and int(Game.key_binds.get("poop", 0)) == KEY_V
+			and int(Game.key_binds.get("pause", 0)) == KEY_P and int(Game.pad_binds.get("pickup", -1)) == JOY_BUTTON_Y):
+		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s %s %s %s %s)"
+			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.control_layout,
+				Game.screen_shake, Game.flashes, Game.text_size])
 	Game.vol_master = keep[0]
 	Game.vol_sfx = keep[1]
 	Game.vol_music = keep[2]
 	Game.fullscreen = keep[3]
 	Game.free_play = keep[4]
 	Game.control_layout = keep[5]
+	Game.screen_shake = keep[6]
+	Game.flashes = keep[7]
+	Game.text_size = keep[8]
+	Game.key_binds = (keep[9] as Dictionary).duplicate()
+	Game.pad_binds = (keep[10] as Dictionary).duplicate()
 	Game.apply_control_layout()
 	Game.save_records()
 	# and the slider steps must stay inside 0..1 however hard you lean on them
@@ -1120,9 +1182,14 @@ static func open_settings_from_menu(m: Node2D) -> void:
 
 
 static func open_settings(m: Node2D) -> void:
+	m.in_controls = false
+	Game.rebind_step = -1
+	Game.rebind_wait_release = false
 	m.in_settings = true
 	m.settings_idx = 0
 	m.settings_panel.visible = true
+	if m.settings_panel.has_method("_recentre"):
+		m.settings_panel._recentre()
 	m.dim.visible = true
 	# the world stops redrawing while settings are open (_process returns
 	# early), so redraw once now to drop the chalked title from behind the panel
@@ -1132,6 +1199,10 @@ static func open_settings(m: Node2D) -> void:
 
 static func close_settings(m: Node2D) -> void:
 	m.in_settings = false
+	m.in_controls = false
+	Game.rebind_step = -1
+	Game.rebind_wait_release = false
+	_rebind_consumed_frame = -1
 	m.settings_panel.visible = false
 	m.queue_redraw()
 	Game.save_records()
@@ -1141,6 +1212,34 @@ static func close_settings(m: Node2D) -> void:
 		m.dim.visible = true
 	else:
 		apply_menu_step(m)
+
+
+static func open_controls(m: Node2D) -> void:
+	m.in_settings = false
+	m.in_controls = true
+	m.controls_idx = 0
+	Game.rebind_step = -1
+	Game.rebind_wait_release = false
+	_rebind_consumed_frame = -1
+	m.settings_panel.visible = false
+	m.dim.visible = true
+	m.queue_redraw()
+	Sfx.play("ui")
+
+
+static func close_controls(m: Node2D) -> void:
+	m.in_controls = false
+	Game.rebind_step = -1
+	Game.rebind_wait_release = false
+	_rebind_consumed_frame = -1
+	Game.save_records()
+	m.in_settings = true
+	m.settings_panel.visible = true
+	if m.settings_panel.has_method("_recentre"):
+		m.settings_panel._recentre()
+	m.dim.visible = true
+	m.queue_redraw()
+	Sfx.play("ui")
 
 
 static func settings_adjust(m: Node2D, dir: int) -> void:
@@ -1161,6 +1260,22 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 			Game.fullscreen = not Game.fullscreen
 			Game.apply_settings()
 			Sfx.play("ui")
+		"screen_shake":
+			Game.screen_shake = not Game.screen_shake
+			Sfx.play("ui")
+			m.queue_redraw()
+		"flashes":
+			Game.flashes = not Game.flashes
+			Sfx.play("ui")
+			m.queue_redraw()
+		"text_size":
+			var ti := Game.TEXT_SIZES.find(Game.text_size)
+			Game.text_size = Game.TEXT_SIZES[wrapi(ti + dir, 0, Game.TEXT_SIZES.size())]
+			UiScale.apply(m)
+			if m.settings_panel != null and m.settings_panel.has_method("_recentre"):
+				m.settings_panel._recentre()
+			Sfx.play("ui")
+			m.queue_redraw()
 		"goals":
 			Game.goals_expanded = not Game.goals_expanded
 			Sfx.play("ui")
@@ -1189,46 +1304,50 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 static func rebind_input(m: Node2D, event: InputEvent) -> void:
 	if Game.rebind_step < 0 or Game.rebind_step >= Game.REBIND_ACTIONS.size():
 		return
+	if not (event is InputEventKey or event is InputEventJoypadButton):
+		return
 	if Game.rebind_wait_release:
-		if (event is InputEventKey and not event.pressed) or (event is InputEventJoypadButton and not event.pressed):
+		if not event.pressed:
 			Game.rebind_wait_release = false
+		_rebind_consumed_frame = Engine.get_process_frames()
 		m.get_viewport().set_input_as_handled()
 		return
 	var act := String(Game.REBIND_ACTIONS[Game.rebind_step])
 	if event is InputEventKey and event.pressed and not event.echo:
 		var code: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
+		_rebind_consumed_frame = Engine.get_process_frames()
 		if code == KEY_ESCAPE:
 			Game.rebind_step = -1
+			Game.rebind_wait_release = false
 			Sfx.play("ui")
+			m.queue_redraw()
 			m.get_viewport().set_input_as_handled()
 			return
 		Game.bind_key(act, code)
+		Game.rebind_step = -1
+		Game.rebind_wait_release = false
 		Sfx.play("ui")
-		Game.rebind_step += 1
-		if Game.rebind_step >= Game.REBIND_ACTIONS.size():
-			Game.rebind_step = -1
+		m.queue_redraw()
 		m.get_viewport().set_input_as_handled()
 	elif event is InputEventJoypadButton and event.pressed:
 		var btn: int = event.button_index
+		_rebind_consumed_frame = Engine.get_process_frames()
 		if btn == JOY_BUTTON_BACK or btn == JOY_BUTTON_START:
 			Game.rebind_step = -1
+			Game.rebind_wait_release = false
 			Sfx.play("ui")
+			m.queue_redraw()
 			m.get_viewport().set_input_as_handled()
 			return
 		Game.bind_pad(act, btn)
+		Game.rebind_step = -1
+		Game.rebind_wait_release = false
 		Sfx.play("ui")
-		Game.rebind_step += 1
-		if Game.rebind_step >= Game.REBIND_ACTIONS.size():
-			Game.rebind_step = -1
+		m.queue_redraw()
 		m.get_viewport().set_input_as_handled()
 
 
 static func tick_settings(m: Node2D) -> void:
-	if Game.rebind_step >= 0:
-		if back_pressed():
-			Game.rebind_step = -1
-			Sfx.play("ui")
-		return
 	var n: int = settings_keys(m).size()
 	if Input.is_action_just_pressed("move_down"):
 		m.settings_idx = wrapi(m.settings_idx + 1, 0, n)
@@ -1241,15 +1360,55 @@ static func tick_settings(m: Node2D) -> void:
 	elif Input.is_action_just_pressed("move_left"):
 		settings_adjust(m, -1)
 	elif Input.is_action_just_pressed("plant"):
-		# confirm flips a switch; on controls it starts interactive rebinding
+		# confirm flips a switch; on controls it opens the controls screen
 		var keys := settings_keys(m)
 		if m.settings_idx >= 0 and m.settings_idx < keys.size() and String(keys[m.settings_idx]) == "controls":
-			Game.rebind_step = 0
-			Game.rebind_wait_release = true
-			Sfx.play("ui")
+			open_controls(m)
 			return
 		var row: Dictionary = settings_rows(m)[m.settings_idx]
 		if String(row.kind) == "toggle" or String(row.kind) == "choice":
 			settings_adjust(m, 1)
 	elif back_pressed():
 		close_settings(m)
+
+
+static func tick_controls(m: Node2D) -> void:
+	if _rebind_consumed_frame == Engine.get_process_frames():
+		return
+	if Game.rebind_step >= 0:
+		if back_pressed():
+			Game.rebind_step = -1
+			Game.rebind_wait_release = false
+			Sfx.play("ui")
+			m.queue_redraw()
+		return
+	var acts := Game.REBIND_ACTIONS.size()
+	var n := acts + 1
+	var per_col := (acts + 1) / 2
+	if Input.is_action_just_pressed("move_down"):
+		m.controls_idx = wrapi(m.controls_idx + 1, 0, n)
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("move_up"):
+		m.controls_idx = wrapi(m.controls_idx - 1, 0, n)
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("move_right") or Input.is_action_just_pressed("move_left"):
+		if int(m.controls_idx) < acts:
+			var col := int(m.controls_idx) / per_col
+			var row := int(m.controls_idx) % per_col
+			var target: int = (per_col + row) if col == 0 else row
+			if target >= acts:
+				target = acts - 1
+			m.controls_idx = target
+			Sfx.play("ui")
+	elif Input.is_action_just_pressed("plant"):
+		if m.controls_idx >= acts:
+			Game.clear_rebinds()
+			Sfx.play("ui")
+			m.queue_redraw()
+		else:
+			Game.rebind_step = m.controls_idx
+			Game.rebind_wait_release = true
+			Sfx.play("ui")
+			m.queue_redraw()
+	elif back_pressed():
+		close_controls(m)

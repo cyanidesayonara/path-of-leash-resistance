@@ -117,7 +117,10 @@ static func _park(c: CanvasItem, t: float, rain: float) -> void:
 	c.draw_rect(Rect2(pole.x - 36.0, pole.y - 330.0, 46.0, 34.0), Color(0.86, 0.86, 0.84))
 	c.draw_colored_polygon(PackedVector2Array([pole + Vector2(10, -320), pole + Vector2(44, -336),
 		pole + Vector2(44, -290), pole + Vector2(10, -306)]), Color(0.30, 0.32, 0.36))
-	var on := t > FilmKit.HEAR_AT and fposmod(t * 2.4, 1.0) < 0.5
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	var on := t > FilmKit.HEAR_AT and (true if not flashes_on else fposmod(t * 2.4, 1.0) < 0.5)
 	var lamp := pole + Vector2(-13, -342)
 	if on:
 		c.draw_circle(lamp, 46.0, Color(1.0, 0.70, 0.15, 0.30))

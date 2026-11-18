@@ -251,7 +251,10 @@ func _hud_cards() -> Array[Rect2]:
 
 func _sfx(at: Vector2, text: String, col: Color, a: float, t: float, tilt: float) -> void:
 	var f := Kit.display()
-	var punch := lerpf(1.45, 1.0, clampf(t / 0.12, 0.0, 1.0))
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var shake_on := true if _gm == null else bool(_gm.screen_shake)
+	var punch := lerpf(1.45, 1.0, clampf(t / 0.12, 0.0, 1.0)) if shake_on else 1.0
 	var w := Kit.text_w(f, text, SFX_PX)
 	draw_set_transform(at, tilt, Vector2(punch, punch))
 	var pos := Vector2(-w * 0.5, 0.0)
@@ -278,7 +281,10 @@ func _score(at: Vector2, word: String, amount: String, col: Color, a: float, t: 
 		f.draw_string(get_canvas_item(), Vector2(x, at.y), word, HORIZONTAL_ALIGNMENT_LEFT, -1, SCORE_PX,
 			Color(col.r, col.g, col.b, a))
 		x += ww + 6.0
-	var punch := lerpf(1.3, 1.0, clampf(t / 0.12, 0.0, 1.0))
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var shake_on := true if _gm == null else bool(_gm.screen_shake)
+	var punch := lerpf(1.3, 1.0, clampf(t / 0.12, 0.0, 1.0)) if shake_on else 1.0
 	var r := Rect2(x, at.y - 15.0, chip_w, 20.0)
 	draw_set_transform(r.get_center(), 0.0, Vector2(punch, punch))
 	var rr := Rect2(-r.size * 0.5, r.size)

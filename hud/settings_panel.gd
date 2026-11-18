@@ -18,6 +18,8 @@ const BAR_W := 208.0
 const BAR_H := 13.0
 
 const Kit := preload("res://hud/ui_kit.gd")
+const Flow := preload("res://hud/menu_flow.gd")
+const UiScale := preload("res://hud/ui_scale.gd")
 
 var main: Node2D
 var sel: StyleBoxFlat
@@ -36,8 +38,43 @@ func _row_count() -> int:
 	return main.settings_rows().size() if main != null else 4
 
 
+func _layout(vs: Vector2) -> Dictionary:
+	var n := _row_count()
+	var ins := UiScale.safe_insets(get_window() if is_inside_tree() else null)
+	var items := Flow.prompts(main, "settings") if main != null else []
+	var top_limit := maxf(12.0, ins.y + 8.0)
+	var bottom_limit := (Kit.prompt_bar_top(self, vs, items) - 14.0) if not items.is_empty() else (vs.y - Kit.BAR_FROM_BOTTOM - ins.w - 14.0)
+	var avail_h := maxf(200.0, bottom_limit - top_limit)
+	var avail_w := maxf(300.0, vs.x - 28.0 - ins.x - ins.z)
+	var two_col := (84.0 + float(n) * 38.0 + 12.0 > avail_h) and avail_w >= 760.0
+	var cols := 2 if two_col else 1
+	var per_col := int(ceil(float(n) / 2.0)) if two_col else n
+	var compact := avail_h < 420.0
+	var title_px := 23 if compact else 27
+	var title_y := 38.0 if compact else 46.0
+	var line_y := 52.0 if compact else 62.0
+	var gap_y := 8.0 if compact else 10.0
+	var footer_h := 10.0 if compact else 12.0
+	var row_h := clampf(floor((avail_h - line_y - gap_y - footer_h) / float(maxi(per_col, 1))), 28.0, ROW_H)
+	var h := line_y + gap_y + float(per_col) * row_h + footer_h
+	var w := minf(900.0, avail_w) if two_col else minf(W, avail_w)
+	var x0 := clampf(ins.x + (vs.x - ins.x - ins.z - w) * 0.5, ins.x + 8.0, maxf(ins.x + 8.0, vs.x - ins.z - w - 8.0))
+	var y0 := clampf(top_limit + (avail_h - h) * 0.5, top_limit, maxf(top_limit, bottom_limit - h))
+	return {
+		"rect": Rect2(x0, y0, w, h),
+		"two_col": two_col,
+		"cols": cols,
+		"per_col": per_col,
+		"title_px": title_px,
+		"title_y": title_y,
+		"line_y": line_y,
+		"first_row_y": line_y + gap_y + row_h * 0.5,
+		"row_h": row_h,
+	}
+
+
 func _panel_height() -> float:
-	return ROWS_Y + float(_row_count()) * ROW_H + FOOTER_H
+	return float(_layout(get_viewport_rect().size).rect.size.y)
 
 
 func _ready() -> void:
@@ -53,11 +90,10 @@ func _ready() -> void:
 
 
 func _recentre() -> void:
-	var vs := get_viewport_rect().size
-	position = Vector2(
-		maxf(0.0, (vs.x - W) * 0.5),
-		maxf(0.0, (vs.y - _panel_height()) * 0.5)
-	)
+	var lay := _layout(get_viewport_rect().size)
+	var r: Rect2 = lay.rect
+	size = r.size
+	position = r.position
 
 
 func _process(_delta: float) -> void:
@@ -70,69 +106,93 @@ func _draw() -> void:
 	if main == null:
 		return
 	var f := ThemeDB.fallback_font
-	var h := _panel_height()
-	Kit.card(self, Rect2(0, 0, W, h), Kit.accent("settings"))
-	Kit.heading(self, Vector2(NAME_X, 46), I18n.t("settings_title"), 27, Kit.accent("settings"))
-	draw_line(Vector2(NAME_X, 62), Vector2(W - NAME_X, 62), Color(1, 1, 1, 0.14), 1.5)
+	var lay := _layout(get_viewport_rect().size)
+	var r: Rect2 = lay.rect
+	if not r.position.is_equal_approx(position):
+		position = r.position
+	size = r.size
+	var w := r.size.x
+	var h := r.size.y
+	var two_col := bool(lay.two_col)
+	var per_col := int(lay.per_col)
+	var row_h := float(lay.row_h)
+	var first_y := float(lay.first_row_y)
+	var line_y := float(lay.line_y)
+	var pad_x := 32.0 if two_col else NAME_X
+	Kit.card(self, Rect2(0, 0, w, h), Kit.accent("settings"))
+	Kit.heading(self, Vector2(pad_x, float(lay.title_y)), I18n.t("settings_title"), int(lay.title_px), Kit.accent("settings"))
+	draw_line(Vector2(pad_x, line_y), Vector2(w - pad_x, line_y), Color(1, 1, 1, 0.14), 1.5)
+	var col_gap := 34.0
+	var col_w := (w - pad_x * 2.0 - col_gap) * 0.5 if two_col else (w - pad_x * 2.0)
+	var name_px := 15 if (two_col or row_h < 38.0) else 18
+	var val_px := 15 if (two_col or row_h < 38.0) else 18
+	var box_h := clampf(row_h - 8.0, 22.0, 36.0)
 	var rows: Array = main.settings_rows()
 	for i in range(rows.size()):
 		var row: Dictionary = rows[i]
-		var y := ROWS_Y + float(i) * ROW_H
+		var col := 0 if not two_col else (i / per_col)
+		var ri := i if not two_col else (i % per_col)
+		var cx := pad_x + float(col) * (col_w + col_gap)
+		var y := first_y + float(ri) * row_h
 		var picked: bool = i == main.settings_idx
 		if picked:
-			draw_style_box(sel, Rect2(NAME_X - 14.0, y - 18.0, W - (NAME_X - 14.0) * 2.0, 36.0))
+			draw_style_box(sel, Rect2(cx - 12.0, y - box_h * 0.5, col_w + 24.0, box_h))
 			# a small caret, and the arrows that say this row takes left/right
 			draw_colored_polygon(
 				PackedVector2Array([
-					Vector2(NAME_X - 24.0, y - 6.0), Vector2(NAME_X - 24.0, y + 6.0),
-					Vector2(NAME_X - 15.0, y)
+					Vector2(cx - 21.0, y - 5.5), Vector2(cx - 21.0, y + 5.5),
+					Vector2(cx - 13.0, y)
 				]), Kit.accent("settings"))
 		var name_col := Kit.INK if picked else Kit.INK_DIM
-		draw_string(Kit.display(), Vector2(NAME_X, y + 6.0), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
-			-1, 18, name_col)
+		var bar_w := 130.0 if two_col else minf(BAR_W, maxf(120.0, col_w - 270.0))
+		var val_room := 52.0 if two_col else 64.0
+		var bar_x := cx + col_w - bar_w - val_room
+		var name_room := maxf(80.0, bar_x - cx - 10.0)
+		draw_string(Kit.display(), Vector2(cx, y + float(name_px) * 0.34), String(row.name), HORIZONTAL_ALIGNMENT_LEFT,
+			name_room, name_px, name_col)
 		if String(row.kind) == "slider":
-			_slider(f, y, float(row.v), picked)
+			_slider(f, bar_x, bar_w, y, float(row.v), val_px, picked)
 		elif String(row.kind) == "choice":
-			_choice(f, y, String(row.text), picked)
+			_choice(f, bar_x, bar_w + val_room, y, String(row.text), val_px, picked)
 		else:
-			_toggle(f, y, bool(row.v), picked)
+			_toggle(f, bar_x, bar_w, y, bool(row.v), val_px, picked)
 	# the buttons are on the prompt bar along the bottom (menu_screen.gd)
 
 
-func _slider(f: Font, y: float, v: float, picked: bool) -> void:
-	var track := Rect2(BAR_X, y - BAR_H * 0.5, BAR_W, BAR_H)
+func _slider(f: Font, bx: float, bw: float, y: float, v: float, px: int, picked: bool) -> void:
+	var track := Rect2(bx, y - BAR_H * 0.5, bw, BAR_H)
 	draw_rect(track, Color(1, 1, 1, 0.08))
-	var fill := clampf(v, 0.0, 1.0) * BAR_W
+	var fill := clampf(v, 0.0, 1.0) * bw
 	if fill > 1.0:
 		var col := Kit.SAFFRON if picked else Kit.INK_MUTE
 		draw_rect(Rect2(track.position, Vector2(fill, BAR_H)), col)
 	draw_rect(track, Color(1, 1, 1, 0.22), false, 1.2)
 	# ten notches, so a step is a visible step rather than a guess
 	for n in range(1, 10):
-		var nx := BAR_X + BAR_W * float(n) / 10.0
+		var nx := bx + bw * float(n) / 10.0
 		draw_line(Vector2(nx, track.position.y), Vector2(nx, track.end.y),
 			Color(0, 0, 0, 0.28), 1.0)
 	var txt := "%d%%" % int(round(v * 100.0))
-	draw_string(f, Vector2(BAR_X + BAR_W + 16.0, y + 6.0), txt, HORIZONTAL_ALIGNMENT_LEFT,
-		-1, 18, Kit.INK if picked else Kit.INK_DIM)
+	draw_string(f, Vector2(bx + bw + 12.0, y + float(px) * 0.34), txt, HORIZONTAL_ALIGNMENT_LEFT,
+		-1, px, Kit.INK if picked else Kit.INK_DIM)
 
 
 # one of a list, stepped with left/right: the value between two arrows
-func _choice(f: Font, y: float, txt: String, picked: bool) -> void:
+func _choice(f: Font, bx: float, bw: float, y: float, txt: String, px: int, picked: bool) -> void:
 	var col := Kit.INK if picked else Kit.INK_DIM
 	var arrow := Kit.accent("settings") if picked else Color(1, 1, 1, 0.22)
-	draw_colored_polygon(PackedVector2Array([Vector2(BAR_X + 8.0, y - 7.0), Vector2(BAR_X, y), Vector2(BAR_X + 8.0, y + 7.0)]), arrow)
-	draw_string(f, Vector2(BAR_X + 18.0, y + 6.0), txt, HORIZONTAL_ALIGNMENT_CENTER, BAR_W - 36.0, 18, col)
-	draw_colored_polygon(PackedVector2Array([Vector2(BAR_X + BAR_W - 8.0, y - 7.0), Vector2(BAR_X + BAR_W, y), Vector2(BAR_X + BAR_W - 8.0, y + 7.0)]), arrow)
+	draw_colored_polygon(PackedVector2Array([Vector2(bx + 8.0, y - 6.5), Vector2(bx, y), Vector2(bx + 8.0, y + 6.5)]), arrow)
+	draw_string(f, Vector2(bx + 14.0, y + float(px) * 0.34), txt, HORIZONTAL_ALIGNMENT_CENTER, bw - 28.0, px, col)
+	draw_colored_polygon(PackedVector2Array([Vector2(bx + bw - 8.0, y - 6.5), Vector2(bx + bw, y), Vector2(bx + bw - 8.0, y + 6.5)]), arrow)
 
 
-func _toggle(f: Font, y: float, on: bool, picked: bool) -> void:
-	var box := Rect2(BAR_X, y - 11.0, 52.0, 22.0)
+func _toggle(f: Font, bx: float, bw: float, y: float, on: bool, px: int, picked: bool) -> void:
+	var box := Rect2(bx, y - 10.5, 50.0, 21.0)
 	var track_col := Color(Kit.TURQUOISE, 0.75) if on else Color(1, 1, 1, 0.09)
 	draw_rect(box, track_col)
 	draw_rect(box, Color(1, 1, 1, 0.22), false, 1.2)
-	var knob := Vector2(box.position.x + (38.0 if on else 14.0), y)
-	draw_circle(knob, 8.0, Kit.SAFFRON if picked else Kit.INK_SOFT)
-	draw_string(f, Vector2(BAR_X + BAR_W + 16.0, y + 6.0), I18n.t("setting_on" if on else "setting_off"),
-		HORIZONTAL_ALIGNMENT_LEFT, -1, 18,
+	var knob := Vector2(box.position.x + (37.0 if on else 13.0), y)
+	draw_circle(knob, 7.5, Kit.SAFFRON if picked else Kit.INK_SOFT)
+	draw_string(f, Vector2(bx + bw + 12.0, y + float(px) * 0.34), I18n.t("setting_on" if on else "setting_off"),
+		HORIZONTAL_ALIGNMENT_LEFT, -1, px,
 		Kit.INK if picked else Kit.INK_DIM)

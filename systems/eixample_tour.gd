@@ -219,5 +219,8 @@ func draw(b: ShapeBatch, vt: float, vb: float, dog_p: Vector2) -> void:
 		if photo_t > 0.0:
 			var to_dog := (dog_p - p).normalized()
 			b.rect(Rect2(p + to_dog * 9.0 - Vector2(3.0, 2.5), Vector2(6.0, 5.0)), CAMERA)
-			if (k + int(photo_t * 10.0)) % 4 == 0:
+			var _ml := Engine.get_main_loop()
+			var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+			var flashes_on := true if _gm == null else bool(_gm.flashes)
+			if flashes_on and (k + int(photo_t * 10.0)) % 4 == 0:
 				b.circle(p + to_dog * 12.0, 4.0, FLASH)

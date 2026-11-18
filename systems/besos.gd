@@ -386,7 +386,11 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 			var bp := Vector2(bx, board.position.y - 4.5)
 			b.circle(bp, 2.8, Color(1.0, 0.72, 0.16) if not open else Color(0.58, 0.42, 0.14))
 			if not open:
-				b.circle(bp, 7.0, Color(1.0, 0.60, 0.12, 0.38 + 0.32 * absf(sin(wt * 10.0))))
+				var _ml := Engine.get_main_loop()
+				var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+				var flashes_on := true if _gm == null else bool(_gm.flashes)
+				var pulse := 0.52 if not flashes_on else 0.38 + 0.32 * absf(sin(wt * 10.0))
+				b.circle(bp, 7.0, Color(1.0, 0.60, 0.12, pulse))
 	if m.ornitoleg != null:
 		m.ornitoleg.draw(m, b, vt, vb)
 	b.flush(m._wc)

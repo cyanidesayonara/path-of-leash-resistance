@@ -64,9 +64,10 @@ func _draw() -> void:
 	var vs := get_viewport_rect().size
 	# a narrow or short viewport (a phone's enlarged interface) shrinks the
 	# card to fit, leaving the side margins the touch buttons stand in
-	var k := minf(1.0, minf((vs.x - 2.0 * SIDE_ROOM) / W, (vs.y - 40.0) / h))
+	var bar_top := Kit.prompt_bar_top(self, vs, []) - 14.0
+	var k := minf(1.0, minf((vs.x - 2.0 * SIDE_ROOM) / W, (bar_top - 16.0) / h))
 	scale = Vector2(k, k)
-	position = Vector2((vs.x - W * k) * 0.5, maxf(20.0, (vs.y - h * k) * 0.5))
+	position = Vector2((vs.x - W * k) * 0.5, clampf((bar_top - h * k) * 0.5, 16.0, maxf(16.0, bar_top - h * k)))
 	Kit.mosaic_card(self, Rect2(0, 0, W, h), Kit.accent("results"), 16)
 
 	var y := PAD + 30.0

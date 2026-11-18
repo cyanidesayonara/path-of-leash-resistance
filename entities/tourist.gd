@@ -267,7 +267,10 @@ func _draw() -> void:
 			var tip := fwd * (26.0 if photo_t > 0.0 else 14.0) + fwd.orthogonal() * 8.0
 			b.line(fwd.orthogonal() * 4.0, tip, Color(0.3, 0.3, 0.32), 1.5)
 			b.rect(Rect2(tip.x - 3.0, tip.y - 2.0, 6.0, 4.0), Color(0.1, 0.1, 0.12))
-	if photo_t > 0.0 and fmod(photo_t, 0.9) < 0.08:
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
+	if flashes_on and photo_t > 0.0 and fmod(photo_t, 0.9) < 0.08:
 		b.circle(fwd * 16.0, 7.0, Color(1, 1, 0.9, 0.8))     # the flash
 	b.flush(self)
 	if robbed_t > 0.0:

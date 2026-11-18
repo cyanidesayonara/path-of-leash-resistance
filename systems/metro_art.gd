@@ -1079,7 +1079,7 @@ static func _doors(wc: ShapeBatch, tr, t: float) -> void:
 				var lip := x0 + w if side < 0.0 else x0
 				wc.rect(Rect2(lip - 1.5, y - 6.0, 3.0, 12.0), DOOR_EDGE)
 		# the warning lamp over the doorway, flashing with the chime
-		var on: bool = (warn or pinched) and end == tr.open_end and fmod(t * 4.0, 1.0) < 0.5
+		var on: bool = (warn or pinched) and end == tr.open_end and (true if not Game.flashes else fmod(t * 4.0, 1.0) < 0.5)
 		for side: float in SIDES:
 			var lx := M.DOOR_L - 8.0 if side < 0.0 else M.DOOR_R + 8.0
 			wc.circle(Vector2(lx, y), 4.0, WARN_ON if on else WARN_OFF)

@@ -537,13 +537,18 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 	# urgency at a glance, and go frantic while it is stuck.
 	var by := L - 108.0
 	b.draw_rect(Rect2(-44.0, by - 5.0, 88.0, 10.0), Color(0.12, 0.12, 0.14))
+	var _ml := Engine.get_main_loop()
+	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
+	var flashes_on := true if _gm == null else bool(_gm.flashes)
 	var on := fmod(rumble, 0.2 if stuck else 0.5) < (0.1 if stuck else 0.25)
 	if kind == "both":
-		b.draw_circle(Vector2(-32.0, by), 7.0, Color(1.0, 0.24, 0.20) if on else Color(0.34, 0.08, 0.07))
-		b.draw_circle(Vector2(32.0, by), 7.0, Color(0.32, 0.46, 1.0) if not on else Color(0.09, 0.13, 0.34))
+		var red_on := true if not flashes_on else on
+		var blue_on := true if not flashes_on else not on
+		b.draw_circle(Vector2(-32.0, by), 7.0, Color(1.0, 0.24, 0.20) if red_on else Color(0.34, 0.08, 0.07))
+		b.draw_circle(Vector2(32.0, by), 7.0, Color(0.32, 0.46, 1.0) if blue_on else Color(0.09, 0.13, 0.34))
 	else:
 		for bx: float in [-32.0, 32.0]:
-			var lit: bool = on if bx < 0.0 else not on
+			var lit: bool = true if not flashes_on else (on if bx < 0.0 else not on)
 			b.draw_circle(Vector2(bx, by), 7.0, Color(1.0, 0.78, 0.16) if lit else Color(0.38, 0.28, 0.06))
 			if lit:
 				b.draw_circle(Vector2(bx, by), 15.0, Color(1.0, 0.80, 0.25, 0.18))

@@ -34,7 +34,9 @@ func _initialize() -> void:
 # One press of one action, handled by whichever screen is up, then let go.
 func _press(action: String) -> void:
 	Input.action_press(action)
-	if main.in_settings:
+	if main.in_controls:
+		main._tick_controls()
+	elif main.in_settings:
 		main._tick_settings()
 	elif main.started and main.paused:
 		Flow.tick_pause(main)
@@ -122,7 +124,7 @@ func _run() -> void:
 		main._apply_menu_step()
 		_check(Flow.main_labels(main)[0] == I18n.t("menu_play") and I18n.language == lang,
 			"%s: the main menu is in %s (%s)" % [lang, lang, Flow.main_labels(main)[0]])
-		for which: String in ["title", "walk", "details", "progress", "settings", "pause", "walkcard"]:
+		for which: String in ["title", "walk", "details", "progress", "settings", "controls", "pause", "walkcard"]:
 			for it: Array in Flow.prompts(main, which):
 				_check(String(it[1]) != "" and (lang == "en" or not String(it[1]).begins_with("verb_")),
 					"%s: %s offers words in the prompt bar (%s)" % [lang, which, it[1]])
@@ -158,6 +160,23 @@ func _run() -> void:
 				if String(row[0]) != "shop":
 					await _press("plant")
 					_check(_screen() == String(row[1]), "plant does not close %s" % row[0])
+				if String(row[0]) == "settings":
+					# open CONTROLS from SETTINGS, test listen cancel, and return to SETTINGS via BACK
+					main.settings_idx = Flow.settings_keys(main).find("controls")
+					await _press("plant")
+					_check(_screen() == "controls" and main.in_controls and not main.in_settings,
+						"%s/%s: plant on controls row enters controls" % [lang, back])
+					await _press("move_down")
+					await _press("move_right")
+					await _press("plant")
+					_check(get_root().get_node("Game").rebind_step >= 0 and _screen() == "controls",
+						"%s/%s: plant on a controls row enters listen mode" % [lang, back])
+					await _press(back)
+					_check(get_root().get_node("Game").rebind_step == -1 and _screen() == "controls",
+						"%s/%s: %s cancels listening inside controls" % [lang, back, back])
+					await _press(back)
+					_check(_screen() == "settings" and main.in_settings and main.settings_panel.visible,
+						"%s/%s: %s from controls returns to settings" % [lang, back, back])
 				await _to_main(back)
 				_check(_screen() == "title" and main.menu_step == 0,
 					"%s on %s returns to the main menu" % [back, row[0]])

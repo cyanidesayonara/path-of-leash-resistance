@@ -1266,7 +1266,9 @@ var ground_detail: Array[Dictionary] = []
 var in_progress_view := false
 var progress_chapter := 0        # the chapter YOUR WALKS shows
 var in_settings := false
+var in_controls := false
 var settings_idx := 0
+var controls_idx := 0
 var settings_panel: Control
 var rotate_prompt: CanvasLayer
 var _redraw_acc := 0.0
@@ -1550,7 +1552,7 @@ func _input(event: InputEvent) -> void:
 	# (the pause menu, a death card) is re-filled, and the title's is rebuilt
 	if Prompts.note(event):
 		Prompts.refresh()
-	if in_settings and Game.rebind_step >= 0:
+	if (in_controls or in_settings) and Game.rebind_step >= 0:
 		MenuFlow.rebind_input(self, event)
 
 
@@ -6364,7 +6366,8 @@ func _refresh_shop() -> void:
 const SETTING_NAMES := {
 	"master": "MASTER VOLUME", "sfx": "SOUND EFFECTS",
 	"music": "MUSIC", "fullscreen": "FULLSCREEN", "goals": "GOAL LIST", "language": "LANGUAGE",
-	"controls": "CONTROLS",
+	"controls": "CONTROLS", "screen_shake": "SCREEN SHAKE",
+	"flashes": "FLASHES", "text_size": "TEXT SIZE",
 	"free_play": "FREE PLAY (DEMO)",
 }
 
@@ -6403,6 +6406,22 @@ func _settings_adjust(dir: int) -> void:
 
 func _tick_settings() -> void:
 	MenuFlow.tick_settings(self)
+
+
+func _open_controls() -> void:
+	MenuFlow.open_controls(self)
+
+
+func _close_controls() -> void:
+	MenuFlow.close_controls(self)
+
+
+func _tick_controls() -> void:
+	MenuFlow.tick_controls(self)
+
+
+func _apply_ui_scale() -> void:
+	UiScale.apply(self)
 
 
 # the moment the "drink" goal is met, wherever she was drinking: said once
@@ -6961,6 +6980,11 @@ func _shot_menu(which: String) -> void:
 		"notice":
 			_skip_title()
 			_death(I18n.t("death_edge"), "edge")
+		"settings":
+			_open_settings_from_menu()
+		"controls":
+			_open_settings_from_menu()
+			_open_controls()
 
 
 # Straight into the walk, as if SPACE had been pressed on the title. For the
@@ -7052,6 +7076,10 @@ func _process(_delta: float) -> void:
 				return
 			if "--shot-settings" in OS.get_cmdline_user_args():
 				_open_settings_from_menu()
+				return
+			if "--shot-controls" in OS.get_cmdline_user_args():
+				_open_settings_from_menu()
+				_open_controls()
 				return
 			# --shot-title leaves the main menu up instead of skipping it, so
 			# it and the name chalked on the pavement can be reviewed.
@@ -7151,6 +7179,9 @@ func _process(_delta: float) -> void:
 	# film likewise keeps its skip from pausing the walk
 	if intro_playing or film_playing:
 		return
+	if in_controls:
+		_tick_controls()
+		return
 	if in_settings:
 		_tick_settings()
 		return
@@ -7208,7 +7239,7 @@ func _process(_delta: float) -> void:
 	if shot_cam.x < INF:
 		cam.position = shot_cam
 		cam.reset_smoothing()
-	if shake_t > 0.0:
+	if shake_t > 0.0 and Game.screen_shake:
 		cam.offset = Vector2(_shake_rng.randf_range(-1, 1), _shake_rng.randf_range(-1, 1)) * 9.0 * shake_t
 	else:
 		cam.offset = Vector2.ZERO
@@ -13046,7 +13077,7 @@ func _draw_world() -> void:
 	if lvl == "partit":
 		if march != null:
 			march.draw(_wc)
-		if _match_flash > 0.0:
+		if _match_flash > 0.0 and Game.flashes:
 			var haze := Color(1.0, 0.92, 0.72, 0.10 * clampf(_match_flash, 0.0, 1.0))
 			_wc.circle(Vector2(980.0, Partit.STADIUM_Y0 + 80.0), 70.0, haze)
 			_wc.circle(Vector2(1040.0, Partit.STADIUM_Y0 - 40.0), 46.0, haze)
@@ -13525,7 +13556,7 @@ func _draw_world() -> void:
 		Arrival.draw(self, _wc)
 	# not under the settings panel, the wardrobe or the progress table: the
 	# dim only halves it, so the chalked name read straight through (#10)
-	var menu_over := in_settings or in_shop or in_progress_view
+	var menu_over := in_settings or in_controls or in_shop or in_progress_view
 	if not menu_over and vb > START_Y - 260.0 and (not started or gloss_a > 0.01 or _sign_mat() == ""):
 		_draw_ground_title()
 	# the signs are the last thing in the world pass, so their canvas sits
