@@ -75,6 +75,15 @@ func _run() -> void:
 	# and the pinecone prize off the trail is still inside it
 	_check(m.prize_pos.x > m.walk_edges(m.prize_pos.y).x - float(LevelBuild.TRAIL_WOOD_OUT) + 10.0,
 		"the pinecone in the brush is on this side of the wood line")
+	# La Clariana, past the gate, is lawn underfoot right across, its worn
+	# patch soft at the edge; the trail up to the gate is as it was
+	var G: int = m.Surfaces.S.GRASS
+	var fr: Rect2 = m._freedom_rect()
+	var mid := fr.get_center()
+	_check(m.surface_at(mid) == G, "the middle of the clearing is lawn (%s)" % mid)
+	_check(m.surface_at(Vector2(m.walk_cx, m.GATE_Y - 120.0)) == G, "and so is the way in from the gate")
+	_check(m.surface_at(Vector2(m.walk_cx, -3100.0)) != G, "the trail itself is not")
+	_check(m.soft_wear, "the clearing's trodden earth is soft at the edge")
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
