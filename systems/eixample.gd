@@ -41,6 +41,11 @@ const SIDEWALK := 104.0             # panot from the facade to the tree line
 
 # --- the things on it ------------------------------------------------------------
 const POND := Rect2(418.0, -4930.0, 124.0, 250.0)
+# lamps on the interior garden's wall, down each side as fractions of its
+# depth; under main.NIGHT_LAMP_R, so the light layer draws each its bracket
+const GARDEN_LAMPS: Array[float] = [0.3, 0.7]
+const GARDEN_LAMP_IN := 8.0
+const GARDEN_LAMP_R := 160.0
 const PRIZE := Vector2(892.0, -1962.0)
 const PRIZE_TEXT := "snatch the croissant off the terrace table"
 # planted islands down the middle, as (centre y, length)
@@ -50,6 +55,8 @@ const ISLANDS: Array[Vector2] = [
 	Vector2(-3500.0, 180.0), Vector2(-3840.0, 200.0),
 ]
 const ISLAND_W := 74.0
+# how far an island's bench reaches out of its west side, bench included
+const ISLAND_BENCH_OUT := 34.0
 # a corner counts as marked when its lamp is (marks keep the pole's position)
 const CORNER_R := 40.0
 
@@ -219,6 +226,13 @@ static func build(m: Node2D) -> Array:
 	for r: Rect2 in island_rects():
 		benches.append(Vector2(r.position.x - 16.0, r.get_center().y))
 	m.benches = Array(benches, TYPE_VECTOR2, &"", null)
+	# your human keeps to the islands' east side, clear of the benches: weaving
+	# the whole street, he walked into a bench's end and was pinned between it
+	# and the island
+	var isl: Array[Dictionary] = []
+	for r: Rect2 in island_rects():
+		isl.append({"rect": Rect2(r.position.x - ISLAND_BENCH_OUT, r.position.y, r.size.x + ISLAND_BENCH_OUT, r.size.y), "side": 1.0})
+	m.islands = isl
 	m.bins = Array([
 		Vector2(CX - HALF + 22.0, -330.0), Vector2(CX + HALF - 22.0, -1240.0),
 		Vector2(CX - HALF + 22.0, -2480.0), Vector2(CX + HALF - 22.0, -3660.0),
@@ -780,6 +794,18 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 		m._freedom_sign(c, r, m.gate_text, "The garden inside the block, off leash")
 
 
+# the interior garden's trees are broadleaves standing in its lawn
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m.broadleaf_grove(c, p)
+
+
+# the street's lamps, and lamps on the garden's wall down either side
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	out.append_array(m.freedom_side_lamps(GARDEN_LAMPS, GARDEN_LAMP_IN, GARDEN_LAMP_R))
+	return out
+
+
 # The street after dark (world/night_fronts.gd): this walk draws its own
 # edges, so it lists its illuminated shopfronts, bars and doorways.
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
@@ -792,7 +818,9 @@ static func night_fronts(m: Node2D) -> Array[Dictionary]:
 			if absf(y - xi) < STREET_H + 24.0:
 				in_xway = true
 				break
-		if not in_xway:
+		# a front's light falls straight across the walk, so it can only sit
+		# on a facade that runs along it: none on a chamfer
+		if not in_xway and half_at(y) <= HALF + 1.0:
 			for side: float in [-1.0, 1.0]:
 				var k := i * 2 + (0 if side < 0.0 else 1) + 707
 				var kind := NightFronts.kind_of(k)

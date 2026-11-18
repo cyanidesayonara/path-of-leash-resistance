@@ -99,6 +99,27 @@ func _run() -> void:
 	_check(m.surface_at(Eixample.POND.get_center()) == Surfaces.S.WATER, "the pond handles as water")
 	_check(m.surface_at(Vector2(640.0, -1800.0)) == Surfaces.S.PAVEMENT, "the crossing handles as paving")
 	_check(m.lane_ys.size() == Eixample.BIKE_XINGS.size(), "bikes ride the cross streets")
+	# your human keeps to each island's far side from its bench
+	_check(m.islands.size() == Eixample.island_rects().size(), "your human walks round every island")
+	for i: int in m.islands.size():
+		var ir: Rect2 = m.islands[i]["rect"]
+		_check(ir.has_point(m.benches[i]) and float(m.islands[i]["side"]) > 0.0,
+			"he keeps clear of the bench at %s" % m.benches[i])
+
+	# a lit front's light falls straight across the walk, so none sits on a
+	# chamfer, whose facade runs at an angle to it
+	var on_chamfer := 0
+	var fronts: Array[Dictionary] = Eixample.night_fronts(m)
+	for f: Dictionary in fronts:
+		if Eixample.half_at(Vector2(f.at).y) > Eixample.HALF + 1.0:
+			on_chamfer += 1
+	_check(not fronts.is_empty() and on_chamfer == 0, "no lit front on a chamfer (%d of %d)" % [on_chamfer, fronts.size()])
+	# the interior garden: broadleaves in its lawn, and lamps on its wall
+	_check(m.walk_mod.has_method("draw_grove"), "the garden's trees are its own broadleaves")
+	var street_l: Array[Vector3] = m.street_night_lights()
+	var lights: Array[Vector3] = m.night_lights()
+	_check(lights.size() == street_l.size() + Eixample.GARDEN_LAMPS.size() * 2,
+		"the street's %d lamps and the garden's wall lamps (%d in all)" % [street_l.size(), lights.size()])
 
 	# the corners goal counts a marked chamfer lamp once
 	var spots: Array[Vector2] = Eixample.chamfer_spots(30.0)
