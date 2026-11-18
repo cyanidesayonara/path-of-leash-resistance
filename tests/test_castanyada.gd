@@ -62,6 +62,22 @@ func _run() -> void:
 		dog.move_and_slide()
 	_check(not st.grow(-4.0).has_point(dog.global_position), "the stage stops the dog")
 	_check(m.hydrants.size() >= 4, "enough chestnut sacks to mark")
+	# the festival yard past the gate is paved wall to wall, soft only in its
+	# tree pits, and its trees stand there without forest roots
+	var S: Dictionary = m.Surfaces.S
+	var fr: Rect2 = m._freedom_rect()
+	var flags := Vector2(fr.position.x + 90.0, m.GATE_Y - 260.0)
+	for pp: Dictionary in m.park_props:
+		if flags.distance_to(pp.pos) < 40.0:
+			flags += Vector2(0.0, -90.0)
+	_check(m.surface_at(flags) == S.PAVEMENT, "the yard's flags off the dance floor handle as paving (%s)" % flags)
+	var pits: Array[Vector2] = m.trees
+	_check(not pits.is_empty() and m.surface_at(pits[0] + Vector2(8.0, 0.0)) == S.GRASS, "a tree pit there is soft")
+	_check(m.walk_mod.has_method("draw_grove"), "the yard's trees stand in their pits without forest roots")
+	var street_l: Array[Vector3] = m.street_night_lights()
+	var lights: Array[Vector3] = m.night_lights()
+	_check(lights.size() == street_l.size() + m.walk_mod.YARD_LAMPS.size() * 2,
+		"the street's %d lamps and the yard's wall lamps (%d in all)" % [street_l.size(), lights.size()])
 	m.queue_free()
 	await process_frame
 	print("\n%d checks, %d failures" % [checks, failures.size()])
