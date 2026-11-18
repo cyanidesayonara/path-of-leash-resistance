@@ -35,9 +35,15 @@ on:
       - "site/**"
       - "store/listing.md"
       - "autoload/game.gd"
+      - "systems/goals.gd"
+      - "systems/tutorial.gd"
+      - "systems/home_chase.gd"
       - "hud/ui_kit.gd"
       - "fonts/**"
       - "tools/site_copy.py"
+      - "tools/site_walks.py"
+      - "tools/site_walks.gd"
+      - "tools/site_walks_data.json"
       - ".github/workflows/pages.yml"
   workflow_run:
     workflows: ["Release to itch.io"]
@@ -99,16 +105,20 @@ jobs:
           sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils fonts-dejavu-core python3-pil
           cd rel
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tools/site_walks.gd
           bash tools/site_media.sh
           cd ..
+          rm -f site/img/shot-*.jpg
           cp rel/site/img/* site/img/
 
       # main's pages, filled from the release's listing and walk list on a
       # release, from main's otherwise
-      - name: Fill in the copy
+      - name: Fill in the copy and walk pages
         env:
           FROM: ${{ github.event_name == 'workflow_run' && '--from=rel' || '' }}
-        run: python3 tools/site_copy.py ${FROM}
+        run: |
+          python3 tools/site_copy.py ${FROM}
+          python3 tools/site_walks.py ${FROM}
 
       - name: Assemble the site
         env:

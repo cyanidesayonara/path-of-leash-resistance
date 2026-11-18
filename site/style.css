@@ -264,3 +264,520 @@ footer {
 }
 
 footer a { color: var(--ink-soft); }
+
+/* Added for walks, chapters, beats, bosses, chases, dogs, and wardrobe */
+html, body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.wrap, .wrap * {
+  box-sizing: border-box;
+}
+
+.beats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 28px;
+}
+
+.beat {
+  background: var(--navy-raised);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-top: 3px solid var(--saffron);
+  border-radius: 10px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.beat-num {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--saffron);
+  margin-bottom: 6px;
+}
+
+.beat h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+
+.beat p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.chapter-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+}
+
+.chapter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--navy-raised);
+  border: 1px solid color-mix(in srgb, var(--saffron) 40%, transparent);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.chapter-pill:hover,
+.chapter-pill:focus-visible {
+  border-color: var(--saffron);
+  background: color-mix(in srgb, var(--saffron) 14%, var(--navy-raised));
+}
+
+.pill-count {
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.chapter {
+  margin: 0 0 36px;
+}
+
+.chapter-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+.chapter-head h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--saffron);
+}
+
+.chapter-sub {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+.walk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.walk-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--navy-raised);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--ink);
+  min-width: 0;
+  transition: transform 0.14s ease, border-color 0.14s ease;
+}
+
+.walk-card:hover,
+.walk-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--saffron);
+}
+
+.walk-card.is-boss {
+  border-color: color-mix(in srgb, var(--turquoise) 45%, transparent);
+}
+
+.walk-card.is-boss:hover,
+.walk-card.is-boss:focus-visible {
+  border-color: var(--turquoise);
+}
+
+.walk-card.is-chase {
+  border-color: color-mix(in srgb, var(--magenta) 45%, transparent);
+}
+
+.walk-card.is-chase:hover,
+.walk-card.is-chase:focus-visible {
+  border-color: var(--magenta);
+}
+
+.walk-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--navy-deep);
+}
+
+.walk-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 13px 14px;
+}
+
+.walk-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  background: color-mix(in srgb, var(--ink) 10%, var(--navy-deep));
+  color: var(--ink-soft);
+}
+
+.badge-boss {
+  background: color-mix(in srgb, var(--turquoise) 22%, var(--navy-deep));
+  color: var(--turquoise);
+}
+
+.badge-chase {
+  background: color-mix(in srgb, var(--magenta) 22%, var(--navy-deep));
+  color: var(--magenta);
+}
+
+.badge-tut {
+  background: color-mix(in srgb, var(--leaf) 22%, var(--navy-deep));
+  color: var(--leaf);
+}
+
+.badge-sky {
+  color: var(--ink-soft);
+}
+
+.badge-chapter,
+.badge-star {
+  background: color-mix(in srgb, var(--saffron) 20%, var(--navy-deep));
+  color: var(--saffron);
+}
+
+.walk-name {
+  font-weight: 700;
+  font-size: 1.02rem;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.walk-place {
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+.walk-gloss {
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.walk-index {
+  margin: 12px 0 32px;
+  background: var(--navy-raised);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 10px;
+  padding: 12px 16px;
+}
+
+.walk-index summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 0.94rem;
+}
+
+.walk-index[open] summary {
+  margin-bottom: 12px;
+  color: var(--saffron);
+}
+
+.boss-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.film-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.film-grid figure,
+.walk-shots figure,
+.grid figure {
+  min-width: 0;
+}
+
+.film-grid img,
+.walk-shots img,
+.grid img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.chase-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 28px;
+}
+
+.chase-links a {
+  display: inline-block;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--navy-raised);
+  border: 1px solid color-mix(in srgb, var(--magenta) 45%, transparent);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.88rem;
+}
+
+.chase-links a:hover,
+.chase-links a:focus-visible {
+  border-color: var(--magenta);
+  background: color-mix(in srgb, var(--magenta) 16%, var(--navy-raised));
+}
+
+.dog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.dog-card,
+.wardrobe-card {
+  min-width: 0;
+}
+
+.dog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dog-head h3,
+.wardrobe-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.08rem;
+  color: var(--ink);
+}
+
+.dog-head h3 {
+  margin-bottom: 0;
+}
+
+.dog-breed {
+  margin: 0 0 8px;
+  font-size: 0.86rem;
+  color: var(--turquoise);
+  font-weight: 600;
+}
+
+.dog-card p:last-child,
+.wardrobe-card p {
+  margin: 0 0 10px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.48;
+}
+
+.wardrobe-card p:last-child {
+  margin-bottom: 0;
+}
+
+.wardrobe-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.swatch-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+}
+
+.swatch-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--navy-deep);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  font-size: 0.84rem;
+  color: var(--ink);
+}
+
+.swatch {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--ink) 40%, transparent);
+  flex-shrink: 0;
+}
+
+.item-cost {
+  color: var(--ink-faint);
+}
+
+.section-lead {
+  color: var(--ink-soft);
+  margin: -6px 0 16px;
+  line-height: 1.5;
+}
+
+.crumb {
+  margin: 0 0 18px;
+  font-size: 0.92rem;
+  color: var(--ink-faint);
+}
+
+.crumb a {
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+
+.crumb a:hover,
+.crumb a:focus-visible {
+  color: var(--saffron);
+  text-decoration: underline;
+}
+
+header.top.walk-top {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+header.top.walk-top .walk-badges {
+  margin-bottom: 10px;
+}
+
+header.top.walk-top h1 {
+  margin: 0 0 6px;
+}
+
+header.top.walk-top .pitch {
+  margin: 0;
+  max-width: none;
+}
+
+.walk-about p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.walk-facts {
+  margin: 18px 0 26px;
+}
+
+.walk-shots {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.goal-list {
+  background: var(--navy-raised);
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 10px;
+  padding: 16px 18px 16px 38px;
+  margin: 0 0 28px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 26px;
+}
+
+.goal-list li {
+  color: var(--ink);
+  line-height: 1.45;
+  font-size: 0.94rem;
+}
+
+.lesson-tag {
+  color: var(--turquoise);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.walk-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin: 10px 0 26px;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+.walk-pager a {
+  color: var(--saffron);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.walk-pager a:hover,
+.walk-pager a:focus-visible {
+  text-decoration: underline;
+}
+
+.walk-pager-mid {
+  color: var(--ink-soft);
+}
+
+@media (max-width: 720px) {
+  .beats,
+  .boss-grid,
+  .film-grid,
+  .wardrobe-grid,
+  .goal-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .walk-grid,
+  .dog-grid,
+  .walk-shots {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chapter-nav {
+    gap: 6px;
+  }
+  .chapter-pill {
+    padding: 5px 10px;
+    font-size: 0.84rem;
+  }
+}
