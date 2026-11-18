@@ -155,7 +155,7 @@ func _run() -> void:
 	var angels_idx: int = game.CAROUSEL.find("angels")
 	_check(angels_idx == trail_idx + 1, "angels directly after trail in CAROUSEL (%d vs %d)" % [angels_idx, trail_idx])
 	_check(String(game.LEVEL_NAMES.get("angels", "")) == "Els Àngels", "LEVEL_NAMES has Els Àngels")
-	_check(String(game.LEVEL_SUBTITLES.get("angels", "")) == "The skate plaza outside the white museum", "LEVEL_SUBTITLES has angels")
+	_check(String(game.LEVEL_SUBTITLES.get("angels", "")) == "The skate plaza by the museum", "LEVEL_SUBTITLES has angels")
 	_check(game.LEVEL_SUBTITLES_CA.has("angels"), "LEVEL_SUBTITLES_CA has angels")
 	_check(game.LEVEL_SUBTITLES_ES.has("angels"), "LEVEL_SUBTITLES_ES has angels")
 	_check(int(game.STAR_GATE.get("angels", -1)) == 22, "STAR_GATE for angels is 22")

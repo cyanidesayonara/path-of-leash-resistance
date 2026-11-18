@@ -181,9 +181,9 @@ func _run() -> void:
 	_check(esp_idx >= 0 and pob_idx > esp_idx and pob_idx == game.CAROUSEL.find("santpau") + 1,
 		"poble follows espanya and santpau in CAROUSEL (%d -> %d)" % [esp_idx, pob_idx])
 	_check(String(game.LEVEL_NAMES.get("poble", "")) == "El Poble Espanyol", "LEVEL_NAMES['poble'] is El Poble Espanyol")
-	_check(String(game.LEVEL_SUBTITLES.get("poble", "")) == "The walled village of copied towns", "EN subtitle matches")
-	_check(String(game.LEVEL_SUBTITLES_CA.get("poble", "")) == "El poble emmurallat de pobles copiats", "CA subtitle matches")
-	_check(String(game.LEVEL_SUBTITLES_ES.get("poble", "")) == "El pueblo amurallado de pueblos copiados", "ES subtitle matches")
+	_check(String(game.LEVEL_SUBTITLES.get("poble", "")) == "A walled village of copied towns", "EN subtitle matches")
+	_check(String(game.LEVEL_SUBTITLES_CA.get("poble", "")) == "Un poble emmurallat de còpies", "CA subtitle matches")
+	_check(String(game.LEVEL_SUBTITLES_ES.get("poble", "")) == "Un pueblo amurallado de copias", "ES subtitle matches")
 	_check(int(game.STAR_GATE.get("poble", -1)) == 46, "STAR_GATE['poble'] is 46")
 	_check(int(game.STAR_GATE.get("espanya", -1)) == 45 and int(game.STAR_GATE.get("site", -1)) == 47, "neighboring star gates unrenumbered (45, 47)")
 	_check(String(game.CHASE_GATE.get("poble", "")) == "boars", "poble gated by boars")
