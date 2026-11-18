@@ -708,10 +708,17 @@ static func _shell(p: Vector2, ax: Vector2, ay: Vector2, r: float) -> PackedVect
 
 
 static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
-	# cut carnations from the flower stalls, laid in the letters: a stem, two
-	# leaves, and a frilled head
+	# a municipal flower bed with the name planted in it: a granite kerb round
+	# a rectangle of dark soil and low ground cover, the letters a band of
+	# foliage set with carnations (a stem, two leaves and a frilled head). On
+	# the bare paving the heads blended into La Rambla's cream waves and the
+	# word was hard to make out; on the bed every colour reads, and the
+	# foliage keeps the letters when the flowers are kicked about.
 	var cols := [Color(0.88, 0.16, 0.22), Color(0.96, 0.52, 0.64), Color(0.98, 0.96, 0.92),
 		Color(0.94, 0.72, 0.20)]
+	_flower_planter(c, sign, h)
+	_stroke(c, sign.lines, h * 0.24, Color(0.22, 0.44, 0.20))
+	_stroke(c, sign.lines, h * 0.15, Color(0.33, 0.56, 0.27))
 	for pc: Dictionary in sign.pieces:
 		var r: float = pc.r
 		var dir := Vector2.from_angle(float(pc.rot))
@@ -727,6 +734,37 @@ static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
 			var a := float(pc.rot) + TAU * float(k) / 6.0
 			c.draw_circle(p + Vector2.from_angle(a) * r * 0.45, r * 0.45, col)
 		c.draw_circle(p, r * 0.4, col.darkened(0.2))
+
+
+# the planter a flower name lies in: its kerb, soil and ground cover, round
+# the strokes' extent
+const PLANTER_PAD := 0.55          # cap heights of bed round the letters
+
+
+static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for pl: PackedVector2Array in sign.lines:
+		for v in pl:
+			lo = lo.min(v)
+			hi = hi.max(v)
+	if lo.x > hi.x:
+		return
+	var r := Rect2(lo, hi - lo).grow(h * PLANTER_PAD)
+	var kerb := maxf(5.0, h * 0.14)
+	c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(kerb), Color(0.05, 0.05, 0.08, 0.24))
+	c.draw_rect(r.grow(kerb), Color(0.66, 0.63, 0.58))
+	c.draw_rect(Rect2(r.position - Vector2(kerb, kerb), Vector2(r.size.x + kerb * 2.0, 2.5)), Color(0.80, 0.78, 0.73))
+	c.draw_rect(r, Color(0.27, 0.20, 0.14))
+	# the ground cover: low clumps over the soil, a hash of the bed's own
+	var key: float = sign.key
+	# fine and low against the soil, so it reads as a texture and the letters
+	# keep the contrast
+	var n := int(r.size.x * r.size.y / (h * h * 0.05))
+	for i in range(n):
+		var q := r.position + Vector2(_h(i, key, 70.0) * r.size.x, _h(i, key, 71.0) * r.size.y)
+		var cr := maxf(1.6, h * (0.025 + 0.02 * _h(i, key, 72.0)))
+		c.draw_circle(q, cr, Color(0.30, 0.26, 0.16).lerp(Color(0.24, 0.30, 0.17), _h(i, key, 73.0)))
 
 
 static func _flowerbed(c: Object, sign: Dictionary, h: float) -> void:
