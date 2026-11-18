@@ -12,6 +12,7 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Letters := preload("res://world/sign_letters.gd")
+const Panot := preload("res://world/panot.gd")
 
 # A BEACH TOWEL: striped across both ends, fringed, and either someone lying
 # on it in the sun or the things they left (flip-flops, a paperback, the sun
@@ -44,6 +45,13 @@ const CREEP_CHUNK := 200.0                        # built and cached a stretch a
 const CREEP_REACH := 80.0                         # furthest a piece reaches from its anchor
 
 static var _creep_cache := {}
+
+const SLAB_ROW := 150.0                           # the promenade's cross joints
+const SLAB_X0 := 570.0
+const SLAB_X1 := 980.0
+const SLAB_COL := Color(0.79, 0.76, 0.7)
+const SLAB_JOINT := Color(0.71, 0.68, 0.62)
+const BIKE_STENCIL_STEP := 600.0
 
 
 static func _hash(i: float, s: float) -> float:
@@ -1165,6 +1173,61 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 		m.kite_flyer.draw(m, wc, vt, vb, Game.weather == "wind")
 
 
+# The promenade's big concrete slabs, three across between the 150 joints,
+# each a shade off its neighbours the way poured slabs weather. Into the
+# world batch: no draw call of their own.
+static func _slabs(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var lo := maxf(float(m.GATE_Y), floorf(vt / SLAB_ROW) * SLAB_ROW)
+	var hi := minf(m.START_Y + 200.0, vb)
+	var w := (SLAB_X1 - SLAB_X0) / 3.0
+	var y := lo
+	while y < hi:
+		var row := floorf(y / SLAB_ROW)
+		for col in range(3):
+			var h := _hash(row * 3.0 + float(col), 4.7)
+			var r := Rect2(SLAB_X0 + w * float(col) + 1.0, y + 1.0, w - 2.0, SLAB_ROW - 2.0)
+			var tone := SLAB_COL.darkened(0.05 * h) if h < 0.5 else SLAB_COL.lightened(0.04 * (h - 0.5))
+			wc.draw_rect(r, tone)
+			wc.draw_rect(Rect2(r.position, Vector2(r.size.x, 2.0)), tone.lightened(0.07))
+		y += SLAB_ROW
+	for col in range(1, 3):
+		var x := SLAB_X0 + w * float(col)
+		wc.draw_line(Vector2(x, maxf(lo, vt - 10.0)), Vector2(x, hi), SLAB_JOINT, 2.0)
+
+
+# A white bicycle and an arrow painted in each lane of the bike path, up one
+# side and down the other, so it reads as a carril bici and not more pavement.
+static func _bike_stencils(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var y := floorf((vt - 40.0) / BIKE_STENCIL_STEP) * BIKE_STENCIL_STEP
+	while y < vb + 40.0:
+		if y > m.GATE_Y + 60.0 and y < m.START_Y - 40.0:
+			_bike_stencil(wc, Vector2(550.0, y), -1.0)
+			_bike_stencil(wc, Vector2(510.0, y + BIKE_STENCIL_STEP * 0.5), 1.0)
+		y += BIKE_STENCIL_STEP
+
+
+static func _bike_stencil(b: ShapeBatch, c: Vector2, dir: float) -> void:
+	var col := Color(0.97, 0.96, 0.93, 0.7)
+	for wy: float in [-8.0, 8.0]:
+		var wc := c + Vector2(0.0, wy * dir)
+		for k in range(10):
+			var a0 := TAU * float(k) / 10.0
+			var a1 := TAU * float(k + 1) / 10.0
+			b.line(wc + Vector2(cos(a0), sin(a0)) * 5.0, wc + Vector2(cos(a1), sin(a1)) * 5.0, col, 1.6)
+	# side on, painted along the lane: rear hub, crank, saddle, head, fork
+	var rear := c + Vector2(0.0, 8.0 * dir)
+	var crank := c + Vector2(0.0, 1.0 * dir)
+	var seat := c + Vector2(-7.0, 3.5 * dir)
+	var head := c + Vector2(-7.0, -5.0 * dir)
+	for seg: Array in [[rear, crank], [rear, seat], [crank, seat], [seat, head], [crank, head], [head, c + Vector2(0.0, -8.0 * dir)]]:
+		b.line(seg[0], seg[1], col, 2.0)
+	b.line(seat + Vector2(-1.5, 2.0 * dir), seat + Vector2(-1.5, -2.0 * dir), col, 2.4)
+	b.line(head, head + Vector2(-2.5, 2.0 * dir), col, 2.0)
+	var ah := c + Vector2(0.0, -26.0 * dir)
+	b.line(c + Vector2(0.0, -16.0 * dir), ah, col, 2.4)
+	b.polygon(PackedVector2Array([ah + Vector2(-5.0, 2.0 * dir), ah + Vector2(0.0, -6.0 * dir), ah + Vector2(5.0, 2.0 * dir)]), col)
+
+
 # no edge layer: the cross-section below runs out past the building line
 static func draw_edge_layer(_m: Node2D, _c: Object, _vt: float, _vb: float) -> void:
 	pass
@@ -1260,13 +1323,17 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		if ddy < vb and ddy > vt:
 			wc.draw_line(Vector2(530, ddy), Vector2(530, ddy - 26.0), Color(0.97, 0.96, 0.93, 0.8), 3.0)
 		ddy -= 64.0
+	_bike_stencils(m, wc, vt, vb)
 	wc.draw_rect(Rect2(570, ftop, 410, bottom - ftop), Color(0.79, 0.76, 0.7))
+	_slabs(m, wc, vt, vb)
 	var sy := minf(m.START_Y + 200.0, vb + 150.0 - fmod(vb, 150.0))
 	while sy > m.GATE_Y and sy > vt - 150.0:
 		if sy < vb and sy > vt:
 			wc.draw_line(Vector2(560, sy), Vector2(980, sy), Color(0.71, 0.68, 0.62), 2.0)
 		sy -= 150.0
 	wc.draw_rect(Rect2(980, ftop, 210, bottom - ftop), Color(0.76, 0.72, 0.65))
+	# the town's own pavement along the blocks: flower panots
+	Panot.flor(wc, 982.0, 1190.0, maxf(ftop, vt - Panot.FLOR), minf(bottom, vb + Panot.FLOR))
 	# The building strip was at x>=1180, and the camera never sees past
 	# x=1140 (zoom 1.28 on a fixed x=640) - so the whole landward side of
 	# this walk was being drawn where nobody could look at it. Brought
@@ -1300,6 +1367,37 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		if (m.towels[ti].rect as Rect2).end.y > vt - 40.0 and (m.towels[ti].rect as Rect2).position.y < vb + 40.0:
 			_towel(m, m.towels[ti], ti)
 	_landmarks(m, vt, vb)
+
+
+# The sand's parasols. Furled (dawn, the walk's own sky, and night) each is a
+# closed canopy wrapped round its pole and tied, standing in a little mound
+# of sand, not a bare stick.
+static func draw_parasol(m: Node2D, b: ShapeBatch, p: Vector2, i: int, up: bool) -> void:
+	var col: Color = m.PARASOL_COLS[i % 3]
+	if up:
+		m._parasol_canopy(b, p, col, float(i))
+		return
+	var foot := p + Vector2(-3.0, 24.0)
+	var tip := p + Vector2(3.0, -28.0)
+	var d := (tip - foot).normalized()
+	var n := Vector2(-d.y, d.x)
+	var span := foot.distance_to(tip)
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	b.line(foot + Shade.light * 3.0, tip + Shade.light * 9.0, sh, 6.0)
+	b.circle(foot, 6.0, m.BEACH_SAND.darkened(0.10))
+	b.circle(foot + Vector2(-1.0, -1.0), 4.0, m.BEACH_SAND.lightened(0.06))
+	b.line(foot, tip, Color(0.62, 0.60, 0.56), 2.4)
+	# the furled canopy: fattest a third of the way up, tapering to the tip
+	var pts := PackedVector2Array()
+	for k in range(13):
+		var side := 1.0 if k < 7 else -0.8
+		var u := float(k if k < 7 else 12 - k) / 6.0
+		var w := 5.0 * (0.6 + 0.4 * u / 0.3 if u < 0.3 else 1.0 - 0.85 * (u - 0.3) / 0.7)
+		pts.append(foot + d * span * (0.22 + 0.74 * u) + n * w * side)
+	b.polygon(pts, col.darkened(0.12))
+	b.line(foot + d * span * 0.26 + n * 1.6, foot + d * span * 0.9 + n * 0.4, col.lightened(0.22), 1.6)
+	b.line(foot + d * span * 0.52 - n * 4.6, foot + d * span * 0.52 + n * 5.4, Color(0.95, 0.93, 0.88), 1.6)
+	b.circle(tip, 1.8, Color(0.40, 0.38, 0.35))
 
 
 # the cabin of the promenade's lifeguard tower stands over everyone

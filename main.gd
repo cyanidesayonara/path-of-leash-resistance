@@ -3298,7 +3298,10 @@ func draw_overhead_piece(b: ShapeBatch, t: Dictionary, _faded := false) -> void:
 		Over.PARASOL:
 			# wide, over the tables by day, in the rain too; furled spikes
 			# at night and under snow (parasols_up)
-			if not parasols_up():
+			if walk_mod != null and walk_mod.has_method("draw_parasol"):
+				var up := parasols_up()
+				walk_mod.draw_parasol(self, b, p, i, up)
+			elif not parasols_up():
 				b.line(p + Vector2(-3, 24), p + Vector2(3, -28), Color(0.45, 0.4, 0.35), 5.0)
 				b.circle(p + Vector2(3, -28), 4.0, PARASOL_COLS[i % 3])
 			else:

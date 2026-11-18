@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish Passeig Marítim
+
+- The promenade was one flat fill with a hairline every 150: it is laid in big poured slabs now, three across, each a shade off its neighbours (`Passeig._slabs`, into the world batch).
+- The bike path read as more pavement: a white bicycle and an arrow are painted in each lane, northbound on the east side (`Passeig._bike_stencils`).
+- The pavement along the blocks is laid with flower panots (`Panot.flor`), the town's own tiles.
+- The sand's four parasols, furled in the walk's dawn and at night, were bare sticks with a knob. Each is now a closed canopy wrapped round its pole and tied, standing in a little mound of sand, through a new walk hook, `draw_parasol`, that only Passeig has; every other walk's parasols draw as before.
+- `test_walk_hooks` lists the new hook.
+
 ## 2026-11-18 - The menus and HUD in Catalan and Spanish
 
 - The LANGUAGE setting now translates every menu screen (main menu, walk select, GET READY, the wardrobe, YOUR WALKS, settings, the pause grid, THIS WALK, the questions, results), the prompt bar, the banner, the goal texts and their readouts, the toasts and the dare card, the loss and catch cards, the tips, the moods and the rotate prompt. Walk shouts, speech bubbles, the tutorial's lessons, combo names and the dare-givers' lines stay in English for now (part two).
