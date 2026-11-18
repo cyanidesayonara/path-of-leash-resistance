@@ -808,6 +808,9 @@
 # Camí de Ronda cliff path walk test
 --headless --path . --script res://tests/test_ronda.gd
 
+# In-game achievements: 24 feats, event hooks, guards, toasts and save persistence
+--headless --path . --script res://tests/test_achievements.gd
+
 # Every menu and HUD string in all three languages, and none written straight to the screen
 --headless --path . --script res://tests/test_i18n.gd
 

@@ -62,6 +62,7 @@ var detour_layer: Node2D = null
 var shot_cam := Vector2(INF, INF)
 var shot_zoom_set := false
 const CamTricks := preload("res://systems/cam_tricks.gd")
+const Ach := preload("res://systems/achievements.gd")
 var arena_zoom_mult := 1.0
 var _arena_zoom_applied := 1.0
 var cam_tilt_t := 0.0
@@ -1265,6 +1266,8 @@ var prof_us := {}
 var ground_detail: Array[Dictionary] = []
 var in_progress_view := false
 var progress_chapter := 0        # the chapter YOUR WALKS shows
+var in_credits := false
+var credits_scroll := 0.0
 var in_settings := false
 var in_controls := false
 var settings_idx := 0
@@ -6575,6 +6578,7 @@ func on_combo_banked(score: int, mult: int, bonus: int) -> void:
 	float_text(dog.global_position + Vector2(0, -26), msg, col)
 	if mult >= 5:
 		_slowmo()
+	Ach.on_combo_banked(self, mult)
 
 
 func _update_challenge_hud() -> void:
@@ -6696,6 +6700,7 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	Sfx.play("dare_won" if win else "dare_lost", 1.0, -3.0)
 	if is_instance_valid(challenge_giver):
 		challenge_giver.resolve(win)
+	Ach.on_challenge_done(self, win)
 	if win:
 		var reward: int = challenge.reward if challenge.reward > 0 else dare_reward(target)
 		bones += reward
@@ -6965,6 +6970,19 @@ func _shot_menu(which: String) -> void:
 				MenuFlow.open_shop(self)
 			elif which == "progress":
 				MenuFlow.open_progress(self)
+				for a in OS.get_cmdline_user_args():
+					if a == "--shot-achievements":
+						progress_chapter = Game.chapters().size()
+					elif a.begins_with("--shot-page="):
+						progress_chapter = clampi(int(a.substr(12)), 0, MenuFlow.progress_page_count() - 1)
+		"credits":
+			menu_step = 0
+			Game.menu_step = 0
+			_apply_menu_step()
+			MenuFlow.open_credits(self)
+			for a in OS.get_cmdline_user_args():
+				if a.begins_with("--shot-scroll="):
+					credits_scroll = maxf(0.0, float(a.substr(14)))
 		"pause":
 			_skip_title()
 			MenuFlow.open_pause(self)
@@ -13567,7 +13585,7 @@ func _draw_world() -> void:
 		Arrival.draw(self, _wc)
 	# not under the settings panel, the wardrobe or the progress table: the
 	# dim only halves it, so the chalked name read straight through (#10)
-	var menu_over := in_settings or in_controls or in_shop or in_progress_view
+	var menu_over := in_settings or in_controls or in_shop or in_progress_view or in_credits
 	if not menu_over and vb > START_Y - 260.0 and (not started or gloss_a > 0.01 or _sign_mat() == ""):
 		_draw_ground_title()
 	# the signs are the last thing in the world pass, so their canvas sits

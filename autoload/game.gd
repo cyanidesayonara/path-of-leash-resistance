@@ -640,6 +640,10 @@ var tips_seen: Array[String] = []
 var tutorial_done := false
 # walks lost, ever (systems/losses.gd): the first loss gets a word of comfort
 var walks_lost := 0
+# in-game achievements unlocked on this save (systems/achievements.gd)
+var achievements: Array[String] = []
+var dogs_walked: Array[String] = []
+var gallery_bones: Array[String] = []
 
 
 func apply_walk_sky(lv: String) -> void:
@@ -1267,6 +1271,9 @@ func _reset_persisted_state() -> void:
 	agility_best = 0.0
 	gate_open = []
 	dog_upgrades = {}
+	achievements = []
+	dogs_walked = []
+	gallery_bones = []
 
 
 func load_records() -> void:
@@ -1343,6 +1350,9 @@ func load_records() -> void:
 	tutorial_done = bool(cf.get_value("global", "tutorial_done", false))
 	walks_lost = int(cf.get_value("global", "walks_lost", 0))
 	tips_seen.assign(Array(cf.get_value("tips", "seen", PackedStringArray())))
+	achievements.assign(Array(cf.get_value("achievements", "unlocked", PackedStringArray())))
+	dogs_walked.assign(Array(cf.get_value("achievements", "dogs_walked", PackedStringArray())))
+	gallery_bones.assign(Array(cf.get_value("achievements", "gallery_bones", PackedStringArray())))
 	agility_best = maxf(0.0, float(cf.get_value("freedom", "agility_best", 0.0)))
 	if cf.has_section_key("global", "gate_open"):
 		gate_open.assign(Array(cf.get_value("global", "gate_open", PackedStringArray())))
@@ -1444,10 +1454,17 @@ func save_records() -> void:
 	cf.set_value("global", "tutorial_done", tutorial_done)
 	cf.set_value("global", "walks_lost", walks_lost)
 	cf.set_value("tips", "seen", PackedStringArray(tips_seen))
+	cf.set_value("achievements", "unlocked", PackedStringArray(achievements))
+	cf.set_value("achievements", "dogs_walked", PackedStringArray(dogs_walked))
+	cf.set_value("achievements", "gallery_bones", PackedStringArray(gallery_bones))
 	cf.set_value("freedom", "agility_best", agility_best)
 	cf.set_value("global", "gate_open", PackedStringArray(gate_open))
 	cf.set_value("global", "gates_version", GATES_VERSION)
 	cf.save(save_path)
+
+
+func has_achievement(id: String) -> bool:
+	return achievements.has(id)
 
 
 # goals are the Tony Hawk-style per-level objective list: completing one

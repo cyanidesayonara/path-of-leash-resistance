@@ -25,6 +25,7 @@ const Kit := preload("res://hud/ui_kit.gd")
 const Icons := preload("res://hud/ui_icons.gd")
 const Flow := preload("res://hud/menu_flow.gd")
 const UiScale := preload("res://hud/ui_scale.gd")
+const Ach := preload("res://systems/achievements.gd")
 
 const MAIN_W := 300.0
 const MAIN_ROW_H := 44.0
@@ -42,8 +43,12 @@ const WALKCARD_W := 620.0
 const CONFIRM_W := 460.0
 const FIRST_ROW_H := 50.0
 const NOTICE_W := 660.0
+const CREDITS_W := 760.0
+const CREDITS_AUTO_SPEED := 18.0
+const CREDITS_MANUAL_SPEED := 240.0
 
 var main: Node2D
+var _credits_clip: Control
 
 
 func setup(m: Node2D) -> void:
@@ -53,6 +58,12 @@ func setup(m: Node2D) -> void:
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_credits_clip = Control.new()
+	_credits_clip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_credits_clip.clip_contents = true
+	_credits_clip.visible = false
+	add_child(_credits_clip)
+	_credits_clip.draw.connect(_draw_credits_body)
 
 
 func _process(delta: float) -> void:
@@ -90,6 +101,29 @@ func _process(delta: float) -> void:
 	modulate.a = (_fade / FADE_S) if s == "walking" and _fade > 0.0 else 1.0
 	# nothing to draw during a walk, so nothing to redraw - except the frame
 	# the fade ends on, which has to clear the last faded picture
+	if _credits_clip != null:
+		_credits_clip.visible = (s == "credits")
+		if s == "credits":
+			var vs := get_viewport_rect().size
+			var cr := _credits_rect(vs)
+			var br := _credits_body_rect(cr)
+			var layout := _credits_layout(br.size.x)
+			var max_s := maxf(0.0, float(layout.h) - br.size.y)
+			var up_held := InputMap.has_action("move_up") and Input.is_action_pressed("move_up")
+			var dn_held := InputMap.has_action("move_down") and Input.is_action_pressed("move_down")
+			if up_held or dn_held:
+				var dir := (1.0 if dn_held else 0.0) - (1.0 if up_held else 0.0)
+				main.credits_scroll += dir * CREDITS_MANUAL_SPEED * delta
+			else:
+				main.credits_scroll += CREDITS_AUTO_SPEED * delta
+			main.credits_scroll = clampf(float(main.credits_scroll), 0.0, max_s)
+			var u := 1.0 - pow(1.0 - clampf(_open_t, 0.0, 1.0), 3.0)
+			var sc := lerpf(0.965, 1.0, u)
+			_credits_clip.position = br.position
+			_credits_clip.size = br.size
+			_credits_clip.pivot_offset = cr.get_center() - br.position
+			_credits_clip.scale = Vector2(sc, sc)
+			_credits_clip.queue_redraw()
 	if s != "walking" or _drawn != "walking" or fading:
 		queue_redraw()
 	_drawn = s
@@ -130,6 +164,8 @@ func _draw() -> void:
 			_progress(vs)
 		"controls":
 			_controls(vs)
+		"credits":
+			_credits(vs)
 		"pause":
 			_pause(vs)
 		"walkcard":
@@ -562,6 +598,9 @@ static func fit_text(f: Font, text: String, px: int, w: float) -> String:
 
 
 func _progress(vs: Vector2) -> void:
+	if Flow.progress_is_achievements(main):
+		_achievements(vs)
+		return
 	var acc := Kit.accent("progress")
 	var rows := Flow.progress_rows(main)
 	var rh := progress_row_h(vs, rows.size())
@@ -572,14 +611,12 @@ func _progress(vs: Vector2) -> void:
 	Kit.heading(self, r.position + Vector2(36.0, 44.0), I18n.t("progress_title"), 26, acc)
 	Kit.purse(self, Vector2(r.end.x - 36.0, r.position.y + 42.0), Game.total_stars(), Game.total_bones)
 	var f := Kit.display()
-	# the page: this chapter's number and a tab for each, as on the walk select
-	var cx := r.position.x + 36.0 + Kit.text_w(f, I18n.t("progress_title"), 26) + 28.0
+	# the page: this chapter's number and a tab for each, plus the achievements page
+	var cx := r.position.x + 36.0 + Kit.text_w(f, I18n.t("progress_title"), 26) + 24.0
 	var ctitle := I18n.t("menu_chapter") % (int(main.progress_chapter) + 1)
 	draw_string(f, Vector2(cx, r.position.y + 42.0), ctitle, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.SAFFRON)
 	cx += Kit.text_w(f, ctitle, 15) + 12.0
-	for k in range(Game.chapters().size()):
-		draw_rect(Rect2(cx + float(k) * 16.0, r.position.y + 33.0, 12.0, 5.0),
-			Kit.SAFFRON if k == int(main.progress_chapter) else Color(Kit.INK_FAINT, 0.6))
+	_draw_progress_tabs(cx, r.position.y + 33.0, int(main.progress_chapter))
 	var body := Kit.body()
 	var c_stars := r.position.x + w * 0.46
 	var c_goals := r.position.x + w * 0.60
@@ -764,6 +801,217 @@ func _controls(vs: Vector2) -> void:
 	draw_string(f, Vector2(rst_r.position.x, rst_r.get_center().y + float(rst_px) * 0.36), String(rst.name),
 		HORIZONTAL_ALIGNMENT_CENTER, rst_r.size.x, rst_px, Kit.INK if rst_picked else Kit.INK_SOFT)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _draw_progress_tabs(cx: float, ty: float, active: int) -> void:
+	var n_ch := Game.chapters().size()
+	var total := Flow.progress_page_count()
+	for k in range(total):
+		var col: Color
+		if k == active:
+			col = Kit.SAFFRON
+		elif k >= n_ch:
+			col = Color(Kit.TURQUOISE, 0.55)
+		else:
+			col = Color(Kit.INK_FAINT, 0.6)
+		var tw := 16.0 if k >= n_ch else 12.0
+		draw_rect(Rect2(cx + float(k) * 16.0, ty, tw, 5.0), col)
+
+
+static func achievements_grid_params(vs: Vector2) -> Dictionary:
+	var cols := 2 if vs.x < 960.0 else 3
+	var rows_n := ceili(float(Ach.FEATS.size()) / float(cols))
+	var margin_x := 44.0 if vs.x < 1100.0 else 80.0
+	var w := minf(1060.0, vs.x - margin_x)
+	var top_limit := 16.0
+	var bottom_limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
+	var avail_h := maxf(180.0, bottom_limit - top_limit)
+	var compact := avail_h < 480.0
+	var head_h := 72.0 if compact else 86.0
+	var gap_y := 4.0 if compact else 8.0
+	var bot_pad := 10.0 if compact else 16.0
+	var max_cell := (avail_h - head_h - bot_pad - float(rows_n - 1) * gap_y) / float(rows_n)
+	var cell_h := clampf(max_cell, 32.0, 56.0 if cols == 3 else 60.0)
+	var h := head_h + float(rows_n) * cell_h + float(rows_n - 1) * gap_y + bot_pad
+	var y0 := clampf((top_limit + bottom_limit - h) * 0.5, top_limit, maxf(top_limit, bottom_limit - h))
+	return {
+		"cols": cols, "rows": rows_n, "compact": compact,
+		"head_h": head_h, "gap_y": gap_y, "cell_h": cell_h,
+		"rect": Rect2(vs.x * 0.5 - w * 0.5, y0, w, h),
+	}
+
+
+func _achievements(vs: Vector2) -> void:
+	var acc := Kit.accent("progress")
+	var gp := achievements_grid_params(vs)
+	var r: Rect2 = gp.rect
+	var cols: int = int(gp.cols)
+	var cell_h: float = float(gp.cell_h)
+	var gap_y: float = float(gp.gap_y)
+	var head_h: float = float(gp.head_h)
+	var compact: bool = bool(gp.compact)
+	_card_pop(r.get_center())
+	Kit.card(self, r, acc, 16)
+	Kit.heading(self, r.position + Vector2(36.0, 44.0), I18n.t("progress_title"), 26, acc)
+	Kit.purse(self, Vector2(r.end.x - 36.0, r.position.y + 42.0), Game.total_stars(), Game.total_bones)
+	var f := Kit.display()
+	var body := Kit.body()
+	var cx := r.position.x + 36.0 + Kit.text_w(f, I18n.t("progress_title"), 26) + 20.0
+	var tab_lbl := I18n.t("progress_achievements_tab")
+	draw_string(f, Vector2(cx, r.position.y + 42.0), tab_lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Kit.SAFFRON)
+	cx += Kit.text_w(f, tab_lbl, 15) + 12.0
+	_draw_progress_tabs(cx, r.position.y + 33.0, int(main.progress_chapter))
+	var count_lbl := I18n.t("progress_achievements_count") % [Ach.unlocked_count(), Ach.FEATS.size()]
+	var hy := r.position.y + (64.0 if compact else 72.0)
+	draw_string(f, Vector2(r.position.x + 36.0, hy), count_lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Kit.INK_FAINT)
+
+	var gap_x := 12.0 if cols == 3 else 16.0
+	var pad_x := 28.0
+	var col_w := (r.size.x - pad_x * 2.0 - float(cols - 1) * gap_x) / float(cols)
+	var y_start := r.position.y + head_h
+	var title_px := 14 if cell_h >= 46.0 else 12
+	var hint_px := 12 if cell_h >= 46.0 else 10
+	var star_r := 7.0 if cell_h >= 46.0 else 5.5
+	var lock_sz := 8.5 if cell_h >= 46.0 else 6.5
+	for i in range(Ach.FEATS.size()):
+		var feat: Dictionary = Ach.FEATS[i]
+		var col_i := i % cols
+		var row_i := i / cols
+		var cr := Rect2(r.position.x + pad_x + float(col_i) * (col_w + gap_x),
+			y_start + float(row_i) * (cell_h + gap_y), col_w, cell_h)
+		var unlocked := Ach.has(String(feat.id))
+		if unlocked:
+			draw_rect(cr, Color(Kit.NAVY_RAISED.r, Kit.NAVY_RAISED.g, Kit.NAVY_RAISED.b, 0.96))
+			draw_rect(Rect2(cr.position, Vector2(3.0, cr.size.y)), Kit.SAFFRON)
+			draw_rect(cr, Color(Kit.SAFFRON.r, Kit.SAFFRON.g, Kit.SAFFRON.b, 0.35), false, 1.0)
+			Icons.draw_star(self, Vector2(cr.position.x + 18.0, cr.get_center().y), star_r, true)
+		else:
+			draw_rect(cr, Color(1, 1, 1, 0.025))
+			draw_rect(cr, Color(Kit.INK_FAINT.r, Kit.INK_FAINT.g, Kit.INK_FAINT.b, 0.16), false, 1.0)
+			Kit.lock(self, Vector2(cr.position.x + 18.0, cr.get_center().y - 1.0), lock_sz, Kit.INK_FAINT)
+		var tx := cr.position.x + 33.0
+		var tw := cr.size.x - 41.0
+		var y_name := cr.position.y + (cell_h * 0.43 if cell_h >= 46.0 else 15.0)
+		var y_hint := cr.position.y + (cell_h * 0.79 if cell_h >= 46.0 else 30.0)
+		var ncol := Kit.INK if unlocked else Kit.INK_FAINT
+		var hcol := Kit.INK_SOFT if unlocked else Color(Kit.INK_FAINT.r, Kit.INK_FAINT.g, Kit.INK_FAINT.b, 0.72)
+		draw_string(f, Vector2(tx, y_name), fit_text(f, I18n.t(String(feat.name)), title_px, tw),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, title_px, ncol)
+		draw_string(body, Vector2(tx, y_hint), fit_text(body, I18n.t(String(feat.hint)), hint_px, tw),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, hint_px, hcol)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+static func _credits_rect(vs: Vector2) -> Rect2:
+	var w := minf(CREDITS_W, vs.x - 48.0)
+	var top_limit := 16.0
+	var bottom_limit := vs.y - Kit.BAR_FROM_BOTTOM - 16.0
+	var avail_h := maxf(180.0, bottom_limit - top_limit)
+	var h := clampf(avail_h * 0.88, 200.0, minf(560.0, avail_h))
+	var y0 := clampf((top_limit + bottom_limit - h) * 0.5, top_limit, maxf(top_limit, bottom_limit - h))
+	return Rect2(vs.x * 0.5 - w * 0.5, y0, w, h)
+
+
+static func _credits_body_rect(r: Rect2) -> Rect2:
+	return Rect2(r.position.x + 34.0, r.position.y + 74.0, maxf(120.0, r.size.x - 74.0), maxf(80.0, r.size.y - 94.0))
+
+
+func _credits_layout(inner_w: float) -> Dictionary:
+	var f := Kit.display()
+	var body := Kit.body()
+	var items: Array = []
+	var y := 6.0
+	# Game, creator and city right at the fold
+	items.append({"rule": false, "font": f, "px": 22, "col": Kit.SAFFRON, "align": HORIZONTAL_ALIGNMENT_CENTER, "text": I18n.t("credits_game_title"), "y": y + 22.0})
+	y += 30.0
+	items.append({"rule": false, "font": f, "px": 18, "col": Kit.INK, "align": HORIZONTAL_ALIGNMENT_CENTER, "text": I18n.t("credits_made_by"), "y": y + 18.0})
+	y += 24.0
+	items.append({"rule": false, "font": body, "px": 15, "col": Kit.TURQUOISE, "align": HORIZONTAL_ALIGNMENT_CENTER, "text": I18n.t("credits_made_in"), "y": y + 15.0})
+	y += 30.0
+	items.append({"rule": true, "y": y})
+	y += 18.0
+	# Dogs
+	items.append({"rule": false, "font": f, "px": 13, "col": Kit.SAFFRON, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": I18n.t("credits_dogs_heading"), "y": y + 13.0})
+	y += 20.0
+	for ln: String in _wrap_lines([I18n.t("credits_dogs_list")], body, 16, inner_w):
+		items.append({"rule": false, "font": body, "px": 16, "col": Kit.INK, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": ln, "y": y + 16.0})
+		y += 24.0
+	y += 10.0
+	items.append({"rule": true, "y": y})
+	y += 18.0
+	# Fonts (OFL)
+	items.append({"rule": false, "font": f, "px": 13, "col": Kit.TURQUOISE, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": I18n.t("credits_fonts_heading"), "y": y + 13.0})
+	y += 20.0
+	for k: String in ["credits_fonts_bricolage", "credits_fonts_inter"]:
+		for ln: String in _wrap_lines([I18n.t(k)], body, 14, inner_w):
+			items.append({"rule": false, "font": body, "px": 14, "col": Kit.INK_SOFT, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": ln, "y": y + 14.0})
+			y += 20.0
+		y += 4.0
+	for ln: String in _wrap_lines([I18n.t("credits_fonts_ofl")], body, 12, inner_w):
+		items.append({"rule": false, "font": body, "px": 12, "col": Kit.INK_FAINT, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": ln, "y": y + 12.0})
+		y += 17.0
+	y += 10.0
+	items.append({"rule": true, "y": y})
+	y += 18.0
+	# Engine (Godot MIT)
+	items.append({"rule": false, "font": f, "px": 13, "col": Kit.TURQUOISE, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": I18n.t("credits_engine_heading"), "y": y + 13.0})
+	y += 20.0
+	items.append({"rule": false, "font": f, "px": 15, "col": Kit.INK, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": I18n.t("credits_engine_godot"), "y": y + 15.0})
+	y += 22.0
+	for para: String in I18n.t("credits_engine_mit").split("\n"):
+		if para == "":
+			y += 8.0
+			continue
+		for ln: String in _wrap_lines([para], body, 12, inner_w):
+			items.append({"rule": false, "font": body, "px": 12, "col": Kit.INK_FAINT, "align": HORIZONTAL_ALIGNMENT_LEFT, "text": ln, "y": y + 12.0})
+			y += 17.0
+	y += 20.0
+	return {"items": items, "h": y}
+
+
+func _credits(vs: Vector2) -> void:
+	var acc := Kit.accent("credits")
+	var r := _credits_rect(vs)
+	var br := _credits_body_rect(r)
+	_card_pop(r.get_center())
+	Kit.card(self, r, acc, 16)
+	Kit.heading(self, r.position + Vector2(34.0, 44.0), I18n.t("credits_title"), 26, acc)
+	draw_line(Vector2(r.position.x + 28.0, r.position.y + 62.0), Vector2(r.end.x - 28.0, r.position.y + 62.0),
+		Color(acc.r, acc.g, acc.b, 0.25), 1.5)
+	var layout := _credits_layout(br.size.x)
+	var total_h: float = float(layout.h)
+	if total_h > br.size.y:
+		var track := Rect2(br.end.x + 12.0, br.position.y, 4.0, br.size.y)
+		draw_rect(track, Color(1, 1, 1, 0.08))
+		var thumb_h := maxf(24.0, br.size.y * (br.size.y / total_h))
+		var frac := clampf(float(main.credits_scroll) / maxf(1.0, total_h - br.size.y), 0.0, 1.0)
+		var thumb_y := br.position.y + frac * (br.size.y - thumb_h)
+		draw_rect(Rect2(track.position.x, thumb_y, track.size.x, thumb_h), Color(acc.r, acc.g, acc.b, 0.65))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _draw_credits_body() -> void:
+	if main == null or Flow.screen(main) != "credits":
+		return
+	var w := _credits_clip.size.x
+	var h := _credits_clip.size.y
+	if w <= 1.0 or h <= 1.0:
+		return
+	var layout := _credits_layout(w)
+	var max_s := maxf(0.0, float(layout.h) - h)
+	var off := clampf(float(main.credits_scroll), 0.0, max_s)
+	for item: Dictionary in layout.items:
+		var yy := float(item.y) - off
+		if bool(item.rule):
+			if yy >= -4.0 and yy <= h + 4.0:
+				_credits_clip.draw_line(Vector2(0.0, yy), Vector2(w, yy), Color(1, 1, 1, 0.10), 1.0)
+			continue
+		var px := int(item.px)
+		if yy < -4.0 or yy - float(px) > h + 4.0:
+			continue
+		var align := int(item.align) as HorizontalAlignment
+		var span := w if align == HORIZONTAL_ALIGNMENT_CENTER else -1.0
+		_credits_clip.draw_string(item.font as Font, Vector2(0.0, yy), String(item.text), align, span, px, item.col as Color)
 
 
 func _pause(vs: Vector2) -> void:

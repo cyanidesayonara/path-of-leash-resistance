@@ -71,13 +71,13 @@ func _run() -> void:
 	main._apply_menu_step()
 	Flow.exit_hidden = false
 	_check(_verbs(main).has("exit game") or OS.has_feature("web"), "the main menu's BACK offers EXIT GAME on desktop")
-	_check(Flow.main_ids(main) == ["play", "tutorial", "shop", "progress", "settings", "exit"]
+	_check(Flow.main_ids(main) == ["play", "tutorial", "shop", "progress", "settings", "credits", "exit"]
 			or OS.has_feature("web"), "the main menu's list (%s)" % [Flow.main_ids(main)])
 	_check(Flow.main_labels(main).size() == Flow.main_ids(main).size(), "one label per main menu row")
 	Flow.exit_hidden = true
 	_check(not _verbs(main).has("exit game"), "and not where the game cannot quit")
-	_check(not Flow.main_ids(main).has("exit") and Flow.main_ids(main).size() == 5,
-		"without exit the main menu has five rows")
+	_check(not Flow.main_ids(main).has("exit") and Flow.main_ids(main).size() == 6,
+		"without exit the main menu has six rows")
 	Flow.exit_hidden = false
 	Flow.open_confirm(main, "exit")
 	_check(Flow.screen(main) == "confirm", "exit from the title asks first")
@@ -259,12 +259,19 @@ func _run() -> void:
 	Flow.open_progress(main)
 	_dump(main, "progress")
 	_check(Flow.screen(main) == "progress" and main.dim.visible, "the progress table opens over a dimmed title")
+	main.progress_chapter = game.chapters().size()
+	_check(Flow.progress_is_achievements(main) and Flow.progress_page_count() == game.chapters().size() + 1,
+		"the achievements page sits after the chapter pages")
 	Flow.close_progress(main)
+	Flow.open_credits(main)
+	_dump(main, "credits")
+	_check(Flow.screen(main) == "credits" and main.dim.visible, "the credits screen opens over a dimmed title")
+	Flow.close_credits(main)
 	# every prompt on every screen names an action Prompts knows, and BACK is
 	# always the one "back" prompt
 	main.menu_step = 0
 	main._apply_menu_step()
-	for which in ["title", "walk", "details", "progress", "settings", "pause", "walkcard", "confirm"]:
+	for which in ["title", "walk", "details", "progress", "credits", "settings", "pause", "walkcard", "confirm"]:
 		var backs := 0
 		for it: Array in Flow.prompts(main, which):
 			_check(Prompts.NAMES.has(String(it[0])), "%s prompt '%s' is an action Prompts knows" % [which, it[0]])
