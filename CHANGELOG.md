@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish La Rambla
+
+- The Pipicà's trees were the forest's, whose roots run toward the walk's edge lines and read in a fenced lawn as sticks poking out of the crowns. They are the lawn's broadleaves now (`Rambla.draw_grove`, as El Parc's).
+- The worn patch in the middle of the Pipicà was a hard-edged flat disc. `Rambla.draw_yard` lays the lawn again over it, worn soft where the dogs play and along the run in from the gate (two `ShapeBatch.glow` gradients), then the same tufts. The yard is on the static freedom layer, so this costs nothing per frame.
+- The Pipicà is drawn as lawn but handled as pavement (surface check: 631 lawn points that handled as pavement). `Rambla.surface` makes it grass past the gate; water still wins. Surface-check mismatches over the walk went from 870 to 118, the Pipicà's from 646 to 27.
+- `tests/test_rambla_polish.gd` covers the Pipicà's surface and draws the new yard and grove; `test_walk_hooks` lists the three new hooks.
+
 ## 2026-11-18 - Polish El Diluvi
 
 - El Porxo's court had a hard-edged flat disc for its wet middle; it is a soft gradient now (`ShapeBatch.glow`), and the court's puddles are smooth ellipses (28 segments, not 14).
