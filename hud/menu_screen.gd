@@ -580,7 +580,7 @@ func _progress(vs: Vector2) -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, sub_px, Kit.INK_SOFT)
 		if locked:
 			Kit.lock(self, Vector2(c_stars + 8.0, base - 5.0), lock_sz, Kit.INK_FAINT)
-			var lock_lbl := I18n.t("progress_opens_at") % int(row.gate)
+			var lock_lbl := I18n.t("progress_opens_at_one" if int(row.gate) == 1 else "progress_opens_at") % int(row.gate)
 			if String(row.get("chase_gate", "")) != "":
 				var ch_id: String = String(row.chase_gate)
 				lock_lbl = I18n.t("progress_finish_first") % Game.LEVEL_NAMES.get(ch_id, ch_id)

@@ -191,6 +191,7 @@ const T := {
 	"progress_col_stars": {"en": "STARS", "ca": "ESTRELLES", "es": "ESTRELLAS"},
 	"progress_col_goals": {"en": "GOALS", "ca": "FITES", "es": "METAS"},
 	"progress_col_best": {"en": "BEST", "ca": "RÈCORD", "es": "RÉCORD"},
+	"progress_opens_at_one": {"en": "Opens at %d stars", "ca": "S'obre amb %d estrella", "es": "Se abre con %d estrella"},
 	"progress_opens_at": {"en": "Opens at %d stars", "ca": "S'obre amb %d estrelles", "es": "Se abre con %d estrellas"},
 	"progress_finish_first": {"en": "Finish %s first", "ca": "Abans, acaba %s", "es": "Antes, termina %s"},
 	"progress_best": {"en": "%d bones  %s", "ca": "%d ossos  %s", "es": "%d huesos  %s"},
