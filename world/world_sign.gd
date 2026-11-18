@@ -784,11 +784,34 @@ static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
 
 # What a name lies on where its own material vanishes into the ground, the
 # way the place would show it: Tibidabo's bulbs on the fairground's marquee
-# board, Sarrià's pastries on a panel of the street's own tiles, La Castanyada's chestnuts on the
-# seller's newspaper. Only where the backing is a thing the place would have:
-# a patch of darker ground under a name reads as a stain, not a frame.
+# board, La Castanyada's chestnuts on the seller's newspaper, and on a paved
+# walk a flat panel of the street's own tiles (TILE_TONES). Only where the
+# backing is a thing the place would have: a patch of darker ground under a
+# name reads as a stain, not a frame.
 # Round the strokes' extent, as a flower bed is (planter_rect).
-const BACKINGS := {"bulbs": "board", "pastries": "tiles", "chestnuts": "newspaper"}
+const BACKINGS := {"bulbs": "board", "chestnuts": "newspaper", "pastries": "tiles",
+	"bagtags": "tiles", "pebbles": "tiles", "pintxos": "tiles", "casings": "tiles", "cascade": "tiles",
+	"tickets": "tiles", "brollies": "tiles", "scarf": "tiles", "puddle": "tiles", "pegs": "tiles",
+	"fronds": "tiles", "seaglass": "tiles"}
+# a tile panel in the walk's own paving: [field, border course, joints], each
+# the street's tone a shade off so the panel lies in it, not on it
+const WARM_TILE := [Color(0.80, 0.73, 0.67), Color(0.70, 0.62, 0.57), Color(0.66, 0.59, 0.55)]
+const GRANITE_TILE := [Color(0.74, 0.73, 0.71), Color(0.62, 0.61, 0.60), Color(0.56, 0.55, 0.54)]
+# a dark slate for pieces lighter than their street, a pale terrazzo for
+# dark ones (the brollies' navy and red)
+const PALE_TILE := [Color(0.84, 0.83, 0.80), Color(0.72, 0.71, 0.68), Color(0.66, 0.65, 0.62)]
+const DARK_TILE := [Color(0.30, 0.31, 0.34), Color(0.24, 0.25, 0.28), Color(0.21, 0.22, 0.25)]
+const SANDSTONE_TILE := [Color(0.82, 0.76, 0.64), Color(0.70, 0.64, 0.54), Color(0.64, 0.58, 0.49)]
+const TILE_TONES := {
+	"pastries": WARM_TILE, "pintxos": DARK_TILE, "casings": GRANITE_TILE, "tickets": GRANITE_TILE,
+	"brollies": PALE_TILE, "scarf": GRANITE_TILE, "puddle": GRANITE_TILE, "pegs": DARK_TILE,
+	"cascade": SANDSTONE_TILE, "fronds": SANDSTONE_TILE,
+	# pale pieces want a darker field: the terminal's terrazzo, the river
+	# path's slate, Sitges' terracotta
+	"bagtags": [Color(0.46, 0.48, 0.52), Color(0.37, 0.39, 0.43), Color(0.33, 0.35, 0.39)],
+	"pebbles": [Color(0.24, 0.27, 0.30), Color(0.19, 0.22, 0.25), Color(0.17, 0.19, 0.22)],
+	"seaglass": [Color(0.66, 0.47, 0.38), Color(0.56, 0.39, 0.31), Color(0.50, 0.35, 0.28)],
+}
 # a backing sits a little tighter under the letters than a bed, clear of the
 # gloss below
 const BACKING_PAD := 0.30
@@ -882,7 +905,10 @@ static func _backing(c: Object, sign: Dictionary, h: float) -> void:
 			var t := h * 0.95
 			var bw := maxf(4.0, h * 0.16)
 			var o := r.grow(bw)
-			var joint := Color(0.66, 0.59, 0.55)
+			var tones: Array = TILE_TONES.get(String(sign.mat), WARM_TILE)
+			var joint: Color = tones[2]
+			var edge: Color = tones[1]
+			var field: Color = tones[0]
 			c.rect(o, joint)
 			# the border course, tile by tile
 			var n := maxi(1, int(round(o.size.x / (bw * 3.0))))
@@ -891,14 +917,14 @@ static func _backing(c: Object, sign: Dictionary, h: float) -> void:
 				var x := o.position.x + step * float(i)
 				for y in [o.position.y, r.end.y]:
 					c.rect(Rect2(x + 1.0, y + 1.0, step - 2.0, bw - 2.0),
-						Color(0.70, 0.62, 0.57).lerp(Color(0.73, 0.65, 0.60), _h(i, key, 95.0 + y)))
+						edge.lerp(edge.lightened(0.05), _h(i, key, 95.0 + y)))
 			var m := maxi(1, int(round(r.size.y / (bw * 3.0))))
 			var vs := r.size.y / float(m)
 			for j in range(m):
 				var y2 := r.position.y + vs * float(j)
 				for x2 in [o.position.x, r.end.x]:
 					c.rect(Rect2(x2 + 1.0, y2 + 1.0, bw - 2.0, vs - 2.0),
-						Color(0.70, 0.62, 0.57).lerp(Color(0.73, 0.65, 0.60), _h(j, key, 97.0 + x2)))
+						edge.lerp(edge.lightened(0.05), _h(j, key, 97.0 + x2)))
 			# the field: whole squares, the last row and column cut to fit
 			var cols := maxi(1, int(round(r.size.x / t)))
 			var rows := maxi(1, int(round(r.size.y / t)))
@@ -908,7 +934,7 @@ static func _backing(c: Object, sign: Dictionary, h: float) -> void:
 				for i in range(cols):
 					var k := j * cols + i
 					c.rect(Rect2(r.position.x + tw * float(i) + 0.8, r.position.y + th * float(j) + 0.8, tw - 1.6, th - 1.6),
-						Color(0.80, 0.73, 0.67).lerp(Color(0.84, 0.77, 0.70), _h(k, key, 99.0)))
+						field.lerp(field.lightened(0.05), _h(k, key, 99.0)))
 		"newspaper":
 			# the chestnut seller's newspaper: two sheets, a little crooked, the
 			# print faint so the chestnuts read over it
