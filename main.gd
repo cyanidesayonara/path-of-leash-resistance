@@ -3203,6 +3203,20 @@ func night_lights() -> Array[Vector3]:
 	return _night_lights
 
 
+# Lamps down both sides of the off-leash area, for a walk's night_lights hook:
+# a pair at each fraction of its depth in `fracs`, `inset` in from its edges,
+# each reaching `reach`. Under NIGHT_LAMP_R the light layer draws each its
+# bracket, so they read as lamps on the wall or fence there.
+func freedom_side_lamps(fracs: Array[float], inset: float, reach: float) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var r := _freedom_rect()
+	for f: float in fracs:
+		var y := r.position.y + r.size.y * f
+		out.append(Vector3(r.position.x + inset, y, reach))
+		out.append(Vector3(r.end.x - inset, y, reach))
+	return out
+
+
 # The street's own lamps: its lampposts, and a wall lamp every so often down
 # the building line where no lamppost is near. A walk's night_lights hook
 # that only adds lights of its own starts from these.

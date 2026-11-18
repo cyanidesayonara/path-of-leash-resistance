@@ -749,6 +749,8 @@
 --headless --path . --script res://tests/test_surface_helpers.gd
 # The shared stamped stones for riprap, breakwaters and groins
 --headless --path . --script res://tests/test_stones.gd
+# The shared lamps down the sides of an off-leash area
+--headless --path . --script res://tests/test_freedom_lamps.gd
 
 # Natural terrain test
 --headless --path . --script res://tests/test_terrain.gd
