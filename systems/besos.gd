@@ -10,6 +10,18 @@ extends RefCounted
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const Stones := preload("res://world/stones.gd")
+
+# the deep channel, and the lighter water where it shelves up to the riprap,
+# feathered out over SHELF_W by SHELF_COLS
+const DEEP := Color(0.08, 0.21, 0.29)
+const SHALLOWER := Color(0.12, 0.28, 0.36)
+const SHELF_W := 120.0
+const SHELF_COLS: Array[float] = [1.0, 0.7, 0.35, 0.12, 0.0]
+# the riprap: a pair of stones every RIP_STEP down the bank
+const RIP_STEP := 16.0
+const RIP_STONES: Array[Color] = [Color(0.44, 0.43, 0.39), Color(0.50, 0.47, 0.41),
+	Color(0.40, 0.40, 0.38), Color(0.53, 0.50, 0.44)]
 
 static func draw_wall_module(m: Node2D, c: Object, r: Rect2, k: int, inner_x: float) -> void:
 	var y0 := r.position.y
@@ -163,8 +175,15 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 	b.rect(Rect2(water.position.x, y0, water.size.x, y1 - y0), Color(0.44, 0.50, 0.40))
 	b.rect(Rect2(water.position.x, y0, water.size.x, y1 - y0), Color(0.45, 0.68, 0.66, 0.85))
 	b.rect(Rect2(water.position.x + 4.0, y0, 54.0, y1 - y0), Color(0.58, 0.78, 0.74, 0.36))
-	b.rect(Rect2(channel.position.x, y0, deep_w, y1 - y0), Color(0.12, 0.28, 0.36))
-	b.rect(Rect2(channel.position.x + 42.0, y0, deep_w - 42.0, y1 - y0), Color(0.08, 0.21, 0.29))
+	# the channel shelving away from the bank: one fill, lighter along the
+	# riprap and feathering into the deep water (a second flat rect showed
+	# its edge as a seam down the river)
+	b.rect(Rect2(channel.position.x, y0, deep_w, y1 - y0), DEEP)
+	var shelf := PackedVector2Array()
+	for yy: float in [y0, y1]:
+		for k in range(SHELF_COLS.size()):
+			shelf.append(Vector2(channel.position.x + SHELF_W * float(k) / float(SHELF_COLS.size() - 1), yy))
+	b.band(shelf, SHELF_COLS.size(), SHALLOWER, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array(SHELF_COLS))
 	if vt < float(m.GATE_Y) + 20.0:
 		# Stone headwall coping where the river passes under the meadow bridge at GATE_Y
 		b.rect(Rect2(water.position.x - 8.0, float(m.GATE_Y) - 5.0, water.size.x + deep_w + 8.0, 9.0), Color(0.56, 0.54, 0.49))
@@ -186,23 +205,32 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 	# 3. Quarry-stone riprap embankment (escullera) between shallow margin and deep channel
 	var rip_x := channel.position.x
 	b.rect(Rect2(rip_x - 8.0, y0, 16.0, y1 - y0), Color(0.20, 0.24, 0.24, 0.72))
-	var ry := floorf(y0 / 18.0) * 18.0
+	# quarry stones tipped, not laid: two staggered courses of angular blocks
+	# of every size, the odd small one wedged between (a single file of round
+	# stones read as a string of beads)
+	var ry := floorf(y0 / RIP_STEP) * RIP_STEP
 	while ry < y1:
-		if ry + 9.0 < y0 + 8.0:
-			ry += 18.0
+		if ry + RIP_STEP < y0:
+			ry += RIP_STEP
 			continue
 		var rh: float = m._cell01(ry, 73.0)
-		var rx := rip_x + (rh - 0.5) * 6.5
-		var rr := 7.2 + fmod(rh * 17.0, 3.8)
-		var stone_c := Color(0.44, 0.43, 0.39) if int(rh * 10.0) % 2 == 0 else Color(0.50, 0.47, 0.41)
-		b.circle(Vector2(rx + 1.5, ry + 9.0 + 1.5), rr, Color(0.10, 0.14, 0.16, 0.58))
-		b.circle(Vector2(rx, ry + 9.0), rr, stone_c)
-		b.circle(Vector2(rx - 2.0, ry + 7.2), rr * 0.55, stone_c.lightened(0.16))
+		for course in range(2):
+			var h: float = m._cell01(ry + float(course) * 7.0, 81.0 + float(course) * 13.0)
+			var at := Vector2(rip_x + (course * 2 - 1) * 5.5 + (h - 0.5) * 7.0,
+				ry + RIP_STEP * 0.5 * float(course) + (rh - 0.5) * 5.0)
+			var rr := 5.0 + h * 5.5
+			var stone_c := RIP_STONES[int(h * 97.0) % RIP_STONES.size()]
+			Stones.stone(b, at + Vector2(1.5, 1.8), rr, Color(0.10, 0.14, 0.16, 0.55), h)
+			Stones.stone(b, at, rr, stone_c, h)
+			Stones.stone(b, at - Vector2(rr * 0.22, rr * 0.25), rr * 0.5, stone_c.lightened(0.14), h + 0.37)
+			if h > 0.62:
+				var chip := at + Vector2((h - 0.8) * 14.0, rr + 1.5)
+				Stones.stone(b, chip, 2.4 + h * 1.6, stone_c.darkened(0.12), h + 0.71)
 		if int(rh * 31.0) % 3 == 0:
 			var lap := sin(ry * 0.04 + wt * 2.2) * 1.5
-			b.line(Vector2(rx - rr - 2.0 + lap, ry + 3.0), Vector2(rx - rr - 1.0 + lap, ry + 15.0),
+			b.line(Vector2(rip_x - 13.0 + lap, ry + 3.0), Vector2(rip_x - 12.0 + lap, ry + 15.0),
 				Color(0.92, 0.97, 0.96, 0.42), 1.6)
-		ry += 18.0
+		ry += RIP_STEP
 
 	# 4. Water current ripples and surface shimmer in both shallow margin and deep channel
 	var wy := floorf(y0 / 90.0) * 90.0
@@ -397,6 +425,17 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
+
+# the street's lamps, less the wall lamps it would hang on the east building
+# line: here that is the river's shingle, with no wall to hang one on
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for l: Vector3 in m.street_night_lights():
+		if l.z < m.NIGHT_LAMP_R and l.x > m.walk_cx:
+			continue
+		out.append(l)
+	return out
+
 
 # the river, over the walkway and the lawns beside it
 static func draw_over_walkway(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
