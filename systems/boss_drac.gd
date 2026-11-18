@@ -1179,7 +1179,7 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 	var near := bark_pos.distance_to(tip) < BOOP_REACH or dog_p.distance_to(tip) < BOOP_REACH \
 		or dog_p.distance_to(pos + face_dir * 60.0) < BOOP_REACH
 	if state == State.SLIDE and near:
-		Sfx.play("bark", 1.25)
+		Sfx.bark(1.25)
 		main.drac_booped = true
 		transition_to(State.CONTENT)
 		return true

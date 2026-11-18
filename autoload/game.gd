@@ -338,6 +338,8 @@ const HUMAN_SHOES := [Color(0.95, 0.93, 0.88), Color(0.16, 0.16, 0.18), Color(0.
 
 const DOGS := {
 	"millie": {
+		"quirk": "sniff",
+		"bark": "bark",
 		"name": "Millie",
 		"breed": "Mongrel",
 		"stars": 0,
@@ -349,6 +351,8 @@ const DOGS := {
 		"nose_mult": 1.3,
 	},
 	"pipa": {
+		"quirk": "stretch",
+		"bark": "bark_pipa",
 		"name": "Pipa",
 		"breed": "Galgo",
 		"stars": 15,
@@ -359,6 +363,8 @@ const DOGS := {
 		"plant_mult": 0.55,
 	},
 	"mochi": {
+		"quirk": "sit",
+		"bark": "bark_mochi",
 		"name": "Mochi",
 		"breed": "French bulldog",
 		"stars": 25,
@@ -369,6 +375,8 @@ const DOGS := {
 		"plant_mult": 1.70,
 	},
 	"bruna": {
+		"quirk": "lie",
+		"bark": "bark_bruna",
 		"name": "Bruna",
 		"breed": "Gos d'atura",
 		"stars": 35,
@@ -381,6 +389,8 @@ const DOGS := {
 		"muck_mult": 1.60,
 	},
 	"tito": {
+		"quirk": "tremble",
+		"bark": "bark_tito",
 		"name": "Tito",
 		"breed": "Chihuahua",
 		"stars": 45,
@@ -783,6 +793,16 @@ func _cost(kind: String, key: String) -> int:
 func dog_data(k := "") -> Dictionary:
 	var key := k if k != "" else dog
 	return DOGS[key] if DOGS.has(key) else DOGS[DEFAULT_DOG]
+
+
+# what she does of her own accord after standing still a while (entities/dog.gd)
+func dog_quirk(k := "") -> String:
+	return String(dog_data(k).get("quirk", "sniff"))
+
+
+# her own bark: a sound in Sfx's library
+func dog_bark(k := "") -> String:
+	return String(dog_data(k).get("bark", "bark"))
 
 
 func dog_name(k := "") -> String:

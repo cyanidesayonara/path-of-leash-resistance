@@ -1541,7 +1541,7 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 	var dog_p: Vector2 = main.dog.global_position
 	if state == State.TOPPLED:
 		if bark_pos.distance_to(snout_pos) < BOOP_REACH or dog_p.distance_to(snout_pos) < BOOP_REACH:
-			Sfx.play("bark", 1.25)
+			Sfx.bark(1.25)
 			transition_to(State.PURR)
 			return true
 	elif state == State.YARN and not tail_tugged:

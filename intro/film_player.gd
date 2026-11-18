@@ -80,7 +80,11 @@ func _process(delta: float) -> void:
 	var cues: Array = scene.CUES
 	while cued < cues.size() and t >= float(cues[cued][0]):
 		var c: Array = cues[cued]
-		Sfx.play(String(c[1]), float(c[2]), float(c[3]))
+		# a film's "bark" is the walking dog's, whoever she is
+		if String(c[1]) == "bark":
+			Sfx.bark(float(c[2]), float(c[3]))
+		else:
+			Sfx.play(String(c[1]), float(c[2]), float(c[3]))
 		cued += 1
 	if done_t < 0.0 and t >= float(scene.LENGTH):
 		_finish()

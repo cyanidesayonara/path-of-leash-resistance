@@ -12093,7 +12093,7 @@ func on_bark(pos: Vector2) -> void:
 		challenge.accept()
 		feed.say(I18n.t("w_dare_on_get_set"), EventFeed.Tone.LOUD)
 	mood.bump(Mood.M.BARKY, 0.22)
-	Sfx.play("bark")
+	Sfx.bark()
 	# the plaça's pigeon game scores the burst before the bark scatters them
 	if pigeon_game != null:
 		pigeon_game.on_bark(self, pos)
