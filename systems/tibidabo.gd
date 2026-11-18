@@ -18,6 +18,12 @@ const EventFeed := preload("res://hud/event_feed.gd")
 const Arrival := preload("res://systems/arrival.gd")
 
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
+# wall lamps on the mirador's house fronts, past the gate, down each side as
+# fractions of its depth; under main.NIGHT_LAMP_R, so the light layer draws
+# each its bracket
+const MIRADOR_LAMPS: Array[float] = [0.25, 0.6]
+const MIRADOR_FRONT := 30.0
+const MIRADOR_LAMP_R := 140.0
 
 # --- colors ------------------------------------------------------------------
 const ROAD_ASPHALT := Color(0.38, 0.37, 0.36)
@@ -378,6 +384,18 @@ static func tick(m: Node2D, _delta: float) -> void:
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.y > m.GATE_Y:
-		return Surfaces.S.PAVEMENT
-	return -1
+	# the mirador is paved: soft only in its tree pits and planters
+	var s := Surfaces.paved_past_gate(m, p, m.trees)
+	return Surfaces.S.PAVEMENT if s < 0 else s
+
+
+# the mirador's trees are broadleaves standing in their pits
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m.broadleaf_grove(c, p)
+
+
+# the street's lamps, and wall lamps on the mirador's house fronts
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	out.append_array(m.freedom_side_lamps(MIRADOR_LAMPS, MIRADOR_FRONT, MIRADOR_LAMP_R))
+	return out

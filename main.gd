@@ -5140,6 +5140,7 @@ const SOFT_WEAR: Array[String] = [
 	"neteja",
 	"besos",
 	"sarria",
+	"tibidabo",
 ]
 
 

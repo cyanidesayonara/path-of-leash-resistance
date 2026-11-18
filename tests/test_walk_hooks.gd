@@ -26,7 +26,7 @@ const HOOKS := {
 	"port": ["cam_lean", "draw_bollard", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "hush_banner", "idle_status", "on_bark", "surface", "tick", "urgent_status"],
 	"reial": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "night_fronts", "night_lights", "surface", "tick"],
 	"vet": ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"],
-	"tibidabo": ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "surface", "tick"],
+	"tibidabo": ["build_layer", "draw_edge_layer", "draw_grove", "draw_live", "draw_overhead", "night_lights", "surface", "tick"],
 	"beach": ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_parasol", "on_bark", "surface", "takes_prints", "tick"],
 	"rain": ["draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_over_walkway", "surface"],
 	"market": ["draw_column", "draw_live", "draw_overhead", "draw_stall", "draw_van", "surface"],
