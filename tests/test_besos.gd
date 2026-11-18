@@ -80,6 +80,18 @@ func _run() -> void:
 		if b.has("rect") and Rect2(b["rect"]).grow(0.5).encloses(channel):
 			covered = true
 	_check(covered, "walkers steer round the channel")
+	# after dark: the flood wall's lamps, and none hung on the river's bank
+	var east_wall := 0
+	var west_wall := 0
+	for l: Vector3 in m.night_lights():
+		if l.z < m.NIGHT_LAMP_R:
+			if l.x > m.walk_cx:
+				east_wall += 1
+			else:
+				west_wall += 1
+	_check(east_wall == 0, "no wall lamp on the riverbank, which has no wall (%d)" % east_wall)
+	_check(west_wall > 0, "the flood wall keeps its lamps (%d)" % west_wall)
+	_check("besos" in m.SOFT_WEAR, "the meadow's trodden earth is soft at its edge")
 
 	await physics_frame
 	HomeChase.begin(m)

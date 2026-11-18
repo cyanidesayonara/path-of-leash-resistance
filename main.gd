@@ -5135,6 +5135,7 @@ func _freedom_sign(c: Object, r: Rect2, txt: String, gloss := "") -> void:
 # disc until they are polished
 const SOFT_WEAR: Array[String] = [
 	"neteja",
+	"besos",
 ]
 
 
