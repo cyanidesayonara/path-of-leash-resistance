@@ -9,38 +9,128 @@ extends RefCounted
 # stay in main: they are the walk's rules, not its picture.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_column", "draw_freedom_beyond", "draw_freedom_ground", "draw_live", "draw_over_walkway", "surface"]
+const HOOKS := [
+	"draw_column",
+	"draw_edge_layer",
+	"draw_freedom_beyond",
+	"draw_freedom_ground",
+	"draw_live",
+	"draw_over_walkway",
+	"draw_threshold",
+	"night_fronts",
+	"surface",
+]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const NightFronts := preload("res://world/night_fronts.gd")
 const Panot := preload("res://world/panot.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const RING_SEGS := 12
 const PORXO_PUDDLE_SEGS := 28
 const PILLAR_STONE := Color(0.58, 0.53, 0.47)
 
+# street geometry constants matching main.gd and LevelBuild
+const EDGE_MOD := 220.0
+const EDGE_DEPTH := 78.0
+const EDGE_INSET := 27.0
+const DOOR_OFFSET := 168.0
+const GUTTER_W := 10.0
+const KERB_W := 4.0
+const ARCADE_GUTTER_X := 98.0
+const KERB_STONE := Color(0.56, 0.54, 0.50)
+const GUTTER_BED := Color(0.24, 0.28, 0.34)
+const DRY_ARCADE_STONE := Color(0.68, 0.62, 0.52)
+const PORXO_KERB_W := 10.0
+const PORXO_KERB_COL := Color(0.65, 0.61, 0.54)
+
+
+static func _in_crossing(m: Node2D, y: float, pad := 0.0) -> bool:
+	for ly: float in m.lane_ys:
+		if absf(y - ly) < float(m.LANE_HALF) + pad:
+			return true
+	return false
+
+
+static func _doorway_ys(m: Node2D, y_min: float, y_max: float) -> Array[float]:
+	var out: Array[float] = []
+	var y := floorf(y_min / EDGE_MOD) * EDGE_MOD
+	while y < y_max:
+		var dy := y + DOOR_OFFSET
+		if dy > y_min + 26.0 and dy < y_max - 26.0 and not _in_crossing(m, dy, 28.0):
+			out.append(dy)
+		y += EDGE_MOD
+	return out
+
+
+static func _near_doorway(dy_list: Array[float], y: float, half_h := 16.0) -> bool:
+	for dy: float in dy_list:
+		if absf(y - dy) < half_h:
+			return true
+	return false
+
+
+static func _in_arcade_y(y: float) -> bool:
+	return y >= LevelBuild.DILUVI_ARCADE_Y0 and y <= LevelBuild.DILUVI_ARCADE_Y1
+
+
+# Where the gutter center runs on each side: outside the arcade on the west
+# side, it steps out to the arcade's drip channel along [ARCADE_Y0, ARCADE_Y1].
+static func _gutter_x(ge: Vector2, gy: float, west: bool) -> float:
+	if not west:
+		return ge.y - GUTTER_W * 0.5
+	if _in_arcade_y(gy):
+		return ge.x + ARCADE_GUTTER_X - GUTTER_W * 0.5
+	return ge.x + GUTTER_W * 0.5
+
+
 # EL DILUVI: the arcade (a roof behind its pillars, arches between), the
 # awnings, the gutters running down both sides, and the owner's wet meter.
 static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var t := AnimClock.msec() / 1000.0
-	# the gutters, running along curbs with storm drain grates and vortexes
-	var gy := floorf((vt - 60.0) / 46.0) * 46.0
-	while gy < vb + 60.0:
-		var ge: Vector2 = m.walk_edges(gy)
-		for gx: float in [ge.x + 6.0, ge.y - 6.0]:
-			b.rect(Rect2(gx - 4.0, gy, 8.0, 46.0), Color(0.30, 0.36, 0.42))
-			var fl := fmod(gy + t * 90.0, 46.0)
-			b.line(Vector2(gx, gy + fl), Vector2(gx, gy + fl + 12.0), Color(0.75, 0.84, 0.92, 0.6), 2.0)
-			if int(absf(gy)) % 184 < 46:
-				# curbside iron slot grate and whirlpool drain
-				b.rect(Rect2(gx - 5.0, gy + 10.0, 10.0, 26.0), Color(0.18, 0.20, 0.22))
-				for gi: int in range(4):
-					b.line(Vector2(gx - 3.5, gy + 14.0 + float(gi) * 5.0), Vector2(gx + 3.5, gy + 14.0 + float(gi) * 5.0), Color(0.10, 0.10, 0.12), 2.0)
-				var wph := fmod(t * 2.2 + absf(gy) * 0.1, 1.0)
-				b.circle(Vector2(gx, gy + 23.0), 2.5 + wph * 4.5, Color(0.72, 0.84, 0.94, 0.38 * (1.0 - wph)))
+	var y_top_lim: float = float(m.GATE_Y) + 14.0
+	var y_bot_lim: float = float(m.START_Y) + 52.0
+	var door_ys := _doorway_ys(m, float(m.GATE_Y) - 20.0, float(m.START_Y) + 74.0)
+	# the gutters: running water and storm drain grates (static stone beds &
+	# kerbs are cached on ground_layer in draw_over_walkway)
+	var gy := floorf(maxf(vt - 60.0, y_top_lim) / 46.0) * 46.0
+	var gy_end := minf(vb + 60.0, y_bot_lim)
+	while gy < gy_end:
+		var seg_a := maxf(gy, y_top_lim)
+		var seg_b := minf(gy + 46.0, y_bot_lim)
+		var mid := (seg_a + seg_b) * 0.5
+		if seg_b > seg_a + 2.0 and not _in_crossing(m, mid, 4.0):
+			var ge: Vector2 = m.walk_edges(mid)
+			for west: bool in [true, false]:
+				var gx := _gutter_x(ge, mid, west)
+				var on_arcade := west and _in_arcade_y(mid)
+				if on_arcade or not _near_doorway(door_ys, mid, 15.0):
+					b.rect(Rect2(gx - 3.5, seg_a, 7.0, seg_b - seg_a), Color(0.30, 0.36, 0.42, 0.85))
+					var fl := fmod(gy + t * 90.0, 46.0)
+					var fy0 := clampf(gy + fl, seg_a, seg_b - 2.0)
+					var fy1 := clampf(gy + fl + 12.0, seg_a, seg_b)
+					if fy1 > fy0 + 2.0:
+						b.line(Vector2(gx, fy0), Vector2(gx, fy1), Color(0.75, 0.84, 0.92, 0.6), 2.0)
+				if int(absf(gy)) % 184 < 46 and (on_arcade or not _near_doorway(door_ys, gy + 23.0, 18.0)):
+					if gy + 10.0 >= y_top_lim and gy + 36.0 <= y_bot_lim and not _in_crossing(m, gy + 23.0, 16.0):
+						_draw_grate(b, gx, gy + 23.0, t, gy)
 		gy += 46.0
+
+	# terminal catch-basin grates where gutters meet crossings, the gate, the
+	# arcade ends, and the start facade so water drains cleanly rather than ending mid-stream
+	var catch_ys: Array[float] = [y_top_lim + 12.0, y_bot_lim - 12.0,
+		LevelBuild.DILUVI_ARCADE_Y1 + 14.0, LevelBuild.DILUVI_ARCADE_Y0 - 14.0]
+	for ly: float in m.lane_ys:
+		catch_ys.append(ly - float(m.LANE_HALF) - 14.0)
+		catch_ys.append(ly + float(m.LANE_HALF) + 14.0)
+	for cy: float in catch_ys:
+		if cy < vt - 40.0 or cy > vb + 40.0:
+			continue
+		var ce: Vector2 = m.walk_edges(cy)
+		for west: bool in [true, false]:
+			_draw_grate(b, _gutter_x(ce, cy, west), cy, t, cy)
 
 	# expanding raindrop impact ripple rings across puddles
 	for pt: Dictionary in m.patches:
@@ -68,7 +158,7 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 		if ar.end.y > vt - 40.0 and ar.position.y < vb + 40.0:
 			var y0 := maxf(ar.position.y, vt - 40.0)
 			var y1 := minf(ar.end.y, vb + 40.0)
-			b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25))
+			b.rect(Rect2(ar.position.x, y0, ar.size.x, y1 - y0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
 	# the striped boards fenced along each side of an open storm drain (its
 	# cones, end on to the way the street walks, are real nodes: spawn_cones)
 	var bd: Vector2 = LevelBuild.DILUVI_DRAIN_BOARD
@@ -88,6 +178,15 @@ static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	if m.awning_dump != null:
 		m.awning_dump.draw(b, vt, vb)
 	b.flush(m._wc)
+
+
+static func _draw_grate(b: ShapeBatch, gx: float, cy: float, t: float, phase_seed: float) -> void:
+	b.rect(Rect2(gx - 4.5, cy - 11.0, 9.0, 22.0), Color(0.18, 0.20, 0.22))
+	for gi: int in range(4):
+		var ly := cy - 7.5 + float(gi) * 5.0
+		b.line(Vector2(gx - 3.0, ly), Vector2(gx + 3.0, ly), Color(0.10, 0.10, 0.12), 2.0)
+	var wph := fmod(t * 2.2 + absf(phase_seed) * 0.1, 1.0)
+	b.circle(Vector2(gx, cy), 2.0 + wph * 4.0, Color(0.72, 0.84, 0.94, 0.35 * (1.0 - wph)))
 
 
 # a ripple's ring on standing water: RING_SEGS quads round the centre, so a
@@ -221,13 +320,32 @@ static func _draw_porxo(m: Node2D, c: Object) -> void:
 	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 26.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
 	b.rect(Rect2(r.position.x, r.position.y, 26.0, r.size.y), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
 	b.rect(Rect2(r.end.x - 26.0, r.position.y, 26.0, r.size.y), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
-	# the drip line: a dark wet edge where the eave sheds onto the court
+	b.rect(Rect2(r.position.x, r.end.y - 10.0, m.PORXO_W, 10.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14))
+	b.rect(Rect2(r.end.x - m.PORXO_W, r.end.y - 10.0, m.PORXO_W, 10.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.14))
+	# soft wet eave drip feathering into the sauló court, bordered by a dressed
+	# stone porch kerb along the column line
 	var ix0: float = r.position.x + m.PORXO_W
 	var ix1: float = r.end.x - m.PORXO_W
 	var iy0: float = r.position.y + m.PORXO_W
-	b.rect(Rect2(ix0, iy0, ix1 - ix0, 6.0), court.darkened(0.30))
-	b.rect(Rect2(ix0, iy0, 6.0, r.end.y - iy0), court.darkened(0.30))
-	b.rect(Rect2(ix1 - 6.0, iy0, 6.0, r.end.y - iy0), court.darkened(0.30))
+	var drip_col := Color(0.36, 0.30, 0.22, 0.44)
+	var drip_rows := PackedFloat32Array([1.0, 0.45, 0.0])
+	var end_cols := PackedFloat32Array([1.0, 1.0])
+	b.band(PackedVector2Array([
+		Vector2(ix0, iy0), Vector2(ix1, iy0),
+		Vector2(ix0, iy0 + 8.0), Vector2(ix1, iy0 + 8.0),
+		Vector2(ix0, iy0 + 20.0), Vector2(ix1, iy0 + 20.0),
+	]), 2, drip_col, drip_rows, end_cols)
+	b.band(PackedVector2Array([
+		Vector2(ix0, iy0), Vector2(ix0, r.end.y),
+		Vector2(ix0 + 8.0, iy0), Vector2(ix0 + 8.0, r.end.y),
+		Vector2(ix0 + 20.0, iy0), Vector2(ix0 + 20.0, r.end.y),
+	]), 2, drip_col, drip_rows, end_cols)
+	b.band(PackedVector2Array([
+		Vector2(ix1, iy0), Vector2(ix1, r.end.y),
+		Vector2(ix1 - 8.0, iy0), Vector2(ix1 - 8.0, r.end.y),
+		Vector2(ix1 - 20.0, iy0), Vector2(ix1 - 20.0, r.end.y),
+	]), 2, drip_col, drip_rows, end_cols)
+	_porxo_kerbs(b, ix0, ix1, iy0, r.end.y)
 	# the columns along the porch's open edge, each on its square base
 	var cols: Array[Vector2] = []
 	var cx := ix0
@@ -244,16 +362,21 @@ static func _draw_porxo(m: Node2D, c: Object) -> void:
 		b.rect(Rect2(cp - Vector2(13, 13), Vector2(26, 26)), Color(0.64, 0.60, 0.54))
 		b.circle(cp, 10.0, Color(0.76, 0.72, 0.66))
 		b.circle(cp - Shade.light * 2.5, 6.5, Color(0.84, 0.81, 0.76))
-	# the walls round the yard, open at the gate
+	# the walls round the yard, open at the gate, with a lit top stone coping
 	var wall := Color(0.60, 0.54, 0.46)
+	var coping := wall.lightened(0.18)
 	b.rect(Rect2(r.position.x - 10.0, r.position.y - 10.0, r.size.x + 20.0, 10.0), wall)
 	b.rect(Rect2(r.position.x - 10.0, r.position.y, 10.0, r.size.y + 10.0), wall)
 	b.rect(Rect2(r.end.x, r.position.y, 10.0, r.size.y + 10.0), wall)
 	b.rect(Rect2(r.position.x - 10.0, r.end.y, m.gate_l - 20.0 - r.position.x + 10.0, 10.0), wall)
 	b.rect(Rect2(m.gate_r + 20.0, r.end.y, r.end.x + 10.0 - m.gate_r - 20.0, 10.0), wall)
-	b.rect(Rect2(r.position.x - 10.0, r.position.y - 10.0, r.size.x + 20.0, 3.0), wall.lightened(0.18))
+	b.rect(Rect2(r.position.x - 10.0, r.position.y - 10.0, r.size.x + 20.0, 3.0), coping)
+	b.rect(Rect2(r.position.x - 10.0, r.position.y - 10.0, 3.0, r.size.y + 20.0), coping)
+	b.rect(Rect2(r.end.x, r.position.y - 10.0, 3.0, r.size.y + 20.0), coping)
+	b.rect(Rect2(r.position.x - 10.0, r.end.y, m.gate_l - 20.0 - r.position.x + 10.0, 3.0), coping)
+	b.rect(Rect2(m.gate_r + 20.0, r.end.y, r.end.x + 10.0 - m.gate_r - 20.0, 3.0), coping)
 	# a downpipe in each corner of the court, spouting onto a splash stone
-	for dp: Vector2 in [Vector2(ix0 + 10.0, iy0 + 10.0), Vector2(ix1 - 10.0, iy0 + 10.0)]:
+	for dp: Vector2 in [Vector2(ix0 + 18.0, iy0 + 16.0), Vector2(ix1 - 18.0, iy0 + 16.0)]:
 		b.rect(Rect2(dp - Vector2(10, 7), Vector2(20, 14)), Color(0.66, 0.62, 0.56))
 		b.circle(dp, 4.0, Color(0.48, 0.52, 0.56))
 		b.circle(dp + Vector2(0, 8), 7.0, Color(0.50, 0.60, 0.70, 0.6))
@@ -261,6 +384,26 @@ static func _draw_porxo(m: Node2D, c: Object) -> void:
 		b.flush()
 	m._draw_freedom_benches(c, r, Color(0.46, 0.34, 0.24))
 	m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_covered_yard_off_leash"))
+
+
+static func _porxo_kerbs(b: ShapeBatch, ix0: float, ix1: float, iy0: float, y_bot: float) -> void:
+	var hk := PORXO_KERB_W * 0.5
+	b.rect(Rect2(ix0 - hk, iy0 - hk, ix1 - ix0 + PORXO_KERB_W, PORXO_KERB_W), PORXO_KERB_COL)
+	b.rect(Rect2(ix0 - hk, iy0 - hk, ix1 - ix0 + PORXO_KERB_W, 2.0), PORXO_KERB_COL.lightened(0.14))
+	b.rect(Rect2(ix0 - hk, iy0 - hk, PORXO_KERB_W, y_bot - iy0 + hk), PORXO_KERB_COL)
+	b.rect(Rect2(ix0 - hk, iy0 - hk, 2.0, y_bot - iy0 + hk), PORXO_KERB_COL.lightened(0.14))
+	b.rect(Rect2(ix1 - hk, iy0 - hk, PORXO_KERB_W, y_bot - iy0 + hk), PORXO_KERB_COL)
+	b.rect(Rect2(ix1 - hk, iy0 - hk, 2.0, y_bot - iy0 + hk), PORXO_KERB_COL.lightened(0.14))
+	var joint := PORXO_KERB_COL.darkened(0.22)
+	var jx := ix0 + 37.0
+	while jx < ix1 - 12.0:
+		b.line(Vector2(jx, iy0 - hk), Vector2(jx, iy0 + hk), joint, 1.2)
+		jx += 37.0
+	var jy := iy0 + 37.0
+	while jy < y_bot - 12.0:
+		b.line(Vector2(ix0 - hk, jy), Vector2(ix0 + hk, jy), joint, 1.2)
+		b.line(Vector2(ix1 - hk, jy), Vector2(ix1 + hk, jy), joint, 1.2)
+		jy += 37.0
 
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
@@ -282,28 +425,52 @@ static func draw_freedom_ground(m: Node2D, c: Object) -> void:
 
 
 # El Porxo's porch roofs past its walls, wet pantile, and the block's
-# terrats beyond
+# terrats beyond, meeting the street's north building blocks cleanly at the
+# south wall without overlapping past it.
 static func draw_freedom_beyond(m: Node2D, c: Object) -> void:
 	var r: Rect2 = m._freedom_rect()
 	var top := r.position.y
+	var wall_bot := r.end.y + 10.0
 	var b := ShapeBatch.new()
 	b.rect(Rect2(-400.0, top - 400.0, 2100.0, 390.0), Color(0.38, 0.35, 0.37))
-	var bays: Array[Rect2] = [Rect2(-400.0, top - 110.0, 2100.0, 100.0),
-		Rect2(-400.0, top - 10.0, 470.0, r.size.y + 40.0), Rect2(r.end.x + 10.0, top - 10.0, 520.0, r.size.y + 40.0)]
-	for k in range(bays.size()):
-		var bay: Rect2 = bays[k]
-		var tile := Color(0.50, 0.29, 0.21)
+	var tile := Color(0.50, 0.29, 0.21)
+	# north wing (-400..1700, top-110..top-10)
+	var n_bay := Rect2(-400.0, top - 110.0, 2100.0, 100.0)
+	b.rect(n_bay, tile)
+	var ty := n_bay.position.y + 4.0
+	while ty < n_bay.end.y:
+		b.line(Vector2(n_bay.position.x, ty), Vector2(n_bay.end.x, ty), tile.darkened(0.28), 2.0)
+		ty += 9.0
+	# west and east porch wings ending flush with El Porxo's south stone wall
+	var w_bay := Rect2(-400.0, top - 10.0, r.position.x - 10.0 + 400.0, wall_bot - (top - 10.0))
+	var e_bay := Rect2(r.end.x + 10.0, top - 10.0, 1700.0 - (r.end.x + 10.0), wall_bot - (top - 10.0))
+	for bay: Rect2 in [w_bay, e_bay]:
 		b.rect(bay, tile)
-		if k == 0:
-			var ty := bay.position.y + 4.0
-			while ty < bay.end.y:
-				b.line(Vector2(bay.position.x, ty), Vector2(bay.end.x, ty), tile.darkened(0.28), 2.0)
-				ty += 9.0
-		else:
-			var tx := bay.position.x + 4.0
-			while tx < bay.end.x:
-				b.line(Vector2(tx, bay.position.y), Vector2(tx, bay.end.y), tile.darkened(0.28), 2.0)
-				tx += 9.0
+		var tx := bay.position.x + 4.0
+		while tx < bay.end.x:
+			b.line(Vector2(tx, bay.position.y), Vector2(tx, bay.end.y), tile.darkened(0.28), 2.0)
+			tx += 9.0
+		# south parapet coping joining El Porxo's south stone wall
+		b.rect(Rect2(bay.position.x, wall_bot - 6.0, bay.size.x, 6.0), Color(0.60, 0.54, 0.46))
+		b.rect(Rect2(bay.position.x, wall_bot - 6.0, bay.size.x, 2.0), Color(0.70, 0.64, 0.55))
+	# mitered hip ridges where the north and side porch roofs meet at the corners
+	for side_x: Array in [[r.position.x - 10.0, -1.0], [r.end.x + 10.0, 1.0]]:
+		var cx := float(side_x[0])
+		var sx := float(side_x[1])
+		var hip_a := Vector2(cx, top - 10.0)
+		var hip_b := Vector2(cx + sx * 100.0, top - 110.0)
+		b.polygon(PackedVector2Array([hip_a, hip_b, Vector2(cx + sx * 100.0, top - 10.0)]), tile.darkened(0.05))
+		var hty := top - 105.0
+		while hty < top - 10.0:
+			var frac := (hty - (top - 10.0)) / -100.0
+			var hx := cx + sx * frac * 100.0
+			var x_lo := minf(cx, hx)
+			var x_hi := maxf(cx, hx)
+			if x_hi - x_lo > 4.0:
+				b.line(Vector2(x_lo, hty), Vector2(x_hi, hty), tile.darkened(0.28), 2.0)
+			hty += 9.0
+		b.line(hip_a, hip_b, tile.darkened(0.26), 7.0)
+		b.line(hip_a, hip_b, tile.lightened(0.16), 3.5)
 	for k in range(9):
 		var tp := Vector2(-300.0 + float(k) * 240.0, top - 260.0 + fmod(float(k) * 53.0, 80.0))
 		b.circle(tp + Shade.light * 10.0, 16.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.3))
@@ -317,6 +484,8 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 	if p.x >= m.walk_cx:
 		m._draw_lamppost(p)
 		return
+	# flush stone paving collar seating the plinth into the panots
+	wc.rect(Rect2(p.x - 16.0, p.y - 16.0, 32.0, 32.0), Color(0.46, 0.44, 0.41))
 	m.cast_shadow(wc, p, 12.0, 30.0, 0.2)
 	# the plinth, then the shaft: lit on the west face and shaded on the east,
 	# as the light falls, with a dressed edge along the top
@@ -328,6 +497,202 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 	wc.rect(Rect2(p.x - 10.0, p.y - 10.0, 20.0, 2.0), PILLAR_STONE.lightened(0.22))
 
 
+# Custom building edge layer for El Diluvi: omits the generic _draw_edge_awning
+# (which collided with the west arcade and east DILUVI_AWNINGS), stops cleanly
+# at El Porxo's south wall (-5020) and the start apartment block (+334), and
+# frames the two cross-streets cleanly.
+static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c)
+	var y_min: float = float(m.GATE_Y) - 20.0
+	var y_max: float = float(m.START_Y) + 74.0
+	var base: Color = m._edge_base_color()
+	var face := 22.0
+	var cast := 38.0
+	var slice := 55.0
+	var sy := maxf(floorf((vt - 320.0) / slice) * slice, y_min)
+	var sy_end := minf(vb + 320.0, y_max)
+	while sy < sy_end - 0.5:
+		var sn := minf(sy + slice, sy_end)
+		for seg: Vector2 in _subtract_crossings(m, sy, sn):
+			m._edge_band(b, seg.x, seg.y - seg.x, base, 520.0, face, cast)
+		sy = sn
+
+	var door_ys := _doorway_ys(m, y_min, y_max)
+	var my := maxf(floorf((vt - EDGE_MOD) / EDGE_MOD) * EDGE_MOD, floorf(y_min / EDGE_MOD) * EDGE_MOD)
+	var my_end := minf(vb + EDGE_MOD, y_max)
+	while my < my_end:
+		var m_top := maxf(my, y_min)
+		var m_bot := minf(my + EDGE_MOD, y_max)
+		if m_bot > m_top + 1.0:
+			var k_base := int(absf(my) / EDGE_MOD)
+			var spans := _subtract_crossings(m, m_top, m_bot)
+			for side: float in [-1.0, 1.0]:
+				var line: Vector2 = m.frontage(clampf((m_top + m_bot) * 0.5, y_min + 1.0, y_max - 1.0))
+				var inner: float = (line.x - EDGE_INSET) if side < 0.0 else (line.y + EDGE_INSET)
+				var x0: float = inner - EDGE_DEPTH if side < 0.0 else inner
+				var k := k_base + (0 if side < 0.0 else 7)
+				for seg: Vector2 in spans:
+					var sh := seg.y - seg.x
+					if sh >= 165.0:
+						m._draw_diluvi_roofs(b, Rect2(x0, seg.x, EDGE_DEPTH, sh), side, k, inner)
+					elif sh >= 8.0:
+						_draw_corner_roof(m, b, inner, side, seg.x, sh, k)
+				var dy := my + DOOR_OFFSET
+				if dy in door_ys:
+					m._draw_doorway(b, inner, side, dy, Color(0.48, 0.30, 0.22))
+		my += EDGE_MOD
+
+	# stone coping along cross-street corners and at El Porxo's south boundary
+	var coping := Color(0.60, 0.54, 0.46)
+	for ly: float in m.lane_ys:
+		var ct := ly - float(m.LANE_HALF)
+		var cb := ly + float(m.LANE_HALF)
+		for side: float in [-1.0, 1.0]:
+			var ce: Vector2 = m.frontage(ly)
+			var x_lo := ce.x - 447.0 if side < 0.0 else ce.y
+			if ct > vt - 60.0 and ct < vb + 60.0:
+				b.rect(Rect2(x_lo, ct - 5.0, 447.0, 5.0), coping)
+				b.rect(Rect2(x_lo, ct - 5.0, 447.0, 2.0), coping.lightened(0.16))
+			if cb > vt - 60.0 and cb < vb + 60.0:
+				b.rect(Rect2(x_lo, cb, 447.0, 5.0), coping)
+				b.rect(Rect2(x_lo, cb, 447.0, 2.0), coping.lightened(0.16))
+				b.rect(Rect2(x_lo, cb + 5.0, 447.0, 6.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+	if b != c:
+		b.flush()
+
+
+static func _subtract_crossings(m: Node2D, y0: float, y1: float) -> Array[Vector2]:
+	var segs: Array[Vector2] = [Vector2(y0, y1)]
+	for ly: float in m.lane_ys:
+		var ct := ly - float(m.LANE_HALF)
+		var cb := ly + float(m.LANE_HALF)
+		var next: Array[Vector2] = []
+		for s: Vector2 in segs:
+			if s.y <= ct or s.x >= cb:
+				next.append(s)
+			else:
+				if s.x < ct:
+					next.append(Vector2(s.x, ct))
+				if s.y > cb:
+					next.append(Vector2(cb, s.y))
+		segs = next
+	return segs
+
+
+# Clipped roof corner where a module is shortened by a cross-street or the
+# south apartment facade so skylights or chimneys never overhang the road.
+static func _draw_corner_roof(m: Node2D, b: ShapeBatch, inner_x: float, out: float, y0: float, h: float, k: int) -> void:
+	var front_pitched := (k % 3) != 1
+	for is_front: bool in [true, false]:
+		var d0 := 0.0 if is_front else 150.0
+		var d1 := 150.0 if is_front else 420.0
+		var a := inner_x + out * d0
+		var z := inner_x + out * d1
+		var lot := Rect2(minf(a, z), y0, absf(z - a), h)
+		var pitched := front_pitched if is_front else (not front_pitched)
+		if pitched:
+			var tile: Color = [Color(0.50, 0.28, 0.20), Color(0.56, 0.32, 0.22), Color(0.46, 0.27, 0.21)][k % 3]
+			b.rect(lot, tile)
+			var ridge := lot.get_center().x
+			b.rect(Rect2(ridge, lot.position.y, lot.end.x - ridge, lot.size.y), tile.darkened(0.12))
+			var ty := lot.position.y + 4.0
+			while ty < lot.end.y - 2.0:
+				b.line(Vector2(lot.position.x + 2.0, ty), Vector2(lot.end.x - 2.0, ty), tile.darkened(0.30), 2.0)
+				ty += 9.0
+			b.rect(Rect2(ridge - 4.0, lot.position.y, 8.0, lot.size.y), tile.lightened(0.16))
+			b.rect(Rect2(ridge - 1.0, lot.position.y, 2.0, lot.size.y), tile.darkened(0.20))
+		else:
+			var flag := Color(0.62, 0.56, 0.50)
+			b.rect(lot, flag.darkened(0.35))
+			var floor_r := lot.grow(-6.0)
+			if floor_r.size.y > 2.0:
+				b.rect(floor_r, flag)
+				var gx := floor_r.position.x + 18.0
+				while gx < floor_r.end.x:
+					b.line(Vector2(gx, floor_r.position.y), Vector2(gx, floor_r.end.y), flag.darkened(0.12), 1.0)
+					gx += 18.0
+				var gy := floor_r.position.y + 18.0
+				while gy < floor_r.end.y:
+					b.line(Vector2(floor_r.position.x, gy), Vector2(floor_r.end.x, gy), flag.darkened(0.12), 1.0)
+					gy += 18.0
+	var gx_eave := inner_x + out * 4.0
+	b.rect(Rect2(gx_eave - 4.0, y0, 8.0, h), Color(0.50, 0.53, 0.56))
+	b.rect(Rect2(gx_eave - 2.5, y0, 5.0, h), Color(0.40, 0.52, 0.64))
+	if h > 16.0:
+		b.circle(Vector2(gx_eave, y0 + 8.0), 5.0, Color(0.56, 0.58, 0.60))
+		b.circle(Vector2(gx_eave, y0 + 8.0), 3.0, Color(0.22, 0.26, 0.30))
+
+
+# Lit doorways for world/light_layer.gd matching draw_edge_layer's exact doors.
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var y_min: float = float(m.GATE_Y) - 20.0
+	var y_max: float = float(m.START_Y) + 74.0
+	var door_ys := _doorway_ys(m, y_min, y_max)
+	var y := floorf(y_min / EDGE_MOD) * EDGE_MOD
+	while y < y_max:
+		var base_dy := y + DOOR_OFFSET
+		if base_dy in door_ys:
+			for side: float in [-1.0, 1.0]:
+				var k := int(absf(y) / EDGE_MOD) + (0 if side < 0.0 else 7)
+				var kind: String = NightFronts.kind_of(k)
+				if kind == "":
+					continue
+				var dy := base_dy + (NightFronts.TV_OFFSET if kind == "tv" else 0.0)
+				if dy <= float(m.GATE_Y) + 20.0 or dy > float(m.START_Y) + 60.0 or _in_crossing(m, dy, 12.0):
+					continue
+				var bl: Vector2 = m.building_line(dy)
+				var fx: float = (bl.x - EDGE_INSET) if side < 0.0 else (bl.y + EDGE_INSET)
+				out.append(NightFronts.front(Vector2(fx, dy), -side, kind, k))
+		y += EDGE_MOD
+	return out
+
+
+# Joins the wet panot street, gutters, stone gate sill and El Porxo's sauló
+# courtyard cleanly across GATE_Y - 40 .. GATE_Y - 6 without leaving a bare
+# grey paving strip poking into the courtyard.
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y_court_end: float = float(m.GATE_Y) - 30.0
+	var y_sill_top: float = float(m.GATE_Y) - 6.0
+	var y_fill_top: float = float(m.GATE_Y) - 40.0
+	var ge: Vector2 = m.walk_edges(float(m.GATE_Y) - 16.0)
+	var gl := maxf(float(m.gate_l), ge.x)
+	var gr := minf(float(m.gate_r), ge.y)
+	var mx := (gl + gr) * 0.5
+	var court := Color(0.62, 0.53, 0.40)
+	# bring El Porxo's sauló cleanly down to the wall line (-5030) across the mouth
+	b.rect(Rect2(ge.x, y_fill_top, ge.y - ge.x, y_court_end - y_fill_top), court)
+	# dressed stone entrance apron from the gate sill (-5006) up to the courtyard (-5030)
+	var apron_col := Color(0.66, 0.61, 0.53)
+	b.rect(Rect2(gl, y_court_end, gr - gl, y_sill_top - y_court_end), apron_col)
+	b.rect(Rect2(gl, y_court_end, gr - gl, 2.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.16))
+	var jx := gl + 38.0
+	while jx < gr - 10.0:
+		b.line(Vector2(jx, y_court_end), Vector2(jx, y_sill_top), apron_col.darkened(0.20), 1.3)
+		jx += 38.0
+	# soldier course of narrow granite setts edging the panots right before the gate sill
+	var sill_bot: float = float(m.GATE_Y) + 6.0
+	b.rect(Rect2(gl, sill_bot, gr - gl, 8.0), KERB_STONE.darkened(0.08))
+	var sx := gl
+	while sx < gr - 2.0:
+		var sw := minf(22.0, gr - sx)
+		b.rect(Rect2(sx + 1.0, sill_bot + 1.0, sw - 2.0, 6.0), KERB_STONE.lightened(0.04 if int(sx / 22.0) % 2 == 0 else -0.05))
+		sx += 22.0
+	# worn damp sauló tongue feathering from the courtyard through the gate mouth
+	var tongue_half := 72.0
+	var tpts := PackedVector2Array()
+	var trows := PackedFloat32Array([0.85, 0.55, 0.25, 0.0])
+	var tcol := PackedFloat32Array([0.0, 0.85, 1.0, 0.85, 0.0])
+	for sp: Array in [[y_court_end - 18.0, 1.0], [y_court_end - 2.0, 0.90], [y_sill_top - 2.0, 0.72], [sill_bot + 16.0, 0.48]]:
+		var sy := float(sp[0])
+		var hw := tongue_half * float(sp[1])
+		tpts.append_array([
+			Vector2(mx - hw, sy), Vector2(mx - hw * 0.55, sy), Vector2(mx, sy),
+			Vector2(mx + hw * 0.55, sy), Vector2(mx + hw, sy),
+		])
+	b.band(tpts, 5, court, trows, tcol)
+
+
 # The street is paved in panots de flor, the Barcelona pavement tile with a
 # four-petal flower pressed into it, laid square (world/panot.gd): drawn over
 # the walkway's slabs, the flowers' grooves dark with water and their crowns
@@ -335,20 +700,94 @@ static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
 const PANOT := Panot.FLOR
 const PANOT_GROOVE := Color(0.0, 0.02, 0.06, 0.13)
 const PANOT_SHINE := Color(0.90, 0.94, 1.0, 0.10)
+const PANOT_DRY_GROOVE := Color(0.14, 0.10, 0.06, 0.10)
+const PANOT_DRY_SHINE := Color(1.0, 0.96, 0.88, 0.08)
 
 
 static func _on_crossing(m: Node2D, y: float) -> bool:
 	for ly: float in m.lane_ys:
-		if absf(y - ly) < float(m.LANE_HALF) + PANOT:
+		if absf(y - ly) < float(m.LANE_HALF) - PANOT * 0.35:
 			return true
 	return false
 
 
 static func draw_over_walkway(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
-	var top: float = maxf(vt - PANOT, float(m.GATE_Y) - 30.0)
-	var bot: float = vb + PANOT
+	var y_top_lim: float = float(m.GATE_Y) + 6.0
+	var y_bot_lim: float = float(m.START_Y) + 74.0
+	var arc_y0: float = LevelBuild.DILUVI_ARCADE_Y0
+	var arc_y1: float = LevelBuild.DILUVI_ARCADE_Y1
+	var arc_w: float = LevelBuild.DILUVI_ARCADE_W
+
+	# 1. Dry arcade paving slab + stone kerb along [ARCADE_Y0, ARCADE_Y1]
+	var ay0 := maxf(arc_y0, vt - PANOT)
+	var ay1 := minf(arc_y1, vb + PANOT)
+	if ay1 > ay0:
+		wc.rect(Rect2(m.sw_l, ay0, arc_w, ay1 - ay0), DRY_ARCADE_STONE)
+		wc.rect(Rect2(m.sw_l + arc_w - 3.0, ay0, 6.0, ay1 - ay0), KERB_STONE)
+		wc.rect(Rect2(m.sw_l + arc_w - 3.0, ay0, 2.0, ay1 - ay0), KERB_STONE.lightened(0.14))
+		# stone end-return thresholds anchoring the north and south ends of the arcade
+		for end_y: float in [arc_y0, arc_y1]:
+			if end_y >= vt - 40.0 and end_y <= vb + 40.0:
+				wc.rect(Rect2(m.sw_l, end_y - 6.0, arc_w + 14.0, 12.0), KERB_STONE)
+				wc.rect(Rect2(m.sw_l, end_y - 6.0, arc_w + 14.0, 2.0), KERB_STONE.lightened(0.16))
+				wc.rect(Rect2(m.sw_l, end_y + 6.0, arc_w + 14.0, 3.0), Color(0, 0, 0, 0.14))
+
+	# 2. Panot tiles: dry tiles under the arcade, wet street tiles between the kerbs
+	var top: float = maxf(vt - PANOT, y_top_lim)
+	var bot: float = minf(vb + PANOT, y_bot_lim)
 	var y := floorf(top / PANOT) * PANOT
 	while y < bot:
-		if not _on_crossing(m, y + PANOT * 0.5):
-			Panot.flor_row(wc, m.sw_l, m.sw_r, y, m.sw_l, PANOT_GROOVE, PANOT_SHINE)
+		var r_top := maxf(y, y_top_lim)
+		var r_bot := minf(y + PANOT, y_bot_lim)
+		var r_mid := (r_top + r_bot) * 0.5
+		if r_bot - r_top >= PANOT * 0.5 and not _on_crossing(m, r_mid):
+			var in_arc := _in_arcade_y(r_mid)
+			var past_gutter := r_mid > float(m.START_Y) + 56.0
+			if in_arc:
+				Panot.flor_row(wc, m.sw_l + 2.0, m.sw_l + arc_w - 4.0, y, m.sw_l + 2.0, PANOT_DRY_GROOVE, PANOT_DRY_SHINE)
+			var wet_l: float = m.sw_l if past_gutter else ((m.sw_l + ARCADE_GUTTER_X + KERB_W) if in_arc else (m.sw_l + GUTTER_W + KERB_W))
+			var wet_r: float = m.sw_r if past_gutter else (m.sw_r - GUTTER_W - KERB_W)
+			Panot.flor_row(wc, wet_l, wet_r, y, m.sw_l + 30.0, PANOT_GROOVE, PANOT_SHINE)
 		y += PANOT
+
+	# 3. Cached gutter stone beds, granite kerbs, and doorway culvert bridges
+	var g_top := maxf(vt - 60.0, float(m.GATE_Y) + 14.0)
+	var g_bot := minf(vb + 60.0, float(m.START_Y) + 52.0)
+	if float(m.START_Y) + 52.0 >= vt - 40.0 and float(m.START_Y) + 52.0 <= vb + 40.0:
+		var ky := float(m.START_Y) + 52.0
+		wc.rect(Rect2(m.sw_l, ky, GUTTER_W + KERB_W, KERB_W), KERB_STONE)
+		wc.rect(Rect2(m.sw_r - GUTTER_W - KERB_W, ky, GUTTER_W + KERB_W, KERB_W), KERB_STONE)
+	for seg: Vector2 in _subtract_crossings(m, g_top, g_bot):
+		# east gutter bed + granite kerb
+		wc.rect(Rect2(m.sw_r - GUTTER_W, seg.x, GUTTER_W, seg.y - seg.x), GUTTER_BED)
+		wc.rect(Rect2(m.sw_r - GUTTER_W - KERB_W, seg.x, KERB_W, seg.y - seg.x), KERB_STONE)
+		# west gutter bed + granite kerb (steps out around the arcade)
+		var w_pieces: Array[Array] = []
+		if seg.x < arc_y0:
+			w_pieces.append([seg.x, minf(seg.y, arc_y0), false])
+		if seg.y > arc_y0 and seg.x < arc_y1:
+			w_pieces.append([maxf(seg.x, arc_y0), minf(seg.y, arc_y1), true])
+		if seg.y > arc_y1:
+			w_pieces.append([maxf(seg.x, arc_y1), seg.y, false])
+		for wp: Array in w_pieces:
+			var wy0 := float(wp[0])
+			var wy1 := float(wp[1])
+			if wy1 <= wy0:
+				continue
+			if bool(wp[2]):
+				var gx0: float = m.sw_l + ARCADE_GUTTER_X - GUTTER_W
+				wc.rect(Rect2(gx0, wy0, GUTTER_W, wy1 - wy0), GUTTER_BED)
+				wc.rect(Rect2(gx0 + GUTTER_W, wy0, KERB_W, wy1 - wy0), KERB_STONE)
+			else:
+				wc.rect(Rect2(m.sw_l, wy0, GUTTER_W, wy1 - wy0), GUTTER_BED)
+				wc.rect(Rect2(m.sw_l + GUTTER_W, wy0, KERB_W, wy1 - wy0), KERB_STONE)
+
+	# stone doorstep culvert slabs bridging the gutter cleanly
+	for dy: float in _doorway_ys(m, float(m.GATE_Y) - 20.0, y_bot_lim):
+		if dy < vt - 40.0 or dy > vb + 40.0:
+			continue
+		if not _in_arcade_y(dy):
+			wc.rect(Rect2(m.sw_l, dy - 16.0, GUTTER_W + KERB_W + 1.0, 32.0), Color(0.60, 0.57, 0.52))
+			wc.rect(Rect2(m.sw_l + GUTTER_W + KERB_W - 1.0, dy - 16.0, 2.0, 32.0), Color(0.72, 0.69, 0.63))
+		wc.rect(Rect2(m.sw_r - GUTTER_W - KERB_W - 1.0, dy - 16.0, GUTTER_W + KERB_W + 1.0, 32.0), Color(0.60, 0.57, 0.52))
+		wc.rect(Rect2(m.sw_r - GUTTER_W - KERB_W - 1.0, dy - 16.0, 2.0, 32.0), Color(0.72, 0.69, 0.63))
