@@ -60,6 +60,12 @@ var _built := -1
 func setup(m: Node2D) -> void:
 	main = m
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	# the offscreen pass blends onto clear black, so its colours come out
+	# already multiplied by their coverage: drawn with plain alpha they are
+	# multiplied again, and every soft edge gets a dark rim
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA
+	material = mat
 
 
 # Called from main's world pass with the band it was drawn for and whether

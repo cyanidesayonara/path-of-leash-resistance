@@ -176,7 +176,14 @@ func _draw_shapes() -> void:
 	if main.streak > 1:
 		var st := I18n.t("vitals_streak") % main.streak
 		var sw := Kit.text_w(Kit.display(), st, 10) + 10.0
-		var sr := Rect2(CARD_W - PAD - sw, ROW_MARKS, sw, 15.0)
+		# clear of the five drops: where the word will not fit after the last
+		# of them, the bare count does
+		var drops_end := BAR_X + 6.0 + 4.0 * 16.0 + 9.0
+		var room := CARD_W - PAD - drops_end
+		if sw > room:
+			st = "x%d" % main.streak
+			sw = Kit.text_w(Kit.display(), st, 10) + 10.0
+		var sr := Rect2(maxf(drops_end, CARD_W - PAD - sw), ROW_MARKS, sw, 15.0)
 		_b.draw_rect(sr, Color(Kit.TURQUOISE, 0.30))
 		_b.draw_rect(sr, Color(Kit.TURQUOISE, 0.85), false, 1.0)
 		_b.draw_string(Kit.display(), Vector2(sr.position.x + 5.0, sr.position.y + 11.0), st,

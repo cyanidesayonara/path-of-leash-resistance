@@ -1034,6 +1034,8 @@ var greeted := {}
 # one group query per physics tick, shared by every cone, bird, duck and
 # A-stand - thirty entities each asking the scene tree was the stutter
 var riders_cache: Array = []
+# the other dog walkers this frame, for the junk they walk into (cone.gd)
+var pairs_cache: Array = []
 var critters_cache: Array = []
 var birds_cache: Array = []
 var hud_t := 0.0
@@ -6612,6 +6614,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_prof("")
 	riders_cache = get_tree().get_nodes_in_group("bikes")
+	pairs_cache = get_tree().get_nodes_in_group("pairs")
 	critters_cache = get_tree().get_nodes_in_group("squirrels")
 	birds_cache = get_tree().get_nodes_in_group("pigeons")
 	# weather nudges: rain makes the pavement slick, wind shoves everyone

@@ -257,6 +257,7 @@
 
 # Junk placement test
 --headless --path . --script res://tests/test_junk_placement.gd
+--headless --path . --script res://tests/test_junk_pairs.gd
 
 # First-time tips test
 --headless --path . --script res://tests/test_tips.gd

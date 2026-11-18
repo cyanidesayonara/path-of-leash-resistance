@@ -744,18 +744,34 @@ static func _flowerbed(c: Object, sign: Dictionary, h: float) -> void:
 
 
 static func _sand(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
-	# the letters heaped up in sand dug from beside them: the damp dark of
-	# the trench, then each heap a mound shaded away from the light. A paw
-	# spreads a heap flat.
-	_stroke(c, sign.lines, h * 0.24, Color(0.60, 0.50, 0.34, 0.45))
-	for pc: Dictionary in sign.pieces:
-		var r: float = float(pc.r) * (1.4 - 0.4 * float(pc.size))
-		c.draw_circle((pc.p as Vector2) + light * r * 0.4 * float(pc.size), r, Color(0.50, 0.40, 0.26, 0.7))
+	# sand blown and swept into letters on the paving: a pale drift along
+	# each stroke with a grainy edge, the heaps low mounds lit on the sun's
+	# side with only a soft contact shadow (sand has no dark rim), and loose
+	# grains round them. A paw spreads a heap flat, paler and wider, and kicks
+	# its grains further out.
+	var sand := Color(0.93, 0.85, 0.66)
+	var lit := Color(0.99, 0.94, 0.80)
+	var damp := Color(0.80, 0.70, 0.52)
+	_stroke(c, sign.lines, h * 0.30, Color(sand.r, sand.g, sand.b, 0.22))
+	_stroke(c, sign.lines, h * 0.18, Color(sand.r, sand.g, sand.b, 0.30))
 	for pc: Dictionary in sign.pieces:
 		var s: float = pc.size
-		var r: float = float(pc.r) * (1.4 - 0.4 * s)
-		c.draw_circle(pc.p, r * 0.92, Color(0.94, 0.86, 0.66).lerp(Color(0.80, 0.70, 0.52), 1.0 - s))
-		c.draw_circle((pc.p as Vector2) - light * r * 0.3 * s, r * 0.55, Color(0.98, 0.93, 0.80, 0.8 * s))
+		var r: float = float(pc.r) * (1.35 - 0.35 * s)
+		c.draw_circle((pc.p as Vector2) + light * r * 0.35 * s, r * 1.05, Color(0.42, 0.34, 0.22, 0.16 * s))
+	for i in range(sign.pieces.size()):
+		var pc: Dictionary = sign.pieces[i]
+		var s: float = pc.size
+		var r: float = float(pc.r) * (1.35 - 0.35 * s)
+		var p: Vector2 = pc.p
+		var a := 0.55 + 0.45 * s
+		c.draw_circle(p, r, Color(sand.r, sand.g, sand.b, a).lerp(Color(damp.r, damp.g, damp.b, a), 0.25 * float(pc["var"])))
+		c.draw_circle(p - light * r * 0.32 * s, r * 0.58, Color(lit.r, lit.g, lit.b, 0.75 * s))
+		# loose grains about the heap, flung wider once it is spread
+		var spread := r * (1.25 + 0.9 * (1.0 - s))
+		for k in range(3):
+			var g := Vector2.from_angle(TAU * _h(i, float(sign.key), 50.0 + float(k))) * spread * (0.8 + 0.4 * _h(i, float(sign.key), 60.0 + float(k)))
+			var gc := lit if k == 0 else damp
+			c.draw_circle(p + g, maxf(1.1, r * 0.16), Color(gc.r, gc.g, gc.b, 0.7))
 
 
 static func _puddle(c: Object, lines: Array, h: float, key: float, t: float, light: Vector2) -> void:
