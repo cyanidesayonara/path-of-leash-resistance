@@ -426,7 +426,10 @@ var fullscreen := false
 # everything else is English for now.
 const LANGUAGES: Array[String] = ["en", "ca", "es"]
 const LANGUAGE_NAMES := {"en": "ENGLISH", "ca": "CATALÀ", "es": "ESPAÑOL"}
-var language := "en"
+var language := "en":
+	set(v):
+		language = v
+		I18n.set_language(v)
 const CONTROL_LAYOUTS: Array[String] = ["default", "arrows", "compact", "southpaw"]
 const CONTROL_LAYOUT_NAMES := {
 	"default": "DEFAULT",

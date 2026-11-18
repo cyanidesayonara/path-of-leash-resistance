@@ -1580,7 +1580,7 @@ func status() -> String:
 	if fight != "":
 		return fight
 	if not beaten() and main.human.tut_hold_y == HOLD_Y and main.human.global_position.y < HOLD_Y + 40.0:
-		return "YOUR HUMAN WON'T PASS HIM. DEAL WITH EL GAT"
+		return I18n.t("boss_gat_block")
 	return ""
 
 
@@ -1590,25 +1590,25 @@ func fight_status() -> String:
 	var near: bool = main.dog.global_position.distance_to(pos) < 600.0
 	match state:
 		State.SWAT:
-			return "WATCH THE PAW!" if near else ""
+			return I18n.t("boss_gat_paw") if near else ""
 		State.POUNCE_WARN:
-			return "HE'S CROUCHING! OUT OF THE RING" if near else ""
+			return I18n.t("boss_gat_crouch") if near else ""
 		State.POUNCE:
-			return "POUNCE! LEASH ACROSS HIS LEAP" if near else ""
+			return I18n.t("boss_gat_pounce") if near else ""
 		State.BOUNCE:
-			return "BOING! HE'S BOUNCING OFF BALANCE" if near else ""
+			return I18n.t("boss_gat_bounce") if near else ""
 		State.STUNNED:
-			return Prompts.fill("HE'S DAZED! {bark} ON HIS NOSE") if near else ""
+			return Prompts.fill(I18n.t("boss_gat_dazed")) if near else ""
 		State.YARN:
-			return Prompts.fill("HE'S AFTER THE YARN! {bark} ON HIS TAIL") if near else ""
+			return Prompts.fill(I18n.t("boss_gat_yarn")) if near else ""
 		State.RETREAT:
-			return "AFTER HIM! TO THE PLAÇA"
+			return I18n.t("boss_gat_retreat")
 		State.ENRAGE:
-			return "EL GAT IS FURIOUS! GET CLEAR" if near else ""
+			return I18n.t("boss_gat_furious") if near else ""
 		State.ROAR:
-			return "WRAP THE LEASH AROUND HIS LEGS  %d/%d" % [legs_tied, LEGS_TO_TIE]
+			return I18n.t("boss_wrap_legs") % [legs_tied, LEGS_TO_TIE]
 		State.TOPPLED:
-			return Prompts.fill("HE'S DOWN! {bark} ON HIS SNOUT")
+			return Prompts.fill(I18n.t("boss_gat_down"))
 	return ""
 
 

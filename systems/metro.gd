@@ -1087,9 +1087,9 @@ static func idle_status(m: Node2D) -> String:
 		return ""
 	var tr := st.train
 	if (tr.state == Train.St.CHIME or tr.state == Train.St.CLOSING) and rope_through(m, tr.open_end):
-		return "GET IN! THE DOORS ARE CLOSING"
+		return I18n.t("walk_metro_doors")
 	if st.surge.state == Surge.St.OPEN or st.surge.state == Surge.St.POUR:
-		return "RUSH HOUR! DIG IN"
+		return I18n.t("walk_metro_rush")
 	return ""
 
 

@@ -447,7 +447,7 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 static func idle_status(m: Node2D) -> String:
 	var t: Tram = m.diagonal_tram
 	if t != null and t.rang and on_track(m.dog.global_position):
-		return "OFF THE TRACKS! THE TRAM"
+		return I18n.t("walk_diagonal_tram")
 	return ""
 
 

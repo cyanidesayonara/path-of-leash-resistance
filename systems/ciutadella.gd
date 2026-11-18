@@ -261,7 +261,7 @@ static func urgent_status(m: Node2D) -> String:
 			return s
 	var bd: Dictionary = m.ciut_birds
 	if String(bd.state) == "swoop" and m.dog.global_position.distance_to(m.human.global_position) < 520.0:
-		return Prompts.fill("PARAKEETS! {bark} TO SHOO THEM")
+		return Prompts.fill(I18n.t("walk_ciutadella_parakeets"))
 	return ""
 
 

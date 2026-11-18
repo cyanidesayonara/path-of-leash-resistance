@@ -707,7 +707,7 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 
 static func idle_status(m: Node2D) -> String:
 	if m.sarria != null and (m.sarria as State).bell == "ring":
-		return "THE BELLS! HOWL ALONG"
+		return I18n.t("walk_sarria_bells")
 	return ""
 
 

@@ -1138,7 +1138,7 @@ func status() -> String:
 		return fight
 	if state != State.IDLE and not beaten() and main.human.tut_hold_y == HOLD_Y \
 			and main.human.global_position.y < HOLD_Y + 40.0:
-		return "YOUR HUMAN WON'T PASS HIM. DEAL WITH EL MAMUT"
+		return I18n.t("boss_mamut_block")
 	return ""
 
 
@@ -1146,25 +1146,25 @@ func fight_status() -> String:
 	var near: bool = main.dog.global_position.distance_to(pos) < 600.0
 	match state:
 		State.SWIPE:
-			return "WATCH THE TRUNK!" if near else ""
+			return I18n.t("boss_mamut_trunk") if near else ""
 		State.STOMP:
-			return "STOMP! GET CLEAR" if near else ""
+			return I18n.t("boss_mamut_stomp") if near else ""
 		State.CHARGE_WARN, State.CHARGE:
-			return "CHARGE! LEAD HIM INTO THE LAKE" if near else ""
+			return I18n.t("boss_mamut_charge") if near else ""
 		State.STUNNED:
-			return Prompts.fill("HE'S DAZED! {bark} ON HIS TRUNK") if near else ""
+			return Prompts.fill(I18n.t("boss_mamut_dazed")) if near else ""
 		State.SPRAY:
-			return "HE'S SPRAYING! OUT OF THE WAY" if near else ""
+			return I18n.t("boss_mamut_spray") if near else ""
 		State.ENRAGE:
-			return "EL MAMUT IS FURIOUS! GET CLEAR" if near else ""
+			return I18n.t("boss_mamut_furious") if near else ""
 		State.RETREAT:
-			return "AFTER HIM! TO HIS PLINTH"
+			return I18n.t("boss_mamut_retreat")
 		State.STAND:
 			if last_swipe_warning():
-				return "WATCH THE TRUNK!"
-			return "WRAP THE LEASH AROUND HIS LEGS  %d/%d" % [legs_tied, LEGS_TO_TIE]
+				return I18n.t("boss_mamut_trunk")
+			return I18n.t("boss_wrap_legs") % [legs_tied, LEGS_TO_TIE]
 		State.SAT:
-			return Prompts.fill("HE'S DOWN! {bark} ON HIS TRUNK")
+			return Prompts.fill(I18n.t("boss_mamut_down"))
 	return ""
 
 

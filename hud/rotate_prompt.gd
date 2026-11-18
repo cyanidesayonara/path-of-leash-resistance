@@ -62,8 +62,8 @@ func _ready() -> void:
 	_sub = _label(0.66)
 	_sub.modulate.a = 0.75
 	var touch := DisplayServer.is_touchscreen_available()
-	_title.text = "Turn your phone sideways" if touch else "Make the window wider"
-	_sub.text = "The walk waits for you."
+	I18n.set_text(_title, "rotate_phone" if touch else "rotate_window")
+	I18n.set_text(_sub, "rotate_waits")
 	get_viewport().size_changed.connect(_refresh)
 	_refresh()
 
