@@ -9,11 +9,24 @@ extends RefCounted
 # main: they are the walk's rules and shared prop loops, not its picture.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_live", "draw_overhead", "draw_yard"]
+const HOOKS := ["draw_grove", "draw_live", "draw_overhead", "draw_yard", "night_lights", "surface"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const Surfaces := preload("res://world/surfaces.gd")
+
+# the festival yard's light on the ground: the lanterns' pools under each
+# string, and the lit windows' spill, as gradients (stacked discs showed rings)
+const YARD_POOL_R := 66.0
+const YARD_POOL := Color(1.0, 0.74, 0.40, 0.15)
+const WINDOW_SPILL_R := 48.0
+const WINDOW_SPILL := Color(1.0, 0.72, 0.38, 0.09)
+# wall lamps on the yard's house fronts, down each side as fractions of its
+# depth; under main.NIGHT_LAMP_R, so the light layer draws each its bracket
+const YARD_LAMPS: Array[float] = [0.25, 0.6]
+const YARD_FRONT := 30.0
+const YARD_LAMP_R := 140.0
 
 static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
@@ -285,20 +298,19 @@ static func _draw_yard(m: Node2D, c: Object, r: Rect2) -> void:
 	for ly: float in yard_strings(m):
 		var lx := r.position.x + 60.0
 		while lx < r.end.x - 40.0:
-			b.circle(Vector2(lx, ly + 16.0), 56.0, Color(1.0, 0.72, 0.36, 0.08))
-			b.circle(Vector2(lx, ly + 16.0), 28.0, Color(1.0, 0.78, 0.44, 0.08))
+			b.glow(Vector2(lx, ly + 16.0), YARD_POOL_R, YARD_POOL, 0.15)
 			lx += 92.0
 	# lit windows in the house fronts round three sides
 	var wx := r.position.x + 30.0
 	while wx < r.end.x - 20.0:
 		b.rect(Rect2(wx, r.position.y - 36.0, 16.0, 20.0), Color(1.0, 0.78, 0.42, 0.75))
-		b.circle(Vector2(wx + 8.0, r.position.y + 6.0), 40.0, Color(1.0, 0.72, 0.38, 0.06))
+		b.glow(Vector2(wx + 8.0, r.position.y + 6.0), WINDOW_SPILL_R, WINDOW_SPILL, 0.2)
 		wx += 75.0
 	for sx: float in [r.position.x, r.end.x]:
 		var wy := r.position.y + 40.0
 		while wy < r.end.y - 80.0:
 			b.rect(Rect2(sx - (30.0 if sx < r.get_center().x else -14.0), wy, 16.0, 20.0), Color(1.0, 0.78, 0.42, 0.75))
-			b.circle(Vector2(sx, wy + 10.0), 40.0, Color(1.0, 0.72, 0.38, 0.06))
+			b.glow(Vector2(sx, wy + 10.0), WINDOW_SPILL_R, WINDOW_SPILL, 0.2)
 			wy += 65.0
 	# chestnut shells, dropped paper cones and confetti
 	for k in range(140):
@@ -333,3 +345,21 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 # the festival yard on the off-leash plaça
 static func draw_yard(m: Node2D, c: Object, r: Rect2) -> void:
 	_draw_yard(m, c, r)
+
+
+# the plaça past the gate is paved wall to wall, the dance floor laid on it;
+# soft only in its tree pits
+static func surface(m: Node2D, p: Vector2) -> int:
+	return Surfaces.paved_past_gate(m, p, m.trees)
+
+
+# the plaça's trees are broadleaves standing in their pits
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m.broadleaf_grove(c, p)
+
+
+# the street's lamps, and wall lamps on the yard's house fronts
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	out.append_array(m.freedom_side_lamps(YARD_LAMPS, YARD_FRONT, YARD_LAMP_R))
+	return out
