@@ -8,6 +8,7 @@ Append-only session history, newest first.
 - `tests/test_surface_helpers.gd` covers both.
 - The worn patch in the middle of the shared yard, clearing and plaça is drawn by one function, `_worn_patch`: the flat disc as before, or on a walk listed in `main.SOFT_WEAR` a gradient with no edge. The list starts empty, so nothing draws differently; a polished walk adds itself on its own line.
 - The street's default lamps after dark (its lampposts, and a wall lamp down the building line where none is near) come from `main.street_night_lights()`, so a walk's `night_lights` hook can start from them and add or leave out its own instead of copying the rule. Night shots of La Rambla and El Besòs are pixel-identical.
+- El Parc and La Rambla each had their own copy of one `draw_grove` hook: the off-leash trees as broadleaves standing in a lawn, without the forest roots that read there as sticks poking out of the crowns. It is `main.broadleaf_grove(c, p)` now, which both call; their off-leash shots are pixel-identical.
 - `world/stones.gd` stamps rough angular stones (riprap, a breakwater, a groin) into a ShapeBatch from a few outlines built once, so a walk's bank of stones needs no circles in a row and no triangulation per frame; `tests/test_stones.gd` covers it. Nothing calls it yet.
 - `tests/test_cross_section.gd` lists the walks whose off-leash area may be paved one to a line (`PAVED_FREEDOM`, El Mercat, El Gòtic and El Diluvi among them), so walks added side by side do not collide on one line.
 

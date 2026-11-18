@@ -2665,6 +2665,16 @@ func _broadleaf_trunk(b: Object, p: Vector2, scale: float) -> void:
 	b.circle(p + Vector2(-1, -1) * scale, 4.4 * scale, Color(0.36, 0.27, 0.18))
 
 
+# an off-leash grove tree standing in a lawn, for a walk's draw_grove hook: the
+# broadleaf's shadow and trunk, without the forest roots the shared grove runs
+# toward the edge lines, which read in a lawn as sticks poking out of the crowns
+func broadleaf_grove(c: Object, p: Vector2) -> void:
+	_broadleaf_ground(c, p, 0.85)
+	var b := ShapeBatch.new()
+	_broadleaf_trunk(b, p, 0.85)
+	b.flush(c)
+
+
 # a broadleaf's crown, into a batch (the canopy layer draws it over everyone);
 # `trunk` false for a faded crown, whose trunk shows from the ground pass
 func _broadleaf_crown(crown: ShapeBatch, p: Vector2, scale: float, trunk := true) -> void:
