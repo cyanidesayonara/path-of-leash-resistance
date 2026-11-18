@@ -1,0 +1,6 @@
+## 2026-11-18 - Blend Montjuïc's seams
+
+- Join the castle esplanade to the climb at `GATE_Y - 30` (`draw_threshold`, `draw_edge_layer`, `draw_ground`): align `draw_edge_layer` and `draw_ground` to `-5030` so no grey asphalt stripe crosses the gate mouth, flare the hilltop rims to meet the esplanade corners with smooth trapezoidal ground quads, continue the west/east sea and haze gradients and rim shadows smoothly past the gate, and build the stone south parapet walls flanking the gateposts over a feathered gravel threshold.
+- Fit the escalators' flanking stairs (`draw_conveyor`) to the path's real edges per tread with even step spacing, stone cheek curbs, and top/bottom stone landing aprons.
+- Frame the hill road (`draw_road`) with stone kerbs on the hillside, crossing thresholds at the path, viaduct parapets/piers/shadow past the rims, and block verge grass on the asphalt (`surface`, `grass_blocked`).
+- Ground the low and top Telefèric stations (`draw_on_hill`) on stone boarding pads with gravel spurs to the path, keep the `40m` height post clear of the low station, break the `-3900` wall around the top station, seat the `-1500` mirador cleanly into the retaining wall without overlapping a flowerpot, add step cheek curbs, and add a gravel path entry to Jardí de Cactus with its title clear of the `-2100` wall shadow.
