@@ -148,6 +148,7 @@ func _ready() -> void:
 func say(text: String, tone: int = Tone.PLAIN) -> void:
 	if text == "":
 		return
+	text = I18n.of_english(text)
 	# the same line twice running is a stutter, not news - refresh it instead;
 	# and the score for a shout already up ("POLE SWING!" then "POLE SWING!
 	# 14") lands in that line rather than stacking a second copy under it
@@ -366,7 +367,7 @@ func _draw_cards(vs: Vector2) -> void:
 		# and so does a menu open over it (the pause grid has its own bar)
 		var menu_up: bool = bool(main.paused) or (main.menu_screen != null and main.menu_screen.visible)
 		if bool(main.get("tut_skippable")) and String(main.confirm_id) == "" and not menu_up:
-			Kit.prompt_bar(self, vs, [["skip", String(main.tut_skip_label)]])
+			Kit.prompt_bar(self, vs, [["skip", I18n.of_english(String(main.tut_skip_label))]])
 	if main.challenge_l != null and main.challenge_l.visible and main.challenge != null:
 		_dare_card(vs, y)
 

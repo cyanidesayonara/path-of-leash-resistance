@@ -180,7 +180,7 @@ func _run_over(delta: float) -> void:
 			sfx.play("crack", 1.3, -8.0)
 		main.shake_t = maxf(float(main.shake_t), 0.3)
 		if not bool(main.auto_walk):
-			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), "BONK", Color(1.0, 0.92, 0.60))
+			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), I18n.t("w_bonk"), Color(1.0, 0.92, 0.60))
 
 
 func jammed() -> bool:

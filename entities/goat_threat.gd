@@ -226,7 +226,7 @@ func _resolve_boulder_impact(b: Dictionary) -> void:
 				knock_dir = Vector2.DOWN
 			main.dog.knocked(knock_dir, "boulder")
 		if main.feed != null:
-			main.feed.say("BOULDER HIT!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_boulder_hit"), EventFeed.Tone.LOUD)
 
 	if main.human != null and impact_pos.distance_to(human_pos) < BOULDER_R:
 		hit = true
@@ -236,15 +236,15 @@ func _resolve_boulder_impact(b: Dictionary) -> void:
 		if hdir == Vector2.ZERO:
 			hdir = Vector2.DOWN
 		main.human.bumped(hdir)
-		main.float_text(human_pos + Vector2(0.0, -30.0), "Whoa! Loose rock!", Color(1.0, 0.5, 0.3))
+		main.float_text(human_pos + Vector2(0.0, -30.0), I18n.t("w_whoa_loose_rock"), Color(1.0, 0.5, 0.3))
 
 	if not hit and (impact_pos.distance_to(dog_pos) < BOULDER_DODGE_R or impact_pos.distance_to(human_pos) < BOULDER_DODGE_R):
 		dodges += 1
 		main.montserrat_boulder_dodges += 1
 		main.combo.add("BOULDER DODGE", 2)
-		main.award_points(2, "dodged! +2")
+		main.award_points(2, I18n.t("w_dodged_2"))
 		if main.feed != null:
-			main.feed.say("STEPPED CLEAR OF THE BOULDER!", EventFeed.Tone.GOOD)
+			main.feed.say(I18n.t("w_stepped_clear_of_the_boulder"), EventFeed.Tone.GOOD)
 
 
 func boulder_warning() -> bool:

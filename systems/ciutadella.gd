@@ -238,10 +238,10 @@ static func on_bark(m: Node2D, pos: Vector2) -> bool:
 		m.ciut_shooed = true
 		Sfx.play("squawk", 1.1, -4.0)
 		Sfx.play("star", 1.15, -5.0)
-		m.award_points(3, "shoo! +3")
+		m.award_points(3, I18n.t("w_shoo_3"))
 		m.combo.add("SHOO", 3)
-		m.feed.say("SHOO! THE CROISSANT IS SAFE", EventFeed.Tone.GOOD)
-		m.human.say_line("Thanks, pup.")
+		m.feed.say(I18n.t("w_shoo_the_croissant_is_safe"), EventFeed.Tone.GOOD)
+		m.human.say_line(I18n.t("w_thanks_pup_2"))
 		return true
 	if String(bd.state) == "perched" and pos.distance_to(BIRDS_HOME) < 160.0:
 		Sfx.play("squawk", 1.0, -6.0)
@@ -287,7 +287,7 @@ static func _tick_birds(m: Node2D, delta: float) -> void:
 				bd.state = "warn"
 				bd.t = 0.0
 				bd.done = true
-				m.human.notice("Ooh, parakeets!", BIRDS_WARN + 0.4)
+				m.human.notice(I18n.t("w_ooh_parakeets"), BIRDS_WARN + 0.4)
 				Sfx.play("squawk", 1.2, -6.0)
 		"warn":
 			if float(bd.t) >= BIRDS_WARN:
@@ -301,7 +301,7 @@ static func _tick_birds(m: Node2D, delta: float) -> void:
 				bd.state = "fled"
 				bd.t = 0.0
 				bd.stole = true
-				m.human.notice("Hey! My croissant!", 1.8)
+				m.human.notice(I18n.t("w_hey_my_croissant"), 1.8)
 				Sfx.play("squawk", 1.3, -3.0)
 		"fled":
 			if float(bd.t) > 3.0:

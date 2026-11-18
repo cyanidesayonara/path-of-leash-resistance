@@ -611,9 +611,9 @@ static func walk_card(m: Node2D) -> Dictionary:
 		# the free practice at the end is not a lesson
 		if String(st.id) != "" and not TutorialSteps.is_free(int(m.tut_step)):
 			out.lesson = I18n.t("walkcard_lesson") % [int(m.tut_step) + 1, TutorialSteps.lesson_count(),
-				String(st.title)]
+				I18n.of_english(String(st.title))]
 		elif String(st.id) != "":
-			out.lesson = I18n.t("walkcard_free_practice") % String(st.title)
+			out.lesson = I18n.t("walkcard_free_practice") % I18n.of_english(String(st.title))
 		return out
 	for q: Dictionary in m.active_quests:
 		var target := int(q.target)

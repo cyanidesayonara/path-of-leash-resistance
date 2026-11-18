@@ -607,7 +607,7 @@ static func _tick_gate(m: Node2D, st: State, delta: float) -> void:
 			if short > 0.0 and short < FUMBLE_D and absf(hum.x - gx) < 120.0:
 				g.stage = 1
 				g.t = 0.0
-				m.human.notice("Where's my card?", FUMBLE_WARN + FUMBLE_T)
+				m.human.notice(I18n.t("w_where_s_my_card"), FUMBLE_WARN + FUMBLE_T)
 		1, 2:
 			g.t += delta
 			if g.stage == 1 and g.t >= FUMBLE_WARN:
@@ -619,12 +619,12 @@ static func _tick_gate(m: Node2D, st: State, delta: float) -> void:
 					g.stage = 3
 					g.t = 0.0
 					Sfx.play("ui", 1.6, -8.0)
-					m.float_text(Vector2(gx, TURN_Y - 30.0), "beep!", Color(0.7, 1.0, 0.7))
+					m.float_text(Vector2(gx, TURN_Y - 30.0), I18n.t("w_beep"), Color(0.7, 1.0, 0.7))
 			if crossed and not m.metro_turnstile_slipped:
 				m.metro_turnstile_slipped = true
 				m.combo.add("UNDER", 3)
-				m.award_points(3, "under the bar! +3")
-				m.feed.say("UNDER THE TURNSTILE!", EventFeed.Tone.GOOD)
+				m.award_points(3, I18n.t("w_under_the_bar_3"))
+				m.feed.say(I18n.t("w_under_the_turnstile"), EventFeed.Tone.GOOD)
 		3:
 			g.bar = move_toward(g.bar, 1.0, delta * 4.0)
 			g.t += delta
@@ -710,7 +710,7 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 				tr.state = Train.St.CHIME
 				tr.t = 0.0
 				Sfx.play("door_chime", 1.0, -4.0)
-				m.float_text(Vector2(CX, door_y + 20.0 * float(end)), "Doors closing!", Color(1, 1, 1), m.POP_SAY)
+				m.float_text(Vector2(CX, door_y + 20.0 * float(end)), I18n.t("w_doors_closing"), Color(1, 1, 1), m.POP_SAY)
 		Train.St.CHIME:
 			if not inside or end != boarding_end(m):
 				tr.state = Train.St.DOCKED
@@ -762,7 +762,7 @@ static func _tick_train(m: Node2D, st: State, delta: float) -> void:
 			if not tr.announced and tr.t > RIDE_T * 0.45:
 				tr.announced = true
 				var next := "Sant Gos" if end > 0 else "Paraigües"
-				m.float_text(Vector2(CX, (CAR_S + CAR_N) * 0.5), "Next station: %s." % next, Color(1.0, 0.9, 0.6), m.POP_SAY)
+				m.float_text(Vector2(CX, (CAR_S + CAR_N) * 0.5), I18n.t("w_next_station") % next, Color(1.0, 0.9, 0.6), m.POP_SAY)
 			if tr.t >= RIDE_T:
 				tr.state = Train.St.BRAKE
 				tr.t = 0.0
@@ -806,13 +806,13 @@ static func _catch(m: Node2D, tr: Train, end: int, g: float) -> void:
 	_pinch(m, tr, end)
 	var door := Vector2(CX, CAR_S if end > 0 else CAR_N)
 	Sfx.play("crack", 0.7, -6.0)
-	m.feed.say("THE DOORS CAUGHT THE LEASH!", EventFeed.Tone.LOUD)
-	m.float_text(door, "THUNK", Color(1.0, 0.85, 0.6))
+	m.feed.say(I18n.t("w_the_doors_caught_the_leash"), EventFeed.Tone.LOUD)
+	m.float_text(door, I18n.t("w_thunk"), Color(1.0, 0.85, 0.6))
 	var to_door: Vector2 = door - m.dog.global_position
 	if to_door.length() > 1.0 and m.dog.tumble_t <= 0.0:
 		m.dog.velocity = to_door.normalized() * CATCH_PULL
 	m.human.patience = maxf(0.0, m.human.patience - 0.25)
-	m.human.notice("Hey! The doors!", 1.4)
+	m.human.notice(I18n.t("w_hey_the_doors"), 1.4)
 
 
 # The caught leaves close on the strap: while CAUGHT they are two solid
@@ -889,13 +889,13 @@ static func _tick_surge(m: Node2D, st: State, delta: float) -> void:
 				s.held_t = 0.0
 				s.sorry_said = false
 				Sfx.play("train_rumble", 0.8, -4.0)
-				m.feed.say("TRAIN IN! HERE COMES RUSH HOUR", EventFeed.Tone.LOUD)
+				m.feed.say(I18n.t("w_train_in_here_comes_rush_hour"), EventFeed.Tone.LOUD)
 		Surge.St.ARRIVE:
 			if s.t >= SURGE_IN_T:
 				s.state = Surge.St.OPEN
 				s.t = 0.0
 				Sfx.play("door_chime", 0.94, -4.0)
-				m.float_text(Vector2(880.0, hum.y - 40.0), "ding dong!", Color(1.0, 0.92, 0.6))
+				m.float_text(Vector2(880.0, hum.y - 40.0), I18n.t("w_ding_dong"), Color(1.0, 0.92, 0.6))
 		Surge.St.OPEN:
 			if s.t >= SURGE_OPEN_T:
 				s.state = Surge.St.POUR
@@ -932,8 +932,8 @@ static func _tick_surge(m: Node2D, st: State, delta: float) -> void:
 			if s.held_t >= HOLD_NEED and not m.metro_surge_held:
 				m.metro_surge_held = true
 				m.combo.add("ROCK", 4)
-				m.award_points(4, "rock solid! +4")
-				m.feed.say("ROCK SOLID IN THE RUSH!", EventFeed.Tone.GOOD)
+				m.award_points(4, I18n.t("w_rock_solid_4"))
+				m.feed.say(I18n.t("w_rock_solid_in_the_rush"), EventFeed.Tone.GOOD)
 
 
 static func surge_live(m: Node2D) -> bool:
@@ -1046,7 +1046,7 @@ static func _tick_people(m: Node2D, st: State, delta: float) -> void:
 					st.push_human += -n * over * 6.0
 					if not st.surge.sorry_said and String(p.mode) == "flow":
 						st.surge.sorry_said = true
-						m.float_text(pos + Vector2(0, -24), "Sorry!", Color(1, 1, 1), m.POP_SAY)
+						m.float_text(pos + Vector2(0, -24), I18n.t("w_sorry"), Color(1, 1, 1), m.POP_SAY)
 		# a taut leash across their way: a hop over it, and the pair carried a little with them
 		if taut and String(p.mode) == "flow" and float(p.hop) <= 0.0:
 			for i in range(0, pts.size() - 1, 2):
@@ -1077,8 +1077,8 @@ static func on_bark(m: Node2D, pos: Vector2) -> void:
 	if not Outdoors.underground_busker(Game.weather, Game.hour):
 		return
 	m.metro_busker_cheered = true
-	m.float_text(BUSKER + Vector2(0, -30), "oompah!", Color(1.0, 0.92, 0.6))
-	m.award_points(2, "encore! +2")
+	m.float_text(BUSKER + Vector2(0, -30), I18n.t("w_oompah"), Color(1.0, 0.92, 0.6))
+	m.award_points(2, I18n.t("w_encore_2"))
 
 
 static func idle_status(m: Node2D) -> String:

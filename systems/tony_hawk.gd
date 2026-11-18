@@ -234,7 +234,7 @@ static func tick(m: Node2D, _delta: float) -> void:
 			if m.word_strip != null:
 				m.word_strip.collect(i, l.pos)
 			if m.word_letters_collected >= m.word_letters.size():
-				m.feed.say("SPELLED LEASH!")
+				m.feed.say(I18n.t("w_spelled_leash"))
 				Sfx.play("dare_won")
 			m._check_goals()
 			m._peek_goals()
@@ -243,7 +243,7 @@ static func tick(m: Node2D, _delta: float) -> void:
 	if not m.jamon_found and m.jamon_pos.x < INF:
 		if dog_pos.distance_to(m.jamon_pos) < 26.0:
 			m.jamon_found = true
-			m.float_text(m.jamon_pos, "pernil!", Color(1.0, 0.78, 0.28))
+			m.float_text(m.jamon_pos, I18n.t("w_pernil"), Color(1.0, 0.78, 0.28))
 			Sfx.play("star")
 			m._check_goals()
 			m._peek_goals()

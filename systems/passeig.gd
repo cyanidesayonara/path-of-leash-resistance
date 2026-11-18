@@ -1138,24 +1138,24 @@ static func tick(m: Node2D, delta: float) -> void:
 	k.sky_ok = KiteFlyer.flies_in(Game.weather, Game.hour)
 	var r: Dictionary = k.tick(delta, m.dog.global_position, m.human.global_position, m.phase == "out")
 	if bool(r["warn"]):
-		m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), "Kite coming down!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), I18n.t("w_kite_coming_down"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(r["bump"]):
 		m.human.patience = maxf(0.0, m.human.patience - KiteFlyer.BUMP_PATIENCE)
 		m.human.bumped(k.bump_dir)
 		Sfx.play("bump", 1.1, -3.0)
-		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Ow! Is that a kite?", Color(1.0, 0.72, 0.72), m.POP_SAY)
-		m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), "Sorry! The wind dropped!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), I18n.t("w_ow_is_that_a_kite"), Color(1.0, 0.72, 0.72), m.POP_SAY)
+		m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), I18n.t("w_sorry_the_wind_dropped"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 	if bool(r["pounce"]):
 		m.combo.add("POUNCE", 2)
-		m.award_points(2, "kite pounce! +2")
+		m.award_points(2, I18n.t("w_kite_pounce_2"))
 		Sfx.play("crack", 2.2, -4.0)
-		m.float_text(k.pos + Vector2(0.0, -34.0), "You caught it! Thanks!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(k.pos + Vector2(0.0, -34.0), I18n.t("w_you_caught_it_thanks"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 	if bool(r["dodge"]):
 		m.saves_done += 1
 		m.combo.add("DODGE", 2)
-		m.award_points(2, "kite dodge! +2")
-		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.award_points(2, I18n.t("w_kite_dodge_2"))
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
@@ -1163,8 +1163,8 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 	if k == null or not k.on_bark(pos if pos != Vector2.ZERO else m.dog.global_position):
 		return
 	m.combo.add("BARK", 2)
-	m.award_points(2, "kite bark! +2")
-	m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), "Whoa! Easy there!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+	m.award_points(2, I18n.t("w_kite_bark_2"))
+	m.float_text(KiteFlyer.FLYER_POS + Vector2(0.0, -40.0), I18n.t("w_whoa_easy_there"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 # the flyer and his kite, in the world's own batch
@@ -1518,7 +1518,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 		ci.draw_line(Vector2(bx.x + 20, bx.y - 5), Vector2(bx.x + 20, bx.y + 8), bcol.darkened(0.2), 2.0)
 	m.contact_shadow(ci, m.gate_bench, 20.0, 8.0, 0.20)
 	ci.draw_rect(Rect2(m.gate_bench.x - 18, m.gate_bench.y - 6, 36, 11), Color(0.54, 0.4, 0.27))
-	m._freedom_sign(ci, r, m.gate_text, "The hotel square by the sea, off leash")
+	m._freedom_sign(ci, r, m.gate_text, I18n.t("w_the_hotel_square_by_the_sea"))
 
 
 # THE SEAFRONT HAS NO GRASS. Its cross-section is sea, sand, boardwalk,

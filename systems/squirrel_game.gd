@@ -152,7 +152,7 @@ func tick(m: Node2D, delta: float) -> void:
 				state = S.FORAGE
 				Sfx.play("rustle", 1.6, -10.0)
 				if round == 0:
-					m.feed.say(Prompts.fill("A SQUIRREL! CHASE IT UP A TREE, THEN {bark} BARK"), EventFeed.Tone.PLAIN)
+					m.feed.say(Prompts.fill(I18n.t("w_a_squirrel_chase_it_up_a_tree_then")), EventFeed.Tone.PLAIN)
 		S.FORAGE:
 			if dog.distance_to(pos) < ALERT:
 				tree = _bolt_tree(m, pos)
@@ -207,7 +207,7 @@ func tick(m: Node2D, delta: float) -> void:
 				round += 1
 				if round >= ROUNDS:
 					done = true
-					m.feed.say("NOT A SQUIRREL LEFT ON THE GROUND", EventFeed.Tone.GOOD)
+					m.feed.say(I18n.t("w_not_a_squirrel_left_on_the_ground"), EventFeed.Tone.GOOD)
 				else:
 					state = S.WAIT
 					t = PAUSE_S
@@ -230,7 +230,7 @@ func _gone(m: Node2D) -> void:
 	streak = 0
 	leaps = 0
 	if round + 1 < ROUNDS:
-		m.feed.say("IT'S OFF OVER THE TREES", EventFeed.Tone.PLAIN)
+		m.feed.say(I18n.t("w_it_s_off_over_the_trees"), EventFeed.Tone.PLAIN)
 
 
 # main.on_bark asks first: a bark from under its tree, while it is up there
@@ -249,10 +249,10 @@ func on_bark(m: Node2D, at: Vector2) -> void:
 	barks += 1
 	m.bones += pay
 	m.combo.add("TREED", pay)
-	var word := "treed again!" if (barks == 1 and streak > 0) else "treed!"
+	var word := I18n.t("w_treed_again") if (barks == 1 and streak > 0) else I18n.t("w_treed")
 	m.float_text(tree + Vector2(0.0, -40.0), "%s +%d" % [word, pay], Color(0.85, 1.0, 0.85))
 	if barks == 1:
-		m.feed.say("TREED! IT'S SCOLDING YOU" if streak == 0 else "AFTER IT! TREED AGAIN x%d" % (streak + 1), EventFeed.Tone.GOOD)
+		m.feed.say(I18n.t("w_treed_it_s_scolding_you") if streak == 0 else I18n.t("w_after_it_treed_again_x") % (streak + 1), EventFeed.Tone.GOOD)
 	Sfx.play("squawk", 2.2, -6.0)
 
 

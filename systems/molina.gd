@@ -226,7 +226,7 @@ static func tick(m: Node2D, delta: float) -> void:
 				# a blast that came by the pair and touched neither: dodged
 				if bool(c["involved"]) and not bool(c["hit"]):
 					m.molina_cannon_dodges += 1
-					m.award_points(2, "dodged the cannon! +2")
+					m.award_points(2, I18n.t("w_dodged_the_cannon_2"))
 			c["state"] = now
 		if now == 2:
 			if absf(hp.y - nz.y) < CANNON_INVOLVED or absf(dp.y - nz.y) < CANNON_INVOLVED:
@@ -238,13 +238,13 @@ static func tick(m: Node2D, delta: float) -> void:
 					c["hit"] = true
 					m.molina_cannon_hits += 1
 					var dir: Vector2 = (CANNONS[i][1] as Vector2).normalized()
-					m.feed.say("SNOWED ON!", EventFeed.Tone.LOUD)
+					m.feed.say(I18n.t("w_snowed_on"), EventFeed.Tone.LOUD)
 					if dog_hit:
 						m.dog.knocked(dir, "snow")
 					if hum_hit:
 						m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
 						m.human.bumped(dir)
-						m.float_text(hp, "Brrr!", Color(0.86, 0.94, 1.0))
+						m.float_text(hp, I18n.t("w_brrr"), Color(0.86, 0.94, 1.0))
 		st[key] = c
 	m.molina_cannons = st
 
@@ -267,8 +267,8 @@ static func on_bark(m: Node2D, pos: Vector2) -> void:
 	if pos.distance_to(SNOWMAN) < 150.0 and not m.molina_snowman_barked:
 		m.molina_snowman_barked = true
 		m.bones += 3
-		m.float_text(SNOWMAN + Vector2(0.0, -40.0), "nose! +3", CARROT)
-		m.feed.say("HIS NOSE FELL OFF!", EventFeed.Tone.GOOD)
+		m.float_text(SNOWMAN + Vector2(0.0, -40.0), I18n.t("w_nose_3"), CARROT)
+		m.feed.say(I18n.t("w_his_nose_fell_off"), EventFeed.Tone.GOOD)
 		Sfx.play("poof", 1.4, -6.0)
 
 

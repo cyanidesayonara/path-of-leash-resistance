@@ -363,10 +363,10 @@ func damage(amt: float) -> void:
 		_cheer_up()
 	if hp <= MAX_HP * 0.5 and phase == 1:
 		phase = 2
-		main.feed.say("EL MAMUT IS FURIOUS!", EventFeed.Tone.LOUD)
-		main.human.notice("Is the statue... charging?", 2.2)
+		main.feed.say(I18n.t("w_el_mamut_is_furious"), EventFeed.Tone.LOUD)
+		main.human.notice(I18n.t("w_is_the_statue_charging"), 2.2)
 	if hp <= 0.0 and was > 0.0:
-		main.feed.say("HE'S HAD ENOUGH! AFTER HIM", EventFeed.Tone.GOOD)
+		main.feed.say(I18n.t("w_he_s_had_enough_after_him"), EventFeed.Tone.GOOD)
 
 
 # --- Transitions -------------------------------------------------------------
@@ -439,7 +439,7 @@ func transition_to(s: State) -> void:
 			ls_swipe_cd = LAST_SWIPE_EVERY
 			Sfx.play("mamut_trumpet", 0.95, -3.0)
 			main.shake_t = maxf(float(main.shake_t), 0.6)
-			main.feed.say("TIE UP HIS LEGS!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_tie_up_his_legs"), EventFeed.Tone.LOUD)
 			for r: float in [80.0, 150.0]:
 				rings.append({"pos": pos, "r": r, "life": 0.7, "max": 0.7})
 			_burst(pos, 16, STONE_DARK, 90.0, 260.0, 3.5, 0.6, false, 260.0)
@@ -456,7 +456,7 @@ func transition_to(s: State) -> void:
 			Sfx.play("whoop", 1.0, -6.0)
 			main.mamut_sat = true
 			main.shake_t = 1.4
-			main.feed.say("EL MAMUT SITS DOWN!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_el_mamut_sits_down"), EventFeed.Tone.LOUD)
 			trunk_lift = 0.0
 			for r: float in [50.0, 110.0, 180.0, 260.0]:
 				rings.append({"pos": pos, "r": r, "life": 0.8, "max": 0.8})
@@ -471,9 +471,9 @@ func transition_to(s: State) -> void:
 			Sfx.play("whoop", 1.1, -4.0)
 			main.mamut_settled = true
 			main.combo.add("BOOP", 10)
-			main.float_text(trunk_tip(), "booped! +10", Color(1.0, 0.88, 0.25))
-			main.feed.say("LA CIUTADELLA IS YOURS!", EventFeed.Tone.GOOD)
-			main.human.say_line("Good... mammoth?")
+			main.float_text(trunk_tip(), I18n.t("w_booped_10"), Color(1.0, 0.88, 0.25))
+			main.feed.say(I18n.t("w_la_ciutadella_is_yours"), EventFeed.Tone.GOOD)
+			main.human.say_line(I18n.t("w_good_mammoth"))
 			cheer = 1.0
 			shout_cd = 0.0
 			_crowd_shout(WINS)
@@ -524,7 +524,7 @@ func _strike_swipe(reach: float) -> void:
 
 func _scatter_chairs(at: Vector2, push: Vector2) -> void:
 	Sfx.play("crack", 1.4, -6.0)
-	main.feed.say("CHAIRS EVERYWHERE! LEAD HIM THROUGH THEM", EventFeed.Tone.PLAIN)
+	main.feed.say(I18n.t("w_chairs_everywhere_lead_him_through"), EventFeed.Tone.PLAIN)
 	for k in range(CHAIRS_PER_STACK):
 		var off := push.rotated(lerpf(-0.9, 0.9, float(k) / float(CHAIRS_PER_STACK - 1))) * CHAIR_SCATTER * (0.6 + 0.4 * float(k % 2))
 		var p := at + off
@@ -557,7 +557,7 @@ func _strike_stomp() -> void:
 func _dodged(at: Vector2) -> void:
 	main.mamut_dodges += 1
 	main.combo.add("DODGE", 2)
-	main.float_text(at, "dodged! +2", Color(0.8, 1.0, 0.7))
+	main.float_text(at, I18n.t("w_dodged_2"), Color(0.8, 1.0, 0.7))
 	damage(DODGE_DAMAGE)
 
 
@@ -596,10 +596,10 @@ func _bowl() -> void:
 	Sfx.play("drum", 0.5, -2.0)
 	main.shake_t = 1.2
 	main.human.bumped((main.human.global_position - pos).normalized())
-	main.feed.say("HUMAN BOWLING!", EventFeed.Tone.LOUD)
+	main.feed.say(I18n.t("w_human_bowling"), EventFeed.Tone.LOUD)
 	main.combo.add("BOWLED", 12)
-	main.float_text(pos, "bowled! +12", Color(1.0, 0.6, 0.4))
-	main.human.notice("Ow! Solid stone!", 2.2)
+	main.float_text(pos, I18n.t("w_bowled_12"), Color(1.0, 0.6, 0.4))
+	main.human.notice(I18n.t("w_ow_solid_stone"), 2.2)
 	screen_flash = 0.35
 	_big_hit()
 
@@ -612,17 +612,17 @@ func _hit(kind: String) -> void:
 			damage(TRIP_DAMAGE)
 			Sfx.play("intro_taut", 0.9, -4.0)
 			Sfx.play("drum", 0.45, -1.0)
-			main.feed.say("TRIPPED!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_tripped"), EventFeed.Tone.LOUD)
 			main.combo.add("TRIP", 8)
-			main.float_text(pos, "tripped! +8", Color(1.0, 0.85, 0.2))
+			main.float_text(pos, I18n.t("w_tripped_8"), Color(1.0, 0.85, 0.2))
 		"tree":
 			main.mamut_bonked = true
 			damage(BONK_DAMAGE)
 			Sfx.play("crack", 0.55, -3.0)
 			Sfx.play("drum", 0.6, -3.0)
-			main.feed.say("BONK! RIGHT INTO THE TREE", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_bonk_right_into_the_tree"), EventFeed.Tone.LOUD)
 			main.combo.add("BONK", 6)
-			main.float_text(pos, "bonk! +6", Color(0.9, 0.5, 0.3))
+			main.float_text(pos, I18n.t("w_bonk_6"), Color(0.9, 0.5, 0.3))
 			_burst(pos + charge_dir * 50.0, 14, Color(0.40, 0.62, 0.30), 60.0, 200.0, 4.0, 1.1, false, 200.0)
 		"jetty":
 			jetty_broken = true
@@ -630,9 +630,9 @@ func _hit(kind: String) -> void:
 			damage(JETTY_DAMAGE)
 			Sfx.play("crack", 0.45, 0.0)
 			Sfx.play("splash", 0.5, 0.0)
-			main.feed.say("CRASH! THROUGH THE JETTY", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_crash_through_the_jetty"), EventFeed.Tone.LOUD)
 			main.combo.add("JETTY", 14)
-			main.float_text(pos, "through the jetty! +14", Color(0.6, 0.85, 1.0))
+			main.float_text(pos, I18n.t("w_through_the_jetty_14"), Color(0.6, 0.85, 1.0))
 			for i in range(4):
 				rings.append({"pos": pos + Vector2(60.0, 0.0), "r": 70.0 + float(i) * 60.0, "life": 1.1, "max": 1.1, "col": WATER})
 			_burst(pos, 22, PLANK, 140.0, 380.0, 5.0, 1.1, false, 380.0)
@@ -643,18 +643,18 @@ func _hit(kind: String) -> void:
 			damage(TRIP_DAMAGE)
 			Sfx.play("crack", 1.1, -4.0)
 			Sfx.play("drum", 0.5, -2.0)
-			main.feed.say("TRIPPED OVER A DECKCHAIR!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_tripped_over_a_deckchair"), EventFeed.Tone.LOUD)
 			main.combo.add("TRIP", 8)
-			main.float_text(pos, "chair trip! +8", Color(1.0, 0.85, 0.2))
+			main.float_text(pos, I18n.t("w_chair_trip_8"), Color(1.0, 0.85, 0.2))
 			_burst(pos, 10, CHAIR_GREEN, 80.0, 220.0, 4.0, 0.9, false, 200.0)
 		"lake":
 			main.mamut_splashed = true
 			damage(SPLASH_DAMAGE)
 			Sfx.play("splash", 0.55, 0.0)
 			Sfx.play("splash", 0.8, -4.0)
-			main.feed.say("SPLASH! INTO THE LAKE", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_splash_into_the_lake"), EventFeed.Tone.LOUD)
 			main.combo.add("SPLASH", 10)
-			main.float_text(pos, "splash! +10", Color(0.6, 0.85, 1.0))
+			main.float_text(pos, I18n.t("w_splash_10"), Color(0.6, 0.85, 1.0))
 			for i in range(3):
 				rings.append({"pos": pos, "r": 70.0 + float(i) * 60.0, "life": 0.9, "max": 0.9, "col": WATER})
 			_burst(pos, 30, WATER, 120.0, 360.0, 4.5, 0.9, false, 360.0)
@@ -692,7 +692,7 @@ func _hold_human() -> void:
 			main.set_leash_target(main.LEASH_LENGTH)
 		if not hold_noticed and h.global_position.y < HOLD_Y + 20.0:
 			hold_noticed = true
-			h.notice("Not past a mammoth.", 1.8)
+			h.notice(I18n.t("w_not_past_a_mammoth"), 1.8)
 	elif h.tut_hold_y == HOLD_Y:
 		h.tut_hold_y = -INF
 
@@ -730,7 +730,7 @@ func tick_state(delta: float) -> void:
 				for r: float in [100.0, 200.0, 320.0]:
 					rings.append({"pos": pos, "r": r, "life": 0.9, "max": 0.9})
 				_scatter_pigeons(pos, 400.0)
-				main.human.notice("Was the mammoth always... facing us?", 2.2)
+				main.human.notice(I18n.t("w_was_the_mammoth_always_facing_us"), 2.2)
 			trunk_lift = clampf((act_t - 0.7) / 0.4, 0.0, 1.0) if act_t < AWAKEN_STEP else \
 				1.0 - clampf((act_t - AWAKEN_STEP) / 0.6, 0.0, 1.0)
 			if act_t >= AWAKEN_STEP:
@@ -949,7 +949,7 @@ func _tick_spray(_delta: float) -> void:
 	if hp_.distance_to(Geometry2D.get_closest_point_to_segment(hp_, from, end)) < SPRAY_W * 0.5 + 12.0:
 		spray_hit = true
 		main.human.bumped(spray_dir)
-		main.human.notice("Hey! Not the phone!", 1.8)
+		main.human.notice(I18n.t("w_hey_not_the_phone"), 1.8)
 
 
 func _tick_last_stand(delta: float, dog_p: Vector2) -> void:
@@ -1125,7 +1125,7 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 		damage(BOOP_DAMAGE)
 		main.mamut_booped = true
 		main.combo.add("BOOP", 3)
-		main.float_text(tip, "boop! +3", Color(1.0, 0.88, 0.25))
+		main.float_text(tip, I18n.t("w_boop_3"), Color(1.0, 0.88, 0.25))
 		return true
 	return false
 
@@ -1211,7 +1211,7 @@ func _draw_card() -> void:
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
 	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL MAMUT", int(52.0 * u), TUSK,
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	var gloss := "The stone mammoth, and he is awake"
+	var gloss := I18n.t("w_the_stone_mammoth_and_he_is")
 	var gs := int(20.0 * u)
 	var gw: float = Kit.text_w(Kit.body(), gloss, gs)
 	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0 * u), gloss,

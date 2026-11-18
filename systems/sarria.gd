@@ -489,7 +489,7 @@ static func _tick_bells(m: Node2D, st: State, delta: float, dog: Vector2) -> voi
 				st.strikes_left -= 1
 				st.strike_t = STRIKE_GAP
 				Sfx.play("church_bell", 1.0, -2.0)
-				m.float_text(tower_top() + Vector2(46.0, -30.0), "DONG", Color(1.0, 0.86, 0.50))
+				m.float_text(tower_top() + Vector2(46.0, -30.0), I18n.t("w_dong_2"), Color(1.0, 0.86, 0.50))
 
 
 # The clock whirs and clunks before the hammer falls: 0.8 s, as every event
@@ -498,8 +498,8 @@ static func _warn_bells(m: Node2D, st: State, strikes: int) -> void:
 	st.bell_t = WARN
 	st.strikes_left = strikes
 	Sfx.play("head_bump", 0.7, -6.0)
-	m.float_text(tower_top() + Vector2(40.0, -40.0), "whirr... clunk!", Color(0.96, 0.94, 0.88))
-	m.feed.say("THE BELLS! HOLD ON TIGHT", EventFeed.Tone.LOUD)
+	m.float_text(tower_top() + Vector2(40.0, -40.0), I18n.t("w_whirr_clunk"), Color(0.96, 0.94, 0.88))
+	m.feed.say(I18n.t("w_the_bells_hold_on_tight"), EventFeed.Tone.LOUD)
 
 
 # The first strike: the pigeons go up off the square, your human looks up
@@ -513,9 +513,9 @@ static func _first_strike(m: Node2D, dog: Vector2) -> void:
 	if dog.distance_to(tower_top()) < BARKY_R:
 		m.mood.bump(Mood.M.BARKY, 0.6)
 	if m.human.has_method("say_line"):
-		var line := "Seven already?" if _hour() == "dawn" else "Is that the time?"
+		var line := I18n.t("w_seven_already") if _hour() == "dawn" else I18n.t("w_is_that_the_time")
 		if m.sarria.rung_home and m.phase == "home":
-			line = "Quarter past. Come on."
+			line = I18n.t("w_quarter_past_come_on")
 		m.human.say_line(line)
 
 
@@ -538,8 +538,8 @@ static func _tick_bread(m: Node2D, st: State, delta: float, dog: Vector2) -> voi
 		st.bread_mask |= 1 << near
 		Sfx.play("snack", 1.2, -6.0)
 		m.combo.add("BREAD", 2)
-		m.award_points(2, "fresh bread! +2")
-		var said := "Not for dogs!" if crates_out() else "Smells good, huh?"
+		m.award_points(2, I18n.t("w_fresh_bread_2"))
+		var said := I18n.t("w_not_for_dogs") if crates_out() else I18n.t("w_smells_good_huh")
 		m.float_text(doors[near] + Vector2(0.0, -34.0), said, Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
@@ -565,7 +565,7 @@ static func _tick_shutters(m: Node2D, st: State, delta: float, dog: Vector2) -> 
 			var e := edges_at(y)
 			var fx: float = e.x if float(SHOPS[i][1]) < 0.0 else e.y
 			if absf(dog.y - y) < 520.0:
-				m.float_text(Vector2(fx, y - 30.0), "rrrattle", Color(0.86, 0.86, 0.88))
+				m.float_text(Vector2(fx, y - 30.0), I18n.t("w_rrrattle"), Color(0.86, 0.86, 0.88))
 				Sfx.play("grit", 0.6, -12.0)
 		if st.rolled[i] and st.shutters[i] < 1.0:
 			st.shutters[i] = minf(1.0, st.shutters[i] + delta / SHUTTER_T)
@@ -587,7 +587,7 @@ static func _tick_sweeper(m: Node2D, st: State, delta: float, dog: Vector2) -> v
 			st.sweep_dir = -1.0
 	elif not st.sweep_said and dog.distance_to(p) < 70.0:
 		st.sweep_said = true
-		m.float_text(p + Vector2(0.0, -30.0), "Bon dia! Mind the broom", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(p + Vector2(0.0, -30.0), I18n.t("w_bon_dia_mind_the_broom"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 static func sweeper_pos(st: State) -> Vector2:
@@ -678,7 +678,7 @@ static func _tick_jogger(m: Node2D, st: State, delta: float, dog: Vector2) -> vo
 		st.jog_y = ahead.y
 	if not st.jog_said and Vector2(st.jog_x, st.jog_y).distance_to(dog) < 60.0:
 		st.jog_said = true
-		m.float_text(Vector2(st.jog_x, st.jog_y - 30.0), "Morning, pup!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(Vector2(st.jog_x, st.jog_y - 30.0), I18n.t("w_morning_pup"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
@@ -690,18 +690,18 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 	if not st.howled and st.bell == "ring" and bp.distance_to(tower_top()) < HOWL_R:
 		st.howled = true
 		m.combo.add("HOWL", 3)
-		m.award_points(3, "howl along! +3")
-		m.float_text(bp + Vector2(0.0, -30.0), "awooo", Color(1.0, 0.86, 0.5))
+		m.award_points(3, I18n.t("w_howl_along_3"))
+		m.float_text(bp + Vector2(0.0, -30.0), I18n.t("w_awooo_2"), Color(1.0, 0.86, 0.5))
 		return
 	# good morning to the gardener on her balcony
 	if not st.greeted and bp.distance_to(gardener_pos()) < GARDENER_BARK_R:
 		st.greeted = true
-		m.award_points(2, "good morning! +2")
-		var reply := "Bon dia, rei! Good dog."
+		m.award_points(2, I18n.t("w_good_morning_2"))
+		var reply := I18n.t("w_bon_dia_rei_good_dog")
 		if _hour() == "night":
-			reply = "Shh! It's late, rei."
+			reply = I18n.t("w_shh_its_late_rei")
 		elif not Outdoors.gardener_on_balcony(_weather(), _hour()):
-			reply = "Bon dia, rei! Stay dry."
+			reply = I18n.t("w_bon_dia_rei_stay_dry")
 		m.float_text(gardener_pos() + Vector2(10.0, -34.0), reply, Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 

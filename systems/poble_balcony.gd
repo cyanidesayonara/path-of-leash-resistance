@@ -126,9 +126,9 @@ func trigger(m: Node2D, idx: int = 0) -> void:
 		if m.human != null and "external_warning_t" in m.human:
 			m.human.external_warning_t = maxf(float(m.human.external_warning_t), WARN_DURATION + 0.25)
 		if m.has_method("float_text"):
-			m.float_text(balcony_pos + Vector2(0.0, -34.0), "Heads up!", Color(0.98, 0.95, 0.88), m.POP_SAY)
+			m.float_text(balcony_pos + Vector2(0.0, -34.0), I18n.t("w_heads_up"), Color(0.98, 0.95, 0.88), m.POP_SAY)
 		if m.get("feed") != null:
-			m.feed.say("WATER FROM ABOVE!", EventFeed.Tone.LOUD)
+			m.feed.say(I18n.t("w_water_from_above"), EventFeed.Tone.LOUD)
 		var sfx = m.get_node_or_null("/root/Sfx")
 		if sfx != null:
 			sfx.play("intro_tap", 1.65, -4.0)
@@ -189,7 +189,7 @@ func tick(m: Node2D, dt: float) -> void:
 				if "poble_shakes" in m:
 					m.poble_shakes += 1
 				if m.has_method("award_points"):
-					m.award_points(2, "shake! +2")
+					m.award_points(2, I18n.t("w_shake_2"))
 				if m.get("combo") != null:
 					m.combo.add("SHAKE OFF", 2)
 				if sfx != null:
@@ -202,7 +202,7 @@ func tick(m: Node2D, dt: float) -> void:
 				if to_splash.length() > 1.0 and m.dog.facing.dot(to_splash.normalized()) > 0.35 and m.dog.velocity.length() > 85.0:
 					booped = true
 					if m.has_method("award_points"):
-						m.award_points(2, "geranium boop! +2")
+						m.award_points(2, I18n.t("w_geranium_boop_2"))
 					if m.get("combo") != null:
 						m.combo.add("GERANIUM BOOP", 2)
 					if sfx != null:
@@ -225,9 +225,9 @@ func tick(m: Node2D, dt: float) -> void:
 					m.float_text(hpos + Vector2(0.0, -32.0), line, Color(1.0, 0.76, 0.74), m.POP_SAY)
 				if was_soak < 0.5 and float(m.human_soak) >= 0.5:
 					if m.human.has_method("notice"):
-						m.human.notice("I'm soaked!", 1.6)
+						m.human.notice(I18n.t("w_i_m_soaked"), 1.6)
 					if m.get("feed") != null:
-						m.feed.say("YOUR HUMAN IS HALF SOAKED", EventFeed.Tone.BAD)
+						m.feed.say(I18n.t("w_your_human_is_half_soaked"), EventFeed.Tone.BAD)
 				if float(m.human_soak) >= 1.0 and m.has_method("crack_phone"):
 					m.crack_phone(hpos)
 				if sfx != null:
@@ -241,11 +241,11 @@ func tick(m: Node2D, dt: float) -> void:
 				dodged = true
 				m.saves_done += 1
 				if m.has_method("award_points"):
-					m.award_points(2, "balcony dodge! +2")
+					m.award_points(2, I18n.t("w_balcony_dodge_2"))
 				if m.get("combo") != null:
 					m.combo.add("BALCONY DODGE", 2)
 				if m.has_method("float_text"):
-					m.float_text(hpos + Vector2(0.0, -32.0), "Whew, kept the phone dry!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+					m.float_text(hpos + Vector2(0.0, -32.0), I18n.t("w_whew_kept_the_phone_dry"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 				if sfx != null:
 					sfx.play("star", 1.15, -5.0)
 
@@ -256,11 +256,11 @@ func tick(m: Node2D, dt: float) -> void:
 						dodged = true
 						m.saves_done += 1
 						if m.has_method("award_points"):
-							m.award_points(2, "balcony dodge! +2")
+							m.award_points(2, I18n.t("w_balcony_dodge_2"))
 						if m.get("combo") != null:
 							m.combo.add("BALCONY DODGE", 2)
 						if m.has_method("float_text"):
-							m.float_text(hpos + Vector2(0.0, -32.0), "Whew, kept the phone dry!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+							m.float_text(hpos + Vector2(0.0, -32.0), I18n.t("w_whew_kept_the_phone_dry"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 						if sfx != null:
 							sfx.play("star", 1.15, -5.0)
 				station_done[station_idx] = true
@@ -276,7 +276,7 @@ func on_bark(m: Node2D, bark_pos: Vector2) -> bool:
 		return false
 	barked = true
 	if m.has_method("award_points"):
-		m.award_points(2, "balcony bark! +2")
+		m.award_points(2, I18n.t("w_balcony_bark_2"))
 	if m.get("combo") != null:
 		m.combo.add("BALCONY BARK", 2)
 	var reply: String = BARK_REPLIES[station_idx % BARK_REPLIES.size()]

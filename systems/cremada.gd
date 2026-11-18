@@ -178,9 +178,9 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 	var bp: Vector2 = pos if pos != Vector2.ZERO else m.dog.global_position
 	if c.on_bark(bp):
 		m.combo.add("BARK", 2)
-		m.award_points(2, "churro bark! +2")
+		m.award_points(2, I18n.t("w_churro_bark_2"))
 		Sfx.play("bell", 1.4, -4.0)
-		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "One for the doggie!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), I18n.t("w_one_for_the_doggie"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 # The churro cart: active on the Rambla outward leg during fair evening/night.
@@ -193,24 +193,24 @@ static func _tick_churros(m: Node2D, delta: float) -> void:
 	c.sky_ok = ChurroCart.active_in(Game.weather, Game.hour)
 	var r: Dictionary = c.tick(delta, m.dog.global_position, m.human.global_position, String(m.phase) != "home")
 	if bool(r["warn"]):
-		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "Xurros calents! Fresh and hot!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), I18n.t("w_xurros_calents_fresh_and_hot"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 		Sfx.play("bell", 1.2, -3.0)
 	if bool(r["bump"]):
 		m.human.patience = maxf(0.0, m.human.patience - ChurroCart.BUMP_PATIENCE)
 		m.human.bumped(c.bump_dir)
 		Sfx.play("bump", 1.1, -3.0)
-		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Ai, que crema!", Color(1.0, 0.72, 0.72), m.POP_SAY)
-		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "Careful with the cart!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), I18n.t("w_ai_que_crema"), Color(1.0, 0.72, 0.72), m.POP_SAY)
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), I18n.t("w_careful_with_the_cart"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 	if bool(r["snatch"]):
 		m.combo.add("SNACK", 2)
-		m.award_points(2, "churro snatch! +2")
+		m.award_points(2, I18n.t("w_churro_snatch_2"))
 		Sfx.play("snack")
-		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), "Bon profit, little one!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(ChurroCart.CART_POS + Vector2(0.0, -32.0), I18n.t("w_bon_profit_little_one"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 	if bool(r["dodge"]):
 		m.saves_done += 1
 		m.combo.add("DODGE", 2)
-		m.award_points(2, "churro dodge! +2")
-		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.award_points(2, I18n.t("w_churro_dodge_2"))
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 # The traca: lit as your human comes within TRACA_NOTICE of it on the way
@@ -227,7 +227,7 @@ static func _tick_traca(m: Node2D, delta: float) -> void:
 			if String(m.phase) != "home" and hp.y < TRACA_Y + TRACA_NOTICE and hp.y > TRACA_Y:
 				tr.state = "fuse"
 				tr.t = 0.0
-				m.human.warn_external("Traca! Cover your ears!", TRACA_WARN)
+				m.human.warn_external(I18n.t("w_traca_cover_your_ears"), TRACA_WARN)
 				Sfx.play("hiss", 1.4, -8.0)
 		"fuse":
 			tr.t = float(tr.t) + delta
@@ -242,14 +242,14 @@ static func _tick_traca(m: Node2D, delta: float) -> void:
 			if not bool(tr.get("hit", false)) and absf(hp.y - TRACA_Y) < TRACA_REACH and not m.auto_walk:
 				tr.hit = true
 				m.human.bumped(Vector2.DOWN)
-				m.float_text(hp, "Ay!", Color(1.0, 0.85, 0.6))
+				m.float_text(hp, I18n.t("w_ay"), Color(1.0, 0.85, 0.6))
 			if float(tr.t) >= TRACA_POP:
 				tr.state = "spent"
 				if not bool(tr.get("hit", false)):
 					m.cremada_traca_dodged = true
 					m.bones += TRACA_BONES
 					m.combo.add("TRACA", TRACA_BONES)
-					m.float_text(m.dog.global_position + Vector2(0.0, -26.0), "traca dodge! +%d" % TRACA_BONES, SPARK)
+					m.float_text(m.dog.global_position + Vector2(0.0, -26.0), I18n.t("w_traca_dodge") % TRACA_BONES, SPARK)
 
 
 static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:

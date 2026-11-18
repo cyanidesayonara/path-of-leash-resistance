@@ -257,9 +257,9 @@ static func tick(m: Node2D, _delta: float) -> void:
 		m.set_meta("horta_eros", true)
 		m.bones += 5
 		m.combo.add("ROUND EROS", 4)
-		m.float_text(hp + Vector2(0, -34), "Is that Cupid? Or Eros?", Color(1, 1, 1, 0.9), m.POP_SAY)
-		m.float_text(dp + Vector2(0, -30), "round eros! +5", Color(0.96, 0.86, 0.32))
-		m.feed.say("ROUND EROS!", EventFeed.Tone.GOOD)
+		m.float_text(hp + Vector2(0, -34), I18n.t("w_is_that_cupid_or_eros"), Color(1, 1, 1, 0.9), m.POP_SAY)
+		m.float_text(dp + Vector2(0, -30), I18n.t("w_round_eros_5"), Color(0.96, 0.86, 0.32))
+		m.feed.say(I18n.t("w_round_eros"), EventFeed.Tone.GOOD)
 		m.get_node("/root/Sfx").play("prize", 1.1)
 
 

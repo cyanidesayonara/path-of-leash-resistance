@@ -208,7 +208,7 @@ static func tick(m: Node2D, delta: float) -> void:
 					m.superilla_circles_sprinted = m.superilla_circles_visited.size()
 					if m.superilla_circles_sprinted == 3:
 						m.combo.add("TACTICAL RUNNER", 2)
-						m.float_text(dog_p + Vector2(0, -28), "tactical runner! +2", Color(0.22, 0.85, 0.8))
+						m.float_text(dog_p + Vector2(0, -28), I18n.t("w_tactical_runner_2"), Color(0.22, 0.85, 0.8))
 
 	# Track dog sliding under ping-pong tables
 	if not m.superilla_pingpong_slid:
@@ -216,7 +216,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			if r.has_point(dog_p):
 				m.superilla_pingpong_slid = true
 				m.combo.add("PINGPONG SLIDE", 2)
-				m.float_text(dog_p + Vector2(0, -28), "table slide! +2", Color(0.96, 0.88, 0.35))
+				m.float_text(dog_p + Vector2(0, -28), I18n.t("w_table_slide_2"), Color(0.96, 0.88, 0.35))
 				break
 
 
@@ -960,7 +960,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, BENCH_WOOD)
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "The old steam-mill courtyard, off leash")
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_old_steam_mill_courtyard_off"))
 
 
 static func surface(m: Node2D, p: Vector2) -> int:

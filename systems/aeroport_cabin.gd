@@ -143,7 +143,7 @@ static func draw(m: Node2D, c: Object) -> void:
 	var top := f.position.y
 	# the place's name over the forward bulkhead, as every space has one
 	c.draw_string(m.font, Vector2(0.0, top - 44.0), String(m.gate_text), HORIZONTAL_ALIGNMENT_CENTER, 1280, 22, Color(0.20, 0.22, 0.28))
-	c.draw_string(m.font, Vector2(0.0, top - 26.0), "The cabin, off leash", HORIZONTAL_ALIGNMENT_CENTER, 1280, 14, Color(0.20, 0.22, 0.28, 0.8))
+	c.draw_string(m.font, Vector2(0.0, top - 26.0), I18n.t("w_the_cabin_off_leash"), HORIZONTAL_ALIGNMENT_CENTER, 1280, 14, Color(0.20, 0.22, 0.28, 0.8))
 
 
 # everything static, into a recording batch: hundreds of small round things,

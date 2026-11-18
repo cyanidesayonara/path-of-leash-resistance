@@ -51,9 +51,9 @@ static func tick(m: Node2D, delta: float) -> void:
 		if m.gotic_castell_t >= WATCH_TIME:
 			m.gotic_castell_watched = true
 			m.combo.add("EQUILIBRI", 2)
-			m.award_points(2, "equilibri! +2")
+			m.award_points(2, I18n.t("w_equilibri_2"))
 			Sfx.play("combo", 1.1, -4.0)
-			m.float_text(DIADA_POS + Vector2(0.0, -42.0), "Força, equilibri, valor i seny!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+			m.float_text(DIADA_POS + Vector2(0.0, -42.0), I18n.t("w_forca_equilibri_valor_i_seny"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 	elif dp.distance_to(DIADA_POS) >= WATCH_DIST + 20.0:
 		m.gotic_castell_t = 0.0
 
@@ -66,9 +66,9 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 		if CastellCycle.cheer_window(m):
 			m.gotic_aleta_cheered = true
 			m.combo.add("ALETA", 2)
-			m.award_points(2, "aleta cheer! +2")
+			m.award_points(2, I18n.t("w_aleta_cheer_2"))
 			Sfx.play("save", 1.2, -4.0)
-			m.float_text(DIADA_POS + Vector2(0.0, -42.0), "Visca els Castellers de Barcelona!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+			m.float_text(DIADA_POS + Vector2(0.0, -42.0), I18n.t("w_visca_els_castellers_de_barcelona"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 static func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:

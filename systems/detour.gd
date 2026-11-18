@@ -255,15 +255,15 @@ static func tick(m: Node2D, delta: float) -> void:
 			drac_cooldown = 1.0
 			m.drac_dragon_greeted += 1
 			_play_sfx(m, "star", 1.35)
-			m.float_text(dp + Vector2(0.0, -22.0), "visca el drac!", Color(0.95, 0.82, 0.3))
+			m.float_text(dp + Vector2(0.0, -22.0), I18n.t("w_visca_el_drac"), Color(0.95, 0.82, 0.3))
 
 		# 2. Check secret Golden Dragon Bone collection
 		var bp: Vector2 = o + BONE_POS
 		if not m.drac_bone_taken and dp.distance_to(bp) < 34.0:
 			m.drac_bone_taken = true
 			_play_sfx(m, "pickup", 1.25)
-			m.float_text(bp + Vector2(0.0, -32.0), "dragon bone!", Color(1.0, 0.88, 0.2))
-			m.feed.say("EL DRAC: THE DRAGON BONE! MASTERPIECE CLAIMED", EventFeed.Tone.GOOD)
+			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_dragon_bone"), Color(1.0, 0.88, 0.2))
+			m.feed.say(I18n.t("w_el_drac_the_dragon_bone_masterpiece"), EventFeed.Tone.GOOD)
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT
@@ -280,15 +280,15 @@ static func tick(m: Node2D, delta: float) -> void:
 				dove_cooldown[i] = 1.0
 				m.colom_doves_greeted += 1
 				_play_sfx(m, "hi", 1.20 + i * 0.1)
-				m.float_text(dp + Vector2(0.0, -22.0), "coo! pigeon!", Color(0.9, 0.95, 1.0))
+				m.float_text(dp + Vector2(0.0, -22.0), I18n.t("w_coo_pigeon"), Color(0.9, 0.95, 1.0))
 
 		# 2. Check secret Golden Cubist Bone collection
 		var bp: Vector2 = o + BONE_POS
 		if not m.colom_bone_taken and dp.distance_to(bp) < 34.0:
 			m.colom_bone_taken = true
 			_play_sfx(m, "pickup", 1.25)
-			m.float_text(bp + Vector2(0.0, -32.0), "cubist bone!", Color(1.0, 0.88, 0.2))
-			m.feed.say("EL COLOM: THE CUBIST BONE! MASTERPIECE CLAIMED", EventFeed.Tone.GOOD)
+			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_cubist_bone"), Color(1.0, 0.88, 0.2))
+			m.feed.say(I18n.t("w_el_colom_the_cubist_bone_masterpiece"), EventFeed.Tone.GOOD)
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT
@@ -305,15 +305,15 @@ static func tick(m: Node2D, delta: float) -> void:
 				ladder_cooldown[i] = 1.0
 				m.estel_ladders_climbed += 1
 				_play_sfx(m, "star", 1.25 + i * 0.15)
-				m.float_text(dp + Vector2(0.0, -22.0), "hop hop hop!", Color(1.0, 0.9, 0.3))
+				m.float_text(dp + Vector2(0.0, -22.0), I18n.t("w_hop_hop_hop"), Color(1.0, 0.9, 0.3))
 
 		# 2. Check secret Golden Star Bone collection
 		var bp: Vector2 = o + BONE_POS
 		if not m.estel_bone_taken and dp.distance_to(bp) < 34.0:
 			m.estel_bone_taken = true
 			_play_sfx(m, "pickup", 1.30)
-			m.float_text(bp + Vector2(0.0, -32.0), "star bone!", Color(1.0, 0.88, 0.2))
-			m.feed.say("L'ESTEL: THE STAR BONE! TO THE STARS", EventFeed.Tone.GOOD)
+			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_star_bone"), Color(1.0, 0.88, 0.2))
+			m.feed.say(I18n.t("w_l_estel_the_star_bone_to_the_stars"), EventFeed.Tone.GOOD)
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT
@@ -345,8 +345,8 @@ static func tick(m: Node2D, delta: float) -> void:
 		if not m.somni_bone_taken and dp.distance_to(bp) < 34.0:
 			m.somni_bone_taken = true
 			_play_sfx(m, "pickup", 1.25)
-			m.float_text(bp + Vector2(0.0, -32.0), "dream bone!", Color(1.0, 0.88, 0.2))
-			m.feed.say("THE DREAM BONE! FINDERS KEEPERS", EventFeed.Tone.GOOD)
+			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_dream_bone"), Color(1.0, 0.88, 0.2))
+			m.feed.say(I18n.t("w_the_dream_bone_finders_keepers"), EventFeed.Tone.GOOD)
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT
@@ -375,17 +375,17 @@ static func enter(m: Node2D) -> void:
 
 	_play_sfx(m, "ui", 0.95)
 	if m.detour_kind == "drac":
-		m.feed.say("EL DRAC: THE MODERNISME GALLERY", EventFeed.Tone.LOUD)
-		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to El Drac!", Color(1.0, 0.92, 0.7), m.POP_SAY)
+		m.feed.say(I18n.t("w_el_drac_the_modernisme_gallery"), EventFeed.Tone.LOUD)
+		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), I18n.t("w_welcome_to_el_drac"), Color(1.0, 0.92, 0.7), m.POP_SAY)
 	elif m.detour_kind == "colom":
-		m.feed.say("EL COLOM: THE CUBIST GALLERY", EventFeed.Tone.LOUD)
-		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to El Colom!", Color(1.0, 0.92, 0.7), m.POP_SAY)
+		m.feed.say(I18n.t("w_el_colom_the_cubist_gallery"), EventFeed.Tone.LOUD)
+		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), I18n.t("w_welcome_to_el_colom"), Color(1.0, 0.92, 0.7), m.POP_SAY)
 	elif is_estel:
-		m.feed.say("L'ESTEL: THE STAR GALLERY", EventFeed.Tone.LOUD)
-		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to L'Estel!", Color(1.0, 0.92, 0.7), m.POP_SAY)
+		m.feed.say(I18n.t("w_l_estel_the_star_gallery"), EventFeed.Tone.LOUD)
+		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), I18n.t("w_welcome_to_l_estel"), Color(1.0, 0.92, 0.7), m.POP_SAY)
 	else:
-		m.feed.say("EL SOMNI: THE DREAM GALLERY", EventFeed.Tone.LOUD)
-		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), "Welcome to El Somni!", Color(1.0, 0.92, 0.7), m.POP_SAY)
+		m.feed.say(I18n.t("w_el_somni_the_dream_gallery"), EventFeed.Tone.LOUD)
+		m.float_text(m.dog.global_position + Vector2(0.0, -36.0), I18n.t("w_welcome_to_el_somni"), Color(1.0, 0.92, 0.7), m.POP_SAY)
 
 
 static func exit(m: Node2D) -> void:
@@ -405,13 +405,13 @@ static func exit(m: Node2D) -> void:
 
 	_play_sfx(m, "ui", 1.05)
 	if m.detour_kind == "drac":
-		m.feed.say("BACK OUT ON LA RAMBLA", EventFeed.Tone.PLAIN)
+		m.feed.say(I18n.t("w_back_out_on_la_rambla"), EventFeed.Tone.PLAIN)
 	elif m.detour_kind == "colom":
-		m.feed.say("BACK OUT ON PLAÇA REIAL", EventFeed.Tone.PLAIN)
+		m.feed.say(I18n.t("w_back_out_on_placa_reial"), EventFeed.Tone.PLAIN)
 	elif m.detour_kind == "estel":
-		m.feed.say("BACK OUT ON MONTJUÏC", EventFeed.Tone.PLAIN)
+		m.feed.say(I18n.t("w_back_out_on_montjuic"), EventFeed.Tone.PLAIN)
 	else:
-		m.feed.say("BACK OUT ON EL GÒTIC", EventFeed.Tone.PLAIN)
+		m.feed.say(I18n.t("w_back_out_on_el_gotic"), EventFeed.Tone.PLAIN)
 
 
 static func cam_x(m: Node2D) -> float:

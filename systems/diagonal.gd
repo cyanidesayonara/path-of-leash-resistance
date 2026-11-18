@@ -348,8 +348,8 @@ static func tick(m: Node2D, delta: float) -> void:
 			t.rang = true
 			t.ring_t = RING_LEAD
 			Sfx.play("crossing_bell", 1.0, -4.0)
-			m.feed.say("TRAM COMING! OFF THE TRACKS", EventFeed.Tone.LOUD)
-			m.float_text(Vector2(TRACK_X, her_y - 60.0), "ding ding!", Color(1.0, 0.9, 0.5))
+			m.feed.say(I18n.t("w_tram_coming_off_the_tracks"), EventFeed.Tone.LOUD)
+			m.float_text(Vector2(TRACK_X, her_y - 60.0), I18n.t("w_ding_ding"), Color(1.0, 0.9, 0.5))
 			t.running = true
 			t.passed = false
 			t.hit_this_run = false
@@ -373,14 +373,14 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.diagonal_tram_hits += 1
 		var side := -1.0 if dog.x < TRACK_X + 10.0 else 1.0
 		m.dog.knocked(Vector2(side, t.dir * 0.4).normalized(), "tram")
-		m.feed.say("CLANG! THE TRAM BUMPED YOU", EventFeed.Tone.LOUD)
+		m.feed.say(I18n.t("w_clang_the_tram_bumped_you"), EventFeed.Tone.LOUD)
 	# its front going by her: off the rails just in time is a dodge
 	if not t.passed and (front - her_y) * t.dir > 0.0:
 		t.passed = true
 		if not t.hit_this_run and t.on_track_t > 0.0 and t.on_track_t < DODGE_WINDOW:
 			m.diagonal_tram_dodges += 1
 			m.combo.add("TRAM", DODGE_PAY)
-			m.award_points(DODGE_PAY, "close shave! +%d" % DODGE_PAY)
+			m.award_points(DODGE_PAY, I18n.t("w_close_shave") % DODGE_PAY)
 	# gone out the far side: the next one
 	if (t.y - her_y) * t.dir > TRAM_FROM:
 		t.running = false
@@ -446,7 +446,7 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 	var p: Vector2 = m.dog.global_position if pos == Vector2.ZERO else pos
 	if not m.diagonal_kiosk_barked and KIOSK.grow(70.0).has_point(p):
 		m.diagonal_kiosk_barked = true
-		m.award_points(2, "woof at the news! +2")
+		m.award_points(2, I18n.t("w_woof_at_the_news_2"))
 		return true
 	return false
 

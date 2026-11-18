@@ -498,7 +498,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			continue
 		if dp.distance_to(COVE_OVERLOOKS[i]) < OVERLOOK_VIEW_R:
 			m.ronda_coves_seen[i] = true
-			m.award_points(2, "cove vista! +2")
+			m.award_points(2, I18n.t("w_cove_vista_2"))
 			_sfx(m, "pickup", 1.1)
 
 	# 2. Blowing hats and maps in wind weather (deterministic, no global RNG)
@@ -524,10 +524,10 @@ static func tick(m: Node2D, delta: float) -> void:
 					st["saved"] = false
 					st["hit"] = false
 					_sfx(m, "hiss", 0.52)
-					m.feed.say("TRAMUNTANA GUST! PLANT LANDWARD", EventFeed.Tone.LOUD)
+					m.feed.say(I18n.t("w_tramuntana_gust_plant_landward"), EventFeed.Tone.LOUD)
 					if m.human.can_warn_external():
-						m.human.notice("Whoa, feel that wind!", 1.2)
-					m.float_text(dp + Vector2(30.0, -56.0), "whoooosh", Color(0.90, 0.96, 1.0))
+						m.human.notice(I18n.t("w_whoa_feel_that_wind"), 1.2)
+					m.float_text(dp + Vector2(30.0, -56.0), I18n.t("w_whoooosh"), Color(0.90, 0.96, 1.0))
 				else:
 					st["t"] = t
 		"telegraph":
@@ -556,10 +556,10 @@ static func tick(m: Node2D, delta: float) -> void:
 					st["saved"] = true
 					m.ronda_gust_held += 1
 					m.saves_done += 1
-					m.award_points(4, "held the gust! +4")
+					m.award_points(4, I18n.t("w_held_the_gust_4"))
 					m.combo.add("ANCHOR", 3)
-					m.feed.say("HELD THE TRAMUNTANA!", EventFeed.Tone.GOOD)
-					m.float_text(hp + Vector2(0.0, -34.0), "Good catch!", Color(0.98, 0.96, 0.88), m.POP_SAY)
+					m.feed.say(I18n.t("w_held_the_tramuntana"), EventFeed.Tone.GOOD)
+					m.float_text(hp + Vector2(0.0, -34.0), I18n.t("w_good_catch"), Color(0.98, 0.96, 0.88), m.POP_SAY)
 					_sfx(m, "save", 1.05)
 			else:
 				m.human.velocity += gdir * GUST_HUMAN_FORCE * swell * delta
@@ -571,8 +571,8 @@ static func tick(m: Node2D, delta: float) -> void:
 							m.human.bumped(gdir)
 							m.human.lose_patience(GUST_PATIENCE_COST)
 							m.human.fall("tramuntana")
-							m.float_text(hp + Vector2(0.0, -34.0), "Whoa! My phone!", Color(1.0, 0.65, 0.55), m.POP_SAY)
-							m.feed.say("SHOVED TO THE RAIL!", EventFeed.Tone.BAD)
+							m.float_text(hp + Vector2(0.0, -34.0), I18n.t("w_whoa_my_phone"), Color(1.0, 0.65, 0.55), m.POP_SAY)
+							m.feed.say(I18n.t("w_shoved_to_the_rail"), EventFeed.Tone.BAD)
 			if t <= 0.0:
 				st["state"] = "idle"
 				st["t"] = GUST_COOLDOWN
@@ -607,7 +607,7 @@ static func _tick_wind_props(m: Node2D, delta: float, dp: Vector2, hp: Vector2) 
 		it["spin"] = float(it["spin"]) + delta * (5.2 if gust_on else 2.8)
 		if p.distance_to(dp) < WIND_PROP_CATCH_R and not m.dog.is_tumbling():
 			m.ronda_wind_caught += 1
-			var label := "caught a hat! +2" if String(it["kind"]) == "hat" else "caught a map! +2"
+			var label := I18n.t("w_caught_a_hat_2") if String(it["kind"]) == "hat" else I18n.t("w_caught_a_map_2")
 			m.award_points(2, label)
 			_sfx(m, "rustle", 1.15)
 			props.remove_at(i)
@@ -630,9 +630,9 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 	for i in range(COVE_OVERLOOKS.size()):
 		if not m.ronda_boats_barked.has(i) and p.distance_to(COVE_OVERLOOKS[i]) <= OVERLOOK_BARK_R:
 			m.ronda_boats_barked[i] = true
-			m.award_points(2, "ahoy boat! +2")
+			m.award_points(2, I18n.t("w_ahoy_boat_2"))
 			m.combo.add("COVE ECHO", 2)
-			m.float_text(COVE_OVERLOOKS[i] + Vector2(64.0, -18.0), "Woof! ...woof!", Color(0.90, 0.96, 1.0))
+			m.float_text(COVE_OVERLOOKS[i] + Vector2(64.0, -18.0), I18n.t("w_woof_woof"), Color(0.90, 0.96, 1.0))
 			_sfx(m, "whoop", 1.15)
 			return true
 	return false
@@ -1150,4 +1150,4 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, TIMBER)
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "The shingle cove, off leash")
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_shingle_cove_off_leash"))

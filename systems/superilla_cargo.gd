@@ -112,7 +112,7 @@ func tick(m: Node2D, delta: float) -> void:
 		if dog_p.distance_to(baguette_pos) < SNATCH_RADIUS:
 			baguette_snatched = true
 			m.combo.add("BAGUETTE SNATCH", 2)
-			m.float_text(baguette_pos, "baguette snatch! +2", Color(0.96, 0.82, 0.54))
+			m.float_text(baguette_pos, I18n.t("w_baguette_snatch_2"), Color(0.96, 0.82, 0.54))
 			var sfx = m.get_node_or_null("/root/Sfx")
 			if sfx != null:
 				sfx.play("snack", 1.2, -2.0)
@@ -123,7 +123,7 @@ func tick(m: Node2D, delta: float) -> void:
 				triggered = true
 				state = State.TELEGRAPH
 				timer = WARN_DURATION
-				m.feed.say("CARGO BIKE COMING THROUGH!", EventFeed.Tone.LOUD)
+				m.feed.say(I18n.t("w_cargo_bike_coming_through"), EventFeed.Tone.LOUD)
 				var sfx = m.get_node_or_null("/root/Sfx")
 				if sfx != null:
 					sfx.play("bell", 1.2, -3.0)
@@ -155,8 +155,8 @@ func tick(m: Node2D, delta: float) -> void:
 						m.human.bumped(Vector2.DOWN)
 					if "patience" in m.human:
 						m.human.patience = maxf(0.0, float(m.human.patience) - 0.08)
-					m.float_text(human_p + Vector2(0, -34), "Watch the cargo bike!", Color(1.0, 0.45, 0.4), m.POP_SAY)
-					m.float_text(pos + Vector2(0, -28), "Mind the bike!", Color(0.96, 0.88, 0.35), m.POP_SAY)
+					m.float_text(human_p + Vector2(0, -34), I18n.t("w_watch_the_cargo_bike"), Color(1.0, 0.45, 0.4), m.POP_SAY)
+					m.float_text(pos + Vector2(0, -28), I18n.t("w_mind_the_bike"), Color(0.96, 0.88, 0.35), m.POP_SAY)
 					var sfx = m.get_node_or_null("/root/Sfx")
 					if sfx != null:
 						sfx.play("grunt", 0.95, -2.0)
@@ -165,7 +165,7 @@ func tick(m: Node2D, delta: float) -> void:
 			if not booped and dog_p.distance_to(pos) < BOOP_RADIUS:
 				booped = true
 				m.combo.add("CARGO BOOP", 2)
-				m.float_text(pos + Vector2(0, -32), "cargo boop! +2", Color(1.0, 0.85, 0.3))
+				m.float_text(pos + Vector2(0, -32), I18n.t("w_cargo_boop_2"), Color(1.0, 0.85, 0.3))
 				var sfx = m.get_node_or_null("/root/Sfx")
 				if sfx != null:
 					sfx.play("whoop", 1.25, -3.0)
@@ -187,7 +187,7 @@ func tick(m: Node2D, delta: float) -> void:
 			dodged = true
 			m.saves_done += 1
 			m.combo.add("SUPERILLA DODGE", 2)
-			m.float_text(pos + Vector2(0, -32), "superilla dodge! +2", Color(0.96, 0.88, 0.35))
+			m.float_text(pos + Vector2(0, -32), I18n.t("w_superilla_dodge_2"), Color(0.96, 0.88, 0.35))
 			var sfx = m.get_node_or_null("/root/Sfx")
 			if sfx != null:
 				sfx.play("bell", 1.35, -2.0)
@@ -200,7 +200,7 @@ func on_bark(m: Node2D) -> bool:
 	if dog_p.distance_to(pos) < BARK_RADIUS:
 		barked = true
 		m.combo.add("CARGO CHEER", 2)
-		m.float_text(pos + Vector2(0, -32), "cargo cheer! +2", Color(0.4, 0.9, 0.6))
+		m.float_text(pos + Vector2(0, -32), I18n.t("w_cargo_cheer_2"), Color(0.4, 0.9, 0.6))
 		var sfx = m.get_node_or_null("/root/Sfx")
 		if sfx != null:
 			sfx.play("bell", 1.45, -2.0)

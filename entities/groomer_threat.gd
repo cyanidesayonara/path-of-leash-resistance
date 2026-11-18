@@ -194,7 +194,7 @@ func _run_over(delta: float) -> void:
 			sfx.play("crack", 0.9, -8.0)
 		main.shake_t = maxf(float(main.shake_t), 0.3)
 		if not bool(main.auto_walk):
-			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), "CRUNCH", Color(0.86, 0.92, 1.0))
+			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), I18n.t("w_crunch"), Color(0.86, 0.92, 1.0))
 
 
 func jammed() -> bool:
@@ -295,13 +295,13 @@ func _roll_into(s: Dictionary) -> bool:
 	if hd <= r + SNOWBALL_HIT:
 		hit = true
 		main.human.bumped((hum_p - at).normalized() if hd > 1.0 else Vector2.DOWN)
-		main.float_text(hum_p, "Brrr!", Color(0.86, 0.94, 1.0))
+		main.float_text(hum_p, I18n.t("w_brrr"), Color(0.86, 0.94, 1.0))
 	if hit:
 		s["hit"] = true
 		hits += 1
 		if "molina_snowball_hits" in main:
 			main.molina_snowball_hits += 1
-		main.float_text(at, "SPLAT", SNOW)
+		main.float_text(at, I18n.t("w_splat"), SNOW)
 		main.shake_t = maxf(float(main.shake_t), 0.25)
 	return hit
 
@@ -319,7 +319,7 @@ func _burst(s: Dictionary) -> void:
 	if "molina_snowball_dodges" in main:
 		main.molina_snowball_dodges += 1
 	main.bones += DODGE_BONES
-	main.float_text(main.dog.global_position + Vector2(0.0, -30.0), "dodged! +%d" % DODGE_BONES, Color(0.75, 0.9, 1.0))
+	main.float_text(main.dog.global_position + Vector2(0.0, -30.0), I18n.t("w_dodged") % DODGE_BONES, Color(0.75, 0.9, 1.0))
 
 
 # The banner while a snowball is packing or rolling toward either of them:

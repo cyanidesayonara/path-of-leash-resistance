@@ -81,7 +81,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			State.WARN_DOWN:
 				if not bool(g["warn_shown"]) and dp.distance_to(pos) < 220.0:
 					g["warn_shown"] = true
-					m.float_text(pos + Vector2(0.0, -24.0), "Beep! Dropping...", Color(1.0, 0.82, 0.35), m.POP_SAY)
+					m.float_text(pos + Vector2(0.0, -24.0), I18n.t("w_beep_dropping"), Color(1.0, 0.82, 0.35), m.POP_SAY)
 				if float(g["t"]) <= 0.0:
 					g["state"] = State.DOWN
 					g["t"] = DOWN_SECS
@@ -98,7 +98,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			State.WARN_UP:
 				if not bool(g["warn_shown"]) and dp.distance_to(pos) < 85.0:
 					g["warn_shown"] = true
-					m.float_text(pos + Vector2(0.0, -24.0), "Watch your paws!", Color(1.0, 0.55, 0.30), m.POP_SAY)
+					m.float_text(pos + Vector2(0.0, -24.0), I18n.t("w_watch_your_paws"), Color(1.0, 0.55, 0.30), m.POP_SAY)
 				if float(g["t"]) <= 0.0:
 					g["state"] = State.UP
 					g["t"] = UP_SECS
@@ -136,7 +136,7 @@ static func on_bark(m: Node2D, pos: Vector2) -> bool:
 			if not bool(g["bark_paid"]):
 				g["bark_paid"] = true
 				m.combo.add("BOLLARD", 2)
-				m.award_points(2, "sensor beep! +2")
+				m.award_points(2, I18n.t("w_sensor_beep_2"))
 			return true
 	return false
 

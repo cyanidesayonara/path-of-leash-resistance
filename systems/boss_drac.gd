@@ -411,9 +411,9 @@ func damage(amt: float) -> void:
 	hp = maxf(0.0, hp - amt)
 	if hp <= MAX_HP * 0.5 and phase == 1:
 		phase = 2
-		main.feed.say("EL DRAC IS FURIOUS!", EventFeed.Tone.LOUD)
+		main.feed.say(I18n.t("w_el_drac_is_furious"), EventFeed.Tone.LOUD)
 	if hp <= 0.0 and was > 0.0:
-		main.feed.say("HE'S HAD ENOUGH! AFTER HIM", EventFeed.Tone.GOOD)
+		main.feed.say(I18n.t("w_he_s_had_enough_after_him"), EventFeed.Tone.GOOD)
 	if amt > 0.0:
 		for i in range(LOOSE_PER_HIT):
 			shed_loose()
@@ -463,7 +463,7 @@ func transition_to(s: State) -> void:
 			state_t = BENCH_WARN
 			Sfx.play("drac_click", 1.35, -3.0)
 			if main != null and main.feed != null:
-				main.feed.say("HE'S BOLTING ALONG THE BENCH!", EventFeed.Tone.GOOD)
+				main.feed.say(I18n.t("boss_drac_bench"), EventFeed.Tone.GOOD)
 		State.BENCH_RUN:
 			state_t = BENCH_RUN_TIME
 			Sfx.play("grit", 1.15, -2.0)
@@ -481,7 +481,7 @@ func transition_to(s: State) -> void:
 			ls_jet_cd = LAST_JET_EVERY
 			Sfx.play("crack", 0.85, -3.0)
 			main.shake_t = maxf(float(main.shake_t), 0.6)
-			main.feed.say("TIE UP HIS LEGS!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_tie_up_his_legs"), EventFeed.Tone.LOUD)
 		State.WRAPPED:
 			state_t = WOBBLE_TIME
 			Sfx.play("intro_taut", 0.8, -5.0)
@@ -493,16 +493,16 @@ func transition_to(s: State) -> void:
 			Sfx.play("crack", 0.5, -3.0)
 			Sfx.play("whoop", 1.0, -6.0)
 			main.shake_t = 1.2
-			main.feed.say("EL DRAC SLIDES!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_el_drac_slides"), EventFeed.Tone.LOUD)
 		State.CONTENT:
 			hold_noticed = false
 			Sfx.play("star", 1.1)
 			Sfx.play("whoop", 1.1, -4.0)
 			main.drac_settled = true
 			main.combo.add("BOOP", 10)
-			main.award_points(10, "booped! +10")
-			main.feed.say("EL MOSAIC IS YOURS!", EventFeed.Tone.GOOD)
-			main.human.say_line("Good... dragon?")
+			main.award_points(10, I18n.t("w_booped_10"))
+			main.feed.say(I18n.t("w_el_mosaic_is_yours"), EventFeed.Tone.GOOD)
+			main.human.say_line(I18n.t("w_good_dragon"))
 			fountain_t = 0.0
 			if not win_film_shown and FilmPlayer.should_play(main) and ResourceLoader.exists(FILM_WIN):
 				win_film_shown = true
@@ -520,7 +520,7 @@ func _hold_human() -> void:
 			main.set_leash_target(main.LEASH_LENGTH)
 		if not hold_noticed and h.global_position.y < HOLD_Y + 20.0:
 			hold_noticed = true
-			h.notice("Not past that dragon.", 1.8)
+			h.notice(I18n.t("w_not_past_that_dragon"), 1.8)
 	elif h.tut_hold_y == HOLD_Y:
 		h.tut_hold_y = -INF
 
@@ -555,9 +555,9 @@ func _dodge(at: Vector2, slid := false) -> void:
 	main.combo.add("DODGE", 2)
 	if slid:
 		ride_dodges += 1
-		main.award_points(2, "slid clear! +2")
+		main.award_points(2, I18n.t("w_slid_clear_2"))
 	else:
-		main.award_points(2, "dodged! +2")
+		main.award_points(2, I18n.t("w_dodged_2"))
 	damage(DODGE_DAMAGE)
 
 
@@ -655,17 +655,17 @@ func _hit(kind: String) -> void:
 			damage(COLUMN_DAMAGE)
 			Sfx.play("intro_taut", 0.9, -4.0)
 			Sfx.play("crack", 0.7, -2.0)
-			main.feed.say("WOUND ROUND A COLUMN!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_wound_round_a_column"), EventFeed.Tone.LOUD)
 			main.combo.add("COLUMN", 8)
-			main.award_points(8, "wound! +8")
+			main.award_points(8, I18n.t("w_wound_8"))
 		"trip":
 			main.drac_tripped = true
 			damage(TRIP_DAMAGE)
 			Sfx.play("intro_taut", 0.9, -4.0)
 			Sfx.play("crack", 0.55, -1.0)
-			main.feed.say("TRIPPED!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_tripped"), EventFeed.Tone.LOUD)
 			main.combo.add("TRIP", 8)
-			main.award_points(8, "tripped! +8")
+			main.award_points(8, I18n.t("w_tripped_8"))
 	main.shake_t = maxf(float(main.shake_t), 1.0)
 	transition_to(State.STUNNED)
 
@@ -685,7 +685,7 @@ func shed_loose() -> void:
 		loose.remove_at(0)
 	if not loose_taught and in_fight():
 		loose_taught = true
-		main.feed.say("LOOSE TILES! RUN ONTO ONE TO SLIDE", EventFeed.Tone.PLAIN)
+		main.feed.say(I18n.t("w_loose_tiles_run_onto_one_to_slide"), EventFeed.Tone.PLAIN)
 
 
 # A dog running onto a shard rides it; the shard goes with her and breaks up
@@ -782,9 +782,9 @@ func _soak(k: int) -> bool:
 			damage(SPOUT_DAMAGE)
 			Sfx.play("splash", 0.8, -2.0)
 			Sfx.play("groan", 1.1, -6.0)
-			main.feed.say("SOAKED WITH HIS OWN FOUNTAIN!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_soaked_with_his_own_fountain"), EventFeed.Tone.LOUD)
 			main.combo.add("SOAK", SPOUT_PAY)
-			main.award_points(SPOUT_PAY, "soaked! +%d" % SPOUT_PAY)
+			main.award_points(SPOUT_PAY, I18n.t("w_soaked") % SPOUT_PAY)
 			main.shake_t = maxf(float(main.shake_t), 0.6)
 			transition_to(State.STUNNED)
 			state_t = SPOUT_STUN
@@ -794,8 +794,8 @@ func _soak(k: int) -> bool:
 			flash = 0.4
 			ls_jet_cd = LAST_JET_EVERY + JET_WARN
 			Sfx.play("splash", 0.9, -3.0)
-			main.feed.say("CHOKED HIS JET!", EventFeed.Tone.GOOD)
-			main.award_points(CHOKE_PAY, "choked! +%d" % CHOKE_PAY)
+			main.feed.say(I18n.t("w_choked_his_jet"), EventFeed.Tone.GOOD)
+			main.award_points(CHOKE_PAY, I18n.t("w_choked") % CHOKE_PAY)
 			return true
 	return false
 
@@ -928,8 +928,8 @@ func _grind_stop_at_bend() -> void:
 	Sfx.play("crack", 0.72, -1.0)
 	Sfx.play("head_bump", 1.15, -3.0)
 	main.combo.add("BENCH", BENCH_PAY)
-	main.award_points(BENCH_PAY, "ground to a stop! +%d" % BENCH_PAY)
-	main.feed.say("GROUND TO A STOP IN THE BEND!", EventFeed.Tone.LOUD)
+	main.award_points(BENCH_PAY, I18n.t("w_ground_to_a_stop") % BENCH_PAY)
+	main.feed.say(I18n.t("w_ground_to_a_stop_in_the_bend"), EventFeed.Tone.LOUD)
 	main.shake_t = maxf(float(main.shake_t), 0.85)
 	transition_to(State.STUNNED)
 	state_t = BENCH_STUN
@@ -1229,7 +1229,7 @@ func _draw_card() -> void:
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
 	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL DRAC", int(52.0 * u), accent,
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	var gloss := "The salamander, and he is awake"
+	var gloss := I18n.t("w_the_salamander_and_he_is_awake")
 	var gs := int(20.0 * u)
 	var gw: float = Kit.text_w(Kit.body(), gloss, gs)
 	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0 * u), gloss,

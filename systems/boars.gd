@@ -285,7 +285,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.boar_mud_cd = MUD_CD
 		Sfx.play("squelch", 0.9)
 		m.combo.add("WALLOW", 3)
-		m.float_text(m.dog.global_position + Vector2(0, -26), "splat!", Color(0.72, 0.56, 0.36))
+		m.float_text(m.dog.global_position + Vector2(0, -26), I18n.t("w_splat_2"), Color(0.72, 0.56, 0.36))
 	# a pole swing landed round one of the oaks
 	if m.vaults_landed > m.boar_vaults_seen:
 		m.boar_vaults_seen = m.vaults_landed

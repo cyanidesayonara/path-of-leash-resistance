@@ -85,16 +85,16 @@ func _physics_process(delta: float) -> void:
 		# anything punted into a hole is gone, and it is glorious
 		for m in main.manholes:
 			if global_position.distance_to(m) < 16.0:
-				main.float_text(global_position, "plop", Color(0.8, 0.85, 0.9))
+				main.float_text(global_position, I18n.t("w_plop_2"), Color(0.8, 0.85, 0.9))
 				queue_free()
 				return
 		for c in main.cellars:
 			if (c as Rect2).has_point(global_position):
-				main.float_text(global_position, "plop", Color(0.8, 0.85, 0.9))
+				main.float_text(global_position, I18n.t("w_plop_2"), Color(0.8, 0.85, 0.9))
 				queue_free()
 				return
 		if main.pond.size.x > 0.0 and (main.pond as Rect2).has_point(global_position):
-			main.float_text(global_position, "ploosh", Color(0.6, 0.8, 1.0))
+			main.float_text(global_position, I18n.t("w_ploosh"), Color(0.6, 0.8, 1.0))
 			queue_free()
 			return
 		Redraw.later(self)

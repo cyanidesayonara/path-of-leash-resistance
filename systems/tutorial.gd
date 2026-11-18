@@ -438,12 +438,12 @@ static func update_card(m: Node2D) -> void:
 		return
 	m.tut_label.visible = true
 	m.tut_hint.visible = true
-	m.tut_label.text = String(st.title)
+	m.tut_label.text = I18n.of_english(String(st.title))
 	# the skip button is offered in the card's own prompt bar (event_feed.gd),
 	# never written into the sentence
 	m.tut_skippable = true
 	m.tut_skip_label = skip_label(int(m.tut_step))
-	m.tut_hint.text = Prompts.fill(String(st.body))
+	m.tut_hint.text = Prompts.fill(I18n.of_english(String(st.body)))
 	# a green flash of acknowledgement as each lesson lands
 	var _ml := Engine.get_main_loop()
 	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null

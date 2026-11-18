@@ -279,7 +279,7 @@ static func _draw_goods_yard(m: Node2D, c: Object) -> void:
 	if b != c:
 		b.flush()
 	m._draw_freedom_benches(c, r, Color(0.36, 0.40, 0.44))
-	m._freedom_sign(c, r, m.gate_text, "The old goods yard, off leash")
+	m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_old_goods_yard_off_leash"))
 
 
 # Past L'Estacio's goods yard wall: the running lines (ballast, sleepers,
@@ -603,19 +603,19 @@ static func tick(m: Node2D, delta: float) -> void:
 	if bool(out["warn"]):
 		Sfx.play("chime", 1.0, -5.0)
 		var d: Array = DEPARTURES[int(out["row"])]
-		var feed_msg := "TRAIN TO %s! BOARDING PLATFORM %s" % [String(d[1]), String(d[2])] if bool(out["boarding"]) else "TRAIN FROM %s! PASSENGERS ARRIVING" % String(d[1])
+		var feed_msg := I18n.t("w_train_to_boarding") % [String(d[1]), String(d[2])] if bool(out["boarding"]) else I18n.t("w_train_from_arriving") % String(d[1])
 		m.feed.say(feed_msg, EventFeed.Tone.LOUD)
-		m.float_text(m.human.global_position + Vector2(0.0, -44.0), "ding dong!", Color(1.0, 0.92, 0.56))
+		m.float_text(m.human.global_position + Vector2(0.0, -44.0), I18n.t("w_ding_dong"), Color(1.0, 0.92, 0.56))
 	if bool(out["bump"]):
 		m.human.velocity += (out["bump_dir"] as Vector2) * 120.0
 		if m.human.grace_t <= 0.0:
 			m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.15, -6.0)
-		m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Excuse me!", Color(1.0, 0.82, 0.68), m.POP_SAY)
+		m.float_text(m.human.global_position + Vector2(0.0, -32.0), I18n.t("w_excuse_me"), Color(1.0, 0.82, 0.68), m.POP_SAY)
 	if bool(out["dodge"]):
 		m.saves_done += 1
 		m.combo.add("DODGE", 2)
-		m.award_points(2, "wave dodge! +2")
+		m.award_points(2, I18n.t("w_wave_dodge_2"))
 
 
 static func on_bark(m: Node2D, pos: Vector2) -> void:
@@ -623,7 +623,7 @@ static func on_bark(m: Node2D, pos: Vector2) -> void:
 		return
 	if m.estacio_crowd.on_bark(pos):
 		m.combo.add("BARK", 2)
-		m.award_points(2, "commuter bark! +2")
+		m.award_points(2, I18n.t("w_commuter_bark_2"))
 
 
 # Overhead platform indicator boards (VIA 1 / VIA 2) and train-shed trusses

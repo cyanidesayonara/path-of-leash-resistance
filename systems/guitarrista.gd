@@ -117,7 +117,7 @@ func tick(m: Node2D, delta: float) -> void:
 				triggered = true
 				state = State.TELEGRAPH
 				timer = WARN_DURATION
-				m.feed.say("RUMBA TIME!", EventFeed.Tone.LOUD)
+				m.feed.say(I18n.t("w_rumba_time"), EventFeed.Tone.LOUD)
 				m.get_node("/root/Sfx").play("whoop", 1.15, -4.0)
 
 		State.TELEGRAPH:
@@ -141,8 +141,8 @@ func tick(m: Node2D, delta: float) -> void:
 					human_hit = true
 					m.human.bumped(Vector2.DOWN)
 					m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
-					m.float_text(human_p + Vector2(0, -34), "Watch the guitar!", Color(1.0, 0.45, 0.4), m.POP_SAY)
-					m.float_text(pos + Vector2(0, -28), "Watch those strings!", Color(0.96, 0.88, 0.35), m.POP_SAY)
+					m.float_text(human_p + Vector2(0, -34), I18n.t("w_watch_the_guitar"), Color(1.0, 0.45, 0.4), m.POP_SAY)
+					m.float_text(pos + Vector2(0, -28), I18n.t("w_watch_those_strings"), Color(0.96, 0.88, 0.35), m.POP_SAY)
 					m.get_node("/root/Sfx").play("grunt", 0.95, -2.0)
 
 			if pos.distance_to(END_POS) < 8.0:
@@ -161,7 +161,7 @@ func tick(m: Node2D, delta: float) -> void:
 			dodged = true
 			m.saves_done += 1
 			m.combo.add("CARMEL DODGE", 2)
-			m.float_text(pos + Vector2(0, -32), "carmel dodge! +2", Color(0.96, 0.88, 0.35))
+			m.float_text(pos + Vector2(0, -32), I18n.t("w_carmel_dodge_2"), Color(0.96, 0.88, 0.35))
 			m.get_node("/root/Sfx").play("bell", 1.25, -2.0)
 
 	# Snatching dropped olives
@@ -172,7 +172,7 @@ func tick(m: Node2D, delta: float) -> void:
 		if dog_p.distance_to(olives_pos) < SNATCH_RADIUS:
 			olives_snatched = true
 			m.combo.add("OLIVES SNATCH", 2)
-			m.float_text(olives_pos, "olives snatch! +2", Color(0.55, 0.85, 0.35))
+			m.float_text(olives_pos, I18n.t("w_olives_snatch_2"), Color(0.55, 0.85, 0.35))
 			m.get_node("/root/Sfx").play("snack", 1.2, -2.0)
 
 	# Direct boop
@@ -181,7 +181,7 @@ func tick(m: Node2D, delta: float) -> void:
 			booped = true
 			wobble_t = 0.5
 			m.combo.add("GUITARIST BOOP", 2)
-			m.float_text(pos + Vector2(0, -32), "guitarist boop! +2", Color(1.0, 0.85, 0.3))
+			m.float_text(pos + Vector2(0, -32), I18n.t("w_guitarist_boop_2"), Color(1.0, 0.85, 0.3))
 			m.get_node("/root/Sfx").play("whoop", 1.25, -3.0)
 
 
@@ -193,7 +193,7 @@ func on_bark(m: Node2D) -> bool:
 		barked = true
 		wobble_t = 0.8
 		m.combo.add("RUMBA BARK", 2)
-		m.float_text(pos + Vector2(0, -36), "rumba bark! +2", Color(1.0, 0.75, 0.3))
+		m.float_text(pos + Vector2(0, -36), I18n.t("w_rumba_bark_2"), Color(1.0, 0.75, 0.3))
 		m.get_node("/root/Sfx").play("bell", 1.2, -3.0)
 		return true
 	return false

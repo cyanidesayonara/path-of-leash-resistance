@@ -194,7 +194,7 @@ func _run_over(delta: float) -> void:
 			sfx.play("crack", 1.1, -8.0)
 		main.shake_t = maxf(float(main.shake_t), 0.3)
 		if not bool(main.auto_walk):
-			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), "CRUNCH", Color(1.0, 0.86, 0.50))
+			main.float_text(drive.bonk_at + Vector2(0.0, -24.0), I18n.t("w_crunch"), Color(1.0, 0.86, 0.50))
 
 
 func jammed() -> bool:
@@ -282,20 +282,20 @@ func land(at: Vector2) -> void:
 	if hd <= ROCKET_R and not auto:
 		hit = true
 		main.human.bumped((hum_p - at).normalized() if hd > 1.0 else Vector2.DOWN)
-		main.float_text(hum_p, "Yikes!", Color(1.0, 0.85, 0.6))
+		main.float_text(hum_p, I18n.t("w_yikes"), Color(1.0, 0.85, 0.6))
 	if hit:
 		hits += 1
 		if "cremada_hits" in main:
 			main.cremada_hits += 1
-		main.float_text(at, "BANG", BLAST)
+		main.float_text(at, I18n.t("w_bang"), BLAST)
 		return
-	main.float_text(at, "BANG", BLAST)
+	main.float_text(at, I18n.t("w_bang"), BLAST)
 	if dd <= ROCKET_DODGE_R or hd <= ROCKET_DODGE_R:
 		dodges += 1
 		if "cremada_dodges" in main:
 			main.cremada_dodges += 1
 		main.bones += DODGE_BONES
-		main.float_text(dog_p + Vector2(0.0, -30.0), "dodged! +%d" % DODGE_BONES, Color(0.75, 0.9, 1.0))
+		main.float_text(dog_p + Vector2(0.0, -30.0), I18n.t("w_dodged") % DODGE_BONES, Color(0.75, 0.9, 1.0))
 
 
 # The banner while a ring is filling near either of them: the one thing to do.

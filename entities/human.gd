@@ -314,7 +314,7 @@ func tick(delta: float) -> void:
 		face_dir = Vector2.DOWN
 		hgait += delta
 		if not bubble.visible:
-			_show_bubble("Aah!")
+			_show_bubble(I18n.t("w_aah"))
 		return
 	# strain is cleared and re-set by main.gd/_apply_leash each frame
 	match state:
@@ -384,7 +384,7 @@ func tick(delta: float) -> void:
 				state = HState.BAG
 				state_t = 2.0
 				velocity = Vector2.ZERO
-				_show_bubble("Bagging it...")
+				_show_bubble(I18n.t("w_bagging_it"))
 			else:
 				velocity = velocity.move_toward(to_poop.normalized() * 120.0, 300.0 * delta)
 				move_and_slide()
@@ -395,7 +395,7 @@ func tick(delta: float) -> void:
 				main.on_business_picked()
 				chain_target = main.nearest_bin(global_position)
 				state = HState.GO_BIN
-				_show_bubble("Where's a trash can...")
+				_show_bubble(I18n.t("w_where_s_a_trash_can"))
 		HState.GO_BIN:
 			var to_bin := chain_target - global_position
 			var before_x := global_position
@@ -407,7 +407,7 @@ func tick(delta: float) -> void:
 				velocity = Vector2.ZERO
 				face_dir = to_bin.normalized()
 				bin_stuck_t = 0.0
-				_show_bubble("In it goes...")
+				_show_bubble(I18n.t("w_in_it_goes"))
 			else:
 				velocity = velocity.move_toward(to_bin.normalized() * 120.0, 300.0 * delta)
 				move_and_slide()
@@ -513,7 +513,7 @@ func _converse(delta: float) -> void:
 		if not (state in [HState.WALK, HState.DRIFT]):
 			correct_t = 0.0
 			patience = maxf(patience, 0.2)
-			if bubble.text == "Hey!":
+			if bubble.text == I18n.t("w_hey"):
 				bubble.visible = false
 			return
 		correct_t -= delta
@@ -534,7 +534,7 @@ func _converse(delta: float) -> void:
 		# glance at her every couple of seconds
 		if not grumbled and telegraph_t <= 0.0:
 			grumbled = true
-			notice("Ugh...", 1.0)
+			notice(I18n.t("w_ugh"), 1.0)
 		if glance_t <= 0.0:
 			glance_t = 2.2
 	elif patience > PATIENCE_WARN + 0.15:
@@ -542,7 +542,7 @@ func _converse(delta: float) -> void:
 	if patience <= 0.0 and telegraph_t <= 0.0 and halt_t <= 0.0:
 		correct_t = CORRECT_WARN
 		planted_at_hey = bool(main.dog.planted)
-		_show_bubble("Hey!", I18n.t("owner_had_enough"))
+		_show_bubble(I18n.t("w_hey"), I18n.t("owner_had_enough"))
 
 
 func _correct() -> void:
@@ -599,7 +599,7 @@ func _fiddle_with_reel(delta: float) -> void:
 	# a patient human lets it out; a fed-up one keeps her close
 	reel_pending_len = 170.0 + (reel_pending_len - 170.0) * (0.55 + 0.45 * patience)
 	reel_pending_t = REEL_WARN
-	_show_bubble("Click!")
+	_show_bubble(I18n.t("w_click"))
 	var tw := create_tween()
 	tw.tween_interval(REEL_WARN + 0.3)
 	tw.tween_callback(func() -> void:
@@ -648,7 +648,7 @@ func _walk(delta: float) -> void:
 		waited += delta
 		if waited < WAIT_MAX:
 			if waited <= delta * 1.5 and telegraph_t <= 0.0 and correct_t <= 0.0:
-				notice("Go ahead.", 1.4)
+				notice(I18n.t("w_go_ahead"), 1.4)
 			velocity = velocity.move_toward(Vector2.ZERO, 400.0 * delta)
 			move_and_slide()
 			return
@@ -871,7 +871,7 @@ func _match_events(delta: float) -> void:
 	if not bar_done and global_position.y < -1760.0 and global_position.y > -2140.0:
 		bar_done = true
 		bar_armed = true
-		_show_bubble("Ooh, look at the replay...")
+		_show_bubble(I18n.t("w_ooh_look_at_the_replay"))
 		telegraph_t = 0.8
 
 
@@ -883,7 +883,7 @@ func _fire_bar() -> void:
 	state_t = WAIT_MAX
 	drift_dir = -1.0
 	bar_watching = true
-	_show_bubble("Ooh, look at the replay...", I18n.t("owner_watching_bar"))
+	_show_bubble(I18n.t("w_ooh_look_at_the_replay"), I18n.t("owner_watching_bar"))
 
 
 func _events(delta: float) -> void:
@@ -913,34 +913,34 @@ func _events(delta: float) -> void:
 		if main.signal_prone and roll < 0.45:
 			# out in the woods there are no bars, ever
 			pending_event = HState.SIGNAL
-			_show_bubble("No bars out here.")
+			_show_bubble(I18n.t("w_no_bars_out_here"))
 		elif not call_used and roll < 0.08:
 			pending_event = HState.CALL
-			_show_bubble("Ring ring...")
+			_show_bubble(I18n.t("w_ring_ring_2"))
 		elif roll < 0.18:
 			pending_event = HState.STOPPED
-			_show_bubble("Ring ring!")
+			_show_bubble(I18n.t("w_ring_ring_3"))
 			# a ringing phone is NOISE - in the scrapyard it wakes the guards
 			main.on_phone_noise(global_position)
 		elif roll < 0.36:
 			pending_event = HState.DRIFT
-			_show_bubble("Typing a reply...")
+			_show_bubble(I18n.t("w_typing_a_reply"))
 		elif roll < 0.5:
 			pending_event = HState.DASH
-			_show_bubble("Ooh!")
+			_show_bubble(I18n.t("w_ooh"))
 		elif roll < 0.62:
 			pending_event = HState.SELFIE
-			_show_bubble("Selfie time!")
+			_show_bubble(I18n.t("w_selfie_time"))
 		elif roll < 0.72:
 			pending_event = HState.FILM
-			_show_bubble("Getting this on video...")
+			_show_bubble(I18n.t("w_getting_this_on_video"))
 		elif roll < 0.84:
 			pending_event = HState.SIGNAL
-			_show_bubble("Signal?")
+			_show_bubble(I18n.t("w_signal"))
 		else:
 			pending_event = HState.DASH
 			pending_bench = true
-			_show_bubble("So tired...")
+			_show_bubble(I18n.t("w_so_tired"))
 		telegraph_t = 0.8
 
 
@@ -949,31 +949,31 @@ func _fire_event() -> void:
 		HState.STOPPED:
 			state = HState.STOPPED
 			state_t = randf_range(1.5, 2.8)
-			_show_bubble("Ring ring!", I18n.t("owner_answer"))
+			_show_bubble(I18n.t("w_ring_ring_3"), I18n.t("owner_answer"))
 		HState.DRIFT:
 			state = HState.DRIFT
 			state_t = 1.8
-			_show_bubble("Typing a reply...", I18n.t("owner_texting"))
+			_show_bubble(I18n.t("w_typing_a_reply"), I18n.t("owner_texting"))
 			drift_dir = 1.0 if randf() < 0.5 else -1.0
 		HState.SELFIE:
 			state = HState.SELFIE
 			state_t = 2.2
-			_show_bubble("Selfie time!", I18n.t("owner_selfie"))
+			_show_bubble(I18n.t("w_selfie_time"), I18n.t("owner_selfie"))
 		HState.FILM:
 			state = HState.FILM
 			state_t = randf_range(1.6, 2.4)
-			_show_bubble("Getting this on video...", I18n.t("owner_filming"))
+			_show_bubble(I18n.t("w_getting_this_on_video"), I18n.t("owner_filming"))
 		HState.SIGNAL:
 			state = HState.SIGNAL
 			state_t = randf_range(2.6, 4.2)
-			_show_bubble("No signal...", I18n.t("owner_no_signal"))
+			_show_bubble(I18n.t("w_no_signal"), I18n.t("owner_no_signal"))
 		HState.CALL:
 			# a proper natter: long enough to be a real opportunity
 			state = HState.CALL
 			state_t = randf_range(16.0, 21.0)
 			call_total = state_t
 			call_used = true
-			_show_bubble("Hello? ...Oh, hi!", I18n.t("owner_loose"))
+			_show_bubble(I18n.t("w_hello_oh_hi"), I18n.t("owner_loose"))
 		HState.DASH:
 			var de: Vector2 = main.walk_edges(global_position.y)
 			var lo: float = de.x + 40.0
@@ -1001,7 +1001,7 @@ func _end_dash() -> void:
 		sit_after_dash = false
 		state = HState.STOPPED
 		state_t = 3.0
-		_show_bubble("Hang on, one second.")
+		_show_bubble(I18n.t("w_hang_on_one_second"))
 	else:
 		state = HState.WALK
 
@@ -1014,7 +1014,7 @@ func notice(text: String, secs: float) -> void:
 	var tw := create_tween()
 	tw.tween_interval(secs)
 	tw.tween_callback(func() -> void:
-		if bubble.text == text:
+		if bubble.text == I18n.of_english(text):
 			bubble.visible = false)
 
 
@@ -1041,7 +1041,7 @@ func warn_external(text: String, secs: float) -> bool:
 
 func clear_external_warning(text: String) -> void:
 	external_warning_t = 0.0
-	if bubble.text == text:
+	if bubble.text == I18n.of_english(text):
 		bubble.visible = false
 
 
@@ -1051,7 +1051,7 @@ func _show_bubble(text: String, dog_news: String = "") -> void:
 	# game - so anything that changes what she can get away with was landing
 	# out in the corner of the eye and going unread. dog_news is the same
 	# moment said again next to her, in her voice.
-	bubble.text = text
+	bubble.text = I18n.of_english(text)
 	bubble.reset_size()
 	bubble.position.x = -bubble.size.x * 0.5
 	bubble.visible = true
@@ -1071,12 +1071,12 @@ func match_react(side: String) -> bool:
 	if side == "home":
 		state = HState.GOAL
 		state_t = GOAL_HOLD
-		_show_bubble("Gooool!")
+		_show_bubble(I18n.t("w_gooool"))
 	elif side == "away":
 		slump_t = 3.0
-		_show_bubble("No...")
+		_show_bubble(I18n.t("w_no"))
 	else:
-		_show_bubble("What?!")
+		_show_bubble(I18n.t("w_what"))
 	return true
 
 
@@ -1103,7 +1103,7 @@ func start_whirl(pole: Vector2, dir: float, turns: float) -> void:
 	whirl_omega = clampf(velocity.length() / maxf(whirl_r, 30.0), WHIRL_OMEGA_START.x, WHIRL_OMEGA_START.y)
 	_swish_at = whirl_angle
 	telegraph_t = 0.0
-	_show_bubble("Wheee!")
+	_show_bubble(I18n.t("w_wheee"))
 
 
 # the orbit is only honest while the pole is still somewhere she could be
@@ -1174,7 +1174,7 @@ func release_whirl(lean := 0.0) -> void:
 	velocity = launch * clampf(whirl_omega * WHIRL_FLING_PER_OMEGA, WHIRL_FLING_MIN, WHIRL_FLING_MAX)
 	just_flung = true
 	whirl_flung_t = WHIRL_STRETCH_T
-	main.float_text(global_position, "AAAAH!", Color(1, 0.9, 0.6))
+	main.float_text(global_position, I18n.t("w_aaaah"), Color(1, 0.9, 0.6))
 	main.shake_t = maxf(float(main.shake_t), 0.35)
 	if main.dog != null and main.dog.has_method("trigger_launch_stretch"):
 		main.dog.trigger_launch_stretch(launch, 0.25)
@@ -1195,7 +1195,7 @@ func bail_whirl() -> void:
 	whirl_pull = 0.0
 	velocity = away * clampf(whirl_omega * whirl_r, WHIRL_BAIL_MIN, WHIRL_BAIL_SPEED)
 	whirl_bailed = true
-	_show_bubble("Ugh, I'm dizzy...")
+	_show_bubble(I18n.t("w_ugh_i_m_dizzy"))
 	var tw := create_tween()
 	tw.tween_interval(WHIRL_BAIL_STUMBLE + 0.3)
 	tw.tween_callback(func() -> void:
@@ -1210,13 +1210,13 @@ func say_line(text: String) -> void:
 	var tw := create_tween()
 	tw.tween_interval(0.8)
 	tw.tween_callback(func() -> void:
-		if bubble.text == text:
+		if bubble.text == I18n.of_english(text):
 			bubble.visible = false)
 
 
 func throw_pose() -> void:
 	park_throw_t = 0.5
-	_show_bubble("Go get it!")
+	_show_bubble(I18n.t("w_go_get_it"))
 	var tw := create_tween()
 	tw.tween_interval(0.9)
 	tw.tween_callback(func() -> void:
@@ -1236,7 +1236,7 @@ func unpark() -> void:
 	parked = false
 	homeward = true
 	bubble.visible = false
-	_show_bubble("Okay, time to head home.")
+	_show_bubble(I18n.t("w_okay_time_to_head_home"))
 
 
 func is_on_call() -> bool:
@@ -1257,14 +1257,14 @@ func fetch_poop(spot: Vector2) -> void:
 	state = HState.GO_POOP
 	chain_target = spot
 	telegraph_t = 0.0
-	_show_bubble("Ugh, hold on.")
+	_show_bubble(I18n.t("w_ugh_hold_on"))
 
 
 func show_nag() -> void:
 	# opinions about where dogs belong, delivered without looking up
 	if state != HState.WALK or telegraph_t > 0.0:
 		return
-	_show_bubble("Come on, let's go!")
+	_show_bubble(I18n.t("w_come_on_let_s_go"))
 	var tw := create_tween()
 	tw.tween_interval(1.0)
 	tw.tween_callback(func() -> void:
@@ -1290,7 +1290,7 @@ func resume_to_bin(bin: Vector2) -> void:
 	state = HState.GO_BIN
 	chain_target = bin
 	telegraph_t = 0.0
-	_show_bubble("Where's a trash can...")
+	_show_bubble(I18n.t("w_where_s_a_trash_can"))
 
 
 func bumped(dir: Vector2) -> void:
@@ -1334,7 +1334,7 @@ func on_leash_yank(dir: Vector2, dog_planted: bool, yank_speed: float) -> void:
 		velocity = -dir * (yank_speed * 0.9 + 90.0)
 		telegraph_t = 0.0
 		bubble.visible = false
-		main.float_text(global_position, "Whoa there!", Color(1, 1, 1), main.POP_SAY)
+		main.float_text(global_position, I18n.t("w_whoa_there"), Color(1, 1, 1), main.POP_SAY)
 		main.on_stumble_save(global_position)
 
 
@@ -1356,7 +1356,7 @@ func halt(duration: float) -> void:
 		halt_t = duration
 		state = HState.WALK
 		move_and_collide(Vector2(0, 16))
-		_show_bubble("Huh?")
+		_show_bubble(I18n.t("w_huh"))
 		var tw := create_tween()
 		tw.tween_interval(duration)
 		tw.tween_callback(func() -> void: bubble.visible = false)

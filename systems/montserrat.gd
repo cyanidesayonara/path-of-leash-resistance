@@ -285,8 +285,8 @@ static func tick(m: Node2D, delta: float) -> void:
 		# a pass that came by the pair and touched neither: waited out or dodged
 		if bool(fun.get("involved", false)) and not bool(fun.get("hit", false)) and not m.montserrat_funicular_dodged:
 			m.montserrat_funicular_dodged = true
-			m.award_points(3, "funicular cleared! +3")
-			m.feed.say("CLEAR OF THE FUNICULAR!", EventFeed.Tone.GOOD)
+			m.award_points(3, I18n.t("w_funicular_cleared_3"))
+			m.feed.say(I18n.t("w_clear_of_the_funicular"), EventFeed.Tone.GOOD)
 		return
 	# the bell's lead is the warning: nothing is hit before the carriage is on the path
 	if not funicular_on_path(m.elapsed) or bool(fun.get("hit", false)):
@@ -297,7 +297,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	if not dog_hit and not human_hit:
 		return
 	fun["hit"] = true
-	m.feed.say("MIND THE FUNICULAR!", EventFeed.Tone.LOUD)
+	m.feed.say(I18n.t("w_mind_the_funicular"), EventFeed.Tone.LOUD)
 	if dog_hit:
 		m.dog.knocked(Vector2(signf(dp.x - car_x), 0.0), "funicular")
 	if human_hit:
@@ -313,8 +313,8 @@ static func on_bark(m: Node2D, pos: Vector2) -> void:
 		if not m.montserrat_mato_barked:
 			m.montserrat_mato_barked = true
 			m.bones += 3
-			m.float_text(pos + Vector2(0, -30), "mel i mato! +3", HONEY_GOLD)
-			m.feed.say("TASTA EL MEL I MATO!", EventFeed.Tone.GOOD)
+			m.float_text(pos + Vector2(0, -30), I18n.t("w_mel_i_mato_3"), HONEY_GOLD)
+			m.feed.say(I18n.t("w_tasta_el_mel_i_mato"), EventFeed.Tone.GOOD)
 			m.get_node("/root/Sfx").play("prize", 1.1)
 
 

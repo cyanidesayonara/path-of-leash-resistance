@@ -306,7 +306,7 @@ class SchoolTour:
 		if snack_dropped and not snack_taken and dog_p.distance_to(snack_pos) < TOUR_SNATCH_R:
 			snack_taken = true
 			m.kebabs_eaten += 1
-			m.award_points(2, "brioche! +2")
+			m.award_points(2, I18n.t("w_brioche_2"))
 			Santpau._sfx(m, "snack", 1.1)
 
 		match state:
@@ -316,9 +316,9 @@ class SchoolTour:
 					timer = TOUR_WARN
 					m.santpau_chime_t = CLOCK_CHIME_T
 					m.santpau_chime_out = true
-					m.float_text(CLOCK_TOWER_POS + Vector2(0.0, -34.0), "DONG! DONG!", CLOCK_GLOW)
-					m.float_text(Vector2(TOUR_START_X + 60.0, TOUR_CROSS_Y - 52.0), "Two by two! Follow the umbrella!", Color(0.98, 0.92, 0.80), m.POP_SAY)
-					m.feed.say("BELLS CHIMING! SCHOOL TOUR CROSSING", EventFeed.Tone.LOUD)
+					m.float_text(CLOCK_TOWER_POS + Vector2(0.0, -34.0), I18n.t("w_dong_dong"), CLOCK_GLOW)
+					m.float_text(Vector2(TOUR_START_X + 60.0, TOUR_CROSS_Y - 52.0), I18n.t("w_two_by_two_follow_the_umbrella"), Color(0.98, 0.92, 0.80), m.POP_SAY)
+					m.feed.say(I18n.t("w_bells_chiming_school_tour_crossing"), EventFeed.Tone.LOUD)
 					Santpau._sfx(m, "church_bell", 1.12)
 			State.TELEGRAPH:
 				timer -= delta
@@ -338,14 +338,14 @@ class SchoolTour:
 							human_hit = true
 							m.human.bumped((human_p - member_pos(k)).normalized())
 							m.human.lose_patience(TOUR_PATIENCE_COST)
-							m.float_text(human_p + Vector2(0.0, -34.0), "Excuse me, kids!", Color(1.0, 0.65, 0.55), m.POP_SAY)
-							m.float_text(member_pos(0) + Vector2(0.0, -32.0), "Careful, everyone!", Color(0.98, 0.92, 0.80), m.POP_SAY)
+							m.float_text(human_p + Vector2(0.0, -34.0), I18n.t("w_excuse_me_kids"), Color(1.0, 0.65, 0.55), m.POP_SAY)
+							m.float_text(member_pos(0) + Vector2(0.0, -32.0), I18n.t("w_careful_everyone"), Color(0.98, 0.92, 0.80), m.POP_SAY)
 							Santpau._sfx(m, "grunt", 0.95)
 							break
 				if not booped and dog_p.distance_to(member_pos(0)) < TOUR_BOOP_R:
 					booped = true
-					m.award_points(2, "guide boop! +2")
-					m.float_text(member_pos(0) + Vector2(0.0, -40.0), "Careful, pup, you'll join the tour!", Color(0.98, 0.92, 0.80), m.POP_SAY)
+					m.award_points(2, I18n.t("w_guide_boop_2"))
+					m.float_text(member_pos(0) + Vector2(0.0, -40.0), I18n.t("w_careful_pup_you_ll_join_the_tour"), Color(0.98, 0.92, 0.80), m.POP_SAY)
 					Santpau._sfx(m, "whoop", 1.2)
 				if member_pos(TOUR_COUNT).x > TOUR_END_X:
 					state = State.GONE
@@ -364,7 +364,7 @@ class SchoolTour:
 			if bool(step["dodge"]):
 				dodged = true
 				m.saves_done += 1
-				m.award_points(2, "cleared the class! +2")
+				m.award_points(2, I18n.t("w_cleared_the_class_2"))
 				Santpau._sfx(m, "save", 1.0)
 
 	func on_bark(m: Node2D, pos: Vector2) -> bool:
@@ -375,8 +375,8 @@ class SchoolTour:
 				cheered = true
 				cheer_t = 1.6
 				m.combo.add("SCHOOL CHEER", 3)
-				m.award_points(3, "class cheered! +3")
-				m.float_text(member_pos(2) + Vector2(0.0, -36.0), "Look, a puppy!!", Color(0.98, 0.94, 0.78), m.POP_SAY)
+				m.award_points(3, I18n.t("w_class_cheered_3"))
+				m.float_text(member_pos(2) + Vector2(0.0, -36.0), I18n.t("w_look_a_puppy"), Color(0.98, 0.94, 0.78), m.POP_SAY)
 				Santpau._sfx(m, "whoop", 1.25)
 				return true
 		return false
@@ -495,7 +495,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	if m.phase == "home" and not m.santpau_chime_home and float(m.human.global_position.y) > HOME_CHIME_Y and float(m.human.global_position.y) < HOME_CHIME_Y + 120.0:
 		m.santpau_chime_home = true
 		m.santpau_chime_t = CLOCK_CHIME_T
-		m.float_text(CLOCK_TOWER_POS + Vector2(0.0, -34.0), "DONG!", CLOCK_GLOW)
+		m.float_text(CLOCK_TOWER_POS + Vector2(0.0, -34.0), I18n.t("w_dong"), CLOCK_GLOW)
 		_sfx(m, "church_bell", 1.0)
 	if m.santpau_tour != null:
 		m.santpau_tour.tick(m, delta)
@@ -505,7 +505,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		if GARDEN_BEDS[i].has_point(dog_p) and not m.santpau_beds_visited.has(i):
 			m.santpau_beds_visited[i] = true
 			if m.santpau_beds_visited.size() <= 3:
-				m.award_points(1, "lavender! +1")
+				m.award_points(1, I18n.t("w_lavender_1"))
 
 
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
@@ -514,8 +514,8 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 	if float(m.santpau_chime_t) > 0.0 and not m.santpau_chime_howled and p.distance_to(CLOCK_TOWER_POS) <= CLOCK_CHIME_R:
 		m.santpau_chime_howled = true
 		m.combo.add("CHIME HOWL", 3)
-		m.award_points(3, "chimed in! +3")
-		m.float_text(p + Vector2(0.0, -28.0), "Awooo!", Color(0.98, 0.92, 0.72), m.POP_SAY)
+		m.award_points(3, I18n.t("w_chimed_in_3"))
+		m.float_text(p + Vector2(0.0, -28.0), I18n.t("w_awooo"), Color(0.98, 0.92, 0.72), m.POP_SAY)
 		handled = true
 	if m.santpau_tour != null and m.santpau_tour.on_bark(m, p):
 		handled = true
@@ -965,4 +965,4 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, KERB_STONE)
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "The modernista garden courtyard, off leash")
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_modernista_garden_courtyard_off_leash"))

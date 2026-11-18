@@ -214,7 +214,7 @@ func _branch(dog: CharacterBody2D, human: CharacterBody2D, delta: float) -> void
 		who = "dog"
 	elif human.global_position.distance_to(at) < BRANCH_HIT \
 			and int(human.state) != HumanScript.HState.STUMBLE \
-			and human.warn_external("Watch out!", BRANCH_WARN):
+			and human.warn_external(I18n.t("w_watch_out"), BRANCH_WARN):
 		who = "human"
 	if who == "":
 		return

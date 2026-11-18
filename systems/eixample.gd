@@ -292,7 +292,7 @@ static func corners_marked(m: Node2D) -> int:
 static func tick(m: Node2D, delta: float) -> void:
 	if not m.eixample_pond_paddled and POND.grow(-6.0).has_point(m.dog.global_position):
 		m.eixample_pond_paddled = true
-		m.award_points(2, "paddle! +2")
+		m.award_points(2, I18n.t("w_paddle_2"))
 	if m.eixample_tour != null:
 		m.eixample_tour.tick(m, delta)
 
@@ -791,7 +791,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, BENCH_WOOD)
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "The garden inside the block, off leash")
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_garden_inside_the_block_off"))
 
 
 # the interior garden's trees are broadleaves standing in its lawn

@@ -164,7 +164,7 @@ func _carry(m: Node2D, dt: float) -> void:
 	h.patience = maxf(0.0, h.patience - dt * 0.12)
 	if _whoa_in <= 0.0:
 		_whoa_in = 1.4
-		m.float_text(h.global_position, "Whoa, whoa, whoa!", Color(1, 1, 1), m.POP_SAY)
+		m.float_text(h.global_position, I18n.t("w_whoa_whoa_whoa"), Color(1, 1, 1), m.POP_SAY)
 
 
 func _horses_hit(m: Node2D) -> void:
@@ -194,7 +194,7 @@ func _sniff(m: Node2D) -> void:
 			m.sniffs_done += 1
 			m.bones += 4
 			Sfx.play("mark", 1.1)
-			m.float_text(d["pos"], "what a sniff +4", Color(0.85, 0.7, 0.4))
+			m.float_text(d["pos"], I18n.t("w_what_a_sniff_4"), Color(0.85, 0.7, 0.4))
 
 
 func _stand_home(m: Node2D, dt: float) -> void:
