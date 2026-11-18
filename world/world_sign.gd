@@ -234,37 +234,7 @@ static func _from_lines(txt: String, mat: String, lines: Array, h: float, key: f
 		var jit := 0.0 if mat == "cones" else h * 0.025
 		pieces.append(_piece(n, key, q + _j(n, key, 0.0, jit), float(feel.r) * h, {}))
 		n += 1
-	if mat == "carnations":
-		_plant_greenery(sign, n)
 	return sign
-
-
-# Leafy clumps planted with a flower name, loose pieces like the carnations,
-# so the dog tramples and kicks them as she does the flowers. From a hash of
-# the sign.
-const GREENERY_STEP := 0.13         # cap heights between clumps along a stroke
-const GREENERY_SPREAD := 0.13       # how far either side of its stroke a clump sits
-const GREENERY_R := 0.085           # a clump's radius, in cap heights
-
-
-static func _plant_greenery(sign: Dictionary, n0: int) -> void:
-	# a clipped border, as a formal bed's lettering is planted: even clumps
-	# of one size either side of every stroke, at one pitch along it, so each
-	# letter is drawn in a tidy band of green with the carnations down its
-	# middle, and the bed round it stays soil
-	var h: float = sign.h
-	var key: float = sign.key
-	var n := n0
-	for pl: PackedVector2Array in sign.lines:
-		var pts := Letters.points([pl], h * GREENERY_STEP)
-		for i in range(pts.size()):
-			var d := pts[mini(i + 1, pts.size() - 1)] - pts[maxi(i - 1, 0)]
-			if d.length() < 0.01:
-				d = Vector2.RIGHT
-			var side := d.normalized().orthogonal() * h * GREENERY_SPREAD
-			for e: float in [-1.0, 1.0]:
-				(sign.pieces as Array).append(_piece(n, key, pts[i] + side * e, h * GREENERY_R, {"leafy": true, "rot": d.angle()}))
-				n += 1
 
 
 # the bed a flower name lies in, round its strokes' extent, or the one it
@@ -765,29 +735,13 @@ static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
 	_flower_planter(c, sign, h)
 	_stroke(c, sign.lines, h * 0.24, Color(0.22, 0.44, 0.20))
 	_stroke(c, sign.lines, h * 0.15, Color(0.33, 0.56, 0.27))
-	# the greenery round the letters: a rosette of leaves, lit on the sun's
-	# side, each a piece the dog can trample or kick
 	for pc: Dictionary in sign.pieces:
-		if not bool(pc.get("leafy", false)):
-			continue
-		var lr: float = pc.r
-		var lp: Vector2 = pc.p
-		c.draw_circle(lp + Vector2(1.5, 2.0), lr * 0.95, Color(0.05, 0.08, 0.04, 0.25))
-		for k in range(5):
-			var a := float(pc.rot) + TAU * float(k) / 5.0
-			c.draw_circle(lp + Vector2.from_angle(a) * lr * 0.5, lr * 0.52, Color(0.22, 0.43, 0.20))
-		c.draw_circle(lp + Vector2(-1.0, -1.0) * lr * 0.2, lr * 0.45, Color(0.36, 0.60, 0.30))
-	for pc: Dictionary in sign.pieces:
-		if bool(pc.get("leafy", false)):
-			continue
 		var r: float = pc.r
 		var dir := Vector2.from_angle(float(pc.rot))
 		var p: Vector2 = pc.p
 		c.draw_line(p, p - dir * r * 2.4, Color(0.30, 0.50, 0.24), 1.8)
 		c.draw_line(p - dir * r * 1.2, p - dir * r * 1.2 + dir.rotated(0.9) * r * 0.9, Color(0.30, 0.50, 0.24), 1.4)
 	for pc: Dictionary in sign.pieces:
-		if bool(pc.get("leafy", false)):
-			continue
 		var r: float = pc.r
 		var p: Vector2 = pc.p
 		var col := _pick(cols, float(pc["var"]))
@@ -800,7 +754,7 @@ static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
 
 # the planter a flower name lies in: its kerb, soil and ground cover, round
 # the strokes' extent
-const PLANTER_PAD := 0.55          # cap heights of bed round the letters
+const PLANTER_PAD := 0.28          # cap heights of bed round the letters
 
 
 static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
