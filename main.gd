@@ -1034,6 +1034,8 @@ var greeted := {}
 # one group query per physics tick, shared by every cone, bird, duck and
 # A-stand - thirty entities each asking the scene tree was the stutter
 var riders_cache: Array = []
+# the other dog walkers this frame, for the junk they walk into (cone.gd)
+var pairs_cache: Array = []
 var critters_cache: Array = []
 var birds_cache: Array = []
 var hud_t := 0.0
@@ -5496,6 +5498,15 @@ func build_signs() -> void:
 	# and the small line no smaller than the cones can still spell
 	var ok := 30.0 * gk if mat == "cones" else 24.0
 	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), ok, mat, 12.0, gw))
+	# flowers are planted in a bed: the gate's two lines share one
+	if mat == "carnations":
+		var lower: Dictionary = signs[signs.size() - 2]
+		var upper: Dictionary = signs[signs.size() - 1]
+		var bed := WorldSign.planter_rect(upper).merge(WorldSign.planter_rect(lower))
+		# drawn by the lower line, which is drawn first, under both
+		upper.planter = bed
+		lower.planter = bed
+		upper.bed_shared = true
 
 
 func _tick_signs(delta: float) -> void:
@@ -6612,6 +6623,7 @@ func _physics_process(delta: float) -> void:
 		return
 	_prof("")
 	riders_cache = get_tree().get_nodes_in_group("bikes")
+	pairs_cache = get_tree().get_nodes_in_group("pairs")
 	critters_cache = get_tree().get_nodes_in_group("squirrels")
 	birds_cache = get_tree().get_nodes_in_group("pigeons")
 	# weather nudges: rain makes the pavement slick, wind shoves everyone

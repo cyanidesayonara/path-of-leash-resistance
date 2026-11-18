@@ -1,6 +1,7 @@
 extends Node2D
 
-# Loose junk that exists to be kicked. Dog, human and riders all send it
+# Loose junk that exists to be kicked. Dog, human, riders and the other dog
+# walkers all send it
 # skittering; it spins, slides and settles wherever physics leaves it,
 # because nobody in history has ever put a cone back.
 #
@@ -68,6 +69,14 @@ func _physics_process(delta: float) -> void:
 	_kick_by(human.global_position, human.velocity, hit_r + 2.0)
 	for b in main.riders_cache:
 		_kick_by(b.global_position, b.vel, hit_r + 4.0)
+	# the other dog walkers and their dogs shove it aside too, instead of
+	# walking through it as if it were not there
+	for pr in main.pairs_cache:
+		var pv: Vector2 = pr.vel
+		if is_instance_valid(pr.npc_owner):
+			_kick_by(pr.npc_owner.global_position, pv, hit_r + 2.0)
+		if is_instance_valid(pr.npc_dog):
+			_kick_by(pr.npc_dog.global_position, pv, hit_r)
 	if vel.length_squared() > 1.0:
 		position += vel * delta
 		vel = vel.move_toward(Vector2.ZERO, float(k.drag) * delta)

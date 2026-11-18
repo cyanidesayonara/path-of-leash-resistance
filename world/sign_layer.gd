@@ -60,6 +60,12 @@ var _built := -1
 func setup(m: Node2D) -> void:
 	main = m
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	# the offscreen pass blends onto clear black, so its colours come out
+	# already multiplied by their coverage: drawn with plain alpha they are
+	# multiplied again, and every soft edge gets a dark rim
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_PREMULT_ALPHA
+	material = mat
 
 
 # Called from main's world pass with the band it was drawn for and whether
@@ -107,7 +113,11 @@ static func extent(sg: Dictionary) -> Rect2:
 	if lo.x > hi.x:
 		return Rect2()
 	var pad := PAD + float(sg.h) * 0.5
-	return Rect2(lo - Vector2(pad, pad), hi - lo + Vector2(pad, pad) * 2.0)
+	var r := Rect2(lo - Vector2(pad, pad), hi - lo + Vector2(pad, pad) * 2.0)
+	# a flower bed the sign is planted in, shared with the line above it
+	if sg.has("planter") and not bool(sg.get("bed_shared", false)):
+		r = r.merge((sg.planter as Rect2).grow(PAD))
+	return r
 
 
 # paint every shown sign into its texture, sized to where its pieces lie now

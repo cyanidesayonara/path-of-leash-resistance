@@ -237,6 +237,22 @@ static func _from_lines(txt: String, mat: String, lines: Array, h: float, key: f
 	return sign
 
 
+# the bed a flower name lies in, round its strokes' extent, or the one it
+# shares with the line above it (main sets "planter" on both)
+static func planter_rect(sign: Dictionary) -> Rect2:
+	if sign.has("planter"):
+		return sign.planter
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for pl: PackedVector2Array in sign.lines:
+		for v in pl:
+			lo = lo.min(v)
+			hi = hi.max(v)
+	if lo.x > hi.x:
+		return Rect2()
+	return Rect2(lo, hi - lo).grow(float(sign.h) * PLANTER_PAD)
+
+
 static func _piece(n: int, key: float, p: Vector2, r: float, extra: Dictionary) -> Dictionary:
 	var pc := {"p": p, "home": p, "v": Vector2.ZERO, "rot": _h(n, key, 3.0) * TAU, "w": 0.0,
 		"r": r, "var": _h(n, key, 2.0), "up": true, "size": 1.0, "alive": true, "len": 0.0}
@@ -708,10 +724,17 @@ static func _shell(p: Vector2, ax: Vector2, ay: Vector2, r: float) -> PackedVect
 
 
 static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
-	# cut carnations from the flower stalls, laid in the letters: a stem, two
-	# leaves, and a frilled head
+	# a municipal flower bed with the name planted in it: a granite kerb round
+	# a rectangle of dark soil and low ground cover, the letters a band of
+	# foliage set with carnations (a stem, two leaves and a frilled head). On
+	# the bare paving the heads blended into La Rambla's cream waves and the
+	# word was hard to make out; on the bed every colour reads, and the
+	# foliage keeps the letters when the flowers are kicked about.
 	var cols := [Color(0.88, 0.16, 0.22), Color(0.96, 0.52, 0.64), Color(0.98, 0.96, 0.92),
 		Color(0.94, 0.72, 0.20)]
+	_flower_planter(c, sign, h)
+	_stroke(c, sign.lines, h * 0.24, Color(0.22, 0.44, 0.20))
+	_stroke(c, sign.lines, h * 0.15, Color(0.33, 0.56, 0.27))
 	for pc: Dictionary in sign.pieces:
 		var r: float = pc.r
 		var dir := Vector2.from_angle(float(pc.rot))
@@ -729,6 +752,34 @@ static func _carnations(c: Object, sign: Dictionary, h: float) -> void:
 		c.draw_circle(p, r * 0.4, col.darkened(0.2))
 
 
+# the planter a flower name lies in: its kerb, soil and ground cover, round
+# the strokes' extent
+const PLANTER_PAD := 0.42          # cap heights of bed round the letters
+
+
+static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
+	# a sign sharing the bed of the one above it lies in that one's
+	if bool(sign.get("bed_shared", false)):
+		return
+	var r := planter_rect(sign)
+	if r.size.x <= 0.0:
+		return
+	var kerb := maxf(5.0, h * 0.14)
+	c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(kerb), Color(0.05, 0.05, 0.08, 0.24))
+	c.draw_rect(r.grow(kerb), Color(0.66, 0.63, 0.58))
+	c.draw_rect(Rect2(r.position - Vector2(kerb, kerb), Vector2(r.size.x + kerb * 2.0, 2.5)), Color(0.80, 0.78, 0.73))
+	c.draw_rect(r, Color(0.27, 0.20, 0.14))
+	# the ground cover: low clumps over the soil, a hash of the bed's own
+	var key: float = sign.key
+	# fine and low against the soil, so it reads as a texture and the letters
+	# keep the contrast
+	var n := int(r.size.x * r.size.y / (h * h * 0.05))
+	for i in range(n):
+		var q := r.position + Vector2(_h(i, key, 70.0) * r.size.x, _h(i, key, 71.0) * r.size.y)
+		var cr := maxf(1.6, h * (0.025 + 0.02 * _h(i, key, 72.0)))
+		c.draw_circle(q, cr, Color(0.30, 0.26, 0.16).lerp(Color(0.24, 0.30, 0.17), _h(i, key, 73.0)))
+
+
 static func _flowerbed(c: Object, sign: Dictionary, h: float) -> void:
 	# the planting in a municipal flowerbed; shoved plants spring back
 	var cols := [Color(0.92, 0.22, 0.24), Color(0.98, 0.84, 0.26), Color(0.98, 0.96, 0.92),
@@ -744,18 +795,34 @@ static func _flowerbed(c: Object, sign: Dictionary, h: float) -> void:
 
 
 static func _sand(c: Object, sign: Dictionary, h: float, light: Vector2) -> void:
-	# the letters heaped up in sand dug from beside them: the damp dark of
-	# the trench, then each heap a mound shaded away from the light. A paw
-	# spreads a heap flat.
-	_stroke(c, sign.lines, h * 0.24, Color(0.60, 0.50, 0.34, 0.45))
-	for pc: Dictionary in sign.pieces:
-		var r: float = float(pc.r) * (1.4 - 0.4 * float(pc.size))
-		c.draw_circle((pc.p as Vector2) + light * r * 0.4 * float(pc.size), r, Color(0.50, 0.40, 0.26, 0.7))
+	# sand blown and swept into letters on the paving: a pale drift along
+	# each stroke with a grainy edge, the heaps low mounds lit on the sun's
+	# side with only a soft contact shadow (sand has no dark rim), and loose
+	# grains round them. A paw spreads a heap flat, paler and wider, and kicks
+	# its grains further out.
+	var sand := Color(0.93, 0.85, 0.66)
+	var lit := Color(0.99, 0.94, 0.80)
+	var damp := Color(0.80, 0.70, 0.52)
+	_stroke(c, sign.lines, h * 0.30, Color(sand.r, sand.g, sand.b, 0.22))
+	_stroke(c, sign.lines, h * 0.18, Color(sand.r, sand.g, sand.b, 0.30))
 	for pc: Dictionary in sign.pieces:
 		var s: float = pc.size
-		var r: float = float(pc.r) * (1.4 - 0.4 * s)
-		c.draw_circle(pc.p, r * 0.92, Color(0.94, 0.86, 0.66).lerp(Color(0.80, 0.70, 0.52), 1.0 - s))
-		c.draw_circle((pc.p as Vector2) - light * r * 0.3 * s, r * 0.55, Color(0.98, 0.93, 0.80, 0.8 * s))
+		var r: float = float(pc.r) * (1.35 - 0.35 * s)
+		c.draw_circle((pc.p as Vector2) + light * r * 0.35 * s, r * 1.05, Color(0.42, 0.34, 0.22, 0.16 * s))
+	for i in range(sign.pieces.size()):
+		var pc: Dictionary = sign.pieces[i]
+		var s: float = pc.size
+		var r: float = float(pc.r) * (1.35 - 0.35 * s)
+		var p: Vector2 = pc.p
+		var a := 0.55 + 0.45 * s
+		c.draw_circle(p, r, Color(sand.r, sand.g, sand.b, a).lerp(Color(damp.r, damp.g, damp.b, a), 0.25 * float(pc["var"])))
+		c.draw_circle(p - light * r * 0.32 * s, r * 0.58, Color(lit.r, lit.g, lit.b, 0.75 * s))
+		# loose grains about the heap, flung wider once it is spread
+		var spread := r * (1.25 + 0.9 * (1.0 - s))
+		for k in range(3):
+			var g := Vector2.from_angle(TAU * _h(i, float(sign.key), 50.0 + float(k))) * spread * (0.8 + 0.4 * _h(i, float(sign.key), 60.0 + float(k)))
+			var gc := lit if k == 0 else damp
+			c.draw_circle(p + g, maxf(1.1, r * 0.16), Color(gc.r, gc.g, gc.b, 0.7))
 
 
 static func _puddle(c: Object, lines: Array, h: float, key: float, t: float, light: Vector2) -> void:
