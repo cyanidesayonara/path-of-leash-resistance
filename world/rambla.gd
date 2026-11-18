@@ -13,6 +13,7 @@ extends RefCounted
 
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 const Detour := preload("res://systems/detour.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 # Colors
 const CANALETES_IRON := Color(0.12, 0.13, 0.14)
@@ -45,6 +46,10 @@ const PAPER_BUNDLE := Color(0.86, 0.84, 0.80)
 const PAPER_STRING := Color(0.48, 0.42, 0.34)
 const STRAW_HAT := Color(0.88, 0.78, 0.52)
 const ESPADRILLE_STRIPE := Color(0.26, 0.40, 0.62)
+
+const YARD_GRASS := Color(0.34, 0.5, 0.32)
+const YARD_WORN := Color(0.47, 0.46, 0.31, 0.42)
+const YARD_TUFT := Color(0.28, 0.44, 0.27)
 
 
 static func _rr(r: Rect2, rad: float) -> PackedVector2Array:
@@ -355,6 +360,39 @@ static func draw_tree_leaf_drifts(m: Node2D, b: ShapeBatch, vt: float, vb: float
 			var la := float(lf) * 1.7 + p.x
 			var lp := p + Vector2.from_angle(la) * (20.0 + fmod(float(lf) * 4.3, 12.0))
 			b.polygon(PackedVector2Array([lp, lp + Vector2(3, -2), lp + Vector2(5, 1), lp + Vector2(2, 3)]), Color(0.72, 0.50, 0.24))
+
+
+# the Pipicà's trees are broadleaves standing in its lawn: no forest roots,
+# which the shared grove runs toward the edge lines and which read here as
+# sticks poking out of the crowns
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m._broadleaf_ground(c, p, 0.85)
+	var b := ShapeBatch.new()
+	m._broadleaf_trunk(b, p, 0.85)
+	b.flush(c)
+
+
+# the lawn again over the shared yard's hard-edged worn disc: worn soft where
+# the dogs play and along the run in from the gate, then the same tufts
+static func draw_yard(_m: Node2D, c: Object, r: Rect2) -> void:
+	var b := ShapeBatch.new()
+	b.rect(r, YARD_GRASS)
+	b.glow(r.get_center() + Vector2(-40.0, 30.0), 230.0, YARD_WORN, 0.25)
+	b.glow(Vector2(r.get_center().x, r.end.y - 70.0), 130.0, YARD_WORN, 0.2)
+	for tf in range(28):
+		var gxp := r.position.x + 20.0 + tf * ((r.size.x - 40.0) / 27.0)
+		var gyp := r.position.y + 40.0 + fmod(tf * 137.0, r.size.y - 80.0)
+		b.line(Vector2(gxp, gyp), Vector2(gxp - 3.0, gyp - 8.0), YARD_TUFT, 2.0)
+		b.line(Vector2(gxp, gyp), Vector2(gxp + 3.0, gyp - 7.0), YARD_TUFT, 2.0)
+	b.flush(c)
+
+
+# past the gate the Pipicà is lawn all the way across: the boulevard's fill
+# stops 40 past the gate, so its handling must stop there too
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y < m.GATE_Y - 40.0:
+		return Surfaces.S.GRASS
+	return -1
 
 
 static func build_layer(m: Node2D) -> void:

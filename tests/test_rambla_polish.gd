@@ -98,6 +98,20 @@ func _run() -> void:
 		R.draw_statue_dressing(m, sb, sp, s_idx, paint, 0.0, 1.0)
 	# (statue dressing drawn cleanly: a draw error fails the run as a SCRIPT ERROR)
 
+	# 4. The Pipicà handles as the lawn it is drawn as; the boulevard does not
+	var S: Dictionary = load("res://world/surfaces.gd").S
+	var fr: Rect2 = m._freedom_rect()
+	for fp: Vector2 in [fr.get_center(), fr.position + Vector2(60.0, 60.0), fr.end - Vector2(60.0, 80.0)]:
+		var fs: int = m.surface_at(fp)
+		_check(fs == S.GRASS or fs == S.WATER, "Pipica ground at %s handles as grass (got %d)" % [fp, fs])
+	var walk_p := Vector2(float(m.sw_l + m.sw_r) * 0.5, m.GATE_Y + 600.0)
+	_check(R.surface(m, walk_p) == -1, "The boulevard keeps main's own surface")
+
+	# 5. The Pipicà's yard and grove draw as one batch, no forest roots
+	var yb := ShapeBatch.new()
+	R.draw_yard(m, yb, fr)
+	R.draw_grove(m, yb, fr.get_center(), 0)
+
 	if failures.is_empty():
 		print("%d checks, 0 failures" % checks)
 		print("test_rambla_polish: OK")
