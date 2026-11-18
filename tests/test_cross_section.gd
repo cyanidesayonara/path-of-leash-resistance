@@ -12,6 +12,20 @@ extends SceneTree
 # exist yet while this script is being compiled
 var LevelBuild: GDScript
 
+# walks whose off-leash area is paved wall to wall, one to a line so walks
+# added side by side do not collide
+const PAVED_FREEDOM: Array[String] = [
+	"aeroport",
+	"forum",
+	"market",
+	"oldtown",
+	"rain",
+	"sarria",
+	"scrap",
+	"site",
+	"station",
+]
+
 var checks := 0
 var failures: Array[String] = []
 
@@ -62,7 +76,7 @@ func _run() -> void:
 		# and El Diluvi's Porxo are paved wall
 		# to wall)
 		var yard := Vector2(main.walk_cx - main.walk_half - 60.0, main.GATE_Y - 300.0)
-		_check(main.surface_at(yard) != main.Surfaces.S.PAVEMENT or lv == "station" or lv == "site" or lv == "scrap" or lv == "forum" or lv == "aeroport" or lv == "sarria" or lv == "market" or lv == "oldtown" or lv == "rain",
+		_check(main.surface_at(yard) != main.Surfaces.S.PAVEMENT or lv in PAVED_FREEDOM,
 			"%s: the off-leash area is not turned into sidewalk" % lv)
 		# a dog pushed at the building line stops at it (moved inside a physics
 		# step: outside one, move_and_slide uses the last frame's wall time)

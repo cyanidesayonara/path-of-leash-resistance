@@ -6,6 +6,7 @@ Append-only session history, newest first.
 
 - Four walk polishes each wrote their own copy of one surface hook: the off-leash area paved wall to wall, soft only round its trees, planters, shrubs and dig spots. It is one helper now, `Surfaces.paved_past_gate(m, p, trees, earth_r)`, beside `Surfaces.lawn_past_gate(m, p)` for a lawn wall to wall. Both answer -1 short of the line 40 past the gate, so a walk's `surface` hook returns them as they stand. El Parc's hook calls the lawn one; nothing plays or draws differently.
 - `tests/test_surface_helpers.gd` covers both.
+- `tests/test_cross_section.gd` lists the walks whose off-leash area may be paved one to a line (`PAVED_FREEDOM`), so walks added side by side do not collide on one line.
 
 ## 2026-11-18 - The bosses look like their films in the walk
 
