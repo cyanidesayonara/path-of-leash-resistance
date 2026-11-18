@@ -35,13 +35,16 @@ static func word(c: CanvasItem, txt: String, centre: Vector2, px: int, rot := 0.
 # of PATH OF is Millie's pink collar, and the leash comes straight down from the
 # top of the screen to its D-ring: the title drops in on it, overshoots, swings
 # to rest about that point and keeps a slow sway, as a hung sign would.
-const LOGO_INK := Color(0.27, 0.15, 0.09)
-const LOGO_DROP := Color(0.45, 0.25, 0.14)
-const LOGO_CREAM := Color(1.0, 0.97, 0.88)
-const LOGO_RED := Color(0.75, 0.27, 0.20)
+# the theme's (hud/ui_kit.gd): deep navy letters, LEASH in magenta, a cream
+# keyline and a navy drop under it all
+const LOGO_INK := UI.NAVY_DEEP
+const LOGO_DROP := UI.NAVY
+const LOGO_CREAM := UI.CREAM
+const LOGO_RED := UI.MAGENTA
 const COLLAR := Color(0.93, 0.33, 0.55)
 const MEASURE := 540.0           # RESISTANCE spans this many scene units
 const SMALL_TRACK := 0.30
+const ROPE_ABOVE := 2400.0       # how far the strap runs up past its pivot
 const BIG_TRACK := 0.04
 static var _faces := {}
 
@@ -107,10 +110,13 @@ static func _hanging(c: CanvasItem, t: float, cx: float, top: float) -> void:
 	var hang := top + 80.0 - dring.y        # pivot to the D-ring, at rest
 	c.draw_set_transform(pivot, ang, Vector2.ONE)
 	var ring_at := Vector2(0.0, hang + fall + (dring.y - 30.0) * sc.y)
-	# the leash: a dark edge, the strap and the light along it
-	c.draw_line(Vector2.ZERO, ring_at, LOGO_INK, 12.0)
-	c.draw_line(Vector2.ZERO, ring_at, IntroKit.LEASH, 8.0)
-	c.draw_line(Vector2(-1.5, 0), ring_at + Vector2(-1.5, 0), IntroKit.LEASH.lightened(0.35), 2.0)
+	# the leash: a dark edge, the strap and the light along it. It runs on up
+	# past the pivot, off the top of any screen: a window taller than 16:9
+	# shows sky above the scene, and the strap must not end in it
+	var from := Vector2(0.0, -ROPE_ABOVE)
+	c.draw_line(from, ring_at, LOGO_INK, 12.0)
+	c.draw_line(from, ring_at, IntroKit.LEASH, 8.0)
+	c.draw_line(from + Vector2(-1.5, 0), ring_at + Vector2(-1.5, 0), IntroKit.LEASH.lightened(0.35), 2.0)
 	c.draw_set_transform(pivot + Vector2(0.0, hang + fall).rotated(ang), ang, sc)
 	var path_left := Vector2(-w_all * 0.5 + shift, base1)
 	_sticker(c, "PATH", path_left, fs_path, SMALL_TRACK, LOGO_INK)

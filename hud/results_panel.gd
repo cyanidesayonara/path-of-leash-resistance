@@ -67,8 +67,7 @@ func _draw() -> void:
 	var k := minf(1.0, minf((vs.x - 2.0 * SIDE_ROOM) / W, (vs.y - 40.0) / h))
 	scale = Vector2(k, k)
 	position = Vector2((vs.x - W * k) * 0.5, maxf(20.0, (vs.y - h * k) * 0.5))
-	Kit.card(self, Rect2(0, 0, W, h), Kit.accent("results"), 16)
-	Kit.mosaic(self, Rect2(0, 0, W, h), 16)
+	Kit.mosaic_card(self, Rect2(0, 0, W, h), Kit.accent("results"), 16)
 
 	var y := PAD + 30.0
 	Kit.heading(self, Vector2(0, y), String(d.title), 32, Kit.GOLD, HORIZONTAL_ALIGNMENT_CENTER, W)

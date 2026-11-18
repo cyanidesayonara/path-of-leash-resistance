@@ -123,13 +123,13 @@ static func pick_fill(acc: Color) -> Color:
 	return Color(acc.r, acc.g, acc.b, 0.15)
 
 
-static func _card_box(acc: Color, radius: int) -> StyleBoxFlat:
-	var k := "%s/%d" % [acc.to_html(), radius]
+static func _card_box(acc: Color, radius: int, edge := 4) -> StyleBoxFlat:
+	var k := "%s/%d/%d" % [acc.to_html(), radius, edge]
 	if not _cards.has(k):
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = PANEL
 		sb.set_corner_radius_all(radius)
-		sb.border_width_top = 4
+		sb.border_width_top = edge
 		sb.border_color = Color(acc.r, acc.g, acc.b, 0.9)
 		sb.shadow_color = Color(0, 0, 0, 0.35)
 		sb.shadow_size = 10
@@ -145,28 +145,60 @@ static func card(c: CanvasItem, r: Rect2, acc: Color, radius := 14) -> void:
 	c.draw_style_box(_card_box(acc, radius), r)
 
 
+# A card whose top edge is the trencadis strip instead of the accent line.
+static func mosaic_card(c: CanvasItem, r: Rect2, acc: Color, radius := 14) -> void:
+	c.draw_style_box(_card_box(acc, radius, 0), r)
+	mosaic(c, r, radius)
+
+
 # A trencadis strip, the palette's signature: two courses of broken tile
 # shards with slanted joints in navy grout, laid along the top edge of a card
-# between its rounded corners. The same shards every time (no RNG), and one
-# draw call for the whole strip.
+# from edge to edge and rounded into its corners, so the strip is the card's
+# top and not a sticker on it. Each shard is glazed a shade off its colour
+# with a lit top edge. The same shards every time (no RNG), and one draw call
+# for the whole strip.
 const MOSAIC_ROW := 6.0
 const MOSAIC_GROUT := 2.0
-const MOSAIC_COLS := [SAFFRON, TURQUOISE, MAGENTA, SAFFRON, LEAF, TURQUOISE, INK, MAGENTA, SAFFRON]
+const MOSAIC_COLS := [SAFFRON, TURQUOISE, MAGENTA, SAFFRON, LEAF, TURQUOISE, Color("e0d4bc"), MAGENTA, SAFFRON]
+
+
+# how far the card's rounded top corner pulls its edge in at `dy` below the top
+static func _corner_in(dy: float, radius: float) -> float:
+	if dy >= radius:
+		return 0.0
+	var u := radius - dy
+	return radius - sqrt(maxf(radius * radius - u * u, 0.0))
 
 
 static func mosaic(c: CanvasItem, r: Rect2, radius := 14, a := 1.0) -> void:
-	var x0 := r.position.x + float(radius)
-	var x1 := r.end.x - float(radius)
+	var rad := float(radius)
+	var x0 := r.position.x
+	var x1 := r.end.x
 	var top := r.position.y
 	var h := MOSAIC_ROW * 2.0 + MOSAIC_GROUT * 3.0
 	var b := ShapeBatch.new(c)
-	b.rect(Rect2(x0, top, x1 - x0, h), Color(NAVY_DEEP.r, NAVY_DEEP.g, NAVY_DEEP.b, a))
+	# the grout bed, its top corners following the card's
+	var bed := PackedVector2Array()
+	for k in range(7):
+		var dy := rad * float(k) / 6.0
+		bed.append(Vector2(x0 + _corner_in(dy, rad), top + dy))
+	bed.append(Vector2(x0, top + h))
+	bed.append(Vector2(x1, top + h))
+	for k in range(6, -1, -1):
+		var dy := rad * float(k) / 6.0
+		bed.append(Vector2(x1 - _corner_in(dy, rad), top + dy))
+	b.polygon(bed, Color(NAVY_DEEP.r, NAVY_DEEP.g, NAVY_DEEP.b, a))
 	for row in range(2):
 		var y0 := top + MOSAIC_GROUT + float(row) * (MOSAIC_ROW + MOSAIC_GROUT)
 		var y1 := y0 + MOSAIC_ROW
-		var x := x0 + MOSAIC_GROUT
+		var l0 := x0 + _corner_in(y0 - top, rad) + MOSAIC_GROUT
+		var l1 := x0 + _corner_in(y1 - top, rad) + MOSAIC_GROUT
+		var r0 := x1 - _corner_in(y0 - top, rad) - MOSAIC_GROUT
+		var r1 := x1 - _corner_in(y1 - top, rad) - MOSAIC_GROUT
+		var x := minf(l0, l1)
 		var lean := 0.0
 		var i := row * 17
+		var g := MOSAIC_GROUT * 0.5
 		while x < x1 - MOSAIC_GROUT - 6.0:
 			# widths, slants and colours from a fixed hash of the shard's index
 			var k := hash(i * 7919 + 13)
@@ -174,16 +206,26 @@ static func mosaic(c: CanvasItem, r: Rect2, radius := 14, a := 1.0) -> void:
 			var next_lean := float((k >> 7) % 11) - 5.0
 			var xe := x + w
 			if xe >= x1 - MOSAIC_GROUT - 10.0:
-				xe = x1 - MOSAIC_GROUT
+				xe = x1
 				next_lean = 0.0
 			var col: Color = MOSAIC_COLS[(k >> 13) % MOSAIC_COLS.size()]
-			var g := MOSAIC_GROUT * 0.5
-			b.polygon(PackedVector2Array([Vector2(x + lean + g, y0), Vector2(xe + next_lean - g, y0),
-				Vector2(xe - next_lean - g, y1), Vector2(x - lean + g, y1)]),
-				Color(col.r, col.g, col.b, a))
+			var tone := float((k >> 17) % 7) / 6.0
+			col = col.darkened(0.14 * tone) if (k >> 20) % 2 == 0 else col.lightened(0.08 * tone)
+			# the shard's corners, pulled in to the card's rounded edge
+			var tl := Vector2(maxf(x + lean + g, l0), y0)
+			var tr := Vector2(minf(xe + next_lean - g, r0), y0)
+			var br := Vector2(minf(xe - next_lean - g, r1), y1)
+			var bl := Vector2(maxf(x - lean + g, l1), y1)
+			if tr.x - tl.x > 1.0 and br.x - bl.x > 1.0:
+				b.polygon(PackedVector2Array([tl, tr, br, bl]), Color(col.r, col.g, col.b, a))
+				# the glaze catching the light along the shard's top
+				b.polygon(PackedVector2Array([tl, tr, tr + Vector2(-0.4, 1.4), tl + Vector2(0.4, 1.4)]),
+					Color(1.0, 1.0, 1.0, 0.22 * a))
 			x = xe
 			lean = next_lean
 			i += 1
+	# a dark seat under the strip, where it meets the card
+	b.rect(Rect2(x0, top + h, x1 - x0, 2.0), Color(NAVY_DEEP.r, NAVY_DEEP.g, NAVY_DEEP.b, 0.55 * a))
 	b.flush()
 
 
