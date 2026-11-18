@@ -17,6 +17,7 @@ const Aigues := preload("res://systems/aigues.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Eixample := preload("res://systems/eixample.gd")
 const Sarria := preload("res://systems/sarria.gd")
+const Ach := preload("res://systems/achievements.gd")
 const LEVEL_GOAL_IDS := {
 	# El Barri, the everyday walk: the staples and nothing exotic
 	"barri": ["mark", "sniff", "phone", "paws", "bag", "fetch", "tofu", "hi", "drink", "snack", "combo", "prize", "spell", "jamon", "clock"],
@@ -326,6 +327,7 @@ static func credit(m: Node2D, q: Dictionary) -> void:
 		m.feed.toast("goal", I18n.t("toast_goal"), quest_text(q), Color(0.98, 0.80, 0.38))
 	else:
 		m.feed.toast("goal", I18n.t("toast_goal_again"), quest_text(q), Color(0.58, 0.78, 0.62))
+	Ach.on_goal_credited(m)
 
 
 static func check(m: Node2D) -> void:
@@ -461,6 +463,7 @@ static func finish_walk(m: Node2D) -> void:
 		elif perfect:
 			rating = I18n.t("results_rating_perfect")
 		var rec: Dictionary = Game.record_result(m.lvl, m.bones, m.elapsed, perfect)
+		Ach.on_walk_finished(m, perfect)
 		var lines: Array = []
 		var star_gain: int = Game.stars(m.lvl) - m.run_pre_level_stars
 		var head := ""

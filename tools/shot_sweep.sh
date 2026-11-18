@@ -60,7 +60,7 @@ done
 # the tutorial is not a walk in Game.LEVELS, but it is a level of its own
 shot walk-tutorial 1280x720 --level=tutorial
 shot title 1280x720 --shot-title
-for sc in main walk details shop progress pause walkcard confirm notice; do
+for sc in main walk details shop progress credits pause walkcard confirm notice; do
   shot "menu-${sc}" 1280x720 --shot-menu="${sc}" --level=street --shot-at=90
 done
 shot settings 1280x720 --shot-settings

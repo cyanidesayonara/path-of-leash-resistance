@@ -29,11 +29,13 @@ const UiIcons := preload("res://hud/ui_icons.gd")
 const HomeChase := preload("res://systems/home_chase.gd")
 const ChaseCheckpoint := preload("res://systems/chase_checkpoint.gd")
 const UiScale := preload("res://hud/ui_scale.gd")
+const Ach := preload("res://systems/achievements.gd")
 
-const MAIN_ITEMS := ["play", "tutorial", "shop", "progress", "settings", "exit"]
+const MAIN_ITEMS := ["play", "tutorial", "shop", "progress", "settings", "credits", "exit"]
 # every name below is an I18n key; I18n.t gives the words
 const MAIN_LABELS := {"play": "menu_play", "tutorial": "menu_tutorial", "shop": "menu_shop",
-	"progress": "menu_progress", "settings": "menu_settings", "exit": "menu_exit"}
+	"progress": "menu_progress", "settings": "menu_settings", "credits": "menu_credits",
+	"exit": "menu_exit"}
 # the first-time question's two answers, in list order
 const FIRST_OPTIONS := ["first_learn", "first_skip"]
 const DETAIL_ROWS := ["dog", "walker", "time", "weather"]
@@ -82,6 +84,8 @@ static func screen(m: Node2D) -> String:
 		return "shop"
 	if m.in_progress_view:
 		return "progress"
+	if m.in_credits:
+		return "credits"
 	return ["title", "walk", "details"][clampi(m.menu_step, 0, 2)]
 
 
@@ -131,7 +135,9 @@ static func _prompt_keys(m: Node2D, which: String) -> Array:
 			return [["left_right", "tab"], ["up_down", "browse_list"],
 				["plant", verb, st == "owned" or st == "afford"], ["back", "back"]]
 		"progress":
-			return [["left_right", "chapter"], ["back", "back"]]
+			return [["left_right", "page"], ["back", "back"]]
+		"credits":
+			return [["up_down", "scroll"], ["back", "back"]]
 		"settings":
 			var keys := settings_keys(m)
 			if m.settings_idx >= 0 and m.settings_idx < keys.size() and String(keys[m.settings_idx]) == "controls":
@@ -219,6 +225,8 @@ static func main_activate(m: Node2D) -> void:
 			open_progress(m)
 		"settings":
 			open_settings_from_menu(m)
+		"credits":
+			open_credits(m)
 		"exit":
 			open_confirm(m, "exit")
 
@@ -245,7 +253,7 @@ static func apply_menu_step(m: Node2D) -> void:
 	# one screen, one choice: the walk HUD stays down until the walk begins
 	m.panel.visible = m.started
 	m.goals_card.visible = m.started and not m.tutorial_mode
-	m.dim.visible = (not m.started) and (m.in_shop or m.in_progress_view)
+	m.dim.visible = (not m.started) and (m.in_shop or m.in_progress_view or m.in_credits)
 	# the name is part of the world, so the world redraws to add or drop it,
 	# and its pieces are laid for what this step says
 	m.build_signs()
@@ -423,13 +431,17 @@ static func tick_title(m: Node2D) -> bool:
 	if m.in_shop:
 		tick_shop(m)
 		return true
+	if m.in_credits:
+		if back_pressed():
+			close_credits(m)
+		return true
 	if m.in_progress_view:
 		if back_pressed():
 			close_progress(m)
 		elif Input.is_action_just_pressed("move_left") or Input.is_action_just_pressed("move_right"):
-			# a chapter a page
+			# a chapter a page, then the achievements page
 			var dir := 1 if Input.is_action_just_pressed("move_right") else -1
-			m.progress_chapter = wrapi(int(m.progress_chapter) + dir, 0, Game.chapters().size())
+			m.progress_chapter = wrapi(int(m.progress_chapter) + dir, 0, progress_page_count())
 			Sfx.play("ui")
 		return true
 	match m.menu_step:
@@ -931,9 +943,12 @@ static func shop_select(m: Node2D) -> void:
 			m.locked_nudge = 0.35
 		refresh_shop(m)
 		return
-	if Game.is_owned(kind, key) or Game.buy(kind, key):
+	var was_owned := Game.is_owned(kind, key)
+	if was_owned or Game.buy(kind, key):
 		equip(m, kind, key)
 		Game.save_records()
+		if not was_owned:
+			Ach.on_wardrobe_bought(m)
 		if m.shop_preview != null:
 			m.shop_preview.hop = 9.0
 			m.shop_preview.bark_anim = 0.28
@@ -967,6 +982,27 @@ static func open_progress(m: Node2D) -> void:
 
 static func close_progress(m: Node2D) -> void:
 	m.in_progress_view = false
+	apply_menu_step(m)
+	Sfx.play("ui")
+
+
+static func progress_page_count() -> int:
+	return Game.chapters().size() + 1
+
+
+static func progress_is_achievements(m: Node2D) -> bool:
+	return int(m.progress_chapter) >= Game.chapters().size()
+
+
+static func open_credits(m: Node2D) -> void:
+	m.in_credits = true
+	m.credits_scroll = 0.0
+	apply_menu_step(m)
+	Sfx.play("ui")
+
+
+static func close_credits(m: Node2D) -> void:
+	m.in_credits = false
 	apply_menu_step(m)
 	Sfx.play("ui")
 

@@ -7,6 +7,7 @@ const LevelBuild := preload("res://world/level_build.gd")
 const GoticCastellers := preload("res://systems/gotic_castellers.gd")
 const PilonesRetractils := preload("res://systems/pilones_retractils.gd")
 const Surfaces := preload("res://world/surfaces.gd")
+const Ach := preload("res://systems/achievements.gd")
 
 # ARTSY DETOURS ("EXPOSICIÓ - ENTRADA LLIURE"):
 # Hidden-in-plain-sight side rooms off major Barcelona walks.
@@ -264,6 +265,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			_play_sfx(m, "pickup", 1.25)
 			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_dragon_bone"), Color(1.0, 0.88, 0.2))
 			m.feed.say(I18n.t("w_el_drac_the_dragon_bone_masterpiece"), EventFeed.Tone.GOOD)
+			Ach.on_gallery_bone(m, "drac")
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT
@@ -289,6 +291,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			_play_sfx(m, "pickup", 1.25)
 			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_cubist_bone"), Color(1.0, 0.88, 0.2))
 			m.feed.say(I18n.t("w_el_colom_the_cubist_bone_masterpiece"), EventFeed.Tone.GOOD)
+			Ach.on_gallery_bone(m, "colom")
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT
@@ -314,6 +317,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			_play_sfx(m, "pickup", 1.30)
 			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_star_bone"), Color(1.0, 0.88, 0.2))
 			m.feed.say(I18n.t("w_l_estel_the_star_bone_to_the_stars"), EventFeed.Tone.GOOD)
+			Ach.on_gallery_bone(m, "estel")
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT
@@ -347,6 +351,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			_play_sfx(m, "pickup", 1.25)
 			m.float_text(bp + Vector2(0.0, -32.0), I18n.t("w_dream_bone"), Color(1.0, 0.88, 0.2))
 			m.feed.say(I18n.t("w_the_dream_bone_finders_keepers"), EventFeed.Tone.GOOD)
+			Ach.on_gallery_bone(m, "somni")
 
 		# 3. Check exit portal
 		var ep: Vector2 = o + ROOM_EXIT

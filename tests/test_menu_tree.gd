@@ -152,7 +152,7 @@ func _run() -> void:
 			await _press(back)
 			_check(_screen() == "title", "%s on the walk select returns to the main menu" % back)
 			# the screens off the main menu close back to it
-			for row: Array in [["shop", "shop"], ["progress", "progress"], ["settings", "settings"]]:
+			for row: Array in [["shop", "shop"], ["progress", "progress"], ["settings", "settings"], ["credits", "credits"]]:
 				main.main_idx = 0
 				await _pick_main(String(row[0]))
 				_check(_screen() == String(row[1]), "%s opens from the main menu" % row[0])
@@ -177,6 +177,24 @@ func _run() -> void:
 					await _press(back)
 					_check(_screen() == "settings" and main.in_settings and main.settings_panel.visible,
 						"%s/%s: %s from controls returns to settings" % [lang, back, back])
+				if String(row[0]) == "credits" and back == "bark":
+					var s0: float = main.credits_scroll
+					for _f in range(8):
+						await process_frame
+					var s1: float = main.credits_scroll
+					_check(s1 > s0, "credits auto-scrolls slowly on its own")
+					Input.action_press("move_down")
+					for _f in range(10):
+						await process_frame
+					Input.action_release("move_down")
+					var s2: float = main.credits_scroll
+					_check(s2 > s1 + 15.0, "holding move_down scrolls credits further")
+					Input.action_press("move_up")
+					for _f in range(12):
+						await process_frame
+					Input.action_release("move_up")
+					var s3: float = main.credits_scroll
+					_check(s3 < s2 and s3 >= 0.0, "holding move_up scrolls credits back up within bounds")
 				await _to_main(back)
 				_check(_screen() == "title" and main.menu_step == 0,
 					"%s on %s returns to the main menu" % [back, row[0]])

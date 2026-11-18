@@ -182,7 +182,7 @@ func _primary_controls() -> bool:
 
 
 func _menu_button() -> bool:
-	if main == null or bool(main.in_settings) or bool(main.in_controls) or bool(main.in_shop) or bool(main.in_progress_view):
+	if main == null or bool(main.in_settings) or bool(main.in_controls) or bool(main.in_shop) or bool(main.in_progress_view) or bool(main.in_credits):
 		return false
 	return _walking() or bool(main.paused)
 

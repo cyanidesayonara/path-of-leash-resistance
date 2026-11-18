@@ -27,6 +27,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Kit := preload("res://hud/ui_kit.gd")
+const Ach := preload("res://systems/achievements.gd")
 
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
@@ -470,6 +471,7 @@ func transition_to(s: State) -> void:
 			Sfx.play("star", 1.1)
 			Sfx.play("whoop", 1.1, -4.0)
 			main.mamut_settled = true
+			Ach.on_boss_settled(main, "boss_mamut")
 			main.combo.add("BOOP", 10)
 			main.float_text(trunk_tip(), I18n.t("w_booped_10"), Color(1.0, 0.88, 0.25))
 			main.feed.say(I18n.t("w_la_ciutadella_is_yours"), EventFeed.Tone.GOOD)

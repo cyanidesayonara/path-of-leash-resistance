@@ -25,6 +25,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Prompts := preload("res://hud/prompts.gd")
+const Ach := preload("res://systems/achievements.gd")
 
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
@@ -1021,6 +1022,9 @@ func transition_to(new_state: State) -> void:
 	state = new_state
 	state_t = 0.0
 	act_t = 0.0
+	if new_state == State.CONTENT and main != null:
+		main.lleons_settled = true
+		Ach.on_boss_settled(main, "boss_lleons")
 
 
 func _hold_human() -> void:

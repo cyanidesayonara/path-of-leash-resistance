@@ -12,6 +12,7 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const Kit := preload("res://hud/ui_kit.gd")
 const Surfaces := preload("res://world/surfaces.gd")
+const Ach := preload("res://systems/achievements.gd")
 
 const PLINTH := LevelBuild.MOSAIC_SALAMANDER
 # a short step down the stair off the fountain toward the pair
@@ -499,6 +500,7 @@ func transition_to(s: State) -> void:
 			Sfx.play("star", 1.1)
 			Sfx.play("whoop", 1.1, -4.0)
 			main.drac_settled = true
+			Ach.on_boss_settled(main, "boss_drac")
 			main.combo.add("BOOP", 10)
 			main.award_points(10, I18n.t("w_booped_10"))
 			main.feed.say(I18n.t("w_el_mosaic_is_yours"), EventFeed.Tone.GOOD)

@@ -62,7 +62,7 @@ const BAD_SOFT := Color("ff8a7c")
 # (details, wardrobe, progress, settings), magenta for a question or warning.
 const ACCENT := {
 	"title": SAFFRON, "walk": SAFFRON, "details": TURQUOISE,
-	"shop": TURQUOISE, "progress": TURQUOISE,
+	"shop": TURQUOISE, "progress": TURQUOISE, "credits": TURQUOISE,
 	"settings": TURQUOISE, "controls": TURQUOISE, "pause": SAFFRON, "notice": MAGENTA,
 	"results": SAFFRON,
 }
