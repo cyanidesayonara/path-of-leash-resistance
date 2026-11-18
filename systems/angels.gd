@@ -20,7 +20,7 @@ extends RefCounted
 #   with a 0.8 s "Board!" warning and their runaway board shoots across the plaza.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_grove", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -31,6 +31,11 @@ const NightFronts := preload("res://world/night_fronts.gd")
 const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const SHADOW := Color(0.04, 0.05, 0.07, 0.24)
+# lamps on the cloister's side walls, past the gate, as fractions of its
+# depth; under main.NIGHT_LAMP_R, so the light layer draws each its bracket
+const CLAUSTRE_LAMPS: Array[float] = [0.3, 0.7]
+const CLAUSTRE_LAMP_IN := 8.0
+const CLAUSTRE_LAMP_R := 160.0
 
 # --- colors ------------------------------------------------------------------
 const GRANITE_LIGHT := Color(0.74, 0.73, 0.70)
@@ -1303,6 +1308,18 @@ static func surface(m: Node2D, p: Vector2) -> int:
 			return Surfaces.S.PAVEMENT
 		return Surfaces.S.GRASS
 	return Surfaces.S.PAVEMENT
+
+
+# the cloister's trees are broadleaves standing in the flags
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m.broadleaf_grove(c, p)
+
+
+# the street's lamps, and lamps on the cloister's side walls
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	out.append_array(m.freedom_side_lamps(CLAUSTRE_LAMPS, CLAUSTRE_LAMP_IN, CLAUSTRE_LAMP_R))
+	return out
 
 
 # The street after dark (world/night_fronts.gd): this walk draws its own
