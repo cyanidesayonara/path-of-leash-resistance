@@ -10,7 +10,7 @@ extends RefCounted
 # its off-leash area's worn patch is soft at the edge (main.soft_wear)
 const SOFT_WEAR := true
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_grove", "draw_live", "night_lights", "surface"]
+const HOOKS := ["draw_grove", "draw_live", "draw_threshold", "night_lights", "surface"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -25,6 +25,9 @@ const SUN_ROWS := [0.0, 0.38, 0.6, 1.0]
 static var SUN_ALPHA := PackedFloat32Array([0.0, 1.0, 0.8, 0.0])
 # a wet streak's columns: clear, the middle, clear
 static var WET_COLS := PackedFloat32Array([0.0, 1.0, 0.0])
+# feathered doorway light from an open shop: soft top/bottom and fading streetward
+static var SHOP_ROWS := PackedFloat32Array([0.0, 1.0, 1.0, 0.0])
+static var SHOP_COLS := PackedFloat32Array([1.0, 0.46, 0.0])
 # wall lamps on the plaça's house fronts, down each side as fractions of its
 # depth. Under main.NIGHT_LAMP_R, so the light layer draws each its bracket
 const PLACA_LAMPS: Array[float] = [0.25, 0.6]
@@ -33,82 +36,110 @@ const PLACA_LAMP_R := 140.0
 const PLACA_FRONT := 30.0
 
 
+static func _shop_span(m: Node2D, mod_y: float, h: int) -> Vector2:
+	var s0 := mod_y + 26.0 + float((h >> 3) % 3) * 8.0
+	var s1 := mod_y + 220.0 - 46.0
+	var top_lim: float = m.GATE_Y - 30.0
+	if mod_y < top_lim:
+		s0 = maxf(s0, top_lim + 52.0)
+	var bot_lim: float = float(m.START_Y) + 26.0
+	if mod_y + 220.0 > bot_lim:
+		s1 = minf(s1, bot_lim)
+		s0 = minf(s0, s1 - 26.0)
+	return Vector2(s0, s1)
+
+
 static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
+	var gate_lim: float = m.GATE_Y - 28.0
+	var south_lim: float = float(m.START_Y) + 26.0
 	# the low sun down the cross streets: long warm bands lying across the
 	# setts, brightest along the middle and fading to nothing at both edges
 	var sy := floorf((vt - 400.0) / 520.0) * 520.0
 	var sun := PackedVector2Array()
 	sun.resize(8)
 	while sy < vb + 400.0:
-		var e: Vector2 = m.walk_edges(sy)
-		for r in range(4):
-			var off: float = SUN_ROWS[r] * SUN_W
-			sun[r * 2] = Vector2(e.x, sy + off)
-			sun[r * 2 + 1] = Vector2(e.y, sy - 120.0 + off)
-		b.band(sun, 2, Color(1.0, 0.76, 0.52, 0.24), SUN_ALPHA)
+		if sy - 120.0 >= gate_lim and sy - 120.0 <= south_lim:
+			var e: Vector2 = m.walk_edges(sy)
+			for r in range(4):
+				var off: float = SUN_ROWS[r] * SUN_W
+				sun[r * 2] = Vector2(e.x, minf(sy + off, south_lim))
+				sun[r * 2 + 1] = Vector2(e.y, clampf(sy - 120.0 + off, gate_lim, south_lim))
+			b.band(sun, 2, Color(1.0, 0.76, 0.52, 0.24), SUN_ALPHA)
 		sy += 520.0
 
-	# wall lantern warm halos spilling onto the sidewalks
-	var ly := floorf((vt - 160.0) / 160.0) * 160.0
-	while ly < vb + 160.0:
-		var le: Vector2 = m.walk_edges(ly)
-		for side in [-1.0, 1.0]:
-			var lx: float = le.x + 8.0 if side < 0.0 else le.y - 8.0
-			var lpos := Vector2(lx, ly)
-			b.glow(lpos, 40.0, Color(1.0, 0.80, 0.48, 0.12))
-		ly += 160.0
-
-	# a shop with its shutter half up spills warm light across the setts
-	var my := floorf((vt - 280.0) / 220.0) * 220.0
-	while my < vb + 220.0:
-		if my + 110.0 >= m.GATE_Y:
+	# wall lantern halos aligned to each module's bracket and soft warm light
+	# spilling out from open bakeries onto the wet setts
+	var fan := PackedVector2Array()
+	fan.resize(12)
+	var mod_y := floorf((vt - 280.0) / 220.0) * 220.0
+	while mod_y < vb + 220.0:
+		if mod_y + 220.0 > m.GATE_Y - 30.0 and mod_y < south_lim:
 			for side in [-1.0, 1.0]:
-				if open_shop(my, side):
-					var shop_e: Vector2 = m.walk_edges(my + 90.0)
+				var mod_k := int(absf(mod_y) / 220.0) + (0 if side < 0.0 else 7)
+				var mod_h := Gotic.roof_hash(mod_k, int(mod_y))
+				var sp := _shop_span(m, mod_y, mod_h)
+				var s0 := sp.x
+				var s1 := sp.y
+				var ly := s0 - 22.0
+				if ly >= m.GATE_Y - 12.0 and ly <= float(m.START_Y) + 12.0:
+					var le: Vector2 = m.walk_edges(ly)
+					var lx: float = le.x + 6.0 if side < 0.0 else le.y - 6.0
+					b.glow(Vector2(lx, ly), 40.0, Color(1.0, 0.80, 0.48, 0.13))
+				if open_shop(mod_y, side) and s1 > s0 + 12.0:
+					var down := lerpf(s0, s1, 0.42)
+					var mid_y := (down + s1) * 0.5
+					var shop_e: Vector2 = m.walk_edges(mid_y)
 					var shop_x: float = shop_e.x if side < 0.0 else shop_e.y
-					for si in range(4):
-						var sf := float(si) / 3.0
-						var sw := 84.0 * (1.0 - sf * 0.5)
-						var sx0: float = shop_x if side < 0.0 else shop_x - sw
-						b.rect(Rect2(sx0, my + 64.0, sw, 78.0), Color(1.0, 0.70, 0.36, 0.14 - sf * 0.03))
-		my += 220.0
+					var dir: float = 1.0 if side < 0.0 else -1.0
+					var ys0 := [down - 6.0, down + 4.0, s1 - 4.0, s1 + 6.0]
+					var ys1 := [down - 14.0, down - 1.0, s1 + 1.0, s1 + 14.0]
+					var ys2 := [down - 26.0, down - 6.0, s1 + 6.0, s1 + 26.0]
+					for row_i in range(4):
+						fan[row_i * 3] = Vector2(shop_x, ys0[row_i])
+						fan[row_i * 3 + 1] = Vector2(shop_x + dir * 28.0, ys1[row_i])
+						fan[row_i * 3 + 2] = Vector2(shop_x + dir * 88.0, ys2[row_i])
+					b.band(fan, 3, Color(1.0, 0.72, 0.36, 0.28), SHOP_ROWS, SHOP_COLS)
+					b.glow(Vector2(shop_x + dir * 8.0, mid_y), 44.0, Color(1.0, 0.76, 0.40, 0.14))
+		mod_y += 220.0
 
 	# curbside storm drain grates (embornals) along the kerb line with runoff channels and soap suds
 	var gy := floorf((vt - 60.0) / 140.0) * 140.0
 	while gy < vb + 60.0:
-		var ge: Vector2 = m.walk_edges(gy)
-		for side in [-1.0, 1.0]:
-			var gx: float = ge.x + 6.0 if side < 0.0 else ge.y - 6.0
-			var gp := Vector2(gx, gy)
-			# cast iron frame & void
-			b.rect(Rect2(gp.x - 6.0, gp.y - 12.0, 12.0, 24.0), Color(0.18, 0.19, 0.22))
-			b.rect(Rect2(gp.x - 4.5, gp.y - 10.0, 9.0, 20.0), Color(0.06, 0.07, 0.09))
-			# slotted cast iron grate bars
-			for bi in range(5):
-				var bar_y := gp.y - 8.0 + float(bi) * 4.0
-				b.line(Vector2(gp.x - 4.5, bar_y), Vector2(gp.x + 4.5, bar_y), Color(0.28, 0.30, 0.34), 1.6)
-				b.line(Vector2(gp.x - 4.5, bar_y + 1.0), Vector2(gp.x + 4.5, bar_y + 1.0), Color(0.42, 0.44, 0.48, 0.45), 0.8)
-			# wet runoff channel leading to drain
-			var street_in: float = gx + (16.0 if side < 0.0 else -16.0)
-			b.line(Vector2(street_in, gy + 14.0), Vector2(gx, gy), Color(0.16, 0.20, 0.25, 0.22), 4.0)
-			# soap suds (bromera) trapped in grate corners
-			for sidx in range(4):
-				var hval := int(absf(gy * 13.0 + float(sidx) * 37.0 + side * 19.0))
-				var srad: float = 1.4 + float(hval % 3) * 0.8
-				var sox: float = float((hval % 7) - 3) * 1.5
-				var soy: float = (12.0 if sidx < 2 else -12.0) + float((hval % 5) - 2)
-				var sp := gp + Vector2(sox, soy)
-				b.circle(sp, srad + 0.8, Color(0.80, 0.90, 0.98, 0.55))
-				b.circle(sp, srad, Color(0.96, 0.98, 1.0, 0.85))
-				b.circle(sp + Vector2(-0.4, -0.4), srad * 0.4, Color(1.0, 1.0, 1.0, 0.95))
+		if gy >= m.GATE_Y + 25.0 and gy <= float(m.START_Y) - 25.0:
+			var ge: Vector2 = m.walk_edges(gy)
+			for side in [-1.0, 1.0]:
+				var gx: float = ge.x + 6.0 if side < 0.0 else ge.y - 6.0
+				var gp := Vector2(gx, gy)
+				# cast iron frame & void
+				b.rect(Rect2(gp.x - 6.0, gp.y - 12.0, 12.0, 24.0), Color(0.18, 0.19, 0.22))
+				b.rect(Rect2(gp.x - 4.5, gp.y - 10.0, 9.0, 20.0), Color(0.06, 0.07, 0.09))
+				# slotted cast iron grate bars
+				for bi in range(5):
+					var bar_y := gp.y - 8.0 + float(bi) * 4.0
+					b.line(Vector2(gp.x - 4.5, bar_y), Vector2(gp.x + 4.5, bar_y), Color(0.28, 0.30, 0.34), 1.6)
+					b.line(Vector2(gp.x - 4.5, bar_y + 1.0), Vector2(gp.x + 4.5, bar_y + 1.0), Color(0.42, 0.44, 0.48, 0.45), 0.8)
+				# wet runoff channel leading to drain
+				var street_in: float = gx + (16.0 if side < 0.0 else -16.0)
+				b.line(Vector2(street_in, gy + 14.0), Vector2(gx, gy), Color(0.16, 0.20, 0.25, 0.22), 4.0)
+				# soap suds (bromera) trapped in grate corners
+				for sidx in range(4):
+					var hval := int(absf(gy * 13.0 + float(sidx) * 37.0 + side * 19.0))
+					var srad: float = 1.4 + float(hval % 3) * 0.8
+					var sox: float = float((hval % 7) - 3) * 1.5
+					var soy: float = (12.0 if sidx < 2 else -12.0) + float((hval % 5) - 2)
+					var sp := gp + Vector2(sox, soy)
+					b.circle(sp, srad + 0.8, Color(0.80, 0.90, 0.98, 0.55))
+					b.circle(sp, srad, Color(0.96, 0.98, 1.0, 0.85))
+					b.circle(sp + Vector2(-0.4, -0.4), srad * 0.4, Color(1.0, 1.0, 1.0, 0.95))
 		gy += 140.0
 
 	# the water truck's wet streaks down the street: a darker sheen that
 	# feathers out at its edges and wanders a little, the dawn on one edge
 	var y := floorf((vt - 40.0) / 220.0) * 220.0
 	while y < vb + 40.0:
-		_wet_block(m, y).append_to(b)
+		if y + 220.0 > m.GATE_Y - 24.0 and y < float(m.START_Y) + 8.0:
+			_wet_block(m, y).append_to(b)
 		y += 220.0
 
 	# the dumpsters: Cuidem Barcelona selective recycling stations (envasos, paper, orgànica, resta, vidre),
@@ -234,18 +265,30 @@ static func open_shop(y: float, side: float) -> bool:
 # low dawn catching the roofs' street edge. The light on the setts is drawn
 # with the street (_draw_neteja): this layer sits behind the paving.
 static func draw_module(m: Node2D, c: Object, r: Rect2, side: float, k: int, inner_x: float) -> void:
+	var north_clip: bool = r.position.y < m.GATE_Y - 30.0
+	var mod_y0 := maxf(r.position.y, m.GATE_Y - 30.0)
+	var mod_h := r.end.y - mod_y0
+	if mod_h <= 12.0:
+		return
 	var h := Gotic.roof_hash(k, int(r.position.y))
-	var cut := r.size.y * (0.38 + float(h % 5) * 0.06)
-	Gotic.draw_block(m, c, Rect2(r.position.x + 2.0, r.position.y + 2.0, r.size.x - 4.0, cut - 4.0), h)
-	Gotic.draw_block(m, c, Rect2(r.position.x + 2.0, r.position.y + cut + 2.0, r.size.x - 4.0, r.size.y - cut - 4.0),
+	var cut := mod_h * (0.38 + float(h % 5) * 0.06)
+	var block_pad := 4.0 if north_clip else 2.0
+	Gotic.draw_block(m, c, Rect2(r.position.x + 2.0, mod_y0 + block_pad, r.size.x - 4.0, cut - block_pad - 2.0), h)
+	Gotic.draw_block(m, c, Rect2(r.position.x + 2.0, mod_y0 + cut + 2.0, r.size.x - 4.0, mod_h - cut - 4.0),
 		Gotic.roof_hash(h, 7))
+	if north_clip:
+		# stone parapet coping closing the exposed north roof gable onto Plaça dels Gossos
+		c.draw_rect(Rect2(r.position.x, mod_y0, r.size.x, 4.5), Color(0.56, 0.52, 0.46))
+		c.draw_rect(Rect2(r.position.x, mod_y0, r.size.x, 1.5), Color(0.70, 0.66, 0.58))
+		c.draw_rect(Rect2(r.position.x + 1.0, mod_y0 + 4.5, r.size.x - 2.0, 2.0), Color(0.05, 0.04, 0.07, 0.24))
 	# the dawn on the roofs' street edge
 	var lx: float = inner_x - (6.0 if side < 0.0 else 0.0)
-	c.draw_rect(Rect2(lx, r.position.y, 6.0, r.size.y), Color(1.0, 0.74, 0.56, 0.28))
+	c.draw_rect(Rect2(lx, mod_y0, 6.0, mod_h), Color(1.0, 0.74, 0.56, 0.28))
 	# the shop front along the kerb: its fascia sign, shutter box and shutter
 	var sx: float = inner_x if side < 0.0 else inner_x - 16.0
-	var s0 := r.position.y + 26.0 + float((h >> 3) % 3) * 8.0
-	var s1 := r.end.y - 46.0
+	var sp := _shop_span(m, r.position.y, h)
+	var s0 := sp.x
+	var s1 := sp.y
 	var bakery := open_shop(r.position.y, side)
 
 	# commercial fascia signage (rètol de botiga) above the shutter housing
@@ -321,7 +364,8 @@ static func draw_module(m: Node2D, c: Object, r: Rect2, side: float, k: int, inn
 		var tend := minf(ty + span * 0.42, down - 10.0)
 		c.draw_line(Vector2(sx + 2.0, ty), Vector2(sx + 13.0, lerpf(ty, tend, 0.55)), tag, 2.6)
 		c.draw_line(Vector2(sx + 13.0, lerpf(ty, tend, 0.55)), Vector2(sx + 3.0, tend), tag, 2.6)
-	m._draw_doorway(c, inner_x, side, r.end.y - 24.0, Color(0.46, 0.40, 0.36))
+	if r.end.y - 24.0 <= float(m.START_Y) + 26.0:
+		m._draw_doorway(c, inner_x, side, r.end.y - 24.0, Color(0.46, 0.40, 0.36))
 
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
@@ -329,6 +373,28 @@ static func draw_module(m: Node2D, c: Object, r: Rect2, side: float, k: int, inn
 # the street, up to the gate
 static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
+
+
+# dressed stone soldier course bridging Plaça dels Gossos' flags cleanly to the
+# damp street setts with no unjointed gap at the gate corners
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var thresh_y: float = m.GATE_Y - 40.0
+	var edge: Vector2 = m.walk_edges(thresh_y + 2.0)
+	var y0 := thresh_y - 8.0
+	var y1: float = m.GATE_Y - 29.0
+	var th := y1 - y0
+	b.rect(Rect2(edge.x, y0, edge.y - edge.x, th), Color(0.36, 0.35, 0.34))
+	var stone := Color(0.58, 0.55, 0.50)
+	var sx := edge.x
+	var idx := 0
+	while sx < edge.y - 2.0:
+		var bw := minf(24.0, edge.y - sx)
+		var tone := stone.lightened(0.03) if idx % 2 == 0 else stone.darkened(0.05)
+		b.rect(Rect2(sx + 1.0, y0 + 1.5, bw - 2.0, th - 3.0), tone)
+		b.rect(Rect2(sx + 1.0, y0 + 1.5, bw - 2.0, 2.0), tone.lightened(0.14))
+		sx += 24.0
+		idx += 1
+	b.rect(Rect2(edge.x, y1, edge.y - edge.x, 2.5), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22))
 
 
 # the plaça past the gate is paved wall to wall, soft only in its tree pits
@@ -354,6 +420,13 @@ static func night_lights(m: Node2D) -> Array[Vector3]:
 static var _wet_cache := {}
 
 
+static func _wet_fade(m: Node2D, yy: float, lane: float) -> float:
+	var north := clampf((yy - (m.GATE_Y - 24.0)) / 56.0, 0.0, 1.0)
+	var south := clampf((float(m.START_Y) + 6.0 - yy) / 48.0, 0.0, 1.0)
+	var wave := 0.74 + 0.26 * sin(yy * 0.0085 + lane * 4.7)
+	return north * south * wave
+
+
 static func _wet_block(m: Node2D, y: float) -> ShapeBatch:
 	var key := Vector2(float(m.get_instance_id() % 1000003), y)
 	var blk: ShapeBatch = _wet_cache.get(key)
@@ -364,14 +437,17 @@ static func _wet_block(m: Node2D, y: float) -> ShapeBatch:
 	blk = ShapeBatch.new()
 	for lane: float in [0.3, 0.68]:
 		var yy := y
-		while yy < y + 200.0:
+		while yy < y + 220.0 - 0.5:
+			var y2 := yy + 20.0
+			var tf := _wet_fade(m, yy, lane)
+			var tf2 := _wet_fade(m, y2, lane)
+			if tf <= 0.0 and tf2 <= 0.0:
+				yy += 20.0
+				continue
 			var e: Vector2 = m.walk_edges(yy)
 			var x := lerpf(e.x, e.y, lane) + sin(yy * 0.01) * 12.0 + sin(yy * 0.047 + lane * 9.0) * 4.0
-			var tf := clampf(minf(yy - y, y + 200.0 - yy) / 40.0, 0.0, 1.0)
-			var y2 := yy + 20.0
 			var e2: Vector2 = m.walk_edges(y2)
 			var x2 := lerpf(e2.x, e2.y, lane) + sin(y2 * 0.01) * 12.0 + sin(y2 * 0.047 + lane * 9.0) * 4.0
-			var tf2 := clampf(minf(y2 - y, y + 200.0 - y2) / 40.0, 0.0, 1.0)
 			# the sheen: dark along the middle, feathered to nothing at its
 			# sides, and the dawn caught along its left edge
 			var wet := PackedVector2Array([Vector2(x - 22.0, yy), Vector2(x, yy), Vector2(x + 22.0, yy),
