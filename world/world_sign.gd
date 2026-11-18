@@ -784,99 +784,127 @@ static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
 
 # What a name lies on where its own material vanishes into the ground, the
 # way the place would show it: Tibidabo's bulbs on the fairground's marquee
-# board, Sarrià's pastries on a bakery tray, the vet's biscuits on a feeding
-# mat, Llevant's shells on wet sand, El Bosc's sticks on dark earth, La
-# the chestnuts on a sheet of newspaper. Round the strokes' extent, as a flower bed is (planter_rect).
-const BACKINGS := {"bulbs": "board", "pastries": "tray", "biscuits": "mat", "shells": "wetsand",
-	"sticks": "earth", "chestnuts": "newspaper"}
+# board, Sarrià's pastries on a bakery tray, La Castanyada's chestnuts on the
+# seller's newspaper. Only where the backing is a thing the place would have:
+# a patch of darker ground under a name reads as a stain, not a frame.
+# Round the strokes' extent, as a flower bed is (planter_rect).
+const BACKINGS := {"bulbs": "board", "pastries": "tray", "chestnuts": "newspaper"}
 # a backing sits a little tighter under the letters than a bed, clear of the
 # gloss below
 const BACKING_PAD := 0.30
 
 
-static func _round_rect(c: Object, r: Rect2, rad: float, col: Color) -> void:
-	rad = minf(rad, minf(r.size.x, r.size.y) * 0.5)
-	c.draw_rect(Rect2(r.position.x + rad, r.position.y, r.size.x - rad * 2.0, r.size.y), col)
-	c.draw_rect(Rect2(r.position.x, r.position.y + rad, r.size.x, r.size.y - rad * 2.0), col)
-	for k in [r.position + Vector2(rad, rad), Vector2(r.end.x - rad, r.position.y + rad),
-			Vector2(r.position.x + rad, r.end.y - rad), r.end - Vector2(rad, rad)]:
-		c.draw_circle(k, rad, col)
-
-
-# a patch of ground with no edge: layers inset one in another, each a little
-# more of the colour, so it fades out into the ground round it
-static func _soft_patch(c: Object, r: Rect2, h: float, col: Color) -> void:
+# a rounded rectangle's outline, clockwise from the top-left corner's start,
+# closed (the first point again at the end), turned `ang` round its centre
+static func _rr_loop(r: Rect2, rad: float, ang := 0.0) -> PackedVector2Array:
+	rad = clampf(rad, 0.0, minf(r.size.x, r.size.y) * 0.5)
+	var seg := 6
+	var out := PackedVector2Array()
+	var ks := [Vector2(r.end.x - rad, r.position.y + rad), r.end - Vector2(rad, rad),
+		Vector2(r.position.x + rad, r.end.y - rad), r.position + Vector2(rad, rad)]
 	for k in range(4):
-		var g := r.grow(h * 0.18 * float(3 - k))
-		_round_rect(c, g, h * 0.5, Color(col.r, col.g, col.b, col.a * 0.32))
+		for i in range(seg + 1):
+			var t := -PI * 0.5 + (float(k) + float(i) / float(seg)) * PI * 0.5
+			out.append((ks[k] as Vector2) + Vector2.from_angle(t) * rad)
+	out.append(out[0])
+	if ang != 0.0:
+		var ctr := r.get_center()
+		for i in range(out.size()):
+			out[i] = ctr + (out[i] - ctr).rotated(ang)
+	return out
+
+
+# a rounded rectangle, filled, its edge feathering out to nothing over
+# `feather`: a damp patch, a shadow. One gradient, no rings (ShapeBatch.band).
+static func _soft_rr(c: Object, r: Rect2, rad: float, feather: float, col: Color, ang := 0.0) -> void:
+	var inner := _rr_loop(r, rad, ang)
+	c.polygon(inner.slice(0, inner.size() - 1), col)
+	if feather <= 0.0:
+		return
+	var outer := _rr_loop(r.grow(feather), rad + feather, ang)
+	var pts := inner.duplicate()
+	pts.append_array(outer)
+	c.band(pts, inner.size(), col, PackedFloat32Array([1.0, 0.0]))
+
+
+static func _rr(c: Object, r: Rect2, rad: float, col: Color, ang := 0.0) -> void:
+	var loop := _rr_loop(r, rad, ang)
+	c.polygon(loop.slice(0, loop.size() - 1), col)
+
+
+# a point `u` (0..1) of the way round a rectangle's edge, clockwise from the top-left
+static func _perim(r: Rect2, u: float) -> Vector2:
+	var per := (r.size.x + r.size.y) * 2.0 * u
+	if per < r.size.x:
+		return Vector2(r.position.x + per, r.position.y)
+	if per < r.size.x + r.size.y:
+		return Vector2(r.end.x, r.position.y + per - r.size.x)
+	if per < r.size.x * 2.0 + r.size.y:
+		return Vector2(r.end.x - (per - r.size.x - r.size.y), r.end.y)
+	return Vector2(r.position.x, r.end.y - (per - r.size.x * 2.0 - r.size.y))
+
+
+# the shadow under something lying on the ground: soft, a little down-right
+static func _lying_shadow(c: Object, r: Rect2, rad: float, h: float, ang := 0.0) -> void:
+	_soft_rr(c, Rect2(r.position + Vector2(h * 0.05, h * 0.08), r.size), rad, h * 0.22,
+		Color(0.04, 0.04, 0.07, 0.26), ang)
 
 
 static func _backing(c: Object, sign: Dictionary, h: float) -> void:
 	var style := String(BACKINGS.get(String(sign.mat), ""))
-	if style == "":
+	if style == "" or bool(sign.get("bed_shared", false)):
 		return
 	var r := planter_rect(sign)
 	if r.size.x <= 0.0:
 		return
 	# tighter than a bed: the strokes' extent at BACKING_PAD
 	r = r.grow(-float(sign.h) * (PLANTER_PAD - BACKING_PAD))
-	var sh := Color(0.05, 0.05, 0.08, 0.24)
 	var key: float = sign.key
 	match style:
 		"board":
-			# the marquee: a dark board in a gilt frame, ringed in bulbs
-			var fr := maxf(4.0, h * 0.10)
-			c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(fr), sh)
-			c.draw_rect(r.grow(fr), Color(0.70, 0.54, 0.24))
-			c.draw_rect(r, Color(0.16, 0.10, 0.14))
-			var step := h * 0.32
-			var x := r.position.x
-			while x <= r.end.x:
-				for y in [r.position.y - fr * 0.5, r.end.y + fr * 0.5]:
-					c.draw_circle(Vector2(x, y), fr * 0.42, Color(1.0, 0.90, 0.60))
-				x += step
-		"tray":
-			# a baking tray, its rolled rim, and the parchment in it
-			c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(5.0), sh)
-			_round_rect(c, r.grow(5.0), 6.0, Color(0.58, 0.58, 0.60))
-			_round_rect(c, r.grow(2.0), 4.0, Color(0.44, 0.44, 0.46))
-			c.draw_rect(r.grow(-2.0), Color(0.93, 0.89, 0.80))
-		"mat":
-			# a rubber feeding mat, a raised lip round it
-			_round_rect(c, Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(4.0), h * 0.3, sh)
-			_round_rect(c, r.grow(4.0), h * 0.3, Color(0.22, 0.46, 0.54))
-			_round_rect(c, r, h * 0.26, Color(0.30, 0.58, 0.66))
-		"wetsand":
-			_soft_patch(c, r, h, Color(0.62, 0.52, 0.36, 0.9))
-		"earth":
-			_soft_patch(c, r, h, Color(0.26, 0.19, 0.12, 0.9))
-			# a few stones set round it
-			var n := int((r.size.x + r.size.y) * 2.0 / (h * 0.6))
+			# the fairground's marquee: a dark board in an old-gold frame, its
+			# bulbs evenly round the frame
+			var fr := maxf(4.0, h * 0.11)
+			var o := r.grow(fr)
+			_lying_shadow(c, o, h * 0.12, h)
+			_rr(c, o, h * 0.12, Color(0.50, 0.35, 0.17))
+			_rr(c, r, h * 0.06, Color(0.15, 0.09, 0.12))
+			var ring := r.grow(fr * 0.5)
+			var n := int((ring.size.x + ring.size.y) * 2.0 / (h * 0.34))
 			for i in range(n):
-				var u := float(i) / float(n)
-				var q: Vector2
-				var per := (r.size.x + r.size.y) * 2.0 * u
-				if per < r.size.x:
-					q = Vector2(r.position.x + per, r.position.y)
-				elif per < r.size.x + r.size.y:
-					q = Vector2(r.end.x, r.position.y + per - r.size.x)
-				elif per < r.size.x * 2.0 + r.size.y:
-					q = Vector2(r.end.x - (per - r.size.x - r.size.y), r.end.y)
-				else:
-					q = Vector2(r.position.x, r.end.y - (per - r.size.x * 2.0 - r.size.y))
-				q += _j(i, key, 95.0, h * 0.05)
-				c.draw_circle(q + Vector2(1.0, 1.5), h * 0.07, sh)
-				c.draw_circle(q, h * 0.065, Color(0.58, 0.56, 0.52).lerp(Color(0.70, 0.68, 0.62), _h(i, key, 96.0)))
+				var q := _perim(ring, float(i) / float(n))
+				c.circle(q, fr * 0.34, Color(0.30, 0.20, 0.10))
+				c.circle(q, fr * 0.24, Color(1.0, 0.86, 0.56))
+		"tray":
+			# a bakery's tray set down on the setts: a thin warm rim, the parchment
+			# the colour of the street's own stone, so it sits in it
+			var o := r.grow(maxf(3.0, h * 0.07))
+			_lying_shadow(c, o, h * 0.14, h)
+			_rr(c, o, h * 0.14, Color(0.60, 0.52, 0.47))
+			_rr(c, r, h * 0.09, Color(0.88, 0.80, 0.71, 0.9))
 		"newspaper":
-			# a sheet of newspaper, a little crooked, its columns of print
-			c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size), sh)
-			c.draw_rect(r, Color(0.88, 0.85, 0.76))
+			# the chestnut seller's newspaper: two sheets, a little crooked, the
+			# print faint so the chestnuts read over it
+			var under := Rect2(r.position + Vector2(h * 0.3, h * 0.12), r.size).grow(h * 0.05)
+			_lying_shadow(c, under, 2.0, h, 0.035)
+			_rr(c, under, 2.0, Color(0.80, 0.77, 0.69), 0.035)
+			_lying_shadow(c, r, 2.0, h, -0.015)
+			_rr(c, r, 2.0, Color(0.88, 0.85, 0.77), -0.015)
+			var ctr := r.get_center()
+			var ink := Color(0.50, 0.48, 0.44, 0.32)
+			var w := maxf(1.4, h * 0.03)
+			# a headline across the top, then columns of print
+			var hy := r.position.y + h * 0.22
+			c.line(ctr + (Vector2(r.position.x + h * 0.25, hy) - ctr).rotated(-0.015),
+				ctr + (Vector2(r.end.x - h * 0.25, hy) - ctr).rotated(-0.015), Color(ink, 0.45), h * 0.09)
 			var col_w := h * 1.1
 			var cx := r.position.x + h * 0.25
 			while cx + col_w * 0.6 < r.end.x:
-				var ly := r.position.y + h * 0.25
+				var ly := hy + h * 0.2
 				while ly < r.end.y - h * 0.15:
-					c.draw_line(Vector2(cx, ly), Vector2(minf(cx + col_w * 0.85, r.end.x - h * 0.2), ly), Color(0.55, 0.53, 0.48, 0.55), maxf(1.6, h * 0.035))
+					var a2 := Vector2(cx, ly)
+					var b2 := Vector2(minf(cx + col_w * 0.85, r.end.x - h * 0.2), ly)
+					c.line(ctr + (a2 - ctr).rotated(-0.015), ctr + (b2 - ctr).rotated(-0.015), ink, w)
 					ly += h * 0.12
 				cx += col_w
 
