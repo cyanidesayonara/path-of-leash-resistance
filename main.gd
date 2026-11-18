@@ -222,6 +222,7 @@ const EdgePath := preload("res://world/edge_path.gd")
 const TangleGeom := preload("res://systems/tangle_geom.gd")
 const MoodWiring := preload("res://systems/mood_wiring.gd")
 const Gusts := preload("res://systems/gusts.gd")
+const BuriedFinds := preload("res://systems/buried_finds.gd")
 const SkyLook := preload("res://systems/sky.gd")
 const Outdoors := preload("res://systems/outdoors.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
@@ -544,6 +545,10 @@ var gate_bench := Vector2(640, GATE_Y - 150)
 # things to climb, dig, drink from and sniff, spread wide so running around
 # and exploring is rewarded rather than just running in a line.
 var park_props: Array[Dictionary] = []
+# the walk's buried finds (systems/buried_finds.gd), laid out on the first
+# tick once the walk's ground and solids are all known
+var finds: Array = []
+var finds_built := false
 var digs_done := 0
 # the teeter: the moment before you fall in (see teeter.gd)
 var teeter: Node
@@ -2514,6 +2519,8 @@ func _build_scent_sources() -> Array:
 	for pp in park_props:
 		if String(pp.kind) == "dig" and not pp.done:
 			out.append({"pos": pp.pos, "col": Color(0.94, 0.90, 0.76)})
+	# the walk's buried finds: faint, each smelled only within her nose's reach
+	out.append_array(BuriedFinds.scents(self))
 	for k in kebabs:
 		if not k.eaten:
 			out.append({"pos": k.pos, "col": Color(1.0, 0.76, 0.36)})
@@ -2584,7 +2591,7 @@ func _draw_scents() -> void:
 		var at: Vector2 = src.pos
 		var to_dog := dog.global_position - at
 		var d := to_dog.length()
-		if d > reach or d < 6.0:
+		if d > reach or d < 6.0 or d > float(src.get("reach", INF)):
 			continue
 		shown += 1
 		var near: float = 1.0 - d / reach          # 0 at the edge, 1 on top of it
@@ -11039,6 +11046,11 @@ func _pickups(delta: float) -> void:
 			_slowmo()
 			_update_hud()
 	var digging_now := false
+	if not finds_built:
+		finds_built = true
+		BuriedFinds.build(self)
+	if phase != "freedom" and BuriedFinds.tick(self, delta):
+		digging_now = true
 	var sniffing_now := false
 	var trough_drinking := false
 	for h in hydrants:
@@ -13382,6 +13394,9 @@ func _draw_world() -> void:
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.55))
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
 	_dprof("dents, prints, zones")
+	var fb := ShapeBatch.new()
+	BuriedFinds.draw(self, fb, vt, vb)
+	fb.flush(_wc)
 	_draw_scents()
 	_dprof("scents")
 	# the grind: the rail lights up under her and a CENTRED balance bar shows

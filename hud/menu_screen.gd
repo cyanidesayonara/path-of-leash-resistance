@@ -452,12 +452,17 @@ func _shop(vs: Vector2) -> void:
 	Kit.card(self, r, acc, 16)
 	Kit.heading(self, r.position + Vector2(36.0, 54.0), I18n.t("shop_title"), 30, acc)
 	var f := Kit.display()
-	var bones := str(Game.total_bones)
-	var bx := r.end.x - 36.0 - Kit.text_w(f, bones, 22)
-	Kit.heading(self, Vector2(bx, r.position.y + 52.0), bones, 22, Kit.INK)
-	Icons.draw_bone(self, Vector2(bx - 20.0, r.position.y + 44.0), 12.0)
-	# the tabs
 	var tab := Flow.shop_tab_of(main)
+	# the purse the tab spends: bones on clothes, her own training on stats
+	var training := tab == "stats"
+	var purse := str(Game.training_points() if training else Game.total_bones)
+	var bx := r.end.x - 36.0 - Kit.text_w(f, purse, 22)
+	Kit.heading(self, Vector2(bx, r.position.y + 52.0), purse, 22, Kit.INK)
+	if training:
+		Icons.draw_paw(self, Vector2(bx - 20.0, r.position.y + 44.0), 12.0, Kit.TURQUOISE)
+	else:
+		Icons.draw_bone(self, Vector2(bx - 20.0, r.position.y + 44.0), 12.0)
+	# the tabs
 	var tx := r.position.x + 440.0
 	for k: String in Flow.SHOP_TABS:
 		var nm: String = I18n.t(Flow.SHOP_TAB_NAMES[k])
@@ -490,10 +495,13 @@ func _shop(vs: Vector2) -> void:
 		"owned":
 			note = I18n.t("shop_owned_note")
 		"afford":
-			note = I18n.t("shop_cost_note") % int(data.cost)
+			note = I18n.t("shop_train_note" if training else "shop_cost_note") % int(data.cost)
 			ncol = Kit.GOLD
 		"short":
-			note = I18n.t("shop_short_note") % [int(data.cost), int(data.cost) - Game.total_bones]
+			if training:
+				note = I18n.t("shop_train_short_note") % [int(data.cost), Game.dog_name()]
+			else:
+				note = I18n.t("shop_short_note") % [int(data.cost), int(data.cost) - Game.total_bones]
 			ncol = Kit.INK_FAINT
 	var shake: float = sin(float(main.locked_nudge) * 60.0) * 8.0 * (float(main.locked_nudge) / 0.35) if Game.screen_shake else 0.0
 	draw_string(Kit.body(), Vector2(r.position.x + 36.0 + shake, r.position.y + 482.0), note,
@@ -535,8 +543,12 @@ func _shop(vs: Vector2) -> void:
 				var cost := str(int(d.cost))
 				var ccol: Color = Kit.GOLD if rs == "afford" else Kit.INK_FAINT
 				draw_string(f, Vector2(lx, y + 25.0), cost, HORIZONTAL_ALIGNMENT_RIGHT, lw - 16.0, 17, ccol)
-				Icons.draw_bone(self, Vector2(right - Kit.text_w(f, cost, 17) - 18.0, y + 19.0), 9.0,
-					Color(ccol.r, ccol.g, ccol.b, 0.9))
+				if tab == "stats":
+					Icons.draw_paw(self, Vector2(right - Kit.text_w(f, cost, 17) - 18.0, y + 19.0), 9.0,
+						Color(ccol.r, ccol.g, ccol.b, 0.9))
+				else:
+					Icons.draw_bone(self, Vector2(right - Kit.text_w(f, cost, 17) - 18.0, y + 19.0), 9.0,
+						Color(ccol.r, ccol.g, ccol.b, 0.9))
 		y += SHOP_ROW_H
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 

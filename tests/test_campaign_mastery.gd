@@ -71,6 +71,8 @@ func _run() -> void:
 	game.total_bones = 200
 	game.dog = "millie"
 	game.dog_upgrades = {}
+	# stats are bought with her own training, a level n for n points
+	game.training = {"millie": 15}
 
 	# Baseline Millie
 	var base_speed: float = game.dog_speed_mult("millie")
@@ -81,10 +83,11 @@ func _run() -> void:
 	_check(is_equal_approx(base_plant, 1.0), "Millie base plant is 1.0")
 
 	# Upgrade Speed
-	_check(game.can_upgrade_stat("millie", "speed"), "can upgrade speed with 200 bones")
+	_check(game.can_upgrade_stat("millie", "speed"), "can upgrade speed with 15 training")
 	var ok_up: bool = game.upgrade_dog_stat("millie", "speed")
 	_check(ok_up, "upgraded speed successfully")
-	_check(game.total_bones == 160, "bones deducted: 160 left")
+	_check(game.training_points("millie") == 14, "a point spent: 14 left")
+	_check(game.total_bones == 200, "and no bones")
 	_check(game.get_dog_stat("millie", "speed") == 1, "millie speed level is 1")
 	_check(is_equal_approx(game.dog_speed_mult("millie"), 1.05), "millie speed mult increased to 1.05: %f" % game.dog_speed_mult("millie"))
 
@@ -97,7 +100,7 @@ func _run() -> void:
 	# Upgrade Pipa plant (with Pipa unlocked)
 	game.records["barri"] = {"bones": 50, "time": 90.0, "perfects": 1, "stars": 15, "goals": ["mark", "sniff", "phone"], "style": 100}
 	_check(game.is_dog_unlocked("pipa"), "pipa is unlocked with 15 stars")
-	game.total_bones = 100
+	game.training["pipa"] = 1
 	var pipa_base_plant: float = game.dog_plant_mult("pipa")
 	var pipa_ok: bool = game.upgrade_dog_stat("pipa", "plant")
 	_check(pipa_ok, "pipa plant upgraded")

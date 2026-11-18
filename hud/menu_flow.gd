@@ -54,7 +54,7 @@ const SETTING_KEYS := {
 	"flashes": "setting_flashes", "text_size": "setting_text_size",
 	"free_play": "setting_free_play",
 }
-const STAT_KEYS := {"speed": "stat_speed", "plant": "stat_plant", "herd": "stat_herd", "agility": "stat_agility"}
+const STAT_KEYS := {"speed": "stat_speed", "plant": "stat_plant", "herd": "stat_herd", "agility": "stat_agility", "nose": "stat_nose"}
 
 # Leaving the application is a desktop thing: a browser tab is closed by
 # the browser. `--no-exit` and tests set this to see the web layout anywhere.
@@ -861,7 +861,7 @@ static func shop_data(m: Node2D, kind: String, key: String) -> Dictionary:
 		"coat": d = Game.COATS[key]
 		"stats":
 			var nm: String = I18n.t(STAT_KEYS[key]) if STAT_KEYS.has(key) else key.capitalize()
-			return {"name": nm, "cost": Game.STAT_UPGRADE_COST}
+			return {"name": nm, "cost": Game.stat_cost(Game.dog, key)}
 		_: d = Game.BANDANAS[key]
 	var name_key := "%s_%s" % [kind if kind != "" else "bandana", key]
 	if not I18n.has(name_key):
@@ -885,7 +885,7 @@ static func shop_state(kind: String, key: String) -> String:
 	if kind == "stats":
 		if Game.get_dog_stat(Game.dog, key) >= Game.MAX_STAT_POINTS:
 			return "maxed"
-		return "afford" if Game.total_bones >= Game.STAT_UPGRADE_COST else "short"
+		return "afford" if Game.training_points() >= Game.stat_cost(Game.dog, key) else "short"
 	if wearing(kind, key):
 		return "wearing"
 	if Game.is_owned(kind, key):
