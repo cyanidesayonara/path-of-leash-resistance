@@ -3189,9 +3189,18 @@ func night_lights() -> Array[Vector3]:
 	if walk_mod != null and walk_mod.has_method("night_lights"):
 		_night_lights.append_array(walk_mod.night_lights(self))
 		return _night_lights
+	_night_lights.append_array(street_night_lights())
+	return _night_lights
+
+
+# The street's own lamps: its lampposts, and a wall lamp every so often down
+# the building line where no lamppost is near. A walk's night_lights hook
+# that only adds lights of its own starts from these.
+func street_night_lights() -> Array[Vector3]:
+	var out: Array[Vector3] = []
 	for i in range(deco_pole_count):
 		if is_lamppost(i):
-			_night_lights.append(Vector3(poles[i].x, poles[i].y + 16.0, NIGHT_LAMP_R))
+			out.append(Vector3(poles[i].x, poles[i].y + 16.0, NIGHT_LAMP_R))
 	var side := -1.0
 	var y := START_Y - 60.0
 	while y > GATE_Y + 120.0:
@@ -3200,15 +3209,15 @@ func night_lights() -> Array[Vector3]:
 		var e := building_line(y)
 		var at := Vector2(e.x + 8.0 if side < 0.0 else e.y - 8.0, y)
 		var near := false
-		for l: Vector3 in _night_lights:
+		for l: Vector3 in out:
 			if Vector2(l.x, l.y).distance_to(at) < NIGHT_GAP:
 				near = true
 				break
 		if not near:
-			_night_lights.append(Vector3(at.x, at.y, NIGHT_WALL_R))
+			out.append(Vector3(at.x, at.y, NIGHT_WALL_R))
 		side = -side
 		y -= NIGHT_WALL_STEP
-	return _night_lights
+	return out
 
 
 # The lit doorways, shopfronts and windows of the street after dark
