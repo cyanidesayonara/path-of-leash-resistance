@@ -33,7 +33,7 @@ const HOOKS := {
 	"site": ["draw_log_prop", "draw_performer", "draw_top", "draw_van"],
 	"besos": ["draw_bollard", "draw_over_walkway"],
 	"park": ["draw_grove", "draw_live", "draw_over_walkway", "draw_path_edges", "grass_blocked", "night_lights", "surface"],
-	"neteja": ["draw_live"],
+	"neteja": ["draw_grove", "draw_live", "night_lights", "surface"],
 	"spook": ["draw_live", "draw_overhead", "draw_yard"],
 	"aigues": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "rider_lane", "tick", "tree_kind"],
 	"horta": ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "tick", "tree_kind"],

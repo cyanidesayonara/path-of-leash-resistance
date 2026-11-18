@@ -10,6 +10,7 @@ extends RefCounted
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Gotic := preload("res://world/gotic.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 # a sun band's cross-section: four rows down its width (as fractions of
 # SUN_W), clear at both edges and brightest a little above the middle
@@ -18,6 +19,12 @@ const SUN_ROWS := [0.0, 0.38, 0.6, 1.0]
 static var SUN_ALPHA := PackedFloat32Array([0.0, 1.0, 0.8, 0.0])
 # a wet streak's columns: clear, the middle, clear
 static var WET_COLS := PackedFloat32Array([0.0, 1.0, 0.0])
+# wall lamps on the plaça's house fronts, down each side as fractions of its
+# depth. Under main.NIGHT_LAMP_R, so the light layer draws each its bracket
+const PLACA_LAMPS: Array[float] = [0.25, 0.6]
+const PLACA_LAMP_R := 140.0
+# how far in from the plaça's edge its house fronts stand
+const PLACA_FRONT := 30.0
 
 
 static func _draw_street(m: Node2D, vt: float, vb: float) -> void:
@@ -316,6 +323,23 @@ static func draw_module(m: Node2D, c: Object, r: Rect2, side: float, k: int, inn
 # the street, up to the gate
 static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
+
+
+# the plaça past the gate is paved wall to wall, soft only in its tree pits
+static func surface(m: Node2D, p: Vector2) -> int:
+	return Surfaces.paved_past_gate(m, p, LevelBuild.placa_trees(m))
+
+
+# the plaça's trees are broadleaves standing in their pits
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	m.broadleaf_grove(c, p)
+
+
+# the street's lamps, and wall lamps on the plaça's house fronts
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	out.append_array(m.freedom_side_lamps(PLACA_LAMPS, PLACA_FRONT, PLACA_LAMP_R))
+	return out
 
 
 # The wet streaks in one 220-unit stretch of street, built once: they never
