@@ -439,7 +439,7 @@ func knocked(dir: Vector2, cause: String) -> void:
 	ride_t = 0.0
 	velocity = dir * 320.0
 	main.on_dog_hit(cause)
-	main.float_text(global_position, "yipe!", Color(1, 0.8, 0.6))
+	main.float_text(global_position, I18n.t("w_yipe"), Color(1, 0.8, 0.6))
 
 
 func fall_in(center: Vector2) -> void:
@@ -451,7 +451,7 @@ func fall_in(center: Vector2) -> void:
 	global_position = center
 	velocity = Vector2.ZERO
 	main.on_dog_hit("hole")
-	main.float_text(center, "oof", Color(1, 0.85, 0.6))
+	main.float_text(center, I18n.t("w_oof_3"), Color(1, 0.85, 0.6))
 
 
 func forced_squat(duration: float) -> void:

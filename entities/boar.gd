@@ -60,7 +60,7 @@ func setup(m: Node2D, d: Node2D, h: Node2D, y: float, from_x: float, to_x: float
 	dir = signf(to_x - from_x)
 	global_position = Vector2(from_x, y)
 	Sfx.play("grunt", 0.9)
-	main.float_text(global_position + Vector2(0, -26), "grunt grunt", Color(0.95, 0.85, 0.7))
+	main.float_text(global_position + Vector2(0, -26), I18n.t("w_grunt_grunt"), Color(0.95, 0.85, 0.7))
 
 
 # where piglet i is: ahead of her on the crossing line, waddling
@@ -80,7 +80,7 @@ func provoke() -> void:
 		state = S.ALARM
 		state_t = ALARM_T
 		Sfx.play("grunt", 0.75, -3.0)
-		main.float_text(global_position + Vector2(0, -30), "SNORT!", Color(1, 0.7, 0.55))
+		main.float_text(global_position + Vector2(0, -30), I18n.t("w_snort_2"), Color(1, 0.7, 0.55))
 
 
 func _crowded() -> bool:
@@ -120,7 +120,7 @@ func _physics_process(delta: float) -> void:
 			if global_position.distance_to(dog.global_position) < HIT_R and not dog.is_tumbling():
 				dog.knocked(charge_dir, "boar")
 				Sfx.play("grunt", 1.1)
-				main.float_text(global_position + Vector2(0, -24), "THUMP", Color(1, 0.8, 0.6))
+				main.float_text(global_position + Vector2(0, -24), I18n.t("w_thump"), Color(1, 0.8, 0.6))
 				state_t = 0.0
 			if state_t <= 0.0:
 				state = S.RETURN
@@ -143,13 +143,13 @@ func _owner(delta: float) -> void:
 	if owner_warn_t < 0.0:
 		if d < OWNER_WARN_R and owner_cd <= 0.0:
 			owner_warn_t = 0.0
-			human.notice("Is that... a wild boar?", 1.6)
+			human.notice(I18n.t("w_is_that_a_wild_boar"), 1.6)
 		return
 	owner_warn_t += delta
 	if owner_warn_t >= OWNER_WARN_T and d < OWNER_HIT_R and owner_cd <= 0.0:
 		human.bumped((human.global_position - global_position).normalized())
 		Sfx.play("grunt", 0.85)
-		main.float_text(human.global_position + Vector2(0, -34), "OOF", Color(1, 1, 1))
+		main.float_text(human.global_position + Vector2(0, -34), I18n.t("w_oof_2"), Color(1, 1, 1))
 		shoves += 1
 		owner_cd = 2.5
 		owner_warn_t = -1.0

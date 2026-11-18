@@ -52,8 +52,8 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.cable_ticket = true
 		m.cable_ticket_taken = true
 		Sfx.play("pickup", 1.1)
-		m.feed.say("A TELEFÈRIC TICKET!", EventFeed.Tone.GOOD)
-		m.float_text(dp + Vector2(0, -34), "The cable car is up the path.", Color(1, 0.92, 0.8), m.POP_SAY)
+		m.feed.say(I18n.t("w_a_teleferic_ticket"), EventFeed.Tone.GOOD)
+		m.float_text(dp + Vector2(0, -34), I18n.t("w_the_cable_car_is_up_the_path"), Color(1, 0.92, 0.8), m.POP_SAY)
 		return
 	if not m.cable_ticket:
 		return
@@ -81,7 +81,7 @@ static func _board(m: Node2D, from: Vector2, to: Vector2) -> void:
 	m.human.visible = false
 	m.leash.visible = false
 	Sfx.play("ui", 0.8)
-	m.feed.say("ALL ABOARD!", EventFeed.Tone.LOUD)
+	m.feed.say(I18n.t("w_all_aboard"), EventFeed.Tone.LOUD)
 
 
 # Where the cabin is now: eased out of one station and into the other, the
@@ -122,7 +122,7 @@ static func _arrive(m: Node2D) -> void:
 		for tf in m.get_tree().get_nodes_in_group("tofu"):
 			tf.global_position = m.human.global_position + Vector2(-26.0, 10.0)
 	m.bones += 5
-	m.float_text(m.dog.global_position + Vector2(0, -34), "what a view! +5", Color(0.7, 1.0, 0.75))
+	m.float_text(m.dog.global_position + Vector2(0, -34), I18n.t("w_what_a_view_5"), Color(0.7, 1.0, 0.75))
 	if m.phase == "home":
 		# one ticket, there and back
 		m.cable_ticket = false

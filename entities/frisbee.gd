@@ -59,7 +59,7 @@ func _get_ready() -> void:
 	wait_t = WAIT_S
 	global_position = thrower.global_position + Vector2(10, -8)
 	if thrower == main.human:
-		main.human.say_line("Ready...?")
+		main.human.say_line(I18n.t("w_ready"))
 
 
 func _throw() -> void:

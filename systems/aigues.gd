@@ -233,7 +233,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		var v: Vector2 = bk.get("vel")
 		if to_h.length() < BELL_R and v.dot(to_h) > 0.0:
 			bk.set_meta("rang", true)
-			m.float_text(bk.global_position + Vector2(0, -22), "ring ring!", Color(0.96, 0.94, 0.80))
+			m.float_text(bk.global_position + Vector2(0, -22), I18n.t("w_ring_ring"), Color(0.96, 0.94, 0.80))
 			m.get_node("/root/Sfx").play("bell", 1.0 + randf_range(-0.04, 0.04), -9.0)
 	# the view: keep still at the mirador with your human close by
 	if bool(m.get_meta("aigues_view", false)):
@@ -247,9 +247,9 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.set_meta("aigues_view", true)
 		m.bones += 5
 		m.combo.add("THE VIEW", 4)
-		m.float_text(hp + Vector2(0, -34), "Oh, wow.", Color(1, 1, 1, 0.9), m.POP_SAY)
-		m.float_text(dp + Vector2(0, -30), "the view! +5", Color(0.96, 0.86, 0.32))
-		m.feed.say("YOUR HUMAN LOOKED UP!", EventFeed.Tone.GOOD)
+		m.float_text(hp + Vector2(0, -34), I18n.t("w_oh_wow"), Color(1, 1, 1, 0.9), m.POP_SAY)
+		m.float_text(dp + Vector2(0, -30), I18n.t("w_the_view_5"), Color(0.96, 0.86, 0.32))
+		m.feed.say(I18n.t("w_your_human_looked_up"), EventFeed.Tone.GOOD)
 		m.get_node("/root/Sfx").play("prize", 1.05)
 
 

@@ -367,8 +367,8 @@ static func tick(m: Node2D, _delta: float) -> void:
 		var sr := Rect2(SCALE_POS - SCALE_SIZE * 0.5, SCALE_SIZE)
 		if sr.has_point(m.dog.global_position):
 			m.vet_scale_weighed = true
-			m.feed.say("WEIGH-IN! 14.2 KG", EventFeed.Tone.GOOD)
-			m.float_text(SCALE_POS, "beep!", BEEP_COLOR)
+			m.feed.say(I18n.t("w_weigh_in_14_2_kg"), EventFeed.Tone.GOOD)
+			m.float_text(SCALE_POS, I18n.t("w_beep"), BEEP_COLOR)
 
 
 # main.on_bark: a bark beside a cat carrier gets a hiss back, every time
@@ -377,7 +377,7 @@ static func on_bark(m: Node2D, pos: Vector2) -> void:
 		return
 	for ccp: Vector2 in CAT_CARRIERS:
 		if pos.distance_to(ccp) < CAT_HISS_R:
-			m.float_text(ccp, "hisss!", HISS_COLOR)
+			m.float_text(ccp, I18n.t("w_hisss"), HISS_COLOR)
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:

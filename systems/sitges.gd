@@ -401,7 +401,7 @@ static func _tick_wave(m: Node2D, delta: float) -> void:
 				w["threatened"] = true
 			if not bool(w.get("warned", false)) and m.human.global_position.distance_to(Vector2(540.0, -2400.0)) < 460.0:
 				w["warned"] = true
-				m.float_text(m.human.global_position + Vector2(0.0, -34.0), "BIG WAVE! PULL CLEAR!", Color(0.90, 0.96, 1.0), m.POP_SAY)
+				m.float_text(m.human.global_position + Vector2(0.0, -34.0), I18n.t("w_big_wave_pull_clear"), Color(0.90, 0.96, 1.0), m.POP_SAY)
 			if float(w["t"]) >= WAVE_WARN_S:
 				w["state"] = "wash"
 				w["t"] = 0.0
@@ -443,8 +443,8 @@ static func _tick_wave(m: Node2D, delta: float) -> void:
 				if bool(nm.get("dodge", false)):
 					m.sitges_waves_dodged += 1
 					m.combo.add("WAVE DODGED", 45)
-					m.award_points(45, "stayed dry! +45")
-					m.float_text(hpos + Vector2(0.0, -34.0), "Missed me!", Color(0.75, 0.96, 1.0), m.POP_SAY)
+					m.award_points(45, I18n.t("w_stayed_dry_45"))
+					m.float_text(hpos + Vector2(0.0, -34.0), I18n.t("w_missed_me"), Color(0.75, 0.96, 1.0), m.POP_SAY)
 				w["state"] = "recede"
 				w["t"] = 0.0
 		"recede":
@@ -467,7 +467,7 @@ static func _tick_hat_gust(m: Node2D, delta: float) -> void:
 		if hy_hat <= HAT_BLOW_Y and hy_hat >= HAT_BLOW_Y - 260.0 and not m.human.is_fallen():
 			w["hat_state"] = "warn"
 			w["hat_t"] = 0.0
-			m.float_text(m.human.global_position + Vector2(0.0, -34.0), "Hold onto that hat!", Color(1.0, 0.96, 0.88), m.POP_SAY)
+			m.float_text(m.human.global_position + Vector2(0.0, -34.0), I18n.t("w_hold_onto_that_hat"), Color(1.0, 0.96, 0.88), m.POP_SAY)
 	elif hs == "warn":
 		w["hat_t"] = float(w["hat_t"]) + delta
 		if float(w["hat_t"]) >= HAT_WARN_S:
@@ -514,7 +514,7 @@ static func _tick_napkins(m: Node2D, delta: float) -> void:
 		if dpos.distance_to(n.pos as Vector2) < NAPKIN_CATCH_R and not m.dog.is_tumbling():
 			m.sitges_napkins_caught += 1
 			m.combo.add("NAPKIN", 20)
-			m.award_points(20, "caught napkin! +20")
+			m.award_points(20, I18n.t("w_caught_napkin_20"))
 			Sfx.play("rustle", 1.15, -5.0)
 			var rcy: float = CAFE_YS[(i + 2) % CAFE_YS.size()]
 			n["pos"] = Vector2(edges_at(rcy).x + 40.0, rcy + 50.0)
@@ -531,10 +531,10 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 		if not bool(m.sitges_church_barked):
 			m.sitges_church_barked = true
 			m.combo.add("CHURCH BELL", 40)
-			m.award_points(40, "la Punta bell! +40")
-			m.float_text(BELL_POS + Vector2(-46.0, 12.0), "CLANG!", Color(1.0, 0.92, 0.62), m.POP_SAY)
+			m.award_points(40, I18n.t("w_la_punta_bell_40"))
+			m.float_text(BELL_POS + Vector2(-46.0, 12.0), I18n.t("w_clang"), Color(1.0, 0.92, 0.62), m.POP_SAY)
 		else:
-			m.float_text(BELL_POS + Vector2(-46.0, 12.0), "clang", Color(0.95, 0.90, 0.72), m.POP_SAY)
+			m.float_text(BELL_POS + Vector2(-46.0, 12.0), I18n.t("w_clang_2"), Color(0.95, 0.90, 0.72), m.POP_SAY)
 		return true
 	return false
 

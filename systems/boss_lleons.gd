@@ -464,7 +464,7 @@ func _tick_awaken(_delta: float) -> void:
 
 	if act_t >= 3.0:
 		_sfx("lion_roar", 1.0, -1.0)
-		main.feed.say("WATCH OUT! THE BRONZE LIONS OF EL PORT!", EventFeed.Tone.LOUD)
+		main.feed.say(I18n.t("w_watch_out_the_bronze_lions_of_el"), EventFeed.Tone.LOUD)
 		transition_to(State.PROWL)
 
 
@@ -531,13 +531,13 @@ func _tick_pincer_strike(delta: float) -> void:
 			pincer_hit = true
 			var mid: Vector2 = ((lion_a.pos as Vector2) + (lion_b.pos as Vector2)) * 0.5
 			main.dog.knocked((dp - mid).normalized() if dp.distance_to(mid) > 1.0 else Vector2.DOWN, "lion")
-			main.human.say_line("Ouch! Careful!")
+			main.human.say_line(I18n.t("w_ouch_careful"))
 		elif d_a < BODY_R + 45.0 or d_b < BODY_R + 45.0:
 			# Close miss awards dodge
 			pincer_dodged = true
 			main.lleons_pincer_dodges += 1
-			main.award_points(3, "pincer dodged! +3")
-			main.feed.say("PINCER DODGE!", EventFeed.Tone.GOOD)
+			main.award_points(3, I18n.t("w_pincer_dodged_3"))
+			main.feed.say(I18n.t("w_pincer_dodge"), EventFeed.Tone.GOOD)
 			_take_damage(12.0)
 
 	if _tether_bump_check():
@@ -583,7 +583,7 @@ func _tick_roar_blast(delta: float) -> void:
 			main.dog.velocity += push * 0.15
 			if not roar_paid:
 				roar_paid = true
-				main.award_points(2, "planted! +2")
+				main.award_points(2, I18n.t("w_planted_2"))
 		else:
 			main.dog.velocity += push * delta * 60.0
 
@@ -653,8 +653,8 @@ func _trigger_head_bump() -> void:
 	main.lleons_bumped = true
 	_sfx("head_bump", 1.0, 0.0)
 	main.shake_t = maxf(float(main.shake_t), 0.7)
-	main.award_points(20, "head bump! +20")
-	main.feed.say("HEAD BUMP! BOTH LIONS DAZED!", EventFeed.Tone.LOUD)
+	main.award_points(20, I18n.t("w_head_bump_20"))
+	main.feed.say(I18n.t("w_head_bump_both_lions_dazed"), EventFeed.Tone.LOUD)
 	_take_damage(25.0)
 
 	# Spawn bronze collision spark particles
@@ -726,7 +726,7 @@ func _tick_wrapped(_delta: float) -> void:
 	if act_t >= 0.8:
 		_sfx("drum", 0.4, 0.0)
 		main.shake_t = maxf(float(main.shake_t), 0.5)
-		main.feed.say("THEY SAT! BOOP THEIR NOSES!", EventFeed.Tone.LOUD)
+		main.feed.say(I18n.t("w_they_sat_boop_their_noses"), EventFeed.Tone.LOUD)
 		main.lleons_tied = true
 		lion_a.booped = false
 		lion_b.booped = false
@@ -787,7 +787,7 @@ func _tick_tether(delta: float) -> void:
 			if tether_t[k] <= 0.0:
 				tether_held[k] = 0.0
 				_sfx("tangle", 0.8, -4.0)
-				main.feed.say("TIED TO THE BOLLARD! BRING HIS TWIN", EventFeed.Tone.GOOD)
+				main.feed.say(I18n.t("w_tied_to_the_bollard_bring_his_twin"), EventFeed.Tone.GOOD)
 			tether_t[k] = TETHER_GRACE
 		elif not can:
 			tether_t[k] = 0.0
@@ -799,7 +799,7 @@ func _tick_tether(delta: float) -> void:
 				tether_t[k] = 0.0
 				tether_rest[k] = TETHER_REST
 				_sfx("crack", 1.3, -6.0)
-				main.float_text((_lion(k).pos as Vector2) + Vector2(0.0, -50.0), "yank", Color(0.95, 0.88, 0.70))
+				main.float_text((_lion(k).pos as Vector2) + Vector2(0.0, -50.0), I18n.t("w_yank"), Color(0.95, 0.88, 0.70))
 		else:
 			tether_held[k] = 0.0
 
@@ -814,8 +814,8 @@ func _tether_bump_check() -> bool:
 	main.lleons_bumped = true
 	_sfx("head_bump", 0.9, 0.0)
 	main.shake_t = maxf(float(main.shake_t), 0.7)
-	main.award_points(16, "tied up! +16")
-	main.feed.say("RIGHT INTO HIS TIED-UP TWIN!", EventFeed.Tone.LOUD)
+	main.award_points(16, I18n.t("w_tied_up_16"))
+	main.feed.say(I18n.t("w_right_into_his_tied_up_twin"), EventFeed.Tone.LOUD)
 	var mid: Vector2 = ((lion_a.pos as Vector2) + (lion_b.pos as Vector2)) * 0.5
 	for i in range(12):
 		var a := float(i) * (TAU / 12.0)
@@ -860,7 +860,7 @@ func _blast_horn() -> void:
 	horn_blast_t = 0.0
 	_sfx("van_horn", 0.55, 0.0)
 	_sfx("van_horn", 0.42, -4.0)
-	main.float_text(HORN_SPOT + Vector2(60.0, -80.0), "PAAARP", Color(0.95, 0.88, 0.70))
+	main.float_text(HORN_SPOT + Vector2(60.0, -80.0), I18n.t("w_paaarp"), Color(0.95, 0.88, 0.70))
 	if not net_live():
 		return
 	horn_blasts += 1
@@ -877,8 +877,8 @@ func _blast_horn() -> void:
 	stun_net = false
 	stun_horn = true
 	transition_to(State.STUNNED)
-	main.award_points(6, "toot! +6")
-	main.feed.say("THEY FLINCHED! BOOP THEM", EventFeed.Tone.LOUD)
+	main.award_points(6, I18n.t("w_toot_6"))
+	main.feed.say(I18n.t("w_they_flinched_boop_them"), EventFeed.Tone.LOUD)
 
 
 # --- The cargo net -------------------------------------------------------------
@@ -918,8 +918,8 @@ func _tick_net(delta: float) -> void:
 					_net_to(Net.WARN)
 					_sfx("intro_taut", 0.7, -3.0)
 					_sfx("groan", 1.7, -6.0)
-					main.float_text(NET_C + Vector2(0.0, -70.0), "creeeak", Color(0.95, 0.88, 0.70))
-					main.feed.say("THE NET! GET A LION UNDER IT", EventFeed.Tone.PLAIN)
+					main.float_text(NET_C + Vector2(0.0, -70.0), I18n.t("w_creeeak"), Color(0.95, 0.88, 0.70))
+					main.feed.say(I18n.t("w_the_net_get_a_lion_under_it"), EventFeed.Tone.PLAIN)
 			else:
 				net_pull_t = 0.0
 		Net.WARN:
@@ -948,7 +948,7 @@ func _drop_net() -> void:
 	_sfx("drum", 0.4, 0.0)
 	_sfx("crack", 0.7, -4.0)
 	main.shake_t = maxf(float(main.shake_t), 0.5)
-	main.float_text(NET_C + Vector2(0.0, -40.0), "THWUMP", Color(0.95, 0.88, 0.70))
+	main.float_text(NET_C + Vector2(0.0, -40.0), I18n.t("w_thwump"), Color(0.95, 0.88, 0.70))
 	var pinned: Array[Dictionary] = []
 	for lion: Dictionary in [lion_a, lion_b]:
 		if lion_under_net(lion):
@@ -964,8 +964,8 @@ func _drop_net() -> void:
 	if state != State.STUNNED:
 		transition_to(State.STUNNED)
 	var pay := 12 * pinned.size()
-	main.award_points(pay, "netted! +%d" % pay)
-	main.feed.say("NETTED! BOOP HIM WHILE HE'S DOWN" if pinned.size() == 1 else "NETTED BOTH! BOOP THEM", EventFeed.Tone.LOUD)
+	main.award_points(pay, I18n.t("w_netted") % pay)
+	main.feed.say(I18n.t("w_netted_boop_him_while_he_s_down") if pinned.size() == 1 else I18n.t("w_netted_both_boop_them"), EventFeed.Tone.LOUD)
 	_take_damage(NET_DAMAGE * float(pinned.size()))
 
 
@@ -981,7 +981,7 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			hit = true
 		if hit:
 			_sfx("star", 1.2, -4.0)
-			main.award_points(10, "boop! +10")
+			main.award_points(10, I18n.t("w_boop_10"))
 			_take_damage(10.0)
 			return true
 
@@ -995,15 +995,15 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			hit = true
 		if hit:
 			_sfx("star", 1.3, -3.0)
-			main.award_points(15, "boop! +15")
+			main.award_points(15, I18n.t("w_boop_15"))
 			if lion_a.booped and lion_b.booped:
-				main.feed.say("GOOD PUPS... ER, BIG CATS!", EventFeed.Tone.GOOD)
+				main.feed.say(I18n.t("w_good_pups_er_big_cats"), EventFeed.Tone.GOOD)
 			return true
 
 	if bark_pos.distance_to(HORN_SPOT) < HORN_BARK_R and horn_ready():
 		horn_t = 0.0
 		_sfx("whistle", 0.6, -8.0)
-		main.feed.say("THE GOLONDRINA ANSWERS!", EventFeed.Tone.PLAIN)
+		main.feed.say(I18n.t("w_the_golondrina_answers"), EventFeed.Tone.PLAIN)
 		return true
 	return false
 
@@ -1012,7 +1012,7 @@ func _take_damage(dmg: float) -> void:
 	hp = maxf(0.0, hp - dmg)
 	if hp <= 50.0 and phase == 1:
 		phase = 2
-		main.feed.say("ELS LLEONS ENRAGED! WATCH THE CROSSING!", EventFeed.Tone.LOUD)
+		main.feed.say(I18n.t("w_els_lleons_enraged_watch_the"), EventFeed.Tone.LOUD)
 	if hp <= 10.0 and state != State.STUNNED and state != State.RETREAT and state != State.STAND:
 		transition_to(State.RETREAT)
 
@@ -1031,7 +1031,7 @@ func _hold_human() -> void:
 		main.human.velocity.y = maxf(main.human.velocity.y, 0.0)
 		if not hold_noticed:
 			hold_noticed = true
-			main.human.notice("Whoa... since when do statues move?!", 2.4)
+			main.human.notice(I18n.t("w_whoa_since_when_do_statues_move"), 2.4)
 
 
 func _update_fx(delta: float) -> void:

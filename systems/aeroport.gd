@@ -230,7 +230,7 @@ static func _tick_walkway(m: Node2D) -> void:
 	m.conveyor_zone = Rect2() if stopped else WALKWAY_RECT
 	if stopped and not m.has_meta("aeroport_walkway_said"):
 		m.set_meta("aeroport_walkway_said", true)
-		m.feed.say("THE WALKWAY IS STOPPED", EventFeed.Tone.PLAIN)
+		m.feed.say(I18n.t("w_the_walkway_is_stopped"), EventFeed.Tone.PLAIN)
 
 
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
@@ -241,7 +241,7 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 	if not m.aeroport_carousel_barked and CAROUSEL_RECT.grow(80.0).has_point(bp):
 		m.aeroport_carousel_barked = true
 		m.combo.add("CAROUSEL BARK", 2)
-		m.award_points(2, "carousel bark! +2")
+		m.award_points(2, I18n.t("w_carousel_bark_2"))
 
 
 static func _tick_gate_rush(m: Node2D, delta: float) -> void:
@@ -259,8 +259,8 @@ static func _tick_gate_rush(m: Node2D, delta: float) -> void:
 				rush["t"] = 0.0
 				rush["hit"] = false
 				Sfx.play("chime", 1.0)
-				m.feed.say("LAST CALL FOR GATE B30!", EventFeed.Tone.LOUD)
-				m.float_text(Vector2(640.0, GATE_RUSH_Y - 40.0), "Bing bong!", Color(1.0, 0.9, 0.3), m.POP_SAY)
+				m.feed.say(I18n.t("w_last_call_for_gate_b30"), EventFeed.Tone.LOUD)
+				m.float_text(Vector2(640.0, GATE_RUSH_Y - 40.0), I18n.t("w_bing_bong"), Color(1.0, 0.9, 0.3), m.POP_SAY)
 		"warn":
 			rush["t"] = float(rush.get("t", 0.0)) + delta
 			if float(rush.t) >= RUSH_WARN_SECS:
@@ -279,13 +279,13 @@ static func _tick_gate_rush(m: Node2D, delta: float) -> void:
 				m.human.patience = maxf(0.0, m.human.patience - m.LIVE_EVENT_BUMP_PATIENCE)
 				m.human.bumped(Vector2.RIGHT)
 				Sfx.play("bump", 1.1, -3.0)
-				m.float_text(hp + Vector2(0, -32), "Excuse me! Running late!", Color(1.0, 0.86, 0.80), m.POP_SAY)
+				m.float_text(hp + Vector2(0, -32), I18n.t("w_excuse_me_running_late"), Color(1.0, 0.86, 0.80), m.POP_SAY)
 			if progress >= 1.0:
 				rush["state"] = "done"
 				if not bool(rush.get("hit", false)) and not m.aeroport_rush_dodged:
 					m.aeroport_rush_dodged = true
 					m.combo.add("GATE RUSH", 3)
-					m.award_points(3, "gate rush! +3")
+					m.award_points(3, I18n.t("w_gate_rush_3"))
 
 
 static func _tick_carousel(_m: Node2D) -> void:

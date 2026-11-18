@@ -622,10 +622,10 @@ func damage_boss(amt: float) -> void:
 		_cheer_up()
 	if hp <= MAX_HP * 0.5 and phase == 1:
 		phase = 2
-		main.feed.say("EL GAT IS FURIOUS!", EventFeed.Tone.LOUD)
-		main.human.notice("Is that cat... running at us?", 2.2)
+		main.feed.say(I18n.t("w_el_gat_is_furious"), EventFeed.Tone.LOUD)
+		main.human.notice(I18n.t("w_is_that_cat_running_at_us"), 2.2)
 	if hp <= 0.0 and was > 0.0:
-		main.feed.say("EL GAT HAS HAD ENOUGH! AFTER HIM", EventFeed.Tone.GOOD)
+		main.feed.say(I18n.t("w_el_gat_has_had_enough_after_him"), EventFeed.Tone.GOOD)
 
 
 func transition_to(new_state: State) -> void:
@@ -693,7 +693,7 @@ func transition_to(new_state: State) -> void:
 				var to_ball: Vector2 = yarn[yarn_ball].p - pos
 				if to_ball.length() > 1.0:
 					face_dir = to_ball.normalized()
-			main.feed.say("YARN! HIS BACK IS TURNED", EventFeed.Tone.GOOD)
+			main.feed.say(I18n.t("w_yarn_his_back_is_turned"), EventFeed.Tone.GOOD)
 		State.STUNNED:
 			state_t = STUN_TIME
 			stun_booped = false
@@ -715,7 +715,7 @@ func transition_to(new_state: State) -> void:
 			ls_swat_cd = LAST_SWAT_EVERY
 			Sfx.play("gat_roar", 0.95, -3.0)
 			main.shake_t = maxf(float(main.shake_t), 0.6)
-			main.feed.say("TIE UP HIS LEGS!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_tie_up_his_legs"), EventFeed.Tone.LOUD)
 			# back up on his plinth with a thump
 			for d_rad in [70.0, 130.0]:
 				dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
@@ -736,7 +736,7 @@ func transition_to(new_state: State) -> void:
 			Sfx.play("whoop", 1.0, -6.0)
 			main.gat_toppled = true
 			main.shake_t = 1.4
-			main.feed.say("EL GAT IS DOWN!", EventFeed.Tone.LOUD)
+			main.feed.say(I18n.t("w_el_gat_is_down"), EventFeed.Tone.LOUD)
 			for d_rad in [40.0, 90.0, 150.0, 230.0]:
 				dust_rings.append({"pos": pos, "r": d_rad, "life": 0.8, "max_life": 0.8})
 			_burst(pos, 26, STONE_DARK, 120.0, 340.0, 4.0, 0.8, false, 300.0)
@@ -754,9 +754,9 @@ func transition_to(new_state: State) -> void:
 			Sfx.play("whoop", 1.1, -4.0)
 			main.gat_booped = true
 			main.combo.add("BOOP", 10)
-			main.float_text(snout_pos, "booped! +10", Color(1.0, 0.88, 0.25))
-			main.feed.say("THE RAMBLA IS YOURS!", EventFeed.Tone.GOOD)
-			main.human.say_line("Nice kitty.")
+			main.float_text(snout_pos, I18n.t("w_booped_10"), Color(1.0, 0.88, 0.25))
+			main.feed.say(I18n.t("w_the_rambla_is_yours"), EventFeed.Tone.GOOD)
+			main.human.say_line(I18n.t("w_nice_kitty"))
 			cheer = 1.0
 			fireworks_left = FIREWORKS
 			firework_t = 0.15
@@ -785,7 +785,7 @@ func execute_swat() -> void:
 		# the last stand's swats are only to dodge: out of fight they pay nothing
 		main.gat_swats_dodged += 1
 		main.combo.add("DODGE", 2)
-		main.float_text(swat_pos, "dodged! +2", Color(0.8, 1.0, 0.7))
+		main.float_text(swat_pos, I18n.t("w_dodged_2"), Color(0.8, 1.0, 0.7))
 		damage_boss(DODGE_DAMAGE)
 	if main.human.global_position.distance_to(swat_pos) <= SWAT_RADIUS:
 		main.human.bumped((main.human.global_position - swat_pos).normalized())
@@ -924,10 +924,10 @@ func _pummel() -> void:
 	Sfx.play("gat_clang", 1.2, -5.0)
 	main.shake_t = 1.2
 	main.human.bumped((main.human.global_position - pos).normalized())
-	main.feed.say("HUMAN BOWLING!", EventFeed.Tone.LOUD)
+	main.feed.say(I18n.t("w_human_bowling"), EventFeed.Tone.LOUD)
 	main.combo.add("PUMMEL", 12)
-	main.float_text(pos, "bowled! +12", Color(1.0, 0.6, 0.4))
-	main.human.notice("Ow! Solid bronze!", 2.2)
+	main.float_text(pos, I18n.t("w_bowled_12"), Color(1.0, 0.6, 0.4))
+	main.human.notice(I18n.t("w_ow_solid_bronze"), 2.2)
 	for d_rad in [45.0, 90.0]:
 		dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
 	_burst(pos, 16, Color(1.0, 0.9, 0.45), 200.0, 420.0, 2.5, 0.4, true)
@@ -963,7 +963,7 @@ func _hold_human() -> void:
 			main.set_leash_target(main.LEASH_LENGTH)
 		if not hold_noticed and h.global_position.y < HOLD_Y + 20.0:
 			hold_noticed = true
-			h.notice("Not past that cat.", 1.8)
+			h.notice(I18n.t("w_not_past_that_cat"), 1.8)
 	elif h.tut_hold_y == HOLD_Y:
 		h.tut_hold_y = -INF
 
@@ -1016,7 +1016,7 @@ func tick_state(delta: float) -> void:
 				for d_rad in [90.0, 180.0, 300.0]:
 					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.9, "max_life": 0.9})
 				_scatter_pigeons(pos, 260.0)
-				main.human.notice("Huh, big cat today...", 2.2)
+				main.human.notice(I18n.t("w_huh_big_cat_today"), 2.2)
 			# rears up, then hops down off the front of his plinth
 			var from := START_PLINTH
 			var to := START_PLINTH + Vector2(0.0, -PLINTH_HALF.y - 34.0)
@@ -1112,9 +1112,9 @@ func tick_state(delta: float) -> void:
 				Sfx.play("intro_taut", 1.0, -4.0)
 				Sfx.play("gat_clang", 1.1, -3.0)
 				main.shake_t = 1.1
-				main.feed.say("CAUGHT IN THE LEASH!", EventFeed.Tone.LOUD)
+				main.feed.say(I18n.t("w_caught_in_the_leash"), EventFeed.Tone.LOUD)
 				main.combo.add("CLOTHESLINE", 8)
-				main.float_text(pos, "caught! +8", Color(1.0, 0.85, 0.2))
+				main.float_text(pos, I18n.t("w_caught_8"), Color(1.0, 0.85, 0.2))
 				for d_rad in [35.0, 70.0]:
 					dust_rings.append({"pos": pos, "r": d_rad, "life": 0.6, "max_life": 0.6})
 				screen_flash = 0.35
@@ -1258,7 +1258,7 @@ func _tip_basket(i: int) -> void:
 	var out_dir := Vector2(-signf(bp.x - 640.0), -0.55).normalized()
 	Sfx.play("bump", 0.9, -3.0)
 	Sfx.play("pop", 1.2, -6.0)
-	main.feed.say("BASKET DOWN! YARN EVERYWHERE", EventFeed.Tone.PLAIN)
+	main.feed.say(I18n.t("w_basket_down_yarn_everywhere"), EventFeed.Tone.PLAIN)
 	for k in range(YARN_BALLS):
 		var spread := lerpf(-0.65, 0.65, float(k) / float(YARN_BALLS - 1))
 		var v := out_dir.rotated(spread) * YARN_ROLL * (0.8 + 0.2 * float((k + i) % 2))
@@ -1381,8 +1381,8 @@ func _land() -> void:
 		main.shake_t = maxf(float(main.shake_t), 0.45)
 		dust_rings.append({"pos": pos, "r": POUNCE_R * 1.1, "life": 0.45, "max_life": 0.45, "col": AWNING_B})
 		_burst(pos, 8, AWNING_B, 70.0, 170.0, 4.0, 0.5, false, 150.0)
-		main.feed.say("BOING! OFF THE CAFÉ AWNING", EventFeed.Tone.GOOD)
-		main.float_text(pos, "boing!", Color(1.0, 0.88, 0.35))
+		main.feed.say(I18n.t("w_boing_off_the_cafe_awning"), EventFeed.Tone.GOOD)
+		main.float_text(pos, I18n.t("w_boing"), Color(1.0, 0.88, 0.35))
 		gasp = 0.8
 		transition_to(State.BOUNCE)
 		return
@@ -1396,9 +1396,9 @@ func _land() -> void:
 		Sfx.play("crack", 0.6, -3.0)
 		Sfx.play("gat_clang", 0.95, -3.0)
 		main.shake_t = 1.2
-		main.feed.say("CRASH! RIGHT ONTO IT", EventFeed.Tone.LOUD)
+		main.feed.say(I18n.t("w_crash_right_onto_it"), EventFeed.Tone.LOUD)
 		main.combo.add("SMASH", 6)
-		main.float_text(pos, "smash! +6", Color(0.9, 0.5, 0.3))
+		main.float_text(pos, I18n.t("w_smash_6"), Color(0.9, 0.5, 0.3))
 		for d_rad in [40.0, 80.0]:
 			dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7})
 		_burst(pos, 12, PALM_LEAF_LIGHT, 60.0, 200.0, 4.0, 1.1, false, 200.0)
@@ -1423,7 +1423,7 @@ func _land() -> void:
 	# she was not there: he skids on, and it costs him
 	main.gat_swats_dodged += 1
 	main.combo.add("DODGE", 2)
-	main.float_text(pos, "dodged! +2", Color(0.8, 1.0, 0.7))
+	main.float_text(pos, I18n.t("w_dodged_2"), Color(0.8, 1.0, 0.7))
 	damage_boss(MISS_DAMAGE)
 	transition_to(State.SKID)
 
@@ -1439,8 +1439,8 @@ func _finish_awning_bounce() -> void:
 	Sfx.play("crack", 0.75, -4.0)
 	main.shake_t = 1.0
 	main.combo.add("AWNING", AWNING_PAY)
-	main.float_text(pos, "off balance! +%d" % AWNING_PAY, Color(1.0, 0.85, 0.25))
-	main.feed.say("LANDED OFF BALANCE!", EventFeed.Tone.LOUD)
+	main.float_text(pos, I18n.t("w_off_balance") % AWNING_PAY, Color(1.0, 0.85, 0.25))
+	main.feed.say(I18n.t("w_landed_off_balance"), EventFeed.Tone.LOUD)
 	for d_rad in [42.0, 84.0]:
 		dust_rings.append({"pos": pos, "r": d_rad, "life": 0.7, "max_life": 0.7, "col": AWNING_A})
 	_burst(pos, 12, AWNING_B, 70.0, 210.0, 4.0, 0.9, false, 180.0)
@@ -1549,7 +1549,7 @@ func on_bark_action(bark_pos: Vector2) -> bool:
 			stun_booped = true
 			damage_boss(BOOP_DAMAGE)
 			main.combo.add("BOOP", 3)
-			main.float_text(nose, "boop! +3", Color(1.0, 0.88, 0.25))
+			main.float_text(nose, I18n.t("w_boop_3"), Color(1.0, 0.88, 0.25))
 			return true
 	return false
 
@@ -1560,9 +1560,9 @@ func _tail_tug() -> void:
 	tail_tugged = true
 	Sfx.play("hiss", 0.8, -2.0)
 	Sfx.play("gat_clang", 1.3, -6.0)
-	main.feed.say("TAIL TUG!", EventFeed.Tone.LOUD)
+	main.feed.say(I18n.t("w_tail_tug"), EventFeed.Tone.LOUD)
 	main.combo.add("TAIL", 6)
-	main.award_points(6, "tail tug! +6")
+	main.award_points(6, I18n.t("w_tail_tug_6"))
 	main.shake_t = maxf(float(main.shake_t), 0.7)
 	_burst(tail_pos(), 10, Color(1.0, 0.9, 0.45), 160.0, 320.0, 2.5, 0.3, true)
 	yarn_ball = -1
@@ -1698,7 +1698,7 @@ func _draw_card() -> void:
 	# sculpture, on the card or anywhere else a player reads
 	Kit.heading(card, Vector2(slide, cy + 18.0 * u), "EL GAT", int(52.0 * u), EYE_AMBER,
 		HORIZONTAL_ALIGNMENT_CENTER, vs.x)
-	var gloss := "The Raval's bronze cat, and he is awake"
+	var gloss := I18n.t("w_the_ravals_bronze_cat_and_he")
 	var gs := int(20.0 * u)
 	var gw: float = Kit.text_w(Kit.body(), gloss, gs)
 	card.draw_string(Kit.body(), Vector2(slide + (vs.x - gw) * 0.5, cy + 46.0 * u), gloss,

@@ -185,7 +185,7 @@ func _tick_squad(delta: float) -> void:
 	squad.tick(main, delta, Vector2(cx + sway, front_y), cur_speed)
 	var sl := squad.newly_slipped()
 	if sl >= 0 and not bool(main.auto_walk) and main.has_method("float_text"):
-		main.float_text(squad.members[sl]["pos"] + Vector2(0.0, -34.0), "Eww!", Color(0.92, 0.94, 1.0), main.POP_SAY)
+		main.float_text(squad.members[sl]["pos"] + Vector2(0.0, -34.0), I18n.t("w_eww"), Color(0.92, 0.94, 1.0), main.POP_SAY)
 		if Sfx != null:
 			Sfx.play("squelch", 0.8, -6.0)
 	var i := squad.newly_stuck()
@@ -276,21 +276,21 @@ func _land_suitcase(at: Vector2) -> void:
 		hits += 1
 		main.aeroport_cart_hits += 1
 		main.dog.knocked((dp - at).normalized() if dp.distance_to(at) > 1.0 else Vector2.DOWN, "suitcase")
-		main.float_text(dp + Vector2(0, -30), "Oof!", Color(1.0, 0.4, 0.3))
+		main.float_text(dp + Vector2(0, -30), I18n.t("w_oof"), Color(1.0, 0.4, 0.3))
 
 	if at.distance_to(hp) <= SUITCASE_R:
 		hit = true
 		hits += 1
 		main.aeroport_cart_hits += 1
 		main.human.bumped((hp - at).normalized() if hp.distance_to(at) > 1.0 else Vector2.DOWN)
-		main.float_text(hp + Vector2(0, -30), "Whoa! My ankle!", Color(1.0, 0.5, 0.3))
+		main.float_text(hp + Vector2(0, -30), I18n.t("w_whoa_my_ankle"), Color(1.0, 0.5, 0.3))
 
 	if not hit:
 		if at.distance_to(dp) <= SUITCASE_DODGE_R or at.distance_to(hp) <= SUITCASE_DODGE_R:
 			dodges += 1
 			main.aeroport_luggage_dodges += 1
 			main.combo.add("SUITCASE DODGE", 1)
-			main.award_points(1, "dodged! +1")
+			main.award_points(1, I18n.t("w_dodged_1"))
 
 
 func suitcase_warning() -> bool:

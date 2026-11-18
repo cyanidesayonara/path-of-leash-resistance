@@ -261,10 +261,10 @@ func _physics_process(delta: float) -> void:
 func sorry_line() -> String:
 	match style:
 		"roller", "skate": return "Coming through!"
-		"courier": return "Sorry! In a rush!"
-		"road": return "Watch it!"
-		"pram": return "Oops! Sorry!"
-		"escooter": return "Whoa! Sorry!"
+		"courier": return I18n.t("w_sorry_in_a_rush")
+		"road": return I18n.t("w_watch_it")
+		"pram": return I18n.t("w_oops_sorry")
+		"escooter": return I18n.t("w_whoa_sorry")
 	return "Sorry!"
 
 
@@ -443,11 +443,11 @@ func _ring() -> void:
 	var at := global_position + Vector2(0.0, -22.0)
 	match style:
 		"roller", "skate", "road":
-			main.float_text(at, "On your left!", Color(1, 1, 1, 0.9), main.POP_SAY)
+			main.float_text(at, I18n.t("w_on_your_left"), Color(1, 1, 1, 0.9), main.POP_SAY)
 		"kick", "pram":
-			main.float_text(at, "Excuse me!", Color(1, 1, 1, 0.9), main.POP_SAY)
+			main.float_text(at, I18n.t("w_excuse_me"), Color(1, 1, 1, 0.9), main.POP_SAY)
 		_:
-			main.float_text(at, "ring ring!", Color(0.96, 0.94, 0.80))
+			main.float_text(at, I18n.t("w_ring_ring"), Color(0.96, 0.94, 0.80))
 			var sfx := get_node_or_null("/root/Sfx") if is_inside_tree() else null
 			if sfx != null:
 				sfx.play("bell", 1.0 + (float(look % 9) - 4.0) * 0.01, -9.0)

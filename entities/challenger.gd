@@ -393,7 +393,7 @@ func dare_count() -> int:
 
 
 func display_name() -> String:
-	return String(NAMES[who])
+	return I18n.of_english(String(NAMES[who]))
 
 
 func resolve(win: bool) -> void:
@@ -454,7 +454,7 @@ func speech() -> Dictionary:
 	if main == null or main.pops == null:
 		return {}
 	var head := Vector2(0.0, -28.0) if who == "monkey" else _facing() * 26.0 + Vector2(0.0, -22.0)
-	return {"tip": main.pops.to_local(to_global(head)), "text": _line(), "split": TAKE,
+	return {"tip": main.pops.to_local(to_global(head)), "text": _line(), "split": I18n.of_english(TAKE),
 		"paper": SpeechBubble.PAPER_WIN if result == "win" else SpeechBubble.PAPER}
 
 
@@ -916,17 +916,17 @@ func _line() -> String:
 	var ch: Node = main.challenge if main != null else null
 	var mine: bool = ch != null and main.challenge_giver == self
 	if mine and String(ch.phase) == "offer":
-		var dare: String = (AGAIN if bool(ch.retry) else String(said["dare"])) % [int(ch.target),
+		var dare: String = I18n.of_english(AGAIN if bool(ch.retry) else String(said["dare"])) % [int(ch.target),
 			int(round(float(ch.duration)))]
-		return dare + TAKE if bool(ch.waiting) else GET_READY
+		return dare + I18n.of_english(TAKE) if bool(ch.waiting) else I18n.of_english(GET_READY)
 	if mine and String(ch.phase) == "live":
 		var left := int(ch.target) - int(ch.count)
-		return COUNT % left if left > 1 else LAST
+		return I18n.of_english(COUNT) % left if left > 1 else I18n.of_english(LAST)
 	if result == "win":
-		return String(said["won" if has_another_go() else "done"])
+		return I18n.of_english(String(said["won" if has_another_go() else "done"]))
 	if result == "lose":
-		return String(said["lost"])
-	return String(said["idle"])
+		return I18n.of_english(String(said["lost"]))
+	return I18n.of_english(String(said["idle"]))
 
 
 func _bar(at: Vector2, side: Vector2, length: float, depth: float) -> PackedVector2Array:

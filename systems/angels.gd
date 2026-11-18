@@ -239,7 +239,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			m.angels_decks_visited[i] = true
 			if m.angels_decks_visited.size() == 3:
 				m.combo.add("DECK INSPECTOR", 2)
-				m.float_text(dog_p + Vector2(0.0, -28.0), "deck inspector! +2", Color(0.42, 0.88, 0.96))
+				m.float_text(dog_p + Vector2(0.0, -28.0), I18n.t("w_deck_inspector_2"), Color(0.42, 0.88, 0.96))
 	m.angels_decks_sniffed = maxi(sniff_done, m.angels_decks_visited.size())
 
 	# Goal 3: wrap the leash round three of the plaza's lamp posts (the
@@ -251,7 +251,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			if li >= 0 and not m.angels_lamps_wrapped.has(li):
 				m.angels_lamps_wrapped[li] = true
 				m.combo.add("LAMP WRAP", 1)
-				m.float_text(pole + Vector2(0.0, -26.0), "wrapped! +1", Color(0.96, 0.86, 0.44))
+				m.float_text(pole + Vector2(0.0, -26.0), I18n.t("w_wrapped_1"), Color(0.96, 0.86, 0.44))
 
 
 static func on_bark(m: Node2D, _pos: Vector2 = Vector2.ZERO) -> bool:
@@ -1289,7 +1289,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, BENCH_STONE)
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "The university courtyard, off leash")
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_university_courtyard_off_leash"))
 
 
 static func surface(m: Node2D, p: Vector2) -> int:

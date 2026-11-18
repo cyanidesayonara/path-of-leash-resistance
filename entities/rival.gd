@@ -76,7 +76,7 @@ func _physics_process(delta: float) -> void:
 				target_ref = mark
 				target_pos = mark["pos"]
 				state = S.STALK
-				main.float_text(global_position + Vector2(0, -26), "Ooh, is that free?", Color(1, 0.85, 0.7), main.POP_SAY)
+				main.float_text(global_position + Vector2(0, -26), I18n.t("w_ooh_is_that_free"), Color(1, 0.85, 0.7), main.POP_SAY)
 		S.STALK:
 			# is it still there? if you picked it up he loses interest
 			if target_ref == null or not _loot_still_there(target_ref):
@@ -93,12 +93,12 @@ func _physics_process(delta: float) -> void:
 			# a bark in his ear and he drops it every time - no dice rolls
 			# (the player is being punished enough by having to chase him)
 			if my_dog.global_position.distance_to(global_position) < SNATCH_R:
-				_drop("Caught him!", true)
+				_drop(I18n.t("w_caught_him"), true)
 				return
 			if sulk_t <= 0.0:
 				# he loses interest and wanders off with it. NOT a win for
 				# you - you did nothing - so this pays nothing.
-				_drop("He got away with it!", false)
+				_drop(I18n.t("w_he_got_away_with_it"), false)
 				return
 			# he runs for a corner, but he turns like a bus
 			_move_toward(target_pos, FLEE_SPEED, delta)
@@ -184,7 +184,7 @@ func _drop(msg: String, earned: bool) -> void:
 func scare() -> void:
 	# a bark: if he has your things, he drops them. Always.
 	if state == S.FLEE:
-		_drop("Ha! He dropped it!", true)
+		_drop(I18n.t("w_ha_he_dropped_it"), true)
 	elif state == S.STALK:
 		state = S.SULK
 		sulk_t = 1.6

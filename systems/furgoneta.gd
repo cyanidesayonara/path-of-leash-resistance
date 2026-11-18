@@ -76,7 +76,7 @@ static func tick(m: Node2D, delta: float) -> void:
 				var giver := GroomerGiver.new()
 				giver.setup(m)
 				m.add_child(giver)
-				m.float_text(m.furgoneta + Vector2(0.0, -72.0), "Looking scruffy, pup! Six tricks for a fresh coat?", Color(0.96, 0.94, 0.88), m.POP_SAY)
+				m.float_text(m.furgoneta + Vector2(0.0, -72.0), I18n.t("w_looking_scruffy_pup_six_tricks_for_a"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 				m.start_challenge(giver, 6, 20.0)
 
 
@@ -85,14 +85,14 @@ static func resolve_dare(m: Node2D, win: bool) -> void:
 		m.furgoneta_dare_won = true
 		m.fresh_coat_t = 35.0
 		m.float_text(m.furgoneta + Vector2(0.0, -70.0),
-			"Fresh and fabulous! Enjoy that sparkling coat!", Color(1.0, 0.95, 0.70), m.POP_SAY)
-		m.feed.say("FRESH COAT GROOMED!", EventFeed.Tone.GOOD)
+			I18n.t("w_fresh_and_fabulous_enjoy_that"), Color(1.0, 0.95, 0.70), m.POP_SAY)
+		m.feed.say(I18n.t("w_fresh_coat_groomed"), EventFeed.Tone.GOOD)
 		if m.dog != null:
 			m.dog.energy = 1.0
 		Sfx.play("dare_won", 1.0, -2.0)
 	else:
 		m.float_text(m.furgoneta + Vector2(0.0, -70.0),
-			"A bit tangled! Come back anytime.", Color(0.96, 0.94, 0.88), m.POP_SAY)
+			I18n.t("w_a_bit_tangled_come_back_anytime"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 static func on_bark(m: Node2D, pos: Vector2) -> bool:
@@ -106,14 +106,14 @@ static func on_bark(m: Node2D, pos: Vector2) -> bool:
 	m.furgoneta_flash_t = 0.35
 	m.furgoneta_wiper_t = 0.65
 	Sfx.play("van_horn", 1.0, -2.0)
-	var honk_sayings: Array[String] = ["AWOOGA!", "BEEP-BEEP!", "HONK!"]
+	var honk_sayings: Array[String] = ["AWOOGA!", I18n.t("w_beep_beep"), I18n.t("w_honk")]
 	var say_text: String = honk_sayings[int(AnimClock.msec() / 800.0) % honk_sayings.size()]
 	m.float_text(m.furgoneta + Vector2(0.0, -74.0), say_text, Color(0.98, 0.96, 0.90), m.POP_SAY)
 	# one paid honk a walk: the horn is a toy, not a points tap
 	if not m.furgoneta_honk_paid:
 		m.furgoneta_honk_paid = true
 		m.combo.add("BARK", 2)
-		m.award_points(2, "van honk! +2")
+		m.award_points(2, I18n.t("w_van_honk_2"))
 	return true
 
 

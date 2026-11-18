@@ -43,6 +43,6 @@ func _topple(dir: Vector2) -> void:
 	if side == Vector2.ZERO:
 		side = Vector2.RIGHT
 	main.scooter_falls[global_position] = side
-	main.float_text(global_position, "clatter", Color(0.9, 0.9, 0.9))
+	main.float_text(global_position, I18n.t("w_clatter"), Color(0.9, 0.9, 0.9))
 	Sfx.play("tangle", 1.1, -10.0)
 	set_physics_process(false)

@@ -37,6 +37,36 @@ const SCANNED := [
 	"res://systems/sarria.gd::idle_status", "res://systems/ciutadella.gd::urgent_status",
 	"res://world/ferralla.gd::idle_status",
 ]
+# the walk's lines kept in English in a table and shown through
+# I18n.of_english: [script, constant]
+const WALK_TABLES := [
+	["res://main.gd", "GREET_LINES"], ["res://main.gd", "GRUMPY_LINES"], ["res://main.gd", "CALL_LINES"],
+	["res://main.gd", "CORRECTION_CALLS"], ["res://main.gd", "PP_WHY"], ["res://main.gd", "SUBSTANCES"],
+	["res://entities/aeroport_threat.gd", "HELD_UP_LINES"], ["res://entities/boar_threat.gd", "HELD_SOUNDS"],
+	["res://entities/challenger.gd", "AGAIN"], ["res://entities/challenger.gd", "COUNT"],
+	["res://entities/challenger.gd", "LAST"], ["res://entities/challenger.gd", "TAKE"],
+	["res://entities/challenger.gd", "GET_READY"], ["res://entities/challenger.gd", "LINES"],
+	["res://entities/challenger.gd", "NAMES"], ["res://entities/correfoc_threat.gd", "HELD_LINES"],
+	["res://entities/human.gd", "MUTTERS"], ["res://entities/vet_threat.gd", "HELD_LINES"],
+	["res://entities/otherpair.gd", "NAMES"], ["res://entities/freedog.gd", "NAMES"],
+	["res://systems/agility.gd", "MEDALS"], ["res://systems/blai.gd", "BEG_LINES"],
+	["res://systems/boss_gat.gd", "CHEERS"], ["res://systems/boss_gat.gd", "GASPS"],
+	["res://systems/boss_gat.gd", "WINS"], ["res://systems/boss_mamut.gd", "CHEERS"],
+	["res://systems/boss_mamut.gd", "GASPS"], ["res://systems/boss_mamut.gd", "WINS"],
+	["res://systems/combo.gd", "TRICKS"], ["res://systems/poble_balcony.gd", "HUMAN_LINES"], ["res://systems/poble_balcony.gd", "BARK_REPLIES"],
+]
+# the walk's text sinks: a literal in their arguments is English on screen
+const WALK_SINK := "(float_text|award_points|feed\\.say|_show_bubble|say_line|\\.notice|warn_external)\\("
+# where the walk's words are drawn, and the room each has (a translation fits
+# that, or what its English needs where the English needs more): a bubble
+# wraps once, at the middle, so each of its two lines fits a bubble's width;
+# a score's word sits on a chip; a shout or a label in capitals is drawn as
+# the feed draws it at its smallest, 15 px, inside 0.78 of an 844 px screen;
+# a lesson's text runs across its card at 1280 px
+const BUBBLE_ROOM := 264.0
+const CHIP_ROOM := 260.0
+const SHOUT_ROOM := 658.0
+const LESSON_ROOM := 1140.0
 # literals in those that are not words for the player
 const NOT_WORDS := ["HORIZONTAL_ALIGNMENT_LEFT", "TWEEN", "--shot", "font_size", "font_color"]
 # THIS WALK's goal text room at 1280x720, scaled from its 16 px to 15 px
@@ -59,6 +89,11 @@ func _initialize() -> void:
 	_game_language()
 	_coverage()
 	_sources()
+	_walk_tables()
+	_walk_sinks()
+	_walk_scores()
+	_walk_widths()
+	_sink_round_trip()
 	I.set_language("en")
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():
@@ -311,3 +346,187 @@ func _banner_sinks() -> void:
 			if not line.begins_with("#") and sinks.search(line) != null:
 				bad += "\n  %d: %s" % [i + 1, line]
 		_check(bad == "", "%s hands the banner English:%s" % [path, bad])
+
+
+func _strings_in(v: Variant, out: Array) -> void:
+	if v is String:
+		out.append(v)
+	elif v is Array:
+		for x: Variant in v:
+			_strings_in(x, out)
+	elif v is Dictionary:
+		for x: Variant in (v as Dictionary).values():
+			_strings_in(x, out)
+
+
+func _walk_files() -> Array[String]:
+	var files: Array[String] = ["res://main.gd"]
+	for dir: String in ["res://entities", "res://systems", "res://world"]:
+		for f in DirAccess.get_files_at(dir):
+			if f.ends_with(".gd"):
+				files.append(dir.path_join(f))
+	return files
+
+
+# Every line the walk keeps in English (who says what, the dares, the combo's
+# labels, the tutorial's lessons) has an entry for I18n.of_english to find.
+func _walk_tables() -> void:
+	var en := _english_set()
+	var n := 0
+	for t: Array in WALK_TABLES:
+		var consts: Dictionary = (load(t[0]) as GDScript).get_script_constant_map()
+		_check(consts.has(t[1]), "%s has %s" % [t[0], t[1]])
+		var lines := []
+		_strings_in(consts.get(t[1]), lines)
+		for s: String in lines:
+			n += 1
+			_check(en.has(s), "%s %s: '%s' has an entry" % [t[0].get_file(), t[1], s])
+	var label := RegEx.create_from_string("combo\\.add\\(\"([^\"]+)\"")
+	var over := RegEx.create_from_string("combo\\.add\\(\"([^\"]+)\" if [^,]+ else \"([^\"]+)\"")
+	for path in _walk_files():
+		var src := FileAccess.get_file_as_string(path)
+		for m in label.search_all(src):
+			n += 1
+			_check(en.has(m.get_string(1)), "%s: the combo label '%s' has an entry" % [path.get_file(), m.get_string(1)])
+		for m in over.search_all(src):
+			_check(en.has(m.get_string(2)), "%s: the combo label '%s' has an entry" % [path.get_file(), m.get_string(2)])
+	for m in RegEx.create_from_string("rails\\.append\\(.*\"([A-Z][A-Z ]+)\"\\)\\)").search_all(
+			FileAccess.get_file_as_string("res://systems/rails.gd")):
+		n += 1
+		_check(en.has(m.get_string(1)), "the rail '%s' has an entry" % m.get_string(1))
+	for m in RegEx.create_from_string("\"name\": \"([^\"]+)\"").search_all(FileAccess.get_file_as_string("res://systems/poble.gd")):
+		_check(en.has(m.get_string(1)), "the workshop '%s' has an entry" % m.get_string(1))
+	var Steps: GDScript = load("res://systems/tutorial.gd")
+	var i := 0
+	while String(Steps.step(i).id) != "":
+		var st: Dictionary = Steps.step(i)
+		_check(en.has(String(st.title)) and (String(st.body) == "" or en.has(String(st.body))),
+			"lesson %d (%s) has entries" % [i, st.id])
+		i += 1
+	_check(i > 8 and n > 400, "the walk's tables were read (%d lessons, %d lines)" % [i, n])
+	var HomeChase: GDScript = load("res://systems/home_chase.gd")
+	for kind: String in ["sweeper", "bolt", "both", "boars", "correfoc", "dimoni", "security", "goat", "groomer", "vet", "flood"]:
+		var b: Dictionary = HomeChase.kind_behavior(kind)
+		for field: String in ["warning", "freed", "jammed", "jammed_shout", "caught_shout"]:
+			if b.has(field):
+				_check(en.has(String(b[field])), "chase %s %s has an entry" % [kind, field])
+	I.set_language("ca")
+	_check(I.of_english(String(Steps.step(0).title)) != String(Steps.step(0).title), "of_english finds a lesson")
+	I.set_language("en")
+
+
+# No walk script hands a shout, a bubble or a score an English literal.
+func _walk_sinks() -> void:
+	var sink := RegEx.create_from_string(WALK_SINK)
+	var literal := RegEx.create_from_string("\"((?:[^\"\\\\]|\\\\.)*)\"")
+	var word := RegEx.create_from_string("[A-Za-z]{2,}")
+	var placeholder := RegEx.create_from_string("%(\\.\\d+)?[dsf%]")
+	var calls := 0
+	for path in _walk_files():
+		var lines := FileAccess.get_file_as_string(path).split("\n")
+		var bad := ""
+		for i in range(lines.size()):
+			var line := String(lines[i]).strip_edges()
+			if line.begins_with("#") or line.begins_with("func ") or line.begins_with("static func "):
+				continue
+			var at := sink.search(line)
+			if at == null:
+				continue
+			calls += 1
+			var args := line.substr(at.get_end())
+			for m in literal.search_all(args):
+				var s := m.get_string(1)
+				if word.search(placeholder.sub(s, "", true)) == null:
+					continue
+				var before := args.substr(0, m.get_start()).strip_edges()
+				var after := args.substr(m.get_end()).strip_edges()
+				# a key, a lookup, a dictionary's field, a comparison
+				if before.ends_with("I18n.t(") or before.ends_with("get(") or before.ends_with("[") \
+						or before.ends_with("==") or before.ends_with("!=") or after.begins_with("]") \
+						or after.begins_with("==") or after.begins_with(":") or before.ends_with("has("):
+					continue
+				bad += "\n  %d: %s" % [i + 1, line]
+		_check(bad == "", "%s hands the walk English:%s" % [path, bad])
+	_check(calls > 700, "the walk's sinks were found (%d calls)" % calls)
+
+
+# A score chip stays a score chip: the same amount, last, after its word.
+func _walk_scores() -> void:
+	var Pops: GDScript = load("res://world/pops_layer.gd")
+	for k: String in I.T:
+		var en := String(I.T[k].en).replace("%d", "3")
+		var en_kind: int = Pops.classify(en)
+		for lang: String in ["ca", "es"]:
+			var tr := String(I.T[k][lang]).replace("%d", "3")
+			_check(Pops.classify(tr) == en_kind, "'%s' (%s) is a %s like the English: %s" % [k, lang,
+				"score" if en_kind == Pops.Kind.SCORE else "word", tr])
+			if en_kind == Pops.Kind.SCORE:
+				_check(tr.rsplit(" ", true, 1)[-1] == en.rsplit(" ", true, 1)[-1],
+					"'%s' (%s) keeps its amount last: %s" % [k, lang, tr])
+
+
+func _walk_widths() -> void:
+	var Pops: GDScript = load("res://world/pops_layer.gd")
+	var Bubble: GDScript = load("res://world/speech_bubble.gd")
+	var body: Font = load("res://fonts/Inter.ttf")
+	var heads: Font = load("res://fonts/BricolageGrotesque.ttf")
+	var lessons := {}
+	var Steps: GDScript = load("res://systems/tutorial.gd")
+	var i := 0
+	while String(Steps.step(i).id) != "":
+		lessons[String(Steps.step(i).body)] = true
+		i += 1
+	var measured := 0
+	for k: String in I.T:
+		if not k.begins_with("w_"):
+			continue
+		var en := _filled(String(I.T[k].en))
+		for lang: String in ["ca", "es"]:
+			var tr := _filled(String(I.T[k][lang]))
+			var room: float
+			var w: float
+			var en_w: float
+			if lessons.has(String(I.T[k].en)):
+				room = LESSON_ROOM
+				w = body.get_string_size(tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+				en_w = body.get_string_size(en, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
+			elif Pops.classify(en) == Pops.Kind.SCORE:
+				room = CHIP_ROOM
+				w = body.get_string_size(tr.rsplit(" ", true, 1)[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+				en_w = body.get_string_size(en.rsplit(" ", true, 1)[0], HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+			elif en.to_upper() == en:
+				room = SHOUT_ROOM
+				w = heads.get_string_size(tr, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+				en_w = heads.get_string_size(en, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+			else:
+				room = BUBBLE_ROOM
+				w = _bubble_w(Bubble, tr)
+				en_w = _bubble_w(Bubble, en)
+			measured += 1
+			_check(w <= maxf(room, en_w) + 0.5, "'%s' (%s) fits where it is drawn (%d > %d px): %s" % [k, lang, w,
+				maxf(room, en_w), I.T[k][lang]])
+	_check(measured > 2000, "the walk's words were measured (%d)" % measured)
+
+
+func _filled(text: String) -> String:
+	return text.replace("%.1f", "10.0").replace("%d", "10").replace("%s", "Mochi")
+
+
+# a bubble's widest line, as speech_bubble.gd breaks it
+func _bubble_w(Bubble: GDScript, text: String) -> float:
+	var w := 0.0
+	for part: String in text.split("\n"):
+		for l: String in Bubble.lines(part):
+			w = maxf(w, Kit.text_w(Kit.body(), l, Bubble.PX))
+	return w
+
+
+# The walk's sinks look their text up by its English, and most of it arrives
+# already translated: a translation must come back from that as it went in.
+func _sink_round_trip() -> void:
+	for lang: String in ["ca", "es"]:
+		I.set_language(lang)
+		for k: String in I.T:
+			var tr := String(I.T[k][lang])
+			_check(I.of_english(tr) == tr, "'%s' (%s) survives a second look-up: '%s' became '%s'" % [k, lang, tr, I.of_english(tr)])
+	I.set_language("en")

@@ -101,7 +101,7 @@ func tick(m: Node2D, delta: float) -> void:
 	if pastry_dropped and not pastry_taken and dog_p.distance_to(pastry_pos) < SNATCH_R:
 		pastry_taken = true
 		m.kebabs_eaten += 1
-		m.award_points(2, "pastry! +2")
+		m.award_points(2, I18n.t("w_pastry_2"))
 		_sfx(m, "snack", 1.1)
 	match state:
 		State.IDLE:
@@ -109,8 +109,8 @@ func tick(m: Node2D, delta: float) -> void:
 			if m.phase == "out" and human_p.y < TRIGGER_Y and human_p.y > CROSS_Y - 300.0:
 				state = State.TELEGRAPH
 				timer = WARN
-				m.float_text(Vector2(START_X + 60.0, CROSS_Y - 54.0), "Stay with the umbrella!", Color(0.98, 0.92, 0.80), m.POP_SAY)
-				m.feed.say("TOUR GROUP CROSSING!", EventFeed.Tone.LOUD)
+				m.float_text(Vector2(START_X + 60.0, CROSS_Y - 54.0), I18n.t("w_stay_with_the_umbrella"), Color(0.98, 0.92, 0.80), m.POP_SAY)
+				m.feed.say(I18n.t("w_tour_group_crossing"), EventFeed.Tone.LOUD)
 				_sfx(m, "whistle", 1.3)
 		State.TELEGRAPH:
 			timer -= delta
@@ -129,14 +129,14 @@ func tick(m: Node2D, delta: float) -> void:
 						human_hit = true
 						m.human.bumped((human_p - member_pos(k)).normalized())
 						m.human.patience = maxf(0.0, m.human.patience - PATIENCE_COST)
-						m.float_text(human_p + Vector2(0.0, -34.0), "Sorry, sorry. Excuse me.", Color(1.0, 0.55, 0.45), m.POP_SAY)
-						m.float_text(member_pos(k) + Vector2(0.0, -30.0), "Oh! Pardon!", Color(0.98, 0.92, 0.80), m.POP_SAY)
+						m.float_text(human_p + Vector2(0.0, -34.0), I18n.t("w_sorry_sorry_excuse_me"), Color(1.0, 0.55, 0.45), m.POP_SAY)
+						m.float_text(member_pos(k) + Vector2(0.0, -30.0), I18n.t("w_oh_pardon"), Color(0.98, 0.92, 0.80), m.POP_SAY)
 						_sfx(m, "grunt", 0.95)
 						break
 			if not booped and dog_p.distance_to(member_pos(0)) < BOOP_R:
 				booped = true
-				m.award_points(2, "boop! +2")
-				m.float_text(member_pos(0) + Vector2(0.0, -40.0), "Ha! Someone wants the tour.", Color(0.98, 0.92, 0.80), m.POP_SAY)
+				m.award_points(2, I18n.t("w_boop_2"))
+				m.float_text(member_pos(0) + Vector2(0.0, -40.0), I18n.t("w_ha_someone_wants_the_tour"), Color(0.98, 0.92, 0.80), m.POP_SAY)
 				_sfx(m, "whoop", 1.2)
 			if member_pos(COUNT).x > END_X:
 				state = State.GONE
@@ -154,7 +154,7 @@ func tick(m: Node2D, delta: float) -> void:
 		if bool(step["dodge"]):
 			dodged = true
 			m.saves_done += 1
-			m.award_points(2, "dodged the tour! +2")
+			m.award_points(2, I18n.t("w_dodged_the_tour_2"))
 			_sfx(m, "save", 1.0)
 
 
@@ -166,8 +166,8 @@ func on_bark(m: Node2D) -> bool:
 		if dog_p.distance_to(member_pos(k)) < BARK_R:
 			photographed = true
 			photo_t = 1.2
-			m.award_points(3, "photographed! +3")
-			m.float_text(member_pos(0) + Vector2(0.0, -40.0), "Everyone, look! A local!", Color(0.98, 0.92, 0.80), m.POP_SAY)
+			m.award_points(3, I18n.t("w_photographed_3"))
+			m.float_text(member_pos(0) + Vector2(0.0, -40.0), I18n.t("w_everyone_look_a_local"), Color(0.98, 0.92, 0.80), m.POP_SAY)
 			_sfx(m, "ooooh", 1.1)
 			return true
 	return false

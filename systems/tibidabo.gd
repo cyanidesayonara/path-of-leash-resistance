@@ -363,8 +363,8 @@ static func tick(m: Node2D, _delta: float) -> void:
 				m.tibidabo_viewfinder_gazed = true
 				m.bones += 5
 				m.combo.add("PANORAMA", 4)
-				m.float_text(dp + Vector2(0, -30), "panorama! +5", Color(0.96, 0.86, 0.32))
-				m.feed.say("BARCELONA, ALL OF IT!", EventFeed.Tone.GOOD)
+				m.float_text(dp + Vector2(0, -30), I18n.t("w_panorama_5"), Color(0.96, 0.86, 0.32))
+				m.feed.say(I18n.t("w_barcelona_all_of_it"), EventFeed.Tone.GOOD)
 				m.get_node("/root/Sfx").play("prize", 1.1)
 				break
 	# the funicular: at the road's east side as the carriage passes level
@@ -373,8 +373,8 @@ static func tick(m: Node2D, _delta: float) -> void:
 		if dp.x > WATCH_X and absf(cy - dp.y) < WATCH_DY and cy < CAR_BOTTOM_Y - WATCH_OFF_STATION:
 			m.tibidabo_funicular_seen = true
 			m.bones += 3
-			m.float_text(dp + Vector2(0, -28), "funicular! +3", Color(0.85, 0.35, 0.32))
-			m.feed.say("THE FUNICULAR GOES BY!", EventFeed.Tone.GOOD)
+			m.float_text(dp + Vector2(0, -28), I18n.t("w_funicular_3"), Color(0.85, 0.35, 0.32))
+			m.feed.say(I18n.t("w_the_funicular_goes_by"), EventFeed.Tone.GOOD)
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:

@@ -3604,7 +3604,7 @@ func _tick_shallows(delta: float) -> void:
 	splash_cd = 0.8
 	Sfx.play("splash", 1.1)
 	combo.add("SPLASH", 3)
-	float_text(dog.global_position + Vector2(0, -26), "SPLASH!", Color(0.75, 0.88, 1.0))
+	float_text(dog.global_position + Vector2(0, -26), I18n.t("w_splash"), Color(0.75, 0.88, 1.0))
 
 
 # El Diluvi: the owner soaks in the open and dries under cover; the dog
@@ -3616,8 +3616,8 @@ func _tick_wet(delta: float) -> void:
 	else:
 		human_soak = minf(1.0, human_soak + delta / SOAK_T)
 	if was < 0.5 and human_soak >= 0.5:
-		human.notice("I'm soaked!", 1.6)
-		feed.say("YOUR HUMAN IS HALF SOAKED", EventFeed.Tone.BAD)
+		human.notice(I18n.t("w_i_m_soaked"), 1.6)
+		feed.say(I18n.t("w_your_human_is_half_soaked"), EventFeed.Tone.BAD)
 	splash_cd = maxf(0.0, splash_cd - delta)
 	if splash_cd <= 0.0 and dog.velocity.length() > SPLASH_SPEED:
 		for pt: Dictionary in patches:
@@ -3626,7 +3626,7 @@ func _tick_wet(delta: float) -> void:
 				splash_cd = 0.8
 				Sfx.play("splash", 1.2)
 				combo.add("SPLASH", 3)
-				float_text(dog.global_position + Vector2(0, -26), "SPLASH!", Color(0.75, 0.88, 1.0))
+				float_text(dog.global_position + Vector2(0, -26), I18n.t("w_splash"), Color(0.75, 0.88, 1.0))
 				# and anyone near gets it too
 				if human.global_position.distance_to(dog.global_position) < 70.0:
 					human_soak = minf(1.0, human_soak + 0.06)
@@ -3755,7 +3755,7 @@ func _tick_rambla(delta: float) -> void:
 		var r: Rect2 = bl["rect"]
 		if String(bl.get("state", "laid")) == "laid" and r.grow(4.0).has_point(dp) and float(bl["cd"]) <= 0.0:
 			bl["cd"] = 3.0
-			float_text(_seller_pos(r) + Vector2(0, -22), "Hey! HEY!", Color(1, 0.9, 0.75), POP_SAY)
+			float_text(_seller_pos(r) + Vector2(0, -22), I18n.t("w_hey_hey"), Color(1, 0.9, 0.75), POP_SAY)
 	# a human statue holds still until she stands and watches, then bows
 	for i in range(statues.size()):
 		statue_bow[i] = maxf(0.0, float(statue_bow.get(i, 0.0)) - delta)
@@ -3767,7 +3767,7 @@ func _tick_rambla(delta: float) -> void:
 				statue_wait[i] = -4.0      # not another bow straight away
 				bones += 2
 				combo.add("STATUE", 3)
-				float_text(sp + Vector2(0, -34), "*bows*", Color(0.95, 0.9, 0.7))
+				float_text(sp + Vector2(0, -34), I18n.t("w_bows"), Color(0.95, 0.9, 0.7))
 		elif float(statue_wait.get(i, 0.0)) > 0.0:
 			statue_wait[i] = 0.0
 
@@ -3792,8 +3792,8 @@ func _tick_whistle(delta: float) -> void:
 		else:
 			whistle_t = WHISTLE_EVERY
 			# the whistle from somewhere up the promenade: the tell for all of it
-			float_text(Vector2(walk_cx, cam.position.y - 200.0), "PHWEEET!", Color(0.9, 0.95, 1.0))
-			feed.say("PHWEET! THE SELLERS BOLT", EventFeed.Tone.LOUD)
+			float_text(Vector2(walk_cx, cam.position.y - 200.0), I18n.t("w_phweeet"), Color(0.9, 0.95, 1.0))
+			feed.say(I18n.t("w_phweet_the_sellers_bolt"), EventFeed.Tone.LOUD)
 			for bl: Dictionary in near:
 				bl["state"] = "pack"
 				bl["t"] = 0.0
@@ -3863,8 +3863,8 @@ func _bust_shells(_why: String) -> void:
 	var sp: Vector2 = shell_game["pos"]
 	bones += 6
 	combo.add("RIGGED", 6)
-	float_text(sp + Vector2(0, -30), "The jig is up!", Color(1, 0.9, 0.5), POP_SAY)
-	feed.say("SHELL GAME BUSTED +6", EventFeed.Tone.GOOD)
+	float_text(sp + Vector2(0, -30), I18n.t("w_the_jig_is_up"), Color(1, 0.9, 0.5), POP_SAY)
+	feed.say(I18n.t("w_shell_game_busted_6"), EventFeed.Tone.GOOD)
 	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
 		if tw.global_position.distance_to(sp) < 240.0:
 			tw.cheer()
@@ -3923,7 +3923,7 @@ func parakeet_squawk(at: Vector2) -> void:
 		return
 	squawk_t = elapsed + 1.5
 	Sfx.play("squawk", randf_range(0.9, 1.1), -8.0)
-	float_text(at + Vector2(0, -16), "squawk!", Color(0.6, 0.9, 0.5))
+	float_text(at + Vector2(0, -16), I18n.t("w_squawk"), Color(0.6, 0.9, 0.5))
 
 
 # pickpockets: the first this many seconds in, then one every PP_EVERY while
@@ -4001,7 +4001,7 @@ func _tick_crowd(delta: float) -> void:
 	pp.z_index = 9
 	add_child(pp)
 	pp.setup(self, from, target, is_owner, crowd_rng.randf() * 10.0)
-	feed.say("PICKPOCKET! WATCH HIS HANDS", EventFeed.Tone.LOUD)
+	feed.say(I18n.t("w_pickpocket_watch_his_hands"), EventFeed.Tone.LOUD)
 
 
 # Two thieves before kick-off. The second works a fan in the river, not the
@@ -4029,7 +4029,7 @@ func _spawn_partit_thief(delta: float, cy: float) -> void:
 	pp.z_index = 9
 	add_child(pp)
 	pp.setup(self, from, target, is_owner, crowd_rng.randf() * 10.0)
-	feed.say("PICKPOCKET! WATCH HIS HANDS", EventFeed.Tone.LOUD)
+	feed.say(I18n.t("w_pickpocket_watch_his_hands"), EventFeed.Tone.LOUD)
 
 
 func _fan_mark(cy: float) -> Node2D:
@@ -4043,8 +4043,8 @@ func _fan_mark(cy: float) -> Node2D:
 
 
 func on_pickpocket_lift(at: Vector2, from_owner: bool) -> void:
-	float_text(at + Vector2(0, -30), "Hey! My wallet!" if not from_owner else "!", Color(1, 0.6, 0.5), POP_SAY)
-	feed.say("HE'S GOT %s WALLET! STOP HIM" % ("YOUR HUMAN'S" if from_owner else "A"), EventFeed.Tone.BAD)
+	float_text(at + Vector2(0, -30), I18n.t("w_hey_my_wallet") if not from_owner else "!", Color(1, 0.6, 0.5), POP_SAY)
+	feed.say(I18n.t("w_your_wallet_stop_him") if from_owner else I18n.t("w_a_wallet_stop_him"), EventFeed.Tone.BAD)
 
 
 const PP_WHY := {"bump": "BOWLED OVER!", "tangle": "TANGLED!", "owner": "HUMAN BOWLING!",
@@ -4053,11 +4053,11 @@ const PP_WHY := {"bump": "BOWLED OVER!", "tangle": "TANGLED!", "owner": "HUMAN B
 
 func on_pickpocket_stopped(at: Vector2, why: String, lost: bool, mark: Node2D, from_owner: bool) -> void:
 	Sfx.play("crack", 0.8, -6.0)
-	float_text(at + Vector2(0, -28), String(PP_WHY.get(why, "GOT HIM!")), Color(1, 0.9, 0.5))
+	float_text(at + Vector2(0, -28), String(PP_WHY.get(why, I18n.t("w_got_him"))), Color(1, 0.9, 0.5))
 	if lost:
 		# stopped, but the wallet went down the hole: a stop that earns nothing
-		float_text(at + Vector2(0, -8), "...plop", Color(0.8, 0.85, 1.0))
-		feed.say("IT WENT DOWN THE DRAIN", EventFeed.Tone.BAD)
+		float_text(at + Vector2(0, -8), I18n.t("w_plop"), Color(0.8, 0.85, 1.0))
+		feed.say(I18n.t("w_it_went_down_the_drain"), EventFeed.Tone.BAD)
 		if from_owner:
 			owner_wallet_taken = false
 			owner_wallet_lost = true
@@ -4069,11 +4069,11 @@ func on_pickpocket_stopped(at: Vector2, why: String, lost: bool, mark: Node2D, f
 	combo.add("THIEF", 10)
 	if from_owner:
 		owner_wallet_taken = false
-		feed.say("YOUR HUMAN'S WALLET IS BACK +%d" % pay, EventFeed.Tone.GOOD)
+		feed.say(I18n.t("w_your_human_s_wallet_is_back") % pay, EventFeed.Tone.GOOD)
 	else:
 		if mark != null and is_instance_valid(mark) and "has_wallet" in mark:
 			mark.has_wallet = true
-		feed.say("WALLET SAVED! +%d" % pay, EventFeed.Tone.GOOD)
+		feed.say(I18n.t("w_wallet_saved") % pay, EventFeed.Tone.GOOD)
 	# the crowd round about applauds the dog
 	for tw: Node2D in get_tree().get_nodes_in_group("tourists"):
 		if tw.global_position.distance_to(at) < 260.0:
@@ -4082,7 +4082,7 @@ func on_pickpocket_stopped(at: Vector2, why: String, lost: bool, mark: Node2D, f
 
 
 func on_pickpocket_escaped(from_owner: bool) -> void:
-	feed.say("HE GOT AWAY", EventFeed.Tone.BAD)
+	feed.say(I18n.t("w_he_got_away"), EventFeed.Tone.BAD)
 	if from_owner:
 		owner_wallet_taken = false
 		owner_wallet_lost = true
@@ -4093,7 +4093,7 @@ func on_pickpocket_busted(at: Vector2) -> void:
 	thieves_stopped += 1
 	bones += 4
 	combo.add("BUSTED", 5)
-	float_text(at + Vector2(0, -26), "BUSTED", Color(1, 0.9, 0.5))
+	float_text(at + Vector2(0, -26), I18n.t("w_busted"), Color(1, 0.9, 0.5))
 
 
 func _seller_pos(r: Rect2) -> Vector2:
@@ -5172,7 +5172,7 @@ func _draw_yard(c: Object, gravel: bool) -> void:
 		walk_mod.draw_yard(self, c, r)
 	_draw_freedom_fence(c, r, gravel)
 	_draw_freedom_benches(c, r, Color(0.5, 0.38, 0.26))
-	_freedom_sign(c, r, gate_text, "The off-leash yard" if gravel else "The off-leash dog park")
+	_freedom_sign(c, r, gate_text, I18n.t("w_the_off_leash_yard") if gravel else I18n.t("w_the_off_leash_dog_park"))
 
 
 # EL BARRI's PIPICÀ: the fenced dog area every neighbourhood park has. Raked
@@ -5242,7 +5242,7 @@ func _draw_placa(c: Object) -> void:
 	if walk_mod != null and walk_mod.has_method("draw_yard"):
 		walk_mod.draw_yard(self, c, r)
 	_draw_freedom_benches(c, r, Color(0.36, 0.30, 0.24))
-	_freedom_sign(c, r, "PLAÇA DELS GOSSOS", "the festival square, off leash" if lvl == "spook" else "the dogs' square, off leash")
+	_freedom_sign(c, r, "PLAÇA DELS GOSSOS", I18n.t("w_the_festival_square_off_leash") if lvl == "spook" else I18n.t("w_the_dogs_square_off_leash"))
 
 
 const HOUSE_COLS: Array[Color] = [Color(0.62, 0.44, 0.34), Color(0.70, 0.58, 0.42), Color(0.56, 0.48, 0.44)]
@@ -5305,7 +5305,7 @@ func _draw_clearing(c: Object) -> void:
 	# tree. They are placed as real trees at build time now, so they have
 	# collision, the rope wraps them, and the grove draws them.
 	_draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
-	_freedom_sign(c, r, gate_text, "The clearing, off leash")
+	_freedom_sign(c, r, gate_text, I18n.t("w_the_clearing_off_leash"))
 
 
 func _draw_dog_beach(c: Object) -> void:
@@ -5391,11 +5391,11 @@ func _draw_dog_beach(c: Object) -> void:
 		contact_shadow(c, pa, BEACH_PARASOL_R, 30.0, 0.20)
 	_draw_freedom_benches(c, r, Color(0.62, 0.5, 0.34))
 	if lvl == "cremada":
-		_freedom_sign(c, r, "PLATJA DEL DIMONI", "where the devil burns, off leash")
+		_freedom_sign(c, r, "PLATJA DEL DIMONI", I18n.t("w_where_the_devil_burns_off_leash"))
 	elif lvl == "sitges":
-		_freedom_sign(c, r, "PLATJA DE LA FRAGATA", "under Sant Bartomeu, off leash")
+		_freedom_sign(c, r, "PLATJA DE LA FRAGATA", I18n.t("w_under_sant_bartomeu_off_leash"))
 	else:
-		_freedom_sign(c, r, "PLATJA DELS GOSSOS", "the dog beach, off leash")
+		_freedom_sign(c, r, "PLATJA DELS GOSSOS", I18n.t("w_the_dog_beach_off_leash"))
 	_draw_espigo(c)
 
 
@@ -5519,7 +5519,7 @@ func _draw_world_text(at: Vector2, txt: String, px: int, style: String,
 
 # the tutorial walks another walk's ground, but it is still the First Walk
 func _walk_name() -> String:
-	return String(Game.LEVEL_NAMES["tutorial" if tutorial_mode else lvl])
+	return I18n.t("w_first_walk") if tutorial_mode else String(Game.LEVEL_NAMES[lvl])
 
 
 func _sign_mat() -> String:
@@ -5577,11 +5577,11 @@ func build_signs() -> void:
 	signs.append(WorldSign.build(gate_text, Vector2(gm, GATE_Y - 72.0 * gk), 36.0 * gk, mat, 11.0, gw))
 	# and the small line no smaller than the cones can still spell
 	var ok := 30.0 * gk if mat == "cones" else 24.0
-	signs.append(WorldSign.build("OFF LEASH", Vector2(gm, GATE_Y - 124.0 * gk - 4.0), ok, mat, 12.0, gw))
+	signs.append(WorldSign.build(I18n.t("w_off_leash_gate"), Vector2(gm, GATE_Y - 124.0 * gk - 4.0), ok, mat, 12.0, gw))
 	_share_bed(signs[signs.size() - 2], signs[signs.size() - 1])
 
 
-# Two lines of one name lie on one bed or backing (a flower bed, a tray, a
+# Two lines of one name lie on one bed or backing (a flower bed, a tile panel, a
 # newspaper), not two boxes overlapping: drawn by `first`, which is drawn
 # first, under both.
 func _share_bed(first: Dictionary, second: Dictionary) -> void:
@@ -6274,14 +6274,14 @@ func on_stream_find_returned(kind: String, at: Vector2) -> void:
 	bones += 5
 	Sfx.play("star")
 	combo.add("RESCUE", 3)
-	float_text(at, ("%s saved! +5" % kind) if kind == "ball" else "saved! +5",
+	float_text(at, I18n.t("w_ball_saved") if kind == "ball" else I18n.t("w_saved_5_2"),
 		Color(0.78, 0.94, 0.84))
 	_update_hud()
 
 
 func on_stream_find_grabbed(_at: Vector2) -> void:
 	if feed != null:
-		feed.say("TO THE BANK!", EventFeed.Tone.PLAIN)
+		feed.say(I18n.t("w_to_the_bank"), EventFeed.Tone.PLAIN)
 
 
 func _push_bosc_current(delta: float) -> void:
@@ -6431,7 +6431,7 @@ func _praise_drink(at: Vector2) -> void:
 	drink_praised = true
 	bones += 2
 	combo.add("DRINK", 2)
-	float_text(at, "a good long drink! +2", Color(0.8, 0.92, 1.0))
+	float_text(at, I18n.t("w_a_good_long_drink_2"), Color(0.8, 0.92, 1.0))
 	_update_hud()
 
 
@@ -6564,9 +6564,9 @@ func on_combo_banked(score: int, mult: int, bonus: int) -> void:
 	if bonus > 0:
 		bones += bonus
 	var col := Color(1.0, 0.85, 0.4) if mult < 5 else Color(1.0, 0.7, 0.85)
-	var msg := "COMBO x%d   %d" % [mult, score]
+	var msg := I18n.t("w_combo_banked") % [mult, score]
 	if bonus > 0:
-		msg += "   +%d" % bonus
+		msg += I18n.t("w_combo_bonus") % bonus
 	float_text(dog.global_position + Vector2(0, -26), msg, col)
 	if mult >= 5:
 		_slowmo()
@@ -6617,7 +6617,7 @@ func _refill_zoomies(pts: int) -> void:
 	if was < 1.0 and dog.energy >= 1.0:
 		golden_t = GOLDEN_S
 		Sfx.play("star", 1.4)
-		feed.say("GOLDEN ZOOMIES!", EventFeed.Tone.LOUD)
+		feed.say(I18n.t("w_golden_zoomies"), EventFeed.Tone.LOUD)
 		_update_hud()
 
 
@@ -6625,7 +6625,8 @@ func _refill_zoomies(pts: int) -> void:
 # from what is near her (the same spots entities/dare_marks.gd rings).
 func dare_hint() -> String:
 	if dare_last_t > 0.0 and dare_last != "":
-		return I18n.t("dare_counts") % dare_last.capitalize()
+		var said := I18n.of_english(dare_last)
+		return I18n.t("dare_counts") % (dare_last.capitalize() if said == dare_last else said.left(1) + said.substr(1).to_lower())
 	if human.is_whirling() or whirl_arm > 0.0:
 		return I18n.t("dare_hint_whirl")
 	var at: Vector2 = dog.global_position
@@ -6683,7 +6684,7 @@ func on_challenge_live() -> void:
 	dare_last_t = 0.0
 	Sfx.play("go", 1.0, -3.0)
 	shake_t = maxf(shake_t, 0.2)
-	feed.say("GO! %d TRICKS!" % challenge.target, EventFeed.Tone.LOUD)
+	feed.say(I18n.t("w_go_tricks") % challenge.target, EventFeed.Tone.LOUD)
 
 
 func on_challenge_done(win: bool, target: int, count: int) -> void:
@@ -6693,10 +6694,10 @@ func on_challenge_done(win: bool, target: int, count: int) -> void:
 	if win:
 		var reward: int = challenge.reward if challenge.reward > 0 else dare_reward(target)
 		bones += reward
-		feed.say("DARE WON! +%d" % reward, EventFeed.Tone.GOOD)
+		feed.say(I18n.t("dare_won_title") % reward, EventFeed.Tone.GOOD)
 		_slowmo()
 	else:
-		feed.say("DARE LOST: %d OF %d" % [count, target], EventFeed.Tone.BAD)
+		feed.say(I18n.t("w_dare_lost_of") % [count, target], EventFeed.Tone.BAD)
 
 
 # a first-time tip, from a script that has no Tips (human.gd)
@@ -6766,7 +6767,7 @@ func _physics_process(delta: float) -> void:
 				walkway_rides += 1
 				walkway_from = -INF
 				combo.add("WALKWAY", 4)
-				float_text(dog.global_position + Vector2(0, -26), "ALL THE WAY!", Color(0.8, 0.95, 1.0))
+				float_text(dog.global_position + Vector2(0, -26), I18n.t("w_all_the_way"), Color(0.8, 0.95, 1.0))
 		else:
 			walkway_from = INF
 		if conveyor_zone.has_point(human.global_position):
@@ -7133,11 +7134,6 @@ func _process(_delta: float) -> void:
 			# --shot-goals opens the goal list for the run (unsaved)
 			if "--shot-goals" in OS.get_cmdline_user_args():
 				Game.goals_expanded = true
-			# --shot-say has your human and someone beside them talk at once, to
-			# judge the speech bubbles and how two of them stack
-			if "--shot-say" in OS.get_cmdline_user_args():
-				human._show_bubble("Ugh, hold on.")
-				float_text(human.global_position + Vector2(40.0, -20.0), "Excuse me, go ahead.", Color.WHITE, POP_SAY)
 			for a in OS.get_cmdline_user_args():
 				if a.begins_with("--shot-zoom="):
 					cam.zoom *= float(a.substr(12))
@@ -7157,6 +7153,15 @@ func _process(_delta: float) -> void:
 				dog.global_position.y = human.global_position.y + 100.0
 				leash.resnap()
 				_enter_home()
+		# --shot-say has your human and someone beside them talk at once, to
+		# judge the speech bubbles and how two of them stack, with a shout in
+		# the feed and a score over the dog: half a second before the shot, as
+		# the walk's start clears what was said before it
+		if _shot_frames == maxi(3, _shot_at - 30) and "--shot-say" in OS.get_cmdline_user_args():
+			human._show_bubble(I18n.t("w_ugh_hold_on"))
+			float_text(human.global_position + Vector2(40.0, -20.0), I18n.t("w_excuse_me_go_ahead"), Color.WHITE, POP_SAY)
+			feed.say(I18n.t("w_pickpocket_watch_his_hands"), EventFeed.Tone.BAD)
+			float_text(dog.global_position, I18n.t("w_marked_3"), Color(1, 0.9, 0.5))
 		if _shot_frames > _shot_at:
 			_shot_done = true
 			# --shot-out=PATH writes somewhere other than user://shot.png, so a
@@ -7352,7 +7357,7 @@ func _tick_sprinkler(delta: float) -> void:
 		return
 	var sc: Dictionary = sprinkler.tick(delta, dog.global_position, human.global_position)
 	if bool(sc["warn"]):
-		float_text(human.global_position + Vector2(0.0, -32.0), "Watch the sprinkler!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_watch_the_sprinkler"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(sc["click"]):
 		Sfx.play("intro_tap", 2.2, -12.0)
@@ -7361,19 +7366,19 @@ func _tick_sprinkler(delta: float) -> void:
 		drunk_amount += 0.25
 		combo.add("SPLASH", 2)
 		Sfx.play("splash", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "splish! +2", Color(0.70, 0.90, 1.0))
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_splish_2"), Color(0.70, 0.90, 1.0))
 		_update_hud()
 	if bool(sc["human_soaked"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("splash", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! My phone!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whoa_my_phone"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(sc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "good dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_good_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7383,7 +7388,7 @@ func _tick_mercat_cart(delta: float) -> void:
 		return
 	var mc: Dictionary = mercat_cart.tick(delta, dog.global_position, human.global_position)
 	if bool(mc["warn"]):
-		float_text(mercat_cart.pos + Vector2(0.0, -32.0), "Produce cart coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(mercat_cart.pos + Vector2(0.0, -32.0), I18n.t("w_produce_cart_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(mc["creak"]):
 		Sfx.play("creak", 1.2, -6.0)
@@ -7394,14 +7399,14 @@ func _tick_mercat_cart(delta: float) -> void:
 		kebabs_eaten += 1
 		combo.add("SNACK", 2)
 		Sfx.play("kebab", 1.2, -4.0)
-		float_text(mercat_cart.orange_pos + Vector2(0.0, -18.0), "orange! +2", Color(1.0, 0.78, 0.32))
+		float_text(mercat_cart.orange_pos + Vector2(0.0, -18.0), I18n.t("w_orange_2"), Color(1.0, 0.78, 0.32))
 		_update_hud()
 	if bool(mc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.0, -4.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Watch out!", Color(1.0, 0.75, 0.75), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_watch_out"), Color(1.0, 0.75, 0.75), POP_SAY)
 	if bool(mc["yield"]):
-		float_text(mercat_cart.pos + Vector2(0.0, -32.0), "After you!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(mercat_cart.pos + Vector2(0.0, -32.0), I18n.t("w_after_you"), Color(0.96, 0.94, 0.88), POP_SAY)
 
 
 # La Platja's beach volleyball: casual game by the boardwalk, rogue spiked ball.
@@ -7410,7 +7415,7 @@ func _tick_volleyball(delta: float) -> void:
 		return
 	var vc: Dictionary = volleyball.tick(delta, dog.global_position, dog.facing, human.global_position)
 	if bool(vc["warn"]):
-		float_text(Volleyball.SPIKER_POS + Vector2(0.0, -32.0), "Ball coming in hot!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Volleyball.SPIKER_POS + Vector2(0.0, -32.0), I18n.t("w_ball_coming_in_hot"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(vc["spike"]):
 		Sfx.play("crack", 1.5, -4.0)
@@ -7420,20 +7425,20 @@ func _tick_volleyball(delta: float) -> void:
 		bones += 2
 		combo.add("VOLLEY", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(volleyball.pos + Vector2(0.0, -20.0), "volley! +2", Color(1.0, 0.92, 0.45))
-		float_text(Volleyball.SPIKER_POS + Vector2(0.0, -32.0), "Nice return!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(volleyball.pos + Vector2(0.0, -20.0), I18n.t("w_volley_2"), Color(1.0, 0.92, 0.45))
+		float_text(Volleyball.SPIKER_POS + Vector2(0.0, -32.0), I18n.t("w_nice_return"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(vc["human_hit"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.0, -4.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Watch the game!", Color(1.0, 0.75, 0.75), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_watch_the_game"), Color(1.0, 0.75, 0.75), POP_SAY)
 	if bool(vc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "good dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_good_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7443,7 +7448,7 @@ func _tick_awning_dump(delta: float) -> void:
 		return
 	var dc: Dictionary = awning_dump.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(dc["warn"]):
-		float_text(AwningDump.SHOPKEEPER_POS + Vector2(0.0, -32.0), "Water coming down!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(AwningDump.SHOPKEEPER_POS + Vector2(0.0, -32.0), I18n.t("w_water_coming_down"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(dc["dump"]):
 		Sfx.play("splash", 1.3, -2.0)
@@ -7451,21 +7456,21 @@ func _tick_awning_dump(delta: float) -> void:
 		human_soak = minf(1.0, human_soak + 0.35)
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("splash", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Aah! I'm soaked!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_aah_i_m_soaked"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(dc["dog_splash"]):
 		bones += 2
 		splashes += 1
 		combo.add("SPLASH", 2)
 		Sfx.play("splash", 1.1, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "awning splash! +2", Color(0.70, 0.90, 1.0))
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_awning_splash_2"), Color(0.70, 0.90, 1.0))
 		_update_hud()
 	if bool(dc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "dry passage! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_dry_passage_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7475,7 +7480,7 @@ func _tick_jackhammer(delta: float) -> void:
 		return
 	var jc: Dictionary = jackhammer.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(jc["warn"]):
-		float_text(Jackhammer.WORKER_POS + Vector2(0.0, -32.0), "Jackhammer starting!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Jackhammer.WORKER_POS + Vector2(0.0, -32.0), I18n.t("w_jackhammer_starting"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(jc["drill"]):
 		Sfx.play("crack", 1.8, -4.0)
@@ -7483,20 +7488,20 @@ func _tick_jackhammer(delta: float) -> void:
 	if bool(jc["rattle"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.0, -4.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Aah! Too loud!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_aah_too_loud"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(jc["dog_detour"]):
 		bones += 2
 		combo.add("DETOUR", 2)
 		Sfx.play("star", 1.1, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "smooth detour! +2", Color(0.70, 0.90, 1.0))
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_smooth_detour_2"), Color(0.70, 0.90, 1.0))
 		_update_hud()
 	if bool(jc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "quiet detour! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_quiet_detour_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7506,29 +7511,29 @@ func _tick_fisherman(delta: float) -> void:
 		return
 	var fc: Dictionary = fisherman.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(fc["warn"]):
-		float_text(Fisherman.FISHERMAN_POS + Vector2(0.0, -32.0), "Mind the fishing line!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Fisherman.FISHERMAN_POS + Vector2(0.0, -32.0), I18n.t("w_mind_the_fishing_line"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(fc["reel"]):
 		Sfx.play("splash", 1.3, -2.0)
 	if bool(fc["line_snag"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Yikes, that's a hook!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_yikes_that_s_a_hook"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(fc["fish_snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("star", 1.1, -4.0)
 		Sfx.play("splash", 1.4, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "fish snatch! +2", Color(0.70, 0.90, 1.0))
-		float_text(Fisherman.FISHERMAN_POS + Vector2(0.0, -32.0), "Hey, my fish!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_fish_snatch_2"), Color(0.70, 0.90, 1.0))
+		float_text(Fisherman.FISHERMAN_POS + Vector2(0.0, -32.0), I18n.t("w_hey_my_fish"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(fc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "boardwalk dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_boardwalk_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7538,7 +7543,7 @@ func _tick_luggage_trolley(delta: float) -> void:
 		return
 	var tc: Dictionary = luggage_trolley.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(tc["warn"]):
-		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Luggage cart coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), I18n.t("w_luggage_cart_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(tc["roll"]):
 		Sfx.play("crack", 1.4, -4.0)
@@ -7547,22 +7552,22 @@ func _tick_luggage_trolley(delta: float) -> void:
 	if bool(tc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Ow, my ankles!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_ow_my_ankles"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(tc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "trolley boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Hey, careful!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_trolley_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), I18n.t("w_hey_careful"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(tc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "concourse dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_concourse_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7572,34 +7577,34 @@ func _tick_surfer(delta: float) -> void:
 		return
 	var sf: Dictionary = surfer.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(sf["warn"]):
-		float_text(surfer.pos + Vector2(0.0, -32.0), "Surfboard coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(surfer.pos + Vector2(0.0, -32.0), I18n.t("w_surfboard_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(sf["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Ow! Was that a surfboard?", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_ow_was_that_a_surfboard"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(sf["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "surfer boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(surfer.pos + Vector2(0.0, -32.0), "Dude!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_surfer_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(surfer.pos + Vector2(0.0, -32.0), I18n.t("w_dude"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(sf["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "polo snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(surfer.pos + Vector2(0.0, -32.0), "Hey, my polo!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_polo_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(surfer.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_polo"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(sf["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "surf dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_surf_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7609,34 +7614,34 @@ func _tick_gegant(delta: float) -> void:
 		return
 	var gc: Dictionary = gegant.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(gc["warn"]):
-		float_text(gegant.pos + Vector2(0.0, -32.0), "Giant coming through! Visca!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(gegant.pos + Vector2(0.0, -32.0), I18n.t("w_giant_coming_through_visca"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bell", 1.05, -4.0)
 	if bool(gc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Wow, that thing is huge!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_wow_that_thing_is_huge"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(gc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "giant boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(gegant.pos + Vector2(0.0, -32.0), "Easy, little one!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_giant_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(gegant.pos + Vector2(0.0, -32.0), I18n.t("w_easy_little_one"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(gc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "rosette snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(gegant.pos + Vector2(0.0, -32.0), "Thanks, pup!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_rosette_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(gegant.pos + Vector2(0.0, -32.0), I18n.t("w_thanks_pup"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(gc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "giant dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_giant_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7647,34 +7652,34 @@ func _tick_castanyera(delta: float) -> void:
 		return
 	var cc: Dictionary = castanyera.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(cc["warn"]):
-		float_text(castanyera.pos + Vector2(0.0, -32.0), "Hot chestnuts coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(castanyera.pos + Vector2(0.0, -32.0), I18n.t("w_hot_chestnuts_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bell", 1.15, -4.0)
 	if bool(cc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Hot! Hot! Hot!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_hot_hot_hot"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(cc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "chestnut boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(castanyera.pos + Vector2(0.0, -32.0), "Happy Castanyada, pup!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_chestnut_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(castanyera.pos + Vector2(0.0, -32.0), I18n.t("w_happy_castanyada_pup"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(cc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "chestnut snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(castanyera.pos + Vector2(0.0, -32.0), "Careful, they're hot!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_chestnut_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(castanyera.pos + Vector2(0.0, -32.0), I18n.t("w_careful_they_re_hot"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(cc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "chestnut dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_chestnut_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7684,35 +7689,35 @@ func _tick_gardener(delta: float) -> void:
 		return
 	var gc: Dictionary = gardener.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(gc["warn"]):
-		float_text(gardener.pos + Vector2(0.0, -32.0), "Wheelbarrow coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(gardener.pos + Vector2(0.0, -32.0), I18n.t("w_wheelbarrow_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(gc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Sorry, sorry! Your plants!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(gardener.pos + Vector2(0.0, -32.0), "Mind the plants!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_sorry_sorry_your_plants"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(gardener.pos + Vector2(0.0, -32.0), I18n.t("w_mind_the_plants"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(gc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "gardener boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(gardener.pos + Vector2(0.0, -32.0), "Hello, little troublemaker!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_gardener_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(gardener.pos + Vector2(0.0, -32.0), I18n.t("w_hello_little_troublemaker"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(gc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "geranium snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(gardener.pos + Vector2(0.0, -32.0), "Hey, my flowers!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_geranium_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(gardener.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_flowers"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(gc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "mosaic dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_mosaic_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7722,35 +7727,35 @@ func _tick_forklift(delta: float) -> void:
 		return
 	var fc: Dictionary = forklift.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(fc["warn"]):
-		float_text(forklift.pos + Vector2(0.0, -32.0), "Forklift coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(forklift.pos + Vector2(0.0, -32.0), I18n.t("w_forklift_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("ui", 1.8, -2.0)
 	if bool(fc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "That forklift clipped me!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(forklift.pos + Vector2(0.0, -32.0), "Scrap load, clear the way!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_that_forklift_clipped_me"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(forklift.pos + Vector2(0.0, -32.0), I18n.t("w_scrap_load_clear_the_way"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(fc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "forklift boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(forklift.pos + Vector2(0.0, -32.0), "Hey there, scrap hound!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_forklift_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(forklift.pos + Vector2(0.0, -32.0), I18n.t("w_hey_there_scrap_hound"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(fc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.0, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "hubcap snatch! +2", Color(1.0, 0.82, 0.35))
-		float_text(forklift.pos + Vector2(0.0, -32.0), "Hey, that's my scrap!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_hubcap_snatch_2"), Color(1.0, 0.82, 0.35))
+		float_text(forklift.pos + Vector2(0.0, -32.0), I18n.t("w_hey_that_s_my_scrap"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(fc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "scrap dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_scrap_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7760,35 +7765,35 @@ func _tick_scooter(delta: float) -> void:
 		return
 	var sc: Dictionary = scooter.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(sc["warn"]):
-		float_text(scooter.pos + Vector2(0.0, -32.0), "Scooter coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(scooter.pos + Vector2(0.0, -32.0), I18n.t("w_scooter_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("whistle", 1.8, -3.0)
 	if bool(sc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Ow! My elbow!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(scooter.pos + Vector2(0.0, -32.0), "Tight alley, watch it!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_ow_my_elbow"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(scooter.pos + Vector2(0.0, -32.0), I18n.t("w_tight_alley_watch_it"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(sc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "scooter boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(scooter.pos + Vector2(0.0, -32.0), "Hello, little guy!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_scooter_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(scooter.pos + Vector2(0.0, -32.0), I18n.t("w_hello_little_guy"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(sc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("pickup", 1.2, -3.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "letter snatch! +2", Color(1.0, 0.82, 0.35))
-		float_text(scooter.pos + Vector2(0.0, -32.0), "Thanks for the mail!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_letter_snatch_2"), Color(1.0, 0.82, 0.35))
+		float_text(scooter.pos + Vector2(0.0, -32.0), I18n.t("w_thanks_for_the_mail"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(sc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "gòtic dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_gotic_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7798,35 +7803,35 @@ func _tick_banderer(delta: float) -> void:
 		return
 	var bc: Dictionary = banderer.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(bc["warn"]):
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Big flag coming through! Kickoff soon!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(banderer.pos + Vector2(0.0, -32.0), I18n.t("w_big_flag_coming_through_kickoff_soon"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("bark", 1.2, -4.0)
 	if bool(bc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whoa! Watch the flag!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Al tanto amb la bandera!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whoa_watch_the_flag"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(banderer.pos + Vector2(0.0, -32.0), I18n.t("w_al_tanto_amb_la_bandera"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(bc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "banderer boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Hola, gosset culer!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_banderer_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(banderer.pos + Vector2(0.0, -32.0), I18n.t("w_hola_gosset_culer"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("pickup", 1.2, -3.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "bufanda snatch! +2", Color(1.0, 0.72, 0.32))
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Ei, la meva bufanda!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_bufanda_snatch_2"), Color(1.0, 0.72, 0.32))
+		float_text(banderer.pos + Vector2(0.0, -32.0), I18n.t("w_ei_la_meva_bufanda"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "partit dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_partit_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7836,35 +7841,35 @@ func _tick_botanic(delta: float) -> void:
 		return
 	var bc: Dictionary = botanic.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(bc["warn"]):
-		float_text(botanic.pos + Vector2(0.0, -32.0), "Mind the cactus!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(botanic.pos + Vector2(0.0, -32.0), I18n.t("w_mind_the_cactus"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(bc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Ouch! Is that a cactus?", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(botanic.pos + Vector2(0.0, -32.0), "Mind the spines!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_ouch_is_that_a_cactus"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(botanic.pos + Vector2(0.0, -32.0), I18n.t("w_mind_the_spines"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(bc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "botanist boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(botanic.pos + Vector2(0.0, -32.0), "Hello, mountain pup!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_botanist_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(botanic.pos + Vector2(0.0, -32.0), I18n.t("w_hello_mountain_pup"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("pickup", 1.2, -3.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "succulent snatch! +2", Color(1.0, 0.72, 0.32))
-		float_text(botanic.pos + Vector2(0.0, -32.0), "Hey, my cactus!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_succulent_snatch_2"), Color(1.0, 0.72, 0.32))
+		float_text(botanic.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_cactus"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "montjuïc dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_montjuic_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7874,35 +7879,35 @@ func _tick_escombriaire(delta: float) -> void:
 		return
 	var ec: Dictionary = escombriaire.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(ec["warn"]):
-		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Wet street, mind the broom!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), I18n.t("w_wet_street_mind_the_broom"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(ec["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Ugh, I'm all dusty!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Watch the bristles!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_ugh_i_m_all_dusty"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), I18n.t("w_watch_the_bristles"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(ec["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "sweeper boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Good morning, pup!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_sweeper_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), I18n.t("w_good_morning_pup"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(ec["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("pickup", 1.2, -3.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "duck snatch! +2", Color(1.0, 0.72, 0.32))
-		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Hey, my duck!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_duck_snatch_2"), Color(1.0, 0.72, 0.32))
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_duck"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(ec["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "neteja dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_neteja_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7912,35 +7917,35 @@ func _tick_ornitoleg(delta: float) -> void:
 		return
 	var oc: Dictionary = ornitoleg.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(oc["warn"]):
-		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Birdwatcher crossing!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(ornitoleg.pos + Vector2(0.0, -32.0), I18n.t("w_birdwatcher_crossing"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(oc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Oops, didn't see you there!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Mind the scope!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_oops_didn_t_see_you_there"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(ornitoleg.pos + Vector2(0.0, -32.0), I18n.t("w_mind_the_scope"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(oc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "birder boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Hello, handsome bird!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_birder_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(ornitoleg.pos + Vector2(0.0, -32.0), I18n.t("w_hello_handsome_bird"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(oc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("pickup", 1.2, -3.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "binoculars snatch! +2", Color(1.0, 0.72, 0.32))
-		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Hey, my binoculars!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_binoculars_snatch_2"), Color(1.0, 0.72, 0.32))
+		float_text(ornitoleg.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_binoculars"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(oc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "besòs dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_besos_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7950,35 +7955,35 @@ func _tick_florista(delta: float) -> void:
 		return
 	var fc: Dictionary = florista.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(fc["warn"]):
-		float_text(florista.pos + Vector2(0.0, -32.0), "Fresh flowers coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(florista.pos + Vector2(0.0, -32.0), I18n.t("w_fresh_flowers_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.1, -3.0)
 	if bool(fc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Oops, petals everywhere!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(florista.pos + Vector2(0.0, -32.0), "Oh, my roses!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_oops_petals_everywhere"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(florista.pos + Vector2(0.0, -32.0), I18n.t("w_oh_my_roses"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(fc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "florist boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(florista.pos + Vector2(0.0, -32.0), "Hello, handsome!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_florist_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(florista.pos + Vector2(0.0, -32.0), I18n.t("w_hello_handsome"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(fc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("pickup", 1.2, -3.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "rose snatch! +2", Color(1.0, 0.72, 0.32))
-		float_text(florista.pos + Vector2(0.0, -32.0), "Hey, my rose!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_rose_snatch_2"), Color(1.0, 0.72, 0.32))
+		float_text(florista.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_rose"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(fc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "rambla dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_rambla_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -7988,35 +7993,35 @@ func _tick_boletaire(delta: float) -> void:
 		return
 	var bc: Dictionary = boletaire.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(bc["warn"]):
-		float_text(boletaire.pos + Vector2(0.0, -32.0), "Mushroom picker crossing!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(boletaire.pos + Vector2(0.0, -32.0), I18n.t("w_mushroom_picker_crossing"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("rustle", 1.2, -3.0)
 	if bool(bc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("grunt", 0.9, -2.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Oops, not the mushrooms!", Color(1.0, 0.72, 0.72), POP_SAY)
-		float_text(boletaire.pos + Vector2(0.0, -32.0), "Mind the mushrooms!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_oops_not_the_mushrooms"), Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(boletaire.pos + Vector2(0.0, -32.0), I18n.t("w_mind_the_mushrooms"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(bc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "forager boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(boletaire.pos + Vector2(0.0, -32.0), "Hello, forest pup!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_forager_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(boletaire.pos + Vector2(0.0, -32.0), I18n.t("w_hello_forest_pup"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("pickup", 1.2, -3.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "mushroom snatch! +2", Color(1.0, 0.72, 0.32))
-		float_text(boletaire.pos + Vector2(0.0, -32.0), "Hey, my mushroom!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_mushroom_snatch_2"), Color(1.0, 0.72, 0.32))
+		float_text(boletaire.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_mushroom"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "bosc dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_bosc_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -8026,34 +8031,34 @@ func _tick_wild_boar(delta: float) -> void:
 		return
 	var bc: Dictionary = wild_boar.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(bc["warn"]):
-		float_text(wild_boar.pos + Vector2(0.0, -32.0), "SNORT! SNORT!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), I18n.t("w_snort_snort"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("grunt", 0.95, -4.0)
 	if bool(bc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Is that a boar?!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_is_that_a_boar"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(bc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "boar boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Hmph!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_boar_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), I18n.t("w_hmph"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "truffle snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Snort!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_truffle_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), I18n.t("w_snort"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(bc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "boar dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_boar_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -8063,34 +8068,34 @@ func _tick_lost_tourist(delta: float) -> void:
 		return
 	var lt: Dictionary = lost_tourist.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(lt["warn"]):
-		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "Lost tourist! Mind the map!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), I18n.t("w_lost_tourist_mind_the_map"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(lt["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Oof, that's a big map!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_oof_that_s_a_big_map"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(lt["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "tourist boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "Sorry, sorry!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_tourist_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), I18n.t("w_sorry_sorry"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(lt["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "cookie snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "My cookie!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_cookie_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), I18n.t("w_my_cookie"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(lt["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "maze dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_maze_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -8100,36 +8105,36 @@ func _tick_trail_runner(delta: float) -> void:
 		return
 	var tc: Dictionary = trail_runner.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(tc["warn"]):
-		float_text(trail_runner.pos + Vector2(0.0, -32.0), "Runner coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(trail_runner.pos + Vector2(0.0, -32.0), I18n.t("w_runner_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(tc["clack"]):
 		Sfx.play("crack", 2.2, -6.0)
 	if bool(tc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Oof! Fast, aren't you?", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_oof_fast_aren_t_you"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(tc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "runner boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(trail_runner.pos + Vector2(0.0, -32.0), "Hey, good hustle!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_runner_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(trail_runner.pos + Vector2(0.0, -32.0), I18n.t("w_hey_good_hustle"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(tc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "gel snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(trail_runner.pos + Vector2(0.0, -32.0), "Hey, my energy gel!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_gel_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(trail_runner.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_energy_gel"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(tc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "trail dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_trail_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -8139,36 +8144,36 @@ func _tick_unicyclist(delta: float) -> void:
 		return
 	var uc: Dictionary = unicyclist.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(uc["warn"]):
-		float_text(unicyclist.pos + Vector2(0.0, -32.0), "Unicycle coming through!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(unicyclist.pos + Vector2(0.0, -32.0), I18n.t("w_unicycle_coming_through"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(uc["wobble"]):
 		Sfx.play("crack", 2.0, -6.0)
 	if bool(uc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "A unicycle? Really?", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_a_unicycle_really"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(uc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "unicycle boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(unicyclist.pos + Vector2(0.0, -32.0), "Oop, wobble!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_unicycle_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(unicyclist.pos + Vector2(0.0, -32.0), I18n.t("w_oop_wobble"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(uc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "pin snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(unicyclist.pos + Vector2(0.0, -32.0), "Well spotted!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_pin_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(unicyclist.pos + Vector2(0.0, -32.0), I18n.t("w_well_spotted"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(uc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "summit dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_summit_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -8178,36 +8183,36 @@ func _tick_cone_dog(delta: float) -> void:
 		return
 	var cc: Dictionary = cone_dog.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(cc["warn"]):
-		float_text(cone_dog.pos + Vector2(0.0, -32.0), "Cone dog on the loose!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(cone_dog.pos + Vector2(0.0, -32.0), I18n.t("w_cone_dog_on_the_loose"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(cc["scuffle"]):
 		Sfx.play("crack", 2.0, -6.0)
 	if bool(cc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Ow, that cone is hard!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_ow_that_cone_is_hard"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(cc["boop"]):
 		bones += 2
 		combo.add("BOOP", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "cone boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(cone_dog.pos + Vector2(0.0, -32.0), "Yip!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_cone_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(cone_dog.pos + Vector2(0.0, -32.0), I18n.t("w_yip"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(cc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "treat snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(ConeDog.DOOR + Vector2(0.0, -32.0), "Good dog!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_treat_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(ConeDog.DOOR + Vector2(0.0, -32.0), I18n.t("w_good_dog"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(cc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice dodge!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "clinic dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_dodge"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_clinic_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -8217,29 +8222,29 @@ func _tick_waiter(delta: float) -> void:
 		return
 	var wc: Dictionary = waiter.tick(delta, dog.global_position, dog.velocity, human.global_position)
 	if bool(wc["warn"]):
-		float_text(waiter.pos + Vector2(0.0, -32.0), "Mind the tray!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(waiter.pos + Vector2(0.0, -32.0), I18n.t("w_mind_the_tray"), Color(0.96, 0.94, 0.88), POP_SAY)
 		Sfx.play("intro_tap", 1.8, -4.0)
 	if bool(wc["clink"]):
 		Sfx.play("crack", 2.2, -6.0)
 	if bool(wc["bump"]):
 		human.patience = maxf(0.0, human.patience - LIVE_EVENT_BUMP_PATIENCE)
 		Sfx.play("bump", 1.1, -3.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Hey, my shirt!", Color(1.0, 0.72, 0.72), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_hey_my_shirt"), Color(1.0, 0.72, 0.72), POP_SAY)
 	if bool(wc["snatch"]):
 		bones += 2
 		combo.add("SNATCH", 2)
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "croqueta snatch! +2", Color(1.0, 0.78, 0.32))
-		float_text(waiter.pos + Vector2(0.0, -32.0), "Hey, my croquette!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_croqueta_snatch_2"), Color(1.0, 0.78, 0.32))
+		float_text(waiter.pos + Vector2(0.0, -32.0), I18n.t("w_hey_my_croquette"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if bool(wc["dodge"]):
 		saves_done += 1
 		bones += 2
 		combo.add("DODGE", 2)
 		Sfx.play("star", 1.1, -6.0)
-		float_text(human.global_position + Vector2(0.0, -32.0), "Whew, nice save!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(dog.global_position + Vector2(0.0, -20.0), "plaça dodge! +2", Color(1.0, 0.92, 0.45))
+		float_text(human.global_position + Vector2(0.0, -32.0), I18n.t("w_whew_nice_save"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(dog.global_position + Vector2(0.0, -20.0), I18n.t("w_placa_dodge_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 
 
@@ -8249,7 +8254,7 @@ func _tick_petanca(delta: float) -> void:
 		return
 	var pc: Dictionary = petanca.tick(delta, dog.global_position, dog.facing, human.global_position)
 	if bool(pc["warn"]):
-		float_text(Petanca.THROWER + Vector2(0.0, -28.0), "Watch the boule!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Petanca.THROWER + Vector2(0.0, -28.0), I18n.t("w_watch_the_boule"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(pc["clink"]):
 		Sfx.play("crack", 1.8, -6.0)
 	if bool(pc["boop"]):
@@ -8257,8 +8262,8 @@ func _tick_petanca(delta: float) -> void:
 		Sfx.play("crack", 2.2, -4.0)
 		Sfx.play("star", 1.1, -8.0)
 		combo.add("BOOP", 2)
-		float_text(petanca.pos + Vector2(0.0, -20.0), "boop! +2", Color(1.0, 0.92, 0.45))
-		float_text(Petanca.THROWER + Vector2(0.0, -28.0), "Ha, good dog!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(petanca.pos + Vector2(0.0, -20.0), I18n.t("w_boop_2"), Color(1.0, 0.92, 0.45))
+		float_text(Petanca.THROWER + Vector2(0.0, -28.0), I18n.t("w_ha_good_dog"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 
 
@@ -8273,30 +8278,30 @@ func _tick_corners(delta: float) -> void:
 	var tumbling: bool = dog.is_tumbling()
 	var kc: Dictionary = kickabout.tick(delta, dog.global_position, face, tumbling, kickoff)
 	if bool(kc["yell"]):
-		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "Kick it back!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), I18n.t("w_kick_it_back"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(kc["gol"]):
 		bones += 5
 		Sfx.play("star", 1.1, -4.0)
-		float_text(Kickabout.MOUTH + Vector2(0.0, -30.0), "gol! +5", Color(1.0, 0.92, 0.45))
+		float_text(Kickabout.MOUTH + Vector2(0.0, -30.0), I18n.t("w_gol_5"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 	if bool(kc["back"]):
-		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), "Good dog!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Kickabout.KIDS[1] + Vector2(0.0, -28.0), I18n.t("w_good_dog"), Color(0.96, 0.94, 0.88), POP_SAY)
 	lost_scarf.wind = Game.weather == "wind"
 	var sc: Dictionary = lost_scarf.tick(delta, dog.global_position, face, tumbling, kickoff, Callable(self, "walk_edges"))
 	if bool(sc["scarf"]) and lost_scarf.waiting():
-		float_text(lost_scarf.at + Vector2(0.0, -36.0), "Hey, my lucky scarf!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(lost_scarf.at + Vector2(0.0, -36.0), I18n.t("w_hey_my_lucky_scarf"), Color(0.96, 0.94, 0.88), POP_SAY)
 	if bool(sc["good"]):
 		bones += 6
 		Sfx.play("star", 0.95, -4.0)
-		float_text(lost_scarf.at + Vector2(0.0, -36.0), "good dog! +6", Color(0.85, 1.0, 0.85))
-		float_text(lost_scarf.at + Vector2(-28.0, -16.0), "Yay!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(lost_scarf.at + Vector2(0.0, -36.0), I18n.t("w_good_dog_6"), Color(0.85, 1.0, 0.85))
+		float_text(lost_scarf.at + Vector2(-28.0, -16.0), I18n.t("w_yay"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if phase == "out" and not _fan_pairs and dog.global_position.y < -1400.0:
 		_fan_pairs = true
 		_spawn_fan_pairs()
 	if not _tout_said and dog.global_position.distance_to(Partit.TOUT) < 130.0:
 		_tout_said = true
-		float_text(Partit.TOUT + Vector2(0.0, -28.0), "Anyone selling tickets?", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(Partit.TOUT + Vector2(0.0, -28.0), I18n.t("w_anyone_selling_tickets"), Color(0.96, 0.94, 0.88), POP_SAY)
 
 
 # Fans on the way to the bar: home shirts, the other colour on the cap.
@@ -8350,7 +8355,7 @@ func _tick_match_crowd(delta: float) -> void:
 	if match_day != null and match_day.outflow_due():
 		match_day.watch_home(dog_p.y, HOME_Y, match_crowd.any_south_of(dog_p.y))
 	if match_crowd.hup_fresh:
-		float_text(match_crowd.hup_at, "hup", Color(0.95, 0.93, 0.86))
+		float_text(match_crowd.hup_at, I18n.t("w_hup"), Color(0.95, 0.93, 0.86))
 
 
 # The clock, then what it asks of the crowd and of your human. The river's
@@ -8369,8 +8374,8 @@ func _tick_match_day(delta: float) -> void:
 		_update_hud()
 	if bool(cue["pa"]):
 		var at := human.global_position + Vector2(0.0, -70.0)
-		float_text(at, "Five minutes to kickoff!", Color(0.96, 0.94, 0.88), POP_SAY)
-		float_text(at + Vector2(0.0, 22.0), "Five minutes left!", Color(0.85, 0.84, 0.78), POP_SAY)
+		float_text(at, I18n.t("w_five_minutes_to_kickoff"), Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(at + Vector2(0.0, 22.0), I18n.t("w_five_minutes_left"), Color(0.85, 0.84, 0.78), POP_SAY)
 	if bool(cue["whistle"]):
 		Sfx.play("whistle", 1.0, -2.0)
 		_match_roar = 0.6
@@ -8379,7 +8384,7 @@ func _tick_match_day(delta: float) -> void:
 	if bool(cue["ooooh"]):
 		Sfx.play("ooooh", 1.0, -8.0)
 		_match_flash = MatchDay.SWELL_T
-		float_text(human.global_position + Vector2(0.0, -78.0), "Ooooh!", Color(0.96, 0.94, 0.86), POP_SAY)
+		float_text(human.global_position + Vector2(0.0, -78.0), I18n.t("w_ooooh"), Color(0.96, 0.94, 0.86), POP_SAY)
 	if bool(cue["roar"]):
 		Sfx.play("roar", 0.85, -6.0)
 		_match_flash = 0.45
@@ -8533,14 +8538,14 @@ func _apply_leash(delta: float) -> void:
 		if vault_recent > 0.0:
 			bones += 8
 			combo.add("SLINGSHOT", 20)
-			float_text(human.global_position + Vector2(0, -34), "slingshot! +8",
+			float_text(human.global_position + Vector2(0, -34), I18n.t("w_slingshot_8"),
 				Color(1.0, 0.86, 0.5))
 			vault_recent = 0.0
 		Sfx.play("fling")
 		# the hardest thing on the leash, and paid like it, and said out loud
 		bones += 6
 		combo.add("FLING", 30)
-		feed.say("FLING!  30", EventFeed.Tone.LOUD)
+		feed.say(I18n.t("w_fling_30"), EventFeed.Tone.LOUD)
 		_slowmo()
 		if not leash.detached:
 			# a fresh fling must never be arrested by a residual wrap
@@ -8933,7 +8938,7 @@ func _squirrels(delta: float) -> void:
 		add_child(bo)
 		bo.setup(self, dog, human, LevelBuild.TRAIL_BOAR_Y,
 			be.x - LevelBuild.TRAIL_WOOD_OUT + 10.0, be.y + LevelBuild.TRAIL_WOOD_OUT + 60.0)
-		feed.say("WILD BOAR! GIVE THEM ROOM", EventFeed.Tone.LOUD)
+		feed.say(I18n.t("w_wild_boar_give_them_room"), EventFeed.Tone.LOUD)
 	while duck_ys.size() > 0 and cam.position.y < duck_ys[0] + 650.0:
 		var dy: float = duck_ys.pop_front()
 		var ddir := 1.0 if randf() < 0.5 else -1.0
@@ -9043,7 +9048,7 @@ func nearest_cover(from: Vector2, threat: Vector2) -> Vector2:
 
 func on_duck_disturbed(pos: Vector2) -> void:
 	ducks_disturbed += 1
-	float_text(pos, "quack!", Color(1, 0.9, 0.5))
+	float_text(pos, I18n.t("w_quack"), Color(1, 0.9, 0.5))
 
 
 func on_critter_chase(pos: Vector2, kind: String) -> void:
@@ -9054,11 +9059,11 @@ func on_critter_chase(pos: Vector2, kind: String) -> void:
 		# nose boop is the closest Millie ever gets
 		bones += 4
 		combo.add("BOOP", 4)
-		float_text(pos, "boop! +4", Color(1, 0.95, 0.7))
+		float_text(pos, I18n.t("w_boop_4"), Color(1, 0.95, 0.7))
 	else:
 		bones += 2
 		combo.add("CHASE", 2)
-		float_text(pos, "almost got it! +2", Color(1, 0.95, 0.7))
+		float_text(pos, I18n.t("w_almost_got_it_2"), Color(1, 0.95, 0.7))
 	_update_hud()
 
 
@@ -9086,7 +9091,7 @@ func _greetings() -> void:
 			if o.is_in_group("pairs"):
 				_greet_pair(o)
 			else:
-				float_text(op + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
+				float_text(op + Vector2(0, -18), I18n.t("w_sniff_hi"), Color(0.8, 1.0, 0.85))
 
 
 # what another walker's dog and its owner make of yours coming up to say hello
@@ -9109,12 +9114,12 @@ func _greet_pair(pair: Node2D) -> void:
 	var dp: Vector2 = pair.npc_dog.position
 	var op: Vector2 = pair.npc_owner.position
 	if bool(pair.grumpy):
-		float_text(dp + Vector2(0, -18), "grrr", Color(1.0, 0.7, 0.55))
+		float_text(dp + Vector2(0, -18), I18n.t("w_grrr"), Color(1.0, 0.7, 0.55))
 		# its owner already said sorry when it lunged
 		if String(pair.meet) != "lunge" and String(pair.meet) != "done":
 			float_text(op + Vector2(0, -30), String(GRUMPY_LINES[int(pair.seed_o * 1000.0) % GRUMPY_LINES.size()]), Color(1, 0.92, 0.85), POP_SAY)
 	else:
-		float_text(dp + Vector2(0, -18), "sniff! hi", Color(0.8, 1.0, 0.85))
+		float_text(dp + Vector2(0, -18), I18n.t("w_sniff_hi"), Color(0.8, 1.0, 0.85))
 		float_text(op + Vector2(0, -30), String(GREET_LINES[int(pair.seed_o * 1000.0) % GREET_LINES.size()]), Color(1, 0.95, 0.9), POP_SAY)
 
 
@@ -9126,14 +9131,14 @@ func on_pair_meet(pair: Node2D, kind: String) -> void:
 	var op: Vector2 = pair.npc_owner.position
 	match kind:
 		"warn":
-			float_text(dp + Vector2(0, -18), "grrr", Color(1.0, 0.7, 0.55))
+			float_text(dp + Vector2(0, -18), I18n.t("w_grrr"), Color(1.0, 0.7, 0.55))
 		"lunge":
 			float_text(op + Vector2(0, -30), String(GRUMPY_LINES[int(pair.seed_o * 1000.0) % GRUMPY_LINES.size()]), Color(1, 0.92, 0.85), POP_SAY)
 
 
 func on_pair_bark(pair: Node2D) -> void:
 	Sfx.play("bark", 0.72, -9.0)
-	float_text(pair.npc_dog.position + Vector2(0, -20), "WOOF!", Color(1.0, 0.86, 0.72))
+	float_text(pair.npc_dog.position + Vector2(0, -20), I18n.t("w_woof"), Color(1.0, 0.86, 0.72))
 
 
 const CALL_LINES := ["Yeah, I'm walking the dog.", "No, go on, I'm listening.", "Sí, sí... vale.",
@@ -9499,7 +9504,7 @@ func _pairs(delta: float) -> void:
 			bones += 3
 			Sfx.play("tangle")
 			combo.add("TANGLE", 3)
-			feed.say("YOU TANGLED THEM!  +3", EventFeed.Tone.GOOD)
+			feed.say(I18n.t("w_you_tangled_them_3"), EventFeed.Tone.GOOD)
 
 
 # A PATCH THAT LIES ON THE PATH.
@@ -10427,7 +10432,7 @@ func _offpath(delta: float) -> void:
 		bones += bonus_bones
 		Sfx.play("snack", 0.8)
 		combo.add("MESSY", 4 if is_bruna else 3)
-		float_text(human.global_position + Vector2(0, -34), String(sdd.quip) + (" +%d" % bonus_bones), Color(sdd.col).lightened(0.35))
+		float_text(human.global_position + Vector2(0, -34), I18n.of_english(String(sdd.quip)) + (" +%d" % bonus_bones), Color(sdd.col).lightened(0.35))
 	smudge_cd = maxf(0.0, smudge_cd - delta)
 	var off: bool = dog.global_position.x < tut_l or dog.global_position.x > tut_r
 	if off and human.is_available_for_chore() and not human.is_fallen():
@@ -10469,11 +10474,11 @@ func _tick_vault(delta: float) -> void:
 	if wrapped and lvl == "reial" and not reial_gaudi_wrapped:
 		if pole in Reial.GAUDI_POSTS:
 			reial_gaudi_wrapped = true
-			feed.say("GAUDÍ SLINGSHOT!", EventFeed.Tone.GOOD)
+			feed.say(I18n.t("w_gaudi_slingshot"), EventFeed.Tone.GOOD)
 	if wrapped and lvl == "carmel" and not carmel_cannon_wrapped:
 		if pole in [Carmel.CANNON_1, Carmel.CANNON_2, Carmel.CANNON_3]:
 			carmel_cannon_wrapped = true
-			feed.say("CANNON BATTERY SLINGSHOT!", EventFeed.Tone.GOOD)
+			feed.say(I18n.t("w_cannon_battery_slingshot"), EventFeed.Tone.GOOD)
 	if vault_t > 0.0:
 		# held zoomies keep the swing going, up to its cap
 		var held: bool = dog.turbo_active and vault_elapsed < VAULT_MAX_T
@@ -10501,7 +10506,7 @@ func _tick_vault(delta: float) -> void:
 			# mid-dare, say so out loud: this is the swing she is after
 			if challenge.active and dare_nag_t <= 0.0:
 				dare_nag_t = DARE_NAG_S
-				feed.say(Prompts.fill("HOLD {turbo} TO SWING!"), EventFeed.Tone.LOUD)
+				feed.say(Prompts.fill(I18n.t("w_hold_to_swing")), EventFeed.Tone.LOUD)
 		return
 	# THE FLING HAS RIGHT OF WAY.
 	#
@@ -10540,7 +10545,7 @@ func _tick_vault(delta: float) -> void:
 	vault_pole = pole
 	vault_recent = 2.6
 	Sfx.play("fling", 1.2, -8.0)
-	feed.say("POLE SWING!", EventFeed.Tone.LOUD)
+	feed.say(I18n.t("w_pole_swing"), EventFeed.Tone.LOUD)
 
 
 # a pole that is one of a boss's legs
@@ -10590,10 +10595,10 @@ func _end_vault() -> void:
 		if SwingMath.is_figure_eight(last_swing, vault_pole, s, FIG8_APART):
 			bones += 8
 			combo.add("FIGURE EIGHT", FIG8_PTS)
-			feed.say("FIGURE EIGHT!  %d" % FIG8_PTS, EventFeed.Tone.LOUD)
+			feed.say(I18n.t("w_figure_eight") % FIG8_PTS, EventFeed.Tone.LOUD)
 			last_swing.clear()
 		else:
-			feed.say("POLE SWING!  %d" % pts, EventFeed.Tone.LOUD)
+			feed.say(I18n.t("w_pole_swing_2") % pts, EventFeed.Tone.LOUD)
 			last_swing = {"pole": vault_pole, "sense": s}
 			last_swing_t = FIG8_WINDOW
 		_slowmo()
@@ -10639,7 +10644,7 @@ func _tick_needle(delta: float) -> void:
 				bones += 3
 				combo.add("THREAD THE NEEDLE", NEEDLE_PTS)
 				Sfx.play("star", 1.3, -6.0)
-				feed.say("THREAD THE NEEDLE!", EventFeed.Tone.LOUD)
+				feed.say(I18n.t("w_thread_the_needle"), EventFeed.Tone.LOUD)
 				return
 
 
@@ -10679,8 +10684,8 @@ func on_rival_snatch(at: Vector2, what: String) -> void:
 	# survives, and you can have it straight back if you go and get it.
 	shake_t = maxf(shake_t, 0.3)
 	Sfx.play("bark", 0.7, -5.0)
-	var label := "MY BALL!" if what == "ball" else "MY BONE!"
-	float_text(at + Vector2(0, -30), label + " BARK AT HIM!", Color(1, 0.7, 0.6))
+	var label := I18n.t("w_my_ball") if what == "ball" else I18n.t("w_my_bone")
+	float_text(at + Vector2(0, -30), label + I18n.t("w_bark_at_him"), Color(1, 0.7, 0.6))
 	_update_hud()
 
 
@@ -10690,7 +10695,7 @@ func on_rival_drop(at: Vector2, what: String, msg: String, earned: bool, prop: D
 	if what == "ball" and phase == "freedom" and not romp_done and not is_instance_valid(ball):
 		# whatever became of that one, your human has another
 		_spawn_romp_ball()
-		float_text(human.global_position + Vector2(0, -34), "Here, another one!", Color(1, 0.92, 0.8), POP_SAY)
+		float_text(human.global_position + Vector2(0, -34), I18n.t("w_here_another_one"), Color(1, 0.92, 0.8), POP_SAY)
 	if not earned:
 		# he wandered off with it. You get nothing, because you did nothing -
 		# and the bone stays gone, so a thief who is ignored actually costs
@@ -10745,10 +10750,10 @@ func _tick_call(_delta: float) -> void:
 			var bonus := 3 + call_haul * 2
 			bones += bonus
 			Sfx.play("star", 1.05)
-			feed.say("BUSY DOG! %d THINGS  +%d" % [call_haul, bonus], EventFeed.Tone.GOOD)
+			feed.say(I18n.t("w_busy_dog_things") % [call_haul, bonus], EventFeed.Tone.GOOD)
 			_update_hud()
 		else:
-			feed.say("THE CALL'S OVER", EventFeed.Tone.BAD)
+			feed.say(I18n.t("w_the_call_s_over"), EventFeed.Tone.BAD)
 
 
 func _tick_grind(delta: float) -> void:
@@ -10777,7 +10782,7 @@ func _tick_grind(delta: float) -> void:
 			grind_cd = 0.9
 			combo.bail()
 			Sfx.play("crack", 1.2, -10.0)
-			feed.say("FELL OFF!", EventFeed.Tone.BAD)
+			feed.say(I18n.t("w_fell_off"), EventFeed.Tone.BAD)
 			dog.stumble()
 		elif at_end or absf(along) < GRIND_SPEED:
 			var pts := int(grind.land())
@@ -10788,7 +10793,7 @@ func _tick_grind(delta: float) -> void:
 				grinds_landed += 1
 				combo.add(trick, pts)
 				Sfx.play("star", 1.2)
-				feed.say("%s!  %d" % [trick, pts], EventFeed.Tone.LOUD)
+				feed.say("%s!  %d" % [I18n.of_english(trick), pts], EventFeed.Tone.LOUD)
 				_update_hud()
 		return
 	if grind_cd > 0.0 or dog.is_tumbling() or teeter.active:
@@ -10808,7 +10813,7 @@ func _tick_grind(delta: float) -> void:
 	if lvl == "angels":
 		angels_ledge_ground = true
 	Sfx.play("save", 1.35, -10.0)
-	feed.say("%s!" % String(rails[ri]["name"]), EventFeed.Tone.LOUD)
+	feed.say("%s!" % I18n.of_english(String(rails[ri]["name"])), EventFeed.Tone.LOUD)
 
 
 # The park's pond is drawn as a blob inside its Rect2 (_draw_world: the bank at
@@ -10898,7 +10903,7 @@ func _tick_teeter(delta: float) -> void:
 		bones += 2
 		Sfx.play("star", 1.1)
 		combo.add("BALANCE", 4)
-		feed.say("SAVED IT!  +2", EventFeed.Tone.GOOD)
+		feed.say(I18n.t("w_saved_it_2"), EventFeed.Tone.GOOD)
 		_slowmo()
 		_update_hud()
 		return
@@ -10909,7 +10914,7 @@ func _tick_teeter(delta: float) -> void:
 			# never ends the walk. It just breaks your run of tricks.
 			combo.bail()
 			Sfx.play("splash")
-			feed.say("SPLASH! WORTH IT", EventFeed.Tone.PLAIN)
+			feed.say(I18n.t("w_splash_worth_it"), EventFeed.Tone.PLAIN)
 		_:
 			# a hole is a hole
 			if teeter_msg != "":
@@ -10929,7 +10934,7 @@ func _hazards(delta: float) -> void:
 		if tw.cd <= 0.0 and (tw.rect as Rect2).has_point(human.global_position):
 			tw.cd = 4.0
 			human.bumped((human.global_position - (tw.rect as Rect2).get_center()).normalized())
-			float_text(human.global_position, "Hey! That's my towel!", Color(1, 0.85, 0.7), POP_SAY)
+			float_text(human.global_position, I18n.t("w_hey_that_s_my_towel"), Color(1, 0.85, 0.7), POP_SAY)
 	# Millie LOVES the water. In she goes, paddling happily - and whatever is
 	# on the other end of the leash comes too. The owner wades in reluctantly,
 	# phone held high, and edges back to the bank. Nobody drowns; it is just
@@ -10958,13 +10963,13 @@ func _hazards(delta: float) -> void:
 		dog.swimming = dog_wet
 		if dog_wet and not was_swim:
 			Sfx.play("splash")
-			float_text(dog.global_position, "splish!", Color(0.7, 0.85, 1.0))
+			float_text(dog.global_position, I18n.t("w_splish"), Color(0.7, 0.85, 1.0))
 			swam = true
 		var was_wade: bool = human.wading
 		human.wading = hum_wet
 		human.pond_bank_x = bank_x
 		if hum_wet and not was_wade:
-			float_text(human.global_position, "No no no-", Color(0.7, 0.85, 1.0), POP_SAY)
+			float_text(human.global_position, I18n.t("w_no_no_no"), Color(0.7, 0.85, 1.0), POP_SAY)
 	# open holes are the TOP tier of danger: falling in ends the walk,
 	# full stop. Bumps hurt a little; holes hurt completely.
 	# (auto_walk is a test/attract traversal - it is not allowed to die)
@@ -10994,7 +10999,7 @@ func _pickups(delta: float) -> void:
 		prize_taken = true
 		bones += 8
 		Sfx.play("star", 0.9)
-		float_text(prize_pos, "got it! +8", Color(1, 0.9, 0.5))
+		float_text(prize_pos, I18n.t("w_got_it_8"), Color(1, 0.9, 0.5))
 	# carry mission: grab it, then take it to the drop-off
 	if carry_pickup.x < INF:
 		if carry_state == 0 and not dog_carrying and dog.global_position.distance_to(carry_pickup) < 28.0:
@@ -11002,7 +11007,7 @@ func _pickups(delta: float) -> void:
 				carry_state = 1
 				dog_carrying = true
 				Sfx.play("pickup", 0.9)
-				float_text(carry_pickup, "got %s!" % carry_item, Color(0.85, 1.0, 0.85))
+				float_text(carry_pickup, I18n.t("w_got") % carry_item, Color(0.85, 1.0, 0.85))
 				_update_hud()
 		elif carry_state == 1 and dog.global_position.distance_to(carry_drop) < 34.0:
 			carry_state = 2
@@ -11010,7 +11015,7 @@ func _pickups(delta: float) -> void:
 			bones += 10
 			Sfx.play("star")
 			combo.add("DELIVER", 5)
-			float_text(carry_drop, "delivered! +10", Color(0.8, 1.0, 0.8))
+			float_text(carry_drop, I18n.t("w_delivered_10"), Color(0.8, 1.0, 0.8))
 			_slowmo()
 			_update_hud()
 	var digging_now := false
@@ -11028,7 +11033,7 @@ func _pickups(delta: float) -> void:
 				sniffs_done += 1
 				Sfx.play("mark", 1.2)
 				combo.add("SNIFF", 2)
-				float_text(h.pos, "good sniff +2", Color(1, 0.95, 0.7))
+				float_text(h.pos, I18n.t("w_good_sniff_2"), Color(1, 0.95, 0.7))
 				_update_hud()
 	# reading the noticeboard: another dog's mark is worth a proper sniff,
 	# and it is how you find out who else has been through
@@ -11042,7 +11047,7 @@ func _pickups(delta: float) -> void:
 			bones += 2
 			Sfx.play("mark", 1.3)
 			combo.add("READ", 2)
-			float_text(nm.pos, "%s was here +2" % String(nm.who), Color(0.9, 0.95, 0.75))
+			float_text(nm.pos, I18n.t("w_was_here_2") % I18n.of_english(String(nm.who)), Color(0.9, 0.95, 0.75))
 			_update_hud()
 	# the Fur-Goneta: a van that smells of four hundred other dogs. Sniffing it
 	# is the biggest single payout on the walk, and you only get it once.
@@ -11055,7 +11060,7 @@ func _pickups(delta: float) -> void:
 			Sfx.play("star", 0.9)
 			combo.add("FUR-GONETA", 8)
 			float_text(furgoneta + Vector2(0, -70.0),
-				"four hundred dogs have been in there +12", Color(1, 0.9, 0.6))
+				I18n.t("w_four_hundred_dogs_have_been_in_there"), Color(1, 0.9, 0.6))
 			_update_hud()
 	for k in kebabs:
 		if not k.eaten and dog.global_position.distance_to(k.pos) < 26.0:
@@ -11069,7 +11074,7 @@ func _pickups(delta: float) -> void:
 			poop_sooner(POOP_SNACK_PULL)
 			Sfx.play("snack")
 			combo.add("SNACK", 1)
-			float_text(k.pos, "snack +1", Color(1, 0.95, 0.7))
+			float_text(k.pos, I18n.t("w_snack_1"), Color(1, 0.95, 0.7))
 			_update_hud()
 	# The off-leash furniture, all of it rewarding a nose rather than a
 	# straight line: dig patches hide a bone (hold still over one and keep
@@ -11091,7 +11096,7 @@ func _pickups(delta: float) -> void:
 							bones += 6
 							Sfx.play("star", 0.85)
 							combo.add("DIG", 4)
-							float_text(pp.pos, "buried treasure! +6", Color(1, 0.9, 0.55))
+							float_text(pp.pos, I18n.t("w_buried_treasure_6"), Color(1, 0.9, 0.55))
 							_update_hud()
 					else:
 						var was_dig: float = float(pp.prog)
@@ -11109,7 +11114,7 @@ func _pickups(delta: float) -> void:
 							bones += 2
 							Sfx.play("mark", 1.15)
 							combo.add("SNIFF", 2)
-							float_text(pp.pos, "good sniff +2", Color(1, 0.95, 0.7))
+							float_text(pp.pos, I18n.t("w_good_sniff_2"), Color(1, 0.95, 0.7))
 							_update_hud()
 					else:
 						var was_sniff: float = float(pp.prog)
@@ -11141,7 +11146,7 @@ func _pickups(delta: float) -> void:
 			bones = maxi(0, bones - 3)
 			shake_t = maxf(shake_t, 0.4)
 			Sfx.play("tangle", 0.7)
-			float_text(c.pos, "bleh, not for dogs -3", Color(1, 0.5, 0.45))
+			float_text(c.pos, I18n.t("w_bleh_not_for_dogs_3"), Color(1, 0.5, 0.45))
 			_update_hud()
 
 
@@ -11190,18 +11195,18 @@ func _bodily(delta: float) -> void:
 				Sfx.play("mark")
 				combo.add("OVER-MARK" if not over.is_empty() else "MARK", pay)
 				if over.is_empty():
-					float_text(target, "marked! +3", Color(1, 0.95, 0.7))
+					float_text(target, I18n.t("w_marked_3"), Color(1, 0.95, 0.7))
 				else:
 					overmarks += 1
 					npc_marks.erase(over)
-					float_text(target, "over-marked %s! +6" % String(over.who),
+					float_text(target, I18n.t("w_over_marked_6") % I18n.of_english(String(over.who)),
 						Color(1, 0.85, 0.55))
 				mark_progress = 0.0
 				mark_target = Vector2(INF, INF)
 				if marks.size() >= 5 and not mark_quest_done:
 					mark_quest_done = true
 					bones += 10
-					feed.say("ALL YOUR SPOTS MARKED!  +10", EventFeed.Tone.GOOD)
+					feed.say(I18n.t("w_all_your_spots_marked_10"), EventFeed.Tone.GOOD)
 		else:
 			mark_target = Vector2(INF, INF)
 			mark_progress = 0.0
@@ -11223,7 +11228,7 @@ func _bodily(delta: float) -> void:
 			if dog.global_position.y < urge_y:
 				poop_state = 1
 				urge_timer = POOP_URGE_S
-				float_text(dog.global_position, "Uh oh...", Color(1, 0.9, 0.6))
+				float_text(dog.global_position, I18n.t("w_uh_oh"), Color(1, 0.9, 0.6))
 		1:
 			# she holds it while they run for it (a chase home, a boss fight)
 			var pressed := under_pressure()
@@ -11235,7 +11240,7 @@ func _bodily(delta: float) -> void:
 				if not _poop_sniffed:
 					# she checks the spot before she commits to it
 					_poop_sniffed = true
-					float_text(dog.global_position + Vector2(0, -34), "sniff, sniff", Color(1, 0.95, 0.8))
+					float_text(dog.global_position + Vector2(0, -34), I18n.t("w_sniff_sniff"), Color(1, 0.95, 0.8))
 				# with them on your tail it is a quick one
 				var squat_secs := POOP_SQUAT_RUSHED if pressed else POOP_SQUAT
 				squat_progress += delta
@@ -11252,7 +11257,7 @@ func _bodily(delta: float) -> void:
 			if poop_state == 1 and urge_timer <= 0.0:
 				poop_state = 3
 				urge_timer = 1.2
-				float_text(dog.global_position, "UH OH", Color(1, 0.6, 0.5))
+				float_text(dog.global_position, I18n.t("w_uh_oh_2"), Color(1, 0.6, 0.5))
 		2:
 			# the owner's chore chain: walk to it, bag it, find a bin.
 			# Falls and whirls interrupt; they resume when back on
@@ -11261,7 +11266,7 @@ func _bodily(delta: float) -> void:
 				# no time: your human leaves it where it lies (or keeps the
 				# bag in hand), and it is there for whoever is chasing
 				if human.give_up_chore():
-					human.notice("No time!", 1.2)
+					human.notice(I18n.t("w_no_time"), 1.2)
 			elif bag_pending and human.is_available_for_chore():
 				if human.carrying_bag:
 					human.resume_to_bin(nearest_bin(human.global_position))
@@ -11351,17 +11356,17 @@ func _finish_business(voluntary: bool) -> void:
 	business_spot = dog.global_position + Vector2(0, 8)
 	if voluntary and not walk_has_good_spots():
 		bones += POOP_ANY_BONES
-		feed.say("MUCH BETTER!  +%d" % POOP_ANY_BONES, EventFeed.Tone.GOOD)
+		feed.say(I18n.t("w_much_better") % POOP_ANY_BONES, EventFeed.Tone.GOOD)
 	elif voluntary and poop_spot_good(dog.global_position):
 		bones += POOP_GOOD_BONES
-		feed.say("PERFECT SPOT!  +%d" % POOP_GOOD_BONES, EventFeed.Tone.GOOD)
+		feed.say(I18n.t("w_perfect_spot") % POOP_GOOD_BONES, EventFeed.Tone.GOOD)
 	elif voluntary:
 		bones += POOP_PAVE_BONES
-		feed.say("ON THE SIDEWALK...  +%d" % POOP_PAVE_BONES, EventFeed.Tone.GOOD)
+		feed.say(I18n.t("w_on_the_sidewalk") % POOP_PAVE_BONES, EventFeed.Tone.GOOD)
 		human.patience = maxf(0.0, human.patience - POOP_PAVE_PATIENCE)
-		human.notice("Here? Really?", 1.6)
+		human.notice(I18n.t("w_here_really"), 1.6)
 	else:
-		feed.say("COULDN'T WAIT...", EventFeed.Tone.BAD)
+		feed.say(I18n.t("w_couldn_t_wait"), EventFeed.Tone.BAD)
 	bag_pending = true
 
 
@@ -11390,7 +11395,7 @@ func toss_bag(from: Vector2, to: Vector2) -> void:
 func on_business_bagged(pos: Vector2) -> void:
 	bag_pending = false
 	bones += 2
-	float_text(pos, "bagged, responsibly +2", Color(0.8, 1.0, 0.8))
+	float_text(pos, I18n.t("w_bagged_responsibly_2"), Color(0.8, 1.0, 0.8))
 	_update_hud()
 
 
@@ -11676,9 +11681,9 @@ func _enter_freedom() -> void:
 		rv.z_index = 9
 		add_child(rv)
 		rv.setup(self, dog, rb)
-		float_text(rv.position, "...Oh no. Brutus.", Color(1, 0.85, 0.75), POP_SAY)
+		float_text(rv.position, I18n.t("w_oh_no_brutus"), Color(1, 0.85, 0.75), POP_SAY)
 	FreedomGames.begin(self)
-	feed.say("OFF THE LEASH! GO FETCH", EventFeed.Tone.LOUD)
+	feed.say(I18n.t("w_off_the_leash_go_fetch"), EventFeed.Tone.LOUD)
 
 
 # The owner's ball. Thrown at the start, and thrown again whenever one is lost
@@ -11736,7 +11741,7 @@ func on_wallcat_spooked(pos: Vector2) -> void:
 	wall_cats_spooked += 1
 	bones += 2
 	combo.add("SHOO", 3)
-	float_text(pos + Vector2(0, -20), "scat! +2", Color(0.9, 0.95, 1.0))
+	float_text(pos + Vector2(0, -20), I18n.t("w_scat_2"), Color(0.9, 0.95, 1.0))
 	_update_hud()
 
 
@@ -11757,7 +11762,7 @@ func on_guard_woken(pos: Vector2) -> void:
 	shake_t = maxf(shake_t, 0.5)
 	Sfx.play("bark", 0.6, -3.0)  # a deeper, angrier dog than Millie
 	human.halt(1.0)
-	float_text(pos + Vector2(0, -26), "woof woof woof -2", Color(1, 0.5, 0.4))
+	float_text(pos + Vector2(0, -26), I18n.t("w_woof_woof_woof_2"), Color(1, 0.5, 0.4))
 	_update_hud()
 
 
@@ -11777,14 +11782,14 @@ func _stealth(delta: float) -> void:
 		var to_dog: Vector2 = dog.global_position - (c.pos as Vector2)
 		if c.cd <= 0.0 and to_dog.length() < 190.0 and absf(wrapf(to_dog.angle() - ang, -PI, PI)) < 0.32:
 			c.cd = 3.0
-			_caught("the camera")
+			_caught(I18n.t("w_the_camera"))
 	# laser tripwires: a beam that sweeps up and down its section
 	for lz in lasers:
 		lz.cd = maxf(0.0, float(lz.cd) - delta)
 		var by := lerpf(float(lz.y_lo), float(lz.y_hi), 0.5 + 0.5 * sin(t * float(lz.speed)))
 		if lz.cd <= 0.0 and dog.global_position.x > float(lz.x0) and dog.global_position.x < float(lz.x1) and absf(dog.global_position.y - by) < 7.0:
 			lz.cd = 3.0
-			_caught("the laser")
+			_caught(I18n.t("w_the_laser"))
 
 
 func _caught(what: String) -> void:
@@ -11793,7 +11798,7 @@ func _caught(what: String) -> void:
 	shake_t = maxf(shake_t, 0.4)
 	Sfx.play("crack", 1.4)
 	# `what` already names it ("the laser"), so no second THE
-	feed.say("%s SAW YOU!  -2" % what.to_upper(), EventFeed.Tone.BAD)
+	feed.say(I18n.t("w_saw_you_2") % what.to_upper(), EventFeed.Tone.BAD)
 	# the racket wakes anyone dozing nearby
 	for g in get_tree().get_nodes_in_group("guards"):
 		g.hear_noise(dog.global_position, 200.0)
@@ -11891,7 +11896,7 @@ func _neighbour_fetch() -> void:
 			add_child(npc_ball)
 			npc_ball.setup(self, dog, pair.npc_owner, freedom_lo, GATE_Y - 30.0)
 			npc_ball_pair = pair
-			float_text(pair.npc_owner.global_position + Vector2(0, -20), "Wanna play?", Color(0.85, 0.95, 1.0), POP_SAY)
+			float_text(pair.npc_owner.global_position + Vector2(0, -20), I18n.t("w_wanna_play"), Color(0.85, 0.95, 1.0), POP_SAY)
 			return
 
 
@@ -11902,7 +11907,7 @@ func _romp(delta: float) -> void:
 	if romp_timer <= 0.0:
 		romp_done = true
 		hud_status = ""
-		feed.say("TIME TO HEAD HOME", EventFeed.Tone.PLAIN)
+		feed.say(I18n.t("w_time_to_head_home"), EventFeed.Tone.PLAIN)
 
 
 func on_tofu_home(pos: Vector2) -> void:
@@ -11911,7 +11916,7 @@ func on_tofu_home(pos: Vector2) -> void:
 	Sfx.play("star")
 	tofu_home = true
 	bones += 15
-	float_text(pos, "Tofu's coming home! +15", Color(1, 0.85, 0.7))
+	float_text(pos, I18n.t("w_tofu_s_coming_home_15"), Color(1, 0.85, 0.7))
 	_slowmo()
 
 
@@ -11938,7 +11943,7 @@ func on_frisbee_returned(left: int) -> void:
 
 func on_ball_grabbed() -> void:
 	var snatched: bool = is_instance_valid(ball) and ball.state == ball.State.CARRIED and ball.snatched
-	float_text(dog.global_position, "snatched!" if snatched else "got it!", Color(0.85, 1.0, 0.85))
+	float_text(dog.global_position, I18n.t("w_snatched") if snatched else I18n.t("w_got_it"), Color(0.85, 1.0, 0.85))
 
 
 func on_ball_returned(thrower: Node2D) -> void:
@@ -11953,20 +11958,20 @@ func on_ball_returned(thrower: Node2D) -> void:
 	if is_instance_valid(b):
 		if b.snatched:
 			reward += 2
-			extra = " on the bounce"
+			extra = I18n.t("w_on_the_bounce")
 		if b.out_t < b.QUICK_S:
 			reward += 2
 			extra += " quick"
 	bones += reward
 	Sfx.play("fetch")
 	combo.add("FETCH", reward)
-	float_text(thrower.global_position, ("good dog%s! +%d" % [extra, reward]) if mine else ("shared! +%d" % reward), Color(0.8, 1.0, 0.8))
+	float_text(thrower.global_position, (I18n.t("w_good_dog_2") % [extra, reward]) if mine else (I18n.t("w_shared") % reward), Color(0.8, 1.0, 0.8))
 	if mine and is_instance_valid(thrower):
 		human.throw_pose()
 	if romp_catches >= romp_target and not romp_done:
 		romp_done = true
 		bones += 10
-		feed.say("GOOD FETCH!  +10", EventFeed.Tone.GOOD)
+		feed.say(I18n.t("w_good_fetch_10"), EventFeed.Tone.GOOD)
 		_slowmo()
 
 
@@ -12002,11 +12007,11 @@ func _enter_home() -> void:
 		tf.z_index = 9
 		add_child(tf)
 		tf.setup(self, dog, spots, route["routes"])
-		float_text(spots[0], "Tofu got out again! Can you bring her home?", Color(1, 0.85, 0.7), POP_SAY)
+		float_text(spots[0], I18n.t("w_tofu_got_out_again_can_you_bring_her"), Color(1, 0.85, 0.7), POP_SAY)
 	if chase_active:
 		HomeChase.begin(self)
 	else:
-		feed.say("LET'S GO HOME", EventFeed.Tone.PLAIN)
+		feed.say(I18n.t("w_let_s_go_home"), EventFeed.Tone.PLAIN)
 
 
 func _chase(delta: float) -> void:
@@ -12042,7 +12047,7 @@ func on_bark(pos: Vector2) -> void:
 	# a bark takes the dare on offer (systems/challenge.gd)
 	if challenge != null and challenge.phase == "offer" and challenge.waiting:
 		challenge.accept()
-		feed.say("DARE ON! GET SET", EventFeed.Tone.LOUD)
+		feed.say(I18n.t("w_dare_on_get_set"), EventFeed.Tone.LOUD)
 	mood.bump(Mood.M.BARKY, 0.22)
 	Sfx.play("bark")
 	# the plaça's pigeon game scores the burst before the bark scatters them
@@ -12085,152 +12090,152 @@ func on_bark(pos: Vector2) -> void:
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "jackhammer bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_jackhammer_bark_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 	if awning_dump != null and awning_dump.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "rain bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_rain_bark_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 	if fisherman != null and fisherman.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "gull bark! +2", Color(1.0, 0.92, 0.45))
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_gull_bark_2"), Color(1.0, 0.92, 0.45))
 		_update_hud()
 	if luggage_trolley != null and luggage_trolley.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "trolley bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), "Stop that cart!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_trolley_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(luggage_trolley.chaser_pos + Vector2(0.0, -32.0), I18n.t("w_stop_that_cart"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if waiter != null and waiter.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "waiter bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(waiter.pos + Vector2(0.0, -32.0), "Hey, hands off!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_waiter_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(waiter.pos + Vector2(0.0, -32.0), I18n.t("w_hey_hands_off"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if cone_dog != null and cone_dog.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "cone bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(cone_dog.pos + Vector2(0.0, -32.0), "Yip!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_cone_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(cone_dog.pos + Vector2(0.0, -32.0), I18n.t("w_yip"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if unicyclist != null and unicyclist.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "unicycle bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(unicyclist.pos + Vector2(0.0, -32.0), "Phew, close one!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_unicycle_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(unicyclist.pos + Vector2(0.0, -32.0), I18n.t("w_phew_close_one"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if trail_runner != null and trail_runner.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "runner bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(trail_runner.pos + Vector2(0.0, -32.0), "Faster than me!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_runner_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(trail_runner.pos + Vector2(0.0, -32.0), I18n.t("w_faster_than_me"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if lost_tourist != null and lost_tourist.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "tourist bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(lost_tourist.pos + Vector2(0.0, -32.0), "Not that way!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_tourist_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(lost_tourist.pos + Vector2(0.0, -32.0), I18n.t("w_not_that_way"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if surfer != null and surfer.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "surfer bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(surfer.pos + Vector2(0.0, -32.0), "Nice wave, buddy!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_surfer_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(surfer.pos + Vector2(0.0, -32.0), I18n.t("w_nice_wave_buddy"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if wild_boar != null and wild_boar.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "boar bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(wild_boar.pos + Vector2(0.0, -32.0), "Snort, snort!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_boar_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(wild_boar.pos + Vector2(0.0, -32.0), I18n.t("w_snort_snort_2"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if gegant != null and gegant.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "giant dance! +2", Color(1.0, 0.92, 0.45))
-		float_text(gegant.pos + Vector2(0.0, -32.0), "Dance with us! Visca!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_giant_dance_2"), Color(1.0, 0.92, 0.45))
+		float_text(gegant.pos + Vector2(0.0, -32.0), I18n.t("w_dance_with_us_visca"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if castanyera != null and castanyera.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "chestnut bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(castanyera.pos + Vector2(0.0, -32.0), "Oh, what a cutie!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_chestnut_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(castanyera.pos + Vector2(0.0, -32.0), I18n.t("w_oh_what_a_cutie"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if gardener != null and gardener.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "gardener bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(gardener.pos + Vector2(0.0, -32.0), "Oof, that startled me!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_gardener_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(gardener.pos + Vector2(0.0, -32.0), I18n.t("w_oof_that_startled_me"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if forklift != null and forklift.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "forklift bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(forklift.pos + Vector2(0.0, -32.0), "Brakes! Brakes!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_forklift_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(forklift.pos + Vector2(0.0, -32.0), I18n.t("w_brakes_brakes"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if scooter != null and scooter.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "scooter bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(scooter.pos + Vector2(0.0, -32.0), "Easy on the brakes!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_scooter_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(scooter.pos + Vector2(0.0, -32.0), I18n.t("w_easy_on_the_brakes"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if boletaire != null and boletaire.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "forager bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(boletaire.pos + Vector2(0.0, -32.0), "Yikes, you spooked me!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_forager_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(boletaire.pos + Vector2(0.0, -32.0), I18n.t("w_yikes_you_spooked_me"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if florista != null and florista.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "florist bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(florista.pos + Vector2(0.0, -32.0), "Oh, what a fright!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_florist_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(florista.pos + Vector2(0.0, -32.0), I18n.t("w_oh_what_a_fright"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if ornitoleg != null and ornitoleg.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "birder bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(ornitoleg.pos + Vector2(0.0, -32.0), "Goodness, what a fright!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_birder_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(ornitoleg.pos + Vector2(0.0, -32.0), I18n.t("w_goodness_what_a_fright"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if escombriaire != null and escombriaire.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "sweeper bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(escombriaire.pos + Vector2(0.0, -32.0), "Gosh, you startled me!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_sweeper_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(escombriaire.pos + Vector2(0.0, -32.0), I18n.t("w_gosh_you_startled_me"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if botanic != null and botanic.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "botanist bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(botanic.pos + Vector2(0.0, -32.0), "Oh, you scared me!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_botanist_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(botanic.pos + Vector2(0.0, -32.0), I18n.t("w_oh_you_scared_me"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if banderer != null and banderer.on_bark(pos):
 		bones += 2
 		combo.add("BARK", 2)
 		Sfx.play("star", 1.2, -4.0)
-		float_text(pos + Vector2(0.0, -20.0), "banderer bark! +2", Color(1.0, 0.92, 0.45))
-		float_text(banderer.pos + Vector2(0.0, -32.0), "Come on, team!", Color(0.96, 0.94, 0.88), POP_SAY)
+		float_text(pos + Vector2(0.0, -20.0), I18n.t("w_banderer_bark_2"), Color(1.0, 0.92, 0.45))
+		float_text(banderer.pos + Vector2(0.0, -32.0), I18n.t("w_come_on_team"), Color(0.96, 0.94, 0.88), POP_SAY)
 		_update_hud()
 	if walk_mod != null and walk_mod.has_method("on_bark"):
 		walk_mod.on_bark(self, pos)
@@ -12302,7 +12307,7 @@ func on_correction_braced(pos: Vector2) -> void:
 	Sfx.play("crack", 0.9, -8.0)
 	bones += 3
 	combo.add("BRACED", 4)
-	float_text(pos + Vector2(0, -30), "held firm! +3", Color(0.7, 1.0, 0.75))
+	float_text(pos + Vector2(0, -30), I18n.t("w_held_firm_3"), Color(0.7, 1.0, 0.75))
 	_update_hud()
 
 
@@ -12316,7 +12321,7 @@ func on_stumble_save(pos: Vector2) -> void:
 	bones += streak
 	Sfx.play("save", 1.0 + 0.06 * streak)
 	combo.add("SAVE", 5)
-	float_text(pos + Vector2(0, -30), "nice save +%d" % streak, Color(0.7, 1.0, 0.75))
+	float_text(pos + Vector2(0, -30), I18n.t("w_nice_save") % streak, Color(0.7, 1.0, 0.75))
 	_slowmo()
 	_update_hud()
 
@@ -12344,8 +12349,8 @@ func on_hat_returned(_pos: Vector2) -> void:
 	bones += 6
 	combo.add("HAT", 5)
 	Sfx.play("fetch", 1.1)
-	float_text(human.global_position + Vector2(0, -34), "You found my hat! Good dog!", Color(1, 1, 1), POP_SAY)
-	feed.say("HAT RETURNED!", EventFeed.Tone.GOOD)
+	float_text(human.global_position + Vector2(0, -34), I18n.t("w_you_found_my_hat_good_dog"), Color(1, 1, 1), POP_SAY)
+	feed.say(I18n.t("w_hat_returned"), EventFeed.Tone.GOOD)
 	_update_hud()
 
 
@@ -12355,7 +12360,7 @@ func on_litter_caught(pos: Vector2) -> void:
 	bones += 2
 	combo.add("POUNCE", 2)
 	Sfx.play("rustle", 0.8)
-	float_text(pos + Vector2(0, -24), "got it! +2", Color(0.95, 0.88, 0.7))
+	float_text(pos + Vector2(0, -24), I18n.t("w_got_it_2"), Color(0.95, 0.88, 0.7))
 
 
 func _slowmo() -> void:
@@ -12380,7 +12385,7 @@ func crack_phone(pos: Vector2) -> void:
 	streak = 0
 	shake_t = 1.0
 	_update_hud()
-	float_text(pos, "PHONE CRACKED", Color(1, 0.45, 0.4))
+	float_text(pos, I18n.t("w_phone_cracked"), Color(1, 0.45, 0.4))
 	if phone_hp > 0:
 		Tips.show(self, "crack")
 	if phone_hp <= 0:
@@ -12392,7 +12397,7 @@ func close_call(pos: Vector2) -> void:
 	close_calls += 1
 	Sfx.play("save", 1.15)
 	combo.add("CLOSE", 2)
-	float_text(pos, "close call +1", Color(0.75, 0.9, 1.0))
+	float_text(pos, I18n.t("w_close_call_1"), Color(0.75, 0.9, 1.0))
 	_update_hud()
 
 
@@ -12409,6 +12414,7 @@ var pops: Node2D
 func float_text(pos: Vector2, text: String, color: Color = Color.WHITE, kind := -1) -> void:
 	_pops_layer()
 	var k: int = kind if kind >= 0 else PopsLayer.classify(text)
+	text = I18n.of_english(text)
 	var sz := Vector2(font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x + 30.0, 30.0)
 	var at := clear_of_feed(pos + Vector2(-sz.x * 0.5, -40.0), sz) + Vector2(sz.x * 0.5, 30.0)
 	pops.add(at, text, color, k)
@@ -13252,7 +13258,7 @@ func _draw_world() -> void:
 		var dp := 0.5 + 0.5 * sin(prize_glow)
 		_wc.draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.35, 0.4, 0.5, 0.4 + dp * 0.25))
 		_wc.draw_rect(Rect2(carry_drop.x - 16.0, carry_drop.y - 10.0, 32.0, 20.0), Color(0.7, 0.8, 0.95, 0.5), false, 2.0)
-		_wc.draw_string(font, carry_drop + Vector2(-40, -16), "DROP", HORIZONTAL_ALIGNMENT_CENTER, 80, 13, Color(0.8, 0.9, 1.0, 0.8))
+		_wc.draw_string(font, carry_drop + Vector2(-40, -16), I18n.t("w_drop_here"), HORIZONTAL_ALIGNMENT_CENTER, 80, 13, Color(0.8, 0.9, 1.0, 0.8))
 	if carry_state == 1:
 		var mp: Vector2 = dog.global_position + dog.facing * 20.0
 		_wc.draw_rect(Rect2(mp.x - 7.0, mp.y - 4.0, 14.0, 8.0), Color(0.7, 0.6, 0.4))
@@ -13377,7 +13383,7 @@ func _draw_world() -> void:
 		var tipping: float = absf(nf - 0.5) * 2.0
 		_wc.draw_rect(Rect2(nx - 3.0, gp.y - 6.0, 6.0, 12.0),
 			Color(0.6, 1.0, 0.6).lerp(Color(1.0, 0.4, 0.3), tipping))
-		_wc.draw_string(font, gp + Vector2(-18.0, -12.0), "GRIND %d" % grind.points(),
+		_wc.draw_string(font, gp + Vector2(-18.0, -12.0), I18n.t("w_grind_points") % grind.points(),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1, 0.95, 0.65))
 	# the teeter meter: a tipping bar over the dog, filling toward the brink,
 	# plus an arrow showing which way to scramble. Drawn in the world rather
@@ -13549,7 +13555,7 @@ func _draw_world() -> void:
 		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 66), gate_text, HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 26, Color(0.9, 0.88, 0.8))
 		# the place in Catalan, and what it means under it
-		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 46), "OFF LEASH", HORIZONTAL_ALIGNMENT_CENTER,
+		_wc.draw_string(font, Vector2(gate_l, GATE_Y - 46), I18n.t("w_off_leash_gate"), HORIZONTAL_ALIGNMENT_CENTER,
 			gate_r - gate_l, 14, Color(0.9, 0.88, 0.8, 0.75))
 	# the way in, at the bottom, where the walk both begins and ends
 	if vb > START_Y + 30.0:

@@ -94,7 +94,7 @@ func _land(m: Node2D) -> void:
 		flock.append(pg)
 	Sfx.play("rustle", 1.3, -10.0)
 	if round == 0:
-		m.feed.say(Prompts.fill("PIGEONS! CREEP UP, THEN {bark} BARK"), EventFeed.Tone.PLAIN)
+		m.feed.say(Prompts.fill(I18n.t("fg_pigeons")), EventFeed.Tone.PLAIN)
 
 
 # main.on_bark asks first: how many of the flock are still down within the
@@ -115,11 +115,11 @@ func on_bark(m: Node2D, pos: Vector2) -> void:
 		pay += FULL_BONUS
 	m.bones += pay
 	m.combo.add("PIGEONS", pay)
-	var shout := "WHOOSH! ALL %d" % n if whole else "WHOOSH! %d PIGEONS" % n
+	var shout := I18n.t("w_whoosh_all") % n if whole else I18n.t("w_whoosh_pigeons") % n
 	if close:
-		shout += ", RIGHT AMONG THEM"
+		shout += I18n.t("w_right_among_them")
 	m.feed.say(shout, EventFeed.Tone.GOOD)
-	m.float_text(pos, "pigeons! +%d" % pay, Color(0.85, 1.0, 0.85))
+	m.float_text(pos, I18n.t("w_pigeons") % pay, Color(0.85, 1.0, 0.85))
 	Sfx.play("whoop", 1.2, -8.0)
 
 
@@ -132,7 +132,7 @@ func _round_over(m: Node2D) -> void:
 	round += 1
 	if round >= ROUNDS:
 		done = true
-		m.feed.say("NOT A PIGEON LEFT IN THE PLAÇA", EventFeed.Tone.GOOD)
+		m.feed.say(I18n.t("w_not_a_pigeon_left_in_the_placa"), EventFeed.Tone.GOOD)
 		return
 	wait_t = PAUSE_S
 

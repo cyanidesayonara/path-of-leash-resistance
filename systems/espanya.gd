@@ -203,7 +203,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			m.dog.global_position.y -= 140.0 * delta
 			if m.espanya_escalator_ridden == 0:
 				m.espanya_escalator_ridden = 1
-				m.award_points(2, "escalator glide! +2")
+				m.award_points(2, I18n.t("w_escalator_glide_2"))
 		if esc.has_point(m.human.global_position):
 			m.human.global_position.y -= 100.0 * delta
 
@@ -211,7 +211,7 @@ static func tick(m: Node2D, delta: float) -> void:
 	if m.dog.global_position.distance_to(FOUNTAIN_CENTER) <= FOUNTAIN_RADIUS:
 		if m.espanya_fountain_splashed == 0:
 			m.espanya_fountain_splashed = 1
-			m.award_points(2, "magic fountain splash! +2")
+			m.award_points(2, I18n.t("w_magic_fountain_splash_2"))
 
 	# 3. Columns wrapping check
 	# the leash caught on a column, read the way every walk reads a wrapped
@@ -220,7 +220,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		var pole: Vector2 = m.leash.contact_pole
 		if pole.x < INF and m.leash.static_contacts > 0 and m.leash.contact_static and _is_column(pole):
 			m.espanya_columns_wrapped = 1
-			m.award_points(2, "columns wrap! +2")
+			m.award_points(2, I18n.t("w_columns_wrap_2"))
 
 	# 4. Bubble performer live event tick
 	if m.espanya_bubble != null:
@@ -230,26 +230,26 @@ static func tick(m: Node2D, delta: float) -> void:
 		var ev: Dictionary = m.espanya_bubble.tick(delta, d_pos, d_vel, h_pos)
 
 		if ev.get("telegraph", false):
-			m.float_text(m.espanya_bubble.pos + Vector2(0.0, -42.0), "Bubbles coming!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+			m.float_text(m.espanya_bubble.pos + Vector2(0.0, -42.0), I18n.t("w_bubbles_coming"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 		if ev.get("bump_hazard", false):
 			m.human.patience = maxf(0.0, m.human.patience - BUMP_PATIENCE)
-			m.float_text(m.human.global_position + Vector2(0.0, -32.0), "Ugh, the bucket!", Color(0.95, 0.40, 0.35), m.POP_SAY)
+			m.float_text(m.human.global_position + Vector2(0.0, -32.0), I18n.t("w_ugh_the_bucket"), Color(0.95, 0.40, 0.35), m.POP_SAY)
 			_play_sfx(m, "bump")
 		if ev.get("bubble_pop", false):
 			m.espanya_bubbles_popped += 1
-			m.award_points(2, "bubble pop! +2")
+			m.award_points(2, I18n.t("w_bubble_pop_2"))
 			_play_sfx(m, "splash")
 		if ev.get("soapy_slide", false):
-			m.award_points(2, "soapy slide! +2")
+			m.award_points(2, I18n.t("w_soapy_slide_2"))
 		if ev.get("dodge_save", false):
 			m.saves_done += 1
-			m.award_points(2, "espanya dodge! +2")
+			m.award_points(2, I18n.t("w_espanya_dodge_2"))
 
 
 static func on_bark(m: Node2D, _pos: Vector2 = Vector2.ZERO) -> bool:
 	if m.espanya_bubble != null and m.espanya_bubble.on_bark(m.dog.global_position):
-		m.float_text(m.espanya_bubble.pos + Vector2(0.0, -42.0), "Molt bé!", Color(0.96, 0.94, 0.88), m.POP_SAY)
-		m.award_points(2, "bubble cheer! +2")
+		m.float_text(m.espanya_bubble.pos + Vector2(0.0, -42.0), I18n.t("w_molt_be"), Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.award_points(2, I18n.t("w_bubble_cheer_2"))
 		return true
 	return false
 

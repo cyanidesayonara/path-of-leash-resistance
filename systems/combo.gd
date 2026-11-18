@@ -88,7 +88,10 @@ func label_text() -> String:
 	if names.size() > MAX_LABELS:
 		shown = names.slice(names.size() - MAX_LABELS)
 		prefix = "... "
-	return prefix + " + ".join(shown)
+	var said: Array[String] = []
+	for n: String in shown:
+		said.append(I18n.of_english(n))
+	return prefix + " + ".join(said)
 
 
 static func bonus_for(m: int) -> int:

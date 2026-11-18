@@ -48,7 +48,7 @@ func _topple(dir: Vector2) -> void:
 	fallen = true
 	fall_dir = dir
 	rotation = dir.angle()
-	main.float_text(global_position, "clatter", Color(0.9, 0.9, 0.9))
+	main.float_text(global_position, I18n.t("w_clatter"), Color(0.9, 0.9, 0.9))
 	queue_redraw()
 
 

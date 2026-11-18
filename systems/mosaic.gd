@@ -496,7 +496,7 @@ static func tick_crowd(m: Node2D) -> void:
 		for tw: Node2D in m.get_tree().get_nodes_in_group("tourists"):
 			if tw.mode == "pose" and tw.global_position.distance_to(m.dog.global_position) < 200.0:
 				m.mosaic_aww = true
-				m.float_text(tw.global_position + Vector2(0, -26), "Aww! Who's a good dog?", Color(1, 0.9, 0.95), m.POP_SAY)
+				m.float_text(tw.global_position + Vector2(0, -26), I18n.t("w_aww_who_s_a_good_dog"), Color(1, 0.9, 0.95), m.POP_SAY)
 				tw.photo_t = 1.2
 				break
 
@@ -539,7 +539,7 @@ static func draw_clearing(m: Node2D, c: Object, r: Rect2) -> void:
 		y += 38.0
 	b.flush(c)
 	m._draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
-	m._freedom_sign(c, r, m.gate_text, "The hilltop, off leash")
+	m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_hilltop_off_leash"))
 
 
 # a rubble-stone planter with an agave in it (main.WALK_MODULES draw_bollard)

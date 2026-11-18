@@ -141,16 +141,16 @@ static func _tick_waves(m: Node2D, delta: float) -> void:
 				var pay: int = ev[1]
 				m.bones += pay
 				m.combo.add("WAVES", pay)
-				m.float_text(p, "outran it! +%d" % pay, Color(0.85, 1.0, 0.85))
+				m.float_text(p, I18n.t("w_outran_it") % pay, Color(0.85, 1.0, 0.85))
 				if int(ev[2]) > 1:
-					m.feed.say("DRY  %d IN A ROW" % int(ev[2]), EventFeed.Tone.GOOD)
+					m.feed.say(I18n.t("w_dry_in_a_row") % int(ev[2]), EventFeed.Tone.GOOD)
 				Sfx.play("whoop", 1.3, -10.0)
 			"soaked":
-				m.float_text(p, "SPLOOSH", Color(0.75, 0.9, 1.0))
-				m.feed.say("SOAKED!", EventFeed.Tone.PLAIN)
+				m.float_text(p, I18n.t("w_sploosh"), Color(0.75, 0.9, 1.0))
+				m.feed.say(I18n.t("w_soaked_2"), EventFeed.Tone.PLAIN)
 				Sfx.play("splash", 1.0)
 			"done":
-				m.feed.say("THE SEA WINS IN THE END", EventFeed.Tone.PLAIN)
+				m.feed.say(I18n.t("w_the_sea_wins_in_the_end"), EventFeed.Tone.PLAIN)
 
 
 # --- agility ------------------------------------------------------------------
@@ -169,52 +169,52 @@ static func _tick_agility(m: Node2D, delta: float) -> void:
 			"start":
 				# a pop, not a shout: she may only have been passing (the
 				# banner's clock says the rest)
-				m.float_text(b, "Go!", Color(0.8, 1.0, 0.8))
+				m.float_text(b, I18n.t("w_go"), Color(0.8, 1.0, 0.8))
 				Sfx.play("ui", 1.4)
 			"jump":
 				m.hop_t = HOP_S
-				m.float_text(b, "hup!", Color(1, 1, 1))
+				m.float_text(b, I18n.t("w_hup_2"), Color(1, 1, 1))
 			"pole":
 				if ev[1]:
 					Sfx.play("ui", 1.6, -14.0)
 				else:
-					m.float_text(b, "missed a pole! +%ds" % int(AgilityCourse.FAULT_S), Color(1, 0.7, 0.6))
+					m.float_text(b, I18n.t("w_missed_a_pole_s") % int(AgilityCourse.FAULT_S), Color(1, 0.7, 0.6))
 			"table_count":
 				m.float_text(b, "%d..." % int(ev[1]), Color(1, 1, 1), m.POP_SAY)
 				Sfx.play("count", 1.0)
 			"table_done":
-				m.float_text(b, "3! Go!", Color(0.8, 1.0, 0.8), m.POP_SAY)
+				m.float_text(b, I18n.t("w_3_go"), Color(0.8, 1.0, 0.8), m.POP_SAY)
 				Sfx.play("go", 1.0)
 			"tunnel_out":
 				if ev[1]:
-					m.float_text(b, "whoosh", Color(0.8, 0.9, 1.0))
+					m.float_text(b, I18n.t("w_whoosh"), Color(0.8, 0.9, 1.0))
 			"finish":
 				_agility_finish(m, float(ev[1]), int(ev[2]), String(ev[3]))
 			"quit":
 				# a run that never got going was not one
 				if m.agility.t > 2.0:
-					m.float_text(b, "...Or not.", Color(0.9, 0.9, 0.9), m.POP_SAY)
+					m.float_text(b, I18n.t("w_or_not"), Color(0.9, 0.9, 0.9), m.POP_SAY)
 
 
 static func _agility_finish(m: Node2D, secs: float, faults: int, medal := "") -> void:
 	var best: float = Game.agility_best
 	var reward := AgilityCourse.medal_bones(medal)
-	var line := "AGILITY %.1fS" % secs
+	var line := I18n.t("w_agility_secs") % secs
 	if medal != "":
-		line = "%s! %.1fS" % [medal, secs]
+		line = I18n.t("w_medal_secs") % [I18n.of_english(medal), secs]
 	if faults == 0:
-		line += "  CLEAN"
+		line += I18n.t("w_agility_clean")
 	if best <= 0.0 or secs < best:
 		Game.agility_best = secs
 		Game.save_records()
 		if best > 0.0:
 			reward += AGILITY_BEST_BONES
-			line += "  NEW BEST"
+			line += I18n.t("w_agility_new_best")
 	m.bones += reward
 	m.agility_runs += 1
 	m.combo.add("AGILITY", reward)
 	m.feed.say(line, EventFeed.Tone.GOOD)
-	m.float_text(m.dog.global_position, "%s! +%d" % [medal.to_lower() if medal != "" else "agility", reward], Color(0.85, 1.0, 0.85))
+	m.float_text(m.dog.global_position, I18n.t("w_word_score") % [I18n.of_english(medal).to_lower() if medal != "" else I18n.t("w_agility"), reward], Color(0.85, 1.0, 0.85))
 	Sfx.play("star" if medal != "" else "combo")
 
 
@@ -254,7 +254,7 @@ static func _tick_tug(m: Node2D, delta: float) -> void:
 			_face_the_toy(m, fd)
 			fd.state = fd.S.TUG
 			m.dog_carrying = true
-			m.feed.say("TUG OF WAR!", EventFeed.Tone.PLAIN)
+			m.feed.say(I18n.t("w_tug_of_war"), EventFeed.Tone.PLAIN)
 			Sfx.play("grunt", 1.3)
 		return
 	# her own running counts for only a part while she hauls
@@ -307,16 +307,16 @@ static func _end_tug(m: Node2D, result: String) -> void:
 			m.bones += TUG_BONES
 			m.tugs_won += 1
 			m.combo.add("TUG", TUG_BONES)
-			m.feed.say("TUG WON! IT'S YOURS", EventFeed.Tone.GOOD)
-			m.float_text(m.dog.global_position, "tug! +%d" % TUG_BONES, Color(0.85, 1.0, 0.85))
+			m.feed.say(I18n.t("w_tug_won_it_s_yours"), EventFeed.Tone.GOOD)
+			m.float_text(m.dog.global_position, I18n.t("w_tug") % TUG_BONES, Color(0.85, 1.0, 0.85))
 			Sfx.play("combo")
 		"lost":
 			fd.offer_cd = 8.0
 			fd.vel = (fd.global_position - m.dog.global_position).normalized() * 170.0
-			m.feed.say("IT GOT AWAY WITH IT", EventFeed.Tone.PLAIN)
+			m.feed.say(I18n.t("w_it_got_away_with_it"), EventFeed.Tone.PLAIN)
 		"draw":
 			fd.offer_cd = 6.0
-			m.feed.say("STALEMATE. BOTH LET GO", EventFeed.Tone.PLAIN)
+			m.feed.say(I18n.t("w_stalemate_both_let_go"), EventFeed.Tone.PLAIN)
 
 
 # --- the frisbee ----------------------------------------------------------------
@@ -344,27 +344,27 @@ static func on_frisbee_caught(m: Node2D, air: bool) -> void:
 		var streak: int = maxi(1, m.frisbee.streak) if is_instance_valid(m.frisbee) else 1
 		var leap: bool = is_instance_valid(m.frisbee) and m.frisbee.leapt
 		var pay := AIR_BONES + 2 * (streak - 1) + (2 if leap else 0)
-		var word := "leap catch" if leap else "air catch"
+		var word := I18n.t("w_leap_catch_word") if leap else I18n.t("w_air_catch_word")
 		m.bones += pay
 		m.combo.add("AIR CATCH", pay)
 		if leap:
 			m.hop_t = HOP_S
-		var shout := "LEAP CATCH!" if leap else "AIR CATCH!"
+		var shout := I18n.t("w_leap_catch") if leap else I18n.t("w_air_catch")
 		if streak > 1:
-			shout += "  x%d IN A ROW" % streak
+			shout += I18n.t("w_x_in_a_row") % streak
 		m.feed.say(shout, EventFeed.Tone.GOOD)
-		m.float_text(m.dog.global_position, "%s! +%d" % [word, pay], Color(0.85, 1.0, 0.85))
+		m.float_text(m.dog.global_position, I18n.t("w_word_score") % [word, pay], Color(0.85, 1.0, 0.85))
 		Sfx.play("star", 1.2 + 0.08 * float(mini(streak, 5)))
 	else:
 		m.bones += GROUND_BONES
-		m.float_text(m.dog.global_position, "got it +%d" % GROUND_BONES, Color(0.9, 0.95, 0.9))
+		m.float_text(m.dog.global_position, I18n.t("w_got_it_4") % GROUND_BONES, Color(0.9, 0.95, 0.9))
 
 
 static func on_frisbee_returned(m: Node2D, left: int) -> void:
 	Sfx.play("fetch")
 	if left <= 0:
 		m.frisbee_done = true
-		m.feed.say("FRISBEE DONE  %d/%d IN THE AIR" % [m.frisbee_air, Frisbee.THROWS],
+		m.feed.say(I18n.t("w_frisbee_done_in_the_air") % [m.frisbee_air, Frisbee.THROWS],
 			EventFeed.Tone.GOOD if m.frisbee_air > 0 else EventFeed.Tone.PLAIN)
 
 

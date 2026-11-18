@@ -609,12 +609,12 @@ static func _tick_sellers(m: Node2D, delta: float) -> void:
 			wt = 5.0
 		else:
 			wt = SELLER_WHISTLE_EVERY
-			m.float_text(Vector2(640.0, cam_y - 200.0), "PHWEET!", Color(0.9, 0.95, 1.0))
-			m.feed.say("PHWEET! SELLERS PACK UP!", EventFeed.Tone.LOUD)
+			m.float_text(Vector2(640.0, cam_y - 200.0), I18n.t("w_phweet"), Color(0.9, 0.95, 1.0))
+			m.feed.say(I18n.t("w_phweet_sellers_pack_up"), EventFeed.Tone.LOUD)
 			for sl: Dictionary in near_laid:
 				sl["state"] = "warn"
 				sl["t"] = 0.0
-				m.float_text(Vector2(sl["pos"]) + Vector2(0, -24), "Pack up!", Color(1.0, 0.88, 0.65), m.POP_SAY)
+				m.float_text(Vector2(sl["pos"]) + Vector2(0, -24), I18n.t("w_pack_up"), Color(1.0, 0.88, 0.65), m.POP_SAY)
 	m.set_meta("reial_whistle_t", wt)
 
 	for sl: Dictionary in sellers:
@@ -626,10 +626,10 @@ static func _tick_sellers(m: Node2D, delta: float) -> void:
 			if m.dog.bark_anim > 0.0 and dp.distance_to(r.get_center()) < 90.0:
 				sl["state"] = "warn"
 				sl["t"] = 0.0
-				m.float_text(Vector2(sl["pos"]) + Vector2(0, -24), "Pack up!", Color(1.0, 0.88, 0.65), m.POP_SAY)
+				m.float_text(Vector2(sl["pos"]) + Vector2(0, -24), I18n.t("w_pack_up"), Color(1.0, 0.88, 0.65), m.POP_SAY)
 			elif r.grow(4.0).has_point(dp) and float(sl["cd"]) <= 0.0:
 				sl["cd"] = 3.0
-				m.float_text(Vector2(sl["pos"]) + Vector2(0, -22), "Hey! Careful!", Color(1.0, 0.9, 0.75), m.POP_SAY)
+				m.float_text(Vector2(sl["pos"]) + Vector2(0, -22), I18n.t("w_hey_careful_2"), Color(1.0, 0.9, 0.75), m.POP_SAY)
 			continue
 
 		sl["t"] = float(sl["t"]) + delta
@@ -652,7 +652,7 @@ static func _tick_sellers(m: Node2D, delta: float) -> void:
 				if float(sl["bump_cd"]) <= 0.0 and sp.distance_to(hp) < 24.0:
 					sl["bump_cd"] = 2.0
 					m.human.patience = maxf(0.0, m.human.patience - 0.08)
-					m.float_text(hp + Vector2(0, -32), "Watch out!", Color(1.0, 0.78, 0.55), m.POP_SAY)
+					m.float_text(hp + Vector2(0, -32), I18n.t("w_watch_out"), Color(1.0, 0.78, 0.55), m.POP_SAY)
 				if sp.distance_to(sl["to"]) < 2.0:
 					sl["state"] = "away"
 					sl["t"] = 0.0
@@ -686,8 +686,8 @@ static func tick(m: Node2D, delta: float) -> void:
 	if not bool(m.get("reial_busker_barked")) and m.dog.bark_anim > 0.0 and Outdoors.busking(Game.weather, Game.hour):
 		if m.dog.global_position.distance_to(BUSKER_POS) < 110.0 or m.dog.global_position.distance_to(BUSKER2_POS) < 110.0:
 			m.set("reial_busker_barked", true)
-			m.float_text(m.dog.global_position + Vector2(0, -28), "¡Olé!", Color(0.96, 0.88, 0.35))
-			m.feed.say("A DUET WITH THE BUSKER!", EventFeed.Tone.GOOD)
+			m.float_text(m.dog.global_position + Vector2(0, -28), I18n.t("w_ole"), Color(0.96, 0.88, 0.35))
+			m.feed.say(I18n.t("w_a_duet_with_the_busker"), EventFeed.Tone.GOOD)
 
 	_tick_sellers(m, delta)
 	Detour.tick(m, delta)

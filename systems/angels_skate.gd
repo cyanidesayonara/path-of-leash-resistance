@@ -112,7 +112,7 @@ func tick(m: Node2D, delta: float) -> void:
 			m.angels_churro_stolen = true
 			m.churros_eaten += 1
 			m.combo.add("CHURRO SNATCH", 2)
-			m.float_text(churro_pos, "churro snatch! +2", Color(0.96, 0.82, 0.44))
+			m.float_text(churro_pos, I18n.t("w_churro_snatch_2"), Color(0.96, 0.82, 0.44))
 			var sfx = m.get_node_or_null("/root/Sfx")
 			if sfx != null:
 				sfx.play("snack", 1.2, -2.0)
@@ -123,8 +123,8 @@ func tick(m: Node2D, delta: float) -> void:
 				triggered = true
 				state = State.TELEGRAPH
 				timer = WARN_DURATION
-				m.feed.say("RUNAWAY BOARD!", EventFeed.Tone.LOUD)
-				m.float_text(SKATER_POS + Vector2(0.0, -30.0), "Board!", Color(1.0, 0.88, 0.36), m.POP_SAY)
+				m.feed.say(I18n.t("w_runaway_board"), EventFeed.Tone.LOUD)
+				m.float_text(SKATER_POS + Vector2(0.0, -30.0), I18n.t("w_board"), Color(1.0, 0.88, 0.36), m.POP_SAY)
 				var sfx = m.get_node_or_null("/root/Sfx")
 				if sfx != null:
 					sfx.play("grit", 1.15, -2.0)
@@ -157,8 +157,8 @@ func tick(m: Node2D, delta: float) -> void:
 						m.human.bumped(Vector2.DOWN)
 					if "patience" in m.human:
 						m.human.patience = maxf(0.0, float(m.human.patience) - 0.10)
-					m.float_text(human_p + Vector2(0.0, -34.0), "Ow! My ankles!", Color(1.0, 0.45, 0.40), m.POP_SAY)
-					m.float_text(skater_pos + Vector2(0.0, -28.0), "Sorry! Lost my board!", Color(0.96, 0.88, 0.35), m.POP_SAY)
+					m.float_text(human_p + Vector2(0.0, -34.0), I18n.t("w_ow_my_ankles_2"), Color(1.0, 0.45, 0.40), m.POP_SAY)
+					m.float_text(skater_pos + Vector2(0.0, -28.0), I18n.t("w_sorry_lost_my_board"), Color(0.96, 0.88, 0.35), m.POP_SAY)
 					var sfx = m.get_node_or_null("/root/Sfx")
 					if sfx != null:
 						sfx.play("grunt", 0.95, -2.0)
@@ -167,7 +167,7 @@ func tick(m: Node2D, delta: float) -> void:
 			if not booped and dog_p.distance_to(pos) < BOOP_RADIUS:
 				booped = true
 				m.combo.add("BOARD BOOP", 2)
-				m.float_text(pos + Vector2(0.0, -30.0), "board boop! +2", Color(1.0, 0.85, 0.30))
+				m.float_text(pos + Vector2(0.0, -30.0), I18n.t("w_board_boop_2"), Color(1.0, 0.85, 0.30))
 				var sfx = m.get_node_or_null("/root/Sfx")
 				if sfx != null:
 					sfx.play("whoop", 1.25, -3.0)
@@ -189,7 +189,7 @@ func tick(m: Node2D, delta: float) -> void:
 			dodged = true
 			m.saves_done += 1
 			m.combo.add("BOARD DODGE", 2)
-			m.float_text(pos + Vector2(0.0, -30.0), "board dodge! +2", Color(0.96, 0.88, 0.35))
+			m.float_text(pos + Vector2(0.0, -30.0), I18n.t("w_board_dodge_2"), Color(0.96, 0.88, 0.35))
 			var sfx = m.get_node_or_null("/root/Sfx")
 			if sfx != null:
 				sfx.play("bell", 1.35, -2.0)
@@ -202,7 +202,7 @@ func on_bark(m: Node2D) -> bool:
 	if dog_p.distance_to(pos) < BARK_RADIUS or dog_p.distance_to(skater_pos) < BARK_RADIUS:
 		barked = true
 		m.combo.add("SKATE CHEER", 2)
-		m.float_text(skater_pos + Vector2(0.0, -30.0), "skate cheer! +2", Color(0.42, 0.92, 0.62))
+		m.float_text(skater_pos + Vector2(0.0, -30.0), I18n.t("w_skate_cheer_2"), Color(0.42, 0.92, 0.62))
 		var sfx = m.get_node_or_null("/root/Sfx")
 		if sfx != null:
 			sfx.play("whoop", 1.20, -2.0)

@@ -473,7 +473,7 @@ static func _warn(m: Node2D, behavior: Dictionary) -> void:
 		m.human.panic = true
 	if String(behavior.get("kind", "")) == "flood":
 		Sfx.play("whistle", 0.8, -4.0)
-		m.human.notice("Not our problem.", 1.2)
+		m.human.notice(I18n.t("w_not_our_problem"), 1.2)
 	if behavior.has("warning_color"):
 		m.float_text(m.human.global_position, String(behavior.get("warning", "")), behavior["warning_color"])
 	else:
@@ -573,11 +573,11 @@ static func _hold(m: Node2D, sweeper: Node2D, delta: float) -> void:
 static func _say_freed(m: Node2D, sweeper: Node2D) -> void:
 	if String(m.chase_kind) == "flood":
 		Sfx.play("splash", 0.8, -6.0)
-		m.float_text(Vector2(m.walk_cx, sweeper.front_y - 40.0), "SPILL", Color(0.7, 0.88, 1.0))
+		m.float_text(Vector2(m.walk_cx, sweeper.front_y - 40.0), I18n.t("w_spill"), Color(0.7, 0.88, 1.0))
 		return
 	var behavior := _behavior(m, held_profile(m))
 	Sfx.play(String(behavior.get("freed_sfx", "hiss")), 0.6, -6.0)
-	m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), String(behavior.get("freed", "VRRROOM")), Color(1.0, 0.7, 0.4))
+	m.float_text(Vector2(m.walk_cx + sweeper.sway, sweeper.front_y - 60.0), String(behavior.get("freed", I18n.t("w_vrrroom"))), Color(1.0, 0.7, 0.4))
 
 
 # Whether the jam the machine just snagged on is the profile's checkpoint.
@@ -683,14 +683,14 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.shake_t = maxf(m.shake_t, 0.6)
 		if String(m.chase_kind) == "flood":
 			Sfx.play("splash", 0.7, -8.0)
-			m.float_text(Vector2(m.walk_cx, sweeper.front_y), "HOLD", Color(0.75, 0.9, 1.0))
-			m.feed.say("IT'S HOLDING!", EventFeed.Tone.GOOD)
+			m.float_text(Vector2(m.walk_cx, sweeper.front_y), I18n.t("w_hold"), Color(0.75, 0.9, 1.0))
+			m.feed.say(I18n.t("w_it_s_holding"), EventFeed.Tone.GOOD)
 		else:
 			var jb := _behavior(m, held_profile(m))
 			Sfx.play(String(jb.get("jammed_sfx", "crack")), 0.5, -4.0)
 			m.float_text(Vector2(m.walk_cx + sweeper.jam_side * (m.walk_half - 40.0), sweeper.front_y),
 				String(jb.get("jammed", "CLONK")), Color(1.0, 0.85, 0.5))
-			m.feed.say(String(jb.get("jammed_shout", "IT'S JAMMED!")), EventFeed.Tone.GOOD)
+			m.feed.say(String(jb.get("jammed_shout", I18n.t("w_its_jammed"))), EventFeed.Tone.GOOD)
 	elif sweeper.freed_now:
 		_say_freed(m, sweeper)
 	if sweeper.sweep_junk(m.get_tree().get_nodes_in_group("cones")) > 0:
@@ -726,7 +726,7 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.bones += CLOSE_SHAVE_BONES
 		m.combo.add("CLOSE SHAVE", 6)
 		Sfx.play("save", 1.3)
-		m.float_text(m.dog.global_position, "close shave! +%d" % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
+		m.float_text(m.dog.global_position, I18n.t("w_close_shave") % CLOSE_SHAVE_BONES, Color(0.75, 0.9, 1.0))
 		m._slowmo()
 	if sweeper.caught(m.human.global_position):
 		_catch(m, I18n.of_english(String(_behavior(m, held_profile(m)).get("caught_human", ""))), "human")
@@ -764,8 +764,8 @@ static func _catch(m: Node2D, msg: String, first: String) -> void:
 	m.dog.velocity = Vector2.ZERO
 	m.human.velocity = Vector2.ZERO
 	m.shake_t = 1.0
-	var shout := "SWEPT AWAY!" if String(m.chase_kind) == "flood" \
-		else String(_behavior(m, held_profile(m)).get("caught_shout", "SWEPT!"))
+	var shout := I18n.t("w_swept_away") if String(m.chase_kind) == "flood" \
+		else String(_behavior(m, held_profile(m)).get("caught_shout", I18n.t("w_swept")))
 	m.feed.say(shout, EventFeed.Tone.BAD)
 
 

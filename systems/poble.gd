@@ -279,7 +279,7 @@ static func tick(m: Node2D, dt: float) -> void:
 			if col_idx >= 0 and not m.poble_columns_wrapped.has(col_idx):
 				m.poble_columns_wrapped[col_idx] = true
 				if m.has_method("award_points"):
-					m.award_points(2, "arcade wrap! +2")
+					m.award_points(2, I18n.t("w_arcade_wrap_2"))
 				if m.get("combo") != null:
 					m.combo.add("ARCADE WRAP", 2)
 				if sfx != null:
@@ -287,7 +287,7 @@ static func tick(m: Node2D, dt: float) -> void:
 			elif not m.poble_fountain_wrapped and contact_p.distance_to(FOUNTAIN_POS) <= 28.0:
 				m.poble_fountain_wrapped = true
 				if m.has_method("award_points"):
-					m.award_points(2, "fountain wrap! +2")
+					m.award_points(2, I18n.t("w_fountain_wrap_2"))
 				if m.get("combo") != null:
 					m.combo.add("FOUNTAIN WRAP", 2)
 				if sfx != null:
@@ -303,7 +303,7 @@ static func tick(m: Node2D, dt: float) -> void:
 		if near_ws and (bool(m.dog.sniffing) or m.dog.velocity.length() <= 170.0):
 			m.poble_workshops_sniffed[i] = true
 			if m.has_method("award_points"):
-				m.award_points(2, String(ws["name"]) + "! +2")
+				m.award_points(2, I18n.of_english(String(ws["name"])) + "! +2")
 			if m.get("combo") != null:
 				m.combo.add("CRAFT SNIFF", 2)
 			var sfx = m.get_node_or_null("/root/Sfx")
@@ -323,7 +323,7 @@ static func on_bark(m: Node2D, bark_pos: Vector2 = Vector2.ZERO) -> bool:
 	# Barking at the tour guide in Plaza Mayor gets a guide announcement
 	if bp.distance_to(GUIDE_POS) <= 150.0:
 		if m.has_method("float_text"):
-			m.float_text(GUIDE_POS + Vector2(0.0, -34.0), "Follow the yellow umbrella!", Color(0.98, 0.95, 0.86), m.POP_SAY)
+			m.float_text(GUIDE_POS + Vector2(0.0, -34.0), I18n.t("w_follow_the_yellow_umbrella"), Color(0.98, 0.95, 0.86), m.POP_SAY)
 		return true
 	return false
 
@@ -1363,7 +1363,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, Color(0.48, 0.32, 0.20))
 	if m.has_method("_freedom_sign"):
-		m._freedom_sign(c, r, m.gate_text, "The olive terrace on the old walls, off leash")
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_olive_terrace_on_the_old"))
 
 
 # The street after dark (world/night_fronts.gd): this walk draws its own

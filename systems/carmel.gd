@@ -274,9 +274,9 @@ static func tick(m: Node2D, delta: float) -> void:
 		m.set_meta("carmel_view", true)
 		m.bones += 5
 		m.combo.add("THE SUNSET", 5)
-		m.float_text(hp + Vector2(0, -34), "Look at that sunset...", Color(1.0, 0.95, 0.90, 0.9), m.POP_SAY)
-		m.float_text(dp + Vector2(0, -30), "sunset view! +5", Color(0.96, 0.86, 0.32))
-		m.feed.say("YOUR HUMAN LOOKED UP!", EventFeed.Tone.GOOD)
+		m.float_text(hp + Vector2(0, -34), I18n.t("w_look_at_that_sunset"), Color(1.0, 0.95, 0.90, 0.9), m.POP_SAY)
+		m.float_text(dp + Vector2(0, -30), I18n.t("w_sunset_view_5"), Color(0.96, 0.86, 0.32))
+		m.feed.say(I18n.t("w_your_human_looked_up"), EventFeed.Tone.GOOD)
 		m.get_node("/root/Sfx").play("star", 1.1)
 
 
@@ -1017,4 +1017,4 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	b.line(Vector2(gap_r, gy - 9.0), Vector2(1220.0, gy - 9.0), STONE_TOP, 3.0)
 	b.flush(c)
 	m._draw_freedom_benches(c, r, Color(0.46, 0.36, 0.26))
-	m._freedom_sign(c, r, m.gate_text, "The summit battery, off leash")
+	m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_summit_battery_off_leash"))

@@ -354,7 +354,7 @@ static func tick(m: Node2D, delta: float) -> void:
 				m.gracia_arch_mask |= bit
 				m.gracia_arches_zoomed += 1
 				m.combo.add("ARCH", 2)
-				m.float_text(dp + Vector2(0, -26), "under the arch! +2", ARCH_COLS[i].lightened(0.3))
+				m.float_text(dp + Vector2(0, -26), I18n.t("w_under_the_arch_2"), ARCH_COLS[i].lightened(0.3))
 	# sitting pretty in front of the churro stand
 	if m.churros_eaten == 0:
 		var front := Vector2(CHURRO_STAND.end.x + 24.0, CHURRO_STAND.get_center().y)
@@ -364,7 +364,7 @@ static func tick(m: Node2D, delta: float) -> void:
 				m.churros_eaten = 1
 				Sfx.play("snack")
 				m.combo.add("CHURRO", 3)
-				m.float_text(dp + Vector2(0, -26), "churro! +3", CHURRO_GOLD)
+				m.float_text(dp + Vector2(0, -26), I18n.t("w_churro_3"), CHURRO_GOLD)
 		else:
 			m.gracia_beg_t = 0.0
 	_tick_castell(m, delta)
@@ -381,9 +381,9 @@ static func _tick_castell(m: Node2D, delta: float) -> void:
 		if m.gracia_castell_t >= 1.5:
 			m.gracia_castell_watched = true
 			m.combo.add("EQUILIBRI", 2)
-			m.award_points(2, "equilibri! +2")
+			m.award_points(2, I18n.t("w_equilibri_2"))
 			Sfx.play("combo", 1.1, -4.0)
-			m.float_text(c + Vector2(0.0, -42.0), "Força, equilibri, valor i seny!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+			m.float_text(c + Vector2(0.0, -42.0), I18n.t("w_forca_equilibri_valor_i_seny"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 	elif dp.distance_to(c) >= 130.0:
 		m.gracia_castell_t = 0.0
 
@@ -397,9 +397,9 @@ static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> void:
 		if CastellCycle.cheer_window(m):
 			m.gracia_aleta_cheered = true
 			m.combo.add("ALETA", 2)
-			m.award_points(2, "aleta bark! +2")
+			m.award_points(2, I18n.t("w_aleta_bark_2"))
 			Sfx.play("save", 1.2, -4.0)
-			m.float_text(c + Vector2(0.0, -42.0), "Visca els Castellers de Gràcia!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+			m.float_text(c + Vector2(0.0, -42.0), I18n.t("w_visca_els_castellers_de_gracia"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:

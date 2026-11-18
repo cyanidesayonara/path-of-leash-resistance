@@ -211,8 +211,8 @@ static func tick_font(m: Node2D) -> void:
 		m.set_meta("font_show_done", true)
 		m.bones += 5
 		m.combo.add("SHOW", 4)
-		m.feed.say("THE MAGIC FOUNTAIN!", EventFeed.Tone.GOOD)
-		m.float_text(m.dog.global_position + Vector2(0, -30), "in the show! +5", Color(0.75, 0.9, 1.0))
+		m.feed.say(I18n.t("w_the_magic_fountain"), EventFeed.Tone.GOOD)
+		m.float_text(m.dog.global_position + Vector2(0, -30), I18n.t("w_in_the_show_5"), Color(0.75, 0.9, 1.0))
 
 
 # The cacti: a prick for a dog who runs into one, and a careful sniff at the
@@ -229,8 +229,8 @@ static func tick_cacti(m: Node2D, delta: float) -> void:
 			m.dog.velocity = (dp - c).normalized() * PRICK_BOUNCE
 			m.combo.bail()
 			Sfx.play("grunt", 1.6, -4.0)
-			m.feed.say("OW! CACTUS", EventFeed.Tone.BAD)
-			m.float_text(dp + Vector2(0, -28), "prickly", Color(1, 0.8, 0.7))
+			m.feed.say(I18n.t("w_ow_cactus"), EventFeed.Tone.BAD)
+			m.float_text(dp + Vector2(0, -28), I18n.t("w_prickly"), Color(1, 0.8, 0.7))
 			return
 	if m.has_meta("cactus_sniffed"):
 		return
@@ -243,7 +243,7 @@ static func tick_cacti(m: Node2D, delta: float) -> void:
 			m.bones += 4
 			m.combo.add("CAREFUL", 3)
 			Sfx.play("mark", 1.1)
-			m.float_text(CACTI[0] + Vector2(0, -40), "a very careful sniff +4", Color(0.85, 1.0, 0.7))
+			m.float_text(CACTI[0] + Vector2(0, -40), I18n.t("w_a_very_careful_sniff_4"), Color(0.85, 1.0, 0.7))
 			m._update_hud()
 	else:
 		m.set_meta("cactus_sniff_t", 0.0)
@@ -297,7 +297,7 @@ static func tick_train(m: Node2D, delta: float) -> void:
 		m.set_meta("train_warn", TRAIN_WARN + train.length() / RoadTrain.SPEED + (e.y - e.x) / RoadTrain.SPEED)
 		Sfx.play("pickup", 1.6, -4.0)
 		if near:
-			m.float_text(Vector2(edge, TRAIN_Y - 40.0), "Ding ding!", Color(1, 0.95, 0.75), m.POP_SAY)
+			m.float_text(Vector2(edge, TRAIN_Y - 40.0), I18n.t("w_ding_ding_2"), Color(1, 0.95, 0.75), m.POP_SAY)
 
 
 static func is_cactus(p: Vector2) -> bool:
@@ -343,7 +343,7 @@ static func tick_wind(m: Node2D, delta: float) -> void:
 		var s := -1.0 if m.wind_rng.randf() < 0.65 else 1.0
 		m.wind_dir = Vector2(s, m.wind_rng.randf_range(0.0, 0.35)).normalized()
 		Sfx.play("hiss", 0.45, -8.0)
-		m.float_text(m.dog.global_position + Vector2(-s * 60.0, -30.0), "whoooosh", Color(0.92, 0.95, 1.0))
+		m.float_text(m.dog.global_position + Vector2(-s * 60.0, -30.0), I18n.t("w_whoooosh"), Color(0.92, 0.95, 1.0))
 
 
 # The gust takes your human's sunhat: once a walk, and never while they are
@@ -359,7 +359,7 @@ static func blow_hat(m: Node2D) -> bool:
 	m.add_child(hat)
 	var dir: Vector2 = m.wind_dir if m.wind_dir.length() > 0.1 else Vector2(-1, 0.2).normalized()
 	hat.setup(m, m.human.global_position + Vector2(0, -6), dir * HAT_SPEED)
-	m.float_text(m.human.global_position + Vector2(0, -34), "My hat! Come back!", Color(1, 1, 1), m.POP_SAY)
+	m.float_text(m.human.global_position + Vector2(0, -34), I18n.t("w_my_hat_come_back"), Color(1, 1, 1), m.POP_SAY)
 	Sfx.play("hiss", 0.7, -6.0)
 	return true
 
@@ -456,7 +456,7 @@ static func draw_esplanade(m: Node2D, c: Object) -> void:
 	b.rect(Rect2(fr.position, Vector2(fr.size.x, 8.0)), Color(0.20, 0.36, 0.44))
 	b.flush(c)
 	m._draw_freedom_benches(c, r, Color(0.36, 0.30, 0.24))
-	m._freedom_sign(c, r, "L'ESPLANADA", "the castle esplanade, off leash")
+	m._freedom_sign(c, r, "L'ESPLANADA", I18n.t("w_the_castle_esplanade_off_leash"))
 
 
 # Kites over the esplanade, riding the wind: each on its string down to its

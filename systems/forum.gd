@@ -196,20 +196,20 @@ static func tick(m: Node2D, delta: float) -> void:
 	var res: Dictionary = m.skater.tick(delta, m.dog.global_position, m.dog.velocity, m.human.global_position)
 
 	if res["telegraph"]:
-		m.float_text(m.skater.pos + Vector2(0.0, -36.0), "Watch the board!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.float_text(m.skater.pos + Vector2(0.0, -36.0), I18n.t("w_watch_the_board"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 
 	if res["bump_hazard"]:
 		m.human.patience = maxf(0.0, m.human.patience - BUMP_PATIENCE)
-		m.human.say_line("Ugh, watch out!")
+		m.human.say_line(I18n.t("w_ugh_watch_out"))
 
 	if res["boop"]:
-		m.award_points(2, "board boop! +2")
+		m.award_points(2, I18n.t("w_board_boop_2"))
 
 	if res["snack_snatched"]:
-		m.award_points(2, "energy bar snack! +2")
+		m.award_points(2, I18n.t("w_energy_bar_snack_2"))
 
 	if res["dodge_save"]:
-		m.award_points(2, "forum dodge! +2")
+		m.award_points(2, I18n.t("w_forum_dodge_2"))
 		m.saves_done += 1
 
 	# Solar pergola sprint detector (under canopy between y = -1900.0 and y = -1300.0)
@@ -219,7 +219,7 @@ static func tick(m: Node2D, delta: float) -> void:
 			if not m.has_meta("forum_canopy_in"):
 				m.set_meta("forum_canopy_in", true)
 				m.forum_pergola_sprinted += 1
-				m.award_points(2, "solar sprint! +2")
+				m.award_points(2, I18n.t("w_solar_sprint_2"))
 	else:
 		if m.has_meta("forum_canopy_in"):
 			m.remove_meta("forum_canopy_in")
@@ -232,7 +232,7 @@ static func tick(m: Node2D, delta: float) -> void:
 					if not m.has_meta("forum_rail_grind"):
 						m.set_meta("forum_rail_grind", true)
 						m.forum_rails_grinded += 2
-						m.award_points(2, "skate rail grind! +2")
+						m.award_points(2, I18n.t("w_skate_rail_grind_2"))
 					return
 	if m.has_meta("forum_rail_grind"):
 		m.remove_meta("forum_rail_grind")
@@ -240,8 +240,8 @@ static func tick(m: Node2D, delta: float) -> void:
 
 static func on_bark(m: Node2D, _pos: Vector2 = Vector2.ZERO) -> bool:
 	if m.skater != null and m.skater.on_bark(m.dog.global_position):
-		m.float_text(m.skater.pos + Vector2(0.0, -36.0), "Yeah! Kickflip!", Color(0.96, 0.94, 0.88), m.POP_SAY)
-		m.award_points(2, "skate cheer! +2")
+		m.float_text(m.skater.pos + Vector2(0.0, -36.0), I18n.t("w_yeah_kickflip"), Color(0.96, 0.94, 0.88), m.POP_SAY)
+		m.award_points(2, I18n.t("w_skate_cheer_2"))
 		return true
 	return false
 
@@ -633,7 +633,7 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 
 	# Standard benches and authentic entrance title sign
 	m._draw_freedom_benches(ci, r, Color(0.35, 0.38, 0.42))
-	m._freedom_sign(ci, r, "BANYS DEL FÒRUM", "the seaside bathing park, off leash")
+	m._freedom_sign(ci, r, "BANYS DEL FÒRUM", I18n.t("w_the_seaside_bathing_park_off_leash"))
 
 
 static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:

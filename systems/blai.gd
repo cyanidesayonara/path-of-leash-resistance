@@ -521,7 +521,7 @@ static func _tick_waiter(m: Node2D, w: TrayRun, delta: float) -> void:
 			if hum.distance_to(w.pos + w.face * 24.0) < WAITER_YIELD:
 				if not w.yielded:
 					w.yielded = true
-					m.float_text(w.pos + Vector2(0.0, -34.0), "After you!", Color(0.96, 0.94, 0.88), m.POP_SAY)
+					m.float_text(w.pos + Vector2(0.0, -34.0), I18n.t("w_after_you"), Color(0.96, 0.94, 0.88), m.POP_SAY)
 			else:
 				var step := WAITER_SPEED * delta
 				w.pos = w.table if to.length() <= step else w.pos + w.face * step
@@ -560,8 +560,8 @@ static func _wobble(m: Node2D, w: TrayRun, cause: String) -> void:
 	w.t = WOBBLE_T
 	w.cause = cause
 	w.tipped = true
-	m.float_text(w.pos + Vector2(0.0, -36.0), "Whoa, whoa!", Color(0.96, 0.94, 0.88), m.POP_SAY)
-	m.feed.say("THE TRAY! GET UNDER IT", EventFeed.Tone.LOUD)
+	m.float_text(w.pos + Vector2(0.0, -36.0), I18n.t("w_whoa_whoa"), Color(0.96, 0.94, 0.88), m.POP_SAY)
+	m.feed.say(I18n.t("w_the_tray_get_under_it"), EventFeed.Tone.LOUD)
 	Sfx.play("creak", 1.6, -6.0)
 
 
@@ -583,15 +583,15 @@ static func _tip(m: Node2D, w: TrayRun) -> void:
 			"kind": (i + w.key) % TOPPINGS.size()})
 	Sfx.play("crack", 1.5, -4.0)
 	Sfx.play("bell", 2.2, -10.0)
-	m.float_text(tray + Vector2(0.0, -20.0), "CRASH", Color(1.0, 0.96, 0.86))
-	m.float_text(w.pos + Vector2(0.0, -36.0), "Mare meva!", Color(0.96, 0.94, 0.88), m.POP_SAY)
-	m.feed.say("TRAY DOWN! CATCH ONE", EventFeed.Tone.LOUD)
+	m.float_text(tray + Vector2(0.0, -20.0), I18n.t("w_crash"), Color(1.0, 0.96, 0.86))
+	m.float_text(w.pos + Vector2(0.0, -36.0), I18n.t("w_mare_meva"), Color(0.96, 0.94, 0.88), m.POP_SAY)
+	m.feed.say(I18n.t("w_tray_down_catch_one"), EventFeed.Tone.LOUD)
 	# her doing, in front of a full terrace: your human is mortified (short:
 	# the spill's leave-it follows as the pintxos land, _tick_spill)
 	if w.cause == "bump" or w.cause == "bark":
 		m.human.lose_patience(TIP_COST)
 		if m.human.can_warn_external():
-			m.human.notice("Sorry! Sorry!", 0.4)
+			m.human.notice(I18n.t("w_sorry_sorry_2"), 0.4)
 
 
 static func _tick_pieces(m: Node2D, delta: float) -> void:
@@ -607,7 +607,7 @@ static func _tick_pieces(m: Node2D, delta: float) -> void:
 			m.blai_tray_catches += 1
 			m.kebabs_eaten += 1
 			m.combo.add("CATCH", CATCH_PAY)
-			m.award_points(CATCH_PAY, "caught it! +%d" % CATCH_PAY)
+			m.award_points(CATCH_PAY, I18n.t("w_caught_it") % CATCH_PAY)
 			continue
 		if f >= 1.0:
 			m.kebabs.append({"pos": pc.to, "eaten": false, "left": false})
@@ -628,7 +628,7 @@ static func _tick_spill(m: Node2D, delta: float) -> void:
 		return
 	if m.human.can_warn_external():
 		m.blai_spill_at = Vector2.INF
-		_start_leave(m, at, LEAVE_SPILL_R, LEAVE_SPILL_T, LEAVE_SPILL_PAY, "Leave it! All of it!", -1)
+		_start_leave(m, at, LEAVE_SPILL_R, LEAVE_SPILL_T, LEAVE_SPILL_PAY, I18n.t("w_leave_it_all_of_it"), -1)
 		return
 	m.blai_spill_wait = float(m.blai_spill_wait) - delta
 	if m.blai_spill_wait <= 0.0:
@@ -639,8 +639,8 @@ static func _scold(m: Node2D, gobbled: int) -> void:
 	m.blai_gobbled += gobbled
 	m.human.lose_patience(LEAVE_COST * float(gobbled))
 	m.human.glance_t = maxf(float(m.human.glance_t), 2.2)
-	m.float_text(m.human.global_position + Vector2(0.0, -34.0), "I said leave it!", Color(1.0, 0.86, 0.80), m.POP_SAY)
-	m.feed.say("YOUR HUMAN SAW THAT", EventFeed.Tone.BAD)
+	m.float_text(m.human.global_position + Vector2(0.0, -34.0), I18n.t("w_i_said_leave_it"), Color(1.0, 0.86, 0.80), m.POP_SAY)
+	m.feed.say(I18n.t("w_your_human_saw_that"), EventFeed.Tone.BAD)
 	m.blai_leave = {}
 	m.blai_leave_cool = LEAVE_COOL
 
@@ -699,9 +699,9 @@ static func _tick_floor(m: Node2D, delta: float) -> void:
 				m.blai_leaves += 1
 				m.human.patience = minf(1.0, float(m.human.patience) + LEAVE_BACK)
 				m.combo.add("LEAVE IT", int(lv.pay))
-				m.award_points(int(lv.pay), "left it! +%d" % int(lv.pay))
+				m.award_points(int(lv.pay), I18n.t("w_left_it") % int(lv.pay))
 				if m.human.can_warn_external():
-					m.human.notice("Good dog.", 1.0)
+					m.human.notice(I18n.t("w_good_dog_3"), 1.0)
 		return
 	if m.blai_leave_cool > 0.0 or m.blai_spill_at.x < INF or not m.human.can_warn_external():
 		return
@@ -733,7 +733,7 @@ static func _tick_floor(m: Node2D, delta: float) -> void:
 			best = i
 			best_d = d
 	if best >= 0:
-		_start_leave(m, m.kebabs[best].pos, LEAVE_PASS, LEAVE_T, LEAVE_PAY, "Leave it!", best)
+		_start_leave(m, m.kebabs[best].pos, LEAVE_PASS, LEAVE_T, LEAVE_PAY, I18n.t("w_leave_it"), best)
 
 
 # How far off a pintxo she is told, closing on it at this speed: early
@@ -772,7 +772,7 @@ static func _tick_beg(m: Node2D, delta: float) -> void:
 	m.blai_begged += 1
 	m.kebabs_eaten += 1
 	m.combo.add("SHARED", BEG_PAY)
-	m.award_points(BEG_PAY, "shared! +%d" % BEG_PAY)
+	m.award_points(BEG_PAY, I18n.t("w_shared") % BEG_PAY)
 	m.float_text((who.pos as Vector2) + Vector2(0.0, -30.0), BEG_LINES[int(who.key) % BEG_LINES.size()],
 		Color(0.96, 0.94, 0.88), m.POP_SAY)
 
