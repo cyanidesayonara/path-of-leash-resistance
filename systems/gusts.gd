@@ -7,7 +7,8 @@ extends RefCounted
 # swelling and dying; the leash bows with it and litter takes off
 # (entities/litter.gd reads wind_gust). A planted dog holds her ground. By the
 # sea the wind blows onshore, off whichever side of the walk is water, and
-# carries spray instead of leaves (tick_sea). Montjuïc keeps its own hill wind (systems/montjuic.gd).
+# carries spray instead of leaves (tick_sea). Montjuïc keeps its own hill
+# wind (systems/montjuic.gd).
 #
 # The gust's state is main's (wind_warn, wind_gust, wind_dir, wind_next,
 # wind_rng), shared with Montjuïc's, so the overlay and the litter read one
