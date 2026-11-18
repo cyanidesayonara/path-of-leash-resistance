@@ -99,9 +99,9 @@ func _run() -> void:
 	game.free_walk = true
 	game.apply_walk_sky(game.level_id)
 	main.details_idx = 3
-	var w: String = game.weather
+	var w: String = game.sky
 	Flow.details_change(main, 1)
-	_check(game.weather != w, "left/right on WEATHER changes the weather on a free walk")
+	_check(game.sky != w, "left/right on WEATHER changes the weather on a free walk")
 	game.free_walk = false
 	game.free_play = keep_fp
 	game.apply_walk_sky(game.level_id)
