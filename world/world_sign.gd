@@ -504,6 +504,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			var grow := clampf(u * 1.8, 0.0, 1.0)
 			pc.r = float(pc.r) * maxf(0.01, grow)
 			pc.len = float(pc.len) * grow
+	# what a hard-to-read material lies on (BACKINGS)
+	_backing(c, sign, h)
 	match String(sign.mat):
 		"leaves":
 			_leaves(c, sign, h)
@@ -778,6 +780,105 @@ static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
 		var q := r.position + Vector2(_h(i, key, 70.0) * r.size.x, _h(i, key, 71.0) * r.size.y)
 		var cr := maxf(1.6, h * (0.025 + 0.02 * _h(i, key, 72.0)))
 		c.draw_circle(q, cr, Color(0.30, 0.26, 0.16).lerp(Color(0.24, 0.30, 0.17), _h(i, key, 73.0)))
+
+
+# What a name lies on where its own material vanishes into the ground, the
+# way the place would show it: Tibidabo's bulbs on the fairground's marquee
+# board, Sarrià's pastries on a bakery tray, the vet's biscuits on a feeding
+# mat, Llevant's shells on wet sand, El Bosc's sticks on dark earth, La
+# the chestnuts on a sheet of newspaper. Round the strokes' extent, as a flower bed is (planter_rect).
+const BACKINGS := {"bulbs": "board", "pastries": "tray", "biscuits": "mat", "shells": "wetsand",
+	"sticks": "earth", "chestnuts": "newspaper"}
+# a backing sits a little tighter under the letters than a bed, clear of the
+# gloss below
+const BACKING_PAD := 0.30
+
+
+static func _round_rect(c: Object, r: Rect2, rad: float, col: Color) -> void:
+	rad = minf(rad, minf(r.size.x, r.size.y) * 0.5)
+	c.draw_rect(Rect2(r.position.x + rad, r.position.y, r.size.x - rad * 2.0, r.size.y), col)
+	c.draw_rect(Rect2(r.position.x, r.position.y + rad, r.size.x, r.size.y - rad * 2.0), col)
+	for k in [r.position + Vector2(rad, rad), Vector2(r.end.x - rad, r.position.y + rad),
+			Vector2(r.position.x + rad, r.end.y - rad), r.end - Vector2(rad, rad)]:
+		c.draw_circle(k, rad, col)
+
+
+# a patch of ground with no edge: layers inset one in another, each a little
+# more of the colour, so it fades out into the ground round it
+static func _soft_patch(c: Object, r: Rect2, h: float, col: Color) -> void:
+	for k in range(4):
+		var g := r.grow(h * 0.18 * float(3 - k))
+		_round_rect(c, g, h * 0.5, Color(col.r, col.g, col.b, col.a * 0.32))
+
+
+static func _backing(c: Object, sign: Dictionary, h: float) -> void:
+	var style := String(BACKINGS.get(String(sign.mat), ""))
+	if style == "":
+		return
+	var r := planter_rect(sign)
+	if r.size.x <= 0.0:
+		return
+	# tighter than a bed: the strokes' extent at BACKING_PAD
+	r = r.grow(-float(sign.h) * (PLANTER_PAD - BACKING_PAD))
+	var sh := Color(0.05, 0.05, 0.08, 0.24)
+	var key: float = sign.key
+	match style:
+		"board":
+			# the marquee: a dark board in a gilt frame, ringed in bulbs
+			var fr := maxf(4.0, h * 0.10)
+			c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(fr), sh)
+			c.draw_rect(r.grow(fr), Color(0.70, 0.54, 0.24))
+			c.draw_rect(r, Color(0.16, 0.10, 0.14))
+			var step := h * 0.32
+			var x := r.position.x
+			while x <= r.end.x:
+				for y in [r.position.y - fr * 0.5, r.end.y + fr * 0.5]:
+					c.draw_circle(Vector2(x, y), fr * 0.42, Color(1.0, 0.90, 0.60))
+				x += step
+		"tray":
+			# a baking tray, its rolled rim, and the parchment in it
+			c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(5.0), sh)
+			_round_rect(c, r.grow(5.0), 6.0, Color(0.58, 0.58, 0.60))
+			_round_rect(c, r.grow(2.0), 4.0, Color(0.44, 0.44, 0.46))
+			c.draw_rect(r.grow(-2.0), Color(0.93, 0.89, 0.80))
+		"mat":
+			# a rubber feeding mat, a raised lip round it
+			_round_rect(c, Rect2(r.position + Vector2(3.0, 4.0), r.size).grow(4.0), h * 0.3, sh)
+			_round_rect(c, r.grow(4.0), h * 0.3, Color(0.22, 0.46, 0.54))
+			_round_rect(c, r, h * 0.26, Color(0.30, 0.58, 0.66))
+		"wetsand":
+			_soft_patch(c, r, h, Color(0.62, 0.52, 0.36, 0.9))
+		"earth":
+			_soft_patch(c, r, h, Color(0.26, 0.19, 0.12, 0.9))
+			# a few stones set round it
+			var n := int((r.size.x + r.size.y) * 2.0 / (h * 0.6))
+			for i in range(n):
+				var u := float(i) / float(n)
+				var q: Vector2
+				var per := (r.size.x + r.size.y) * 2.0 * u
+				if per < r.size.x:
+					q = Vector2(r.position.x + per, r.position.y)
+				elif per < r.size.x + r.size.y:
+					q = Vector2(r.end.x, r.position.y + per - r.size.x)
+				elif per < r.size.x * 2.0 + r.size.y:
+					q = Vector2(r.end.x - (per - r.size.x - r.size.y), r.end.y)
+				else:
+					q = Vector2(r.position.x, r.end.y - (per - r.size.x * 2.0 - r.size.y))
+				q += _j(i, key, 95.0, h * 0.05)
+				c.draw_circle(q + Vector2(1.0, 1.5), h * 0.07, sh)
+				c.draw_circle(q, h * 0.065, Color(0.58, 0.56, 0.52).lerp(Color(0.70, 0.68, 0.62), _h(i, key, 96.0)))
+		"newspaper":
+			# a sheet of newspaper, a little crooked, its columns of print
+			c.draw_rect(Rect2(r.position + Vector2(3.0, 4.0), r.size), sh)
+			c.draw_rect(r, Color(0.88, 0.85, 0.76))
+			var col_w := h * 1.1
+			var cx := r.position.x + h * 0.25
+			while cx + col_w * 0.6 < r.end.x:
+				var ly := r.position.y + h * 0.25
+				while ly < r.end.y - h * 0.15:
+					c.draw_line(Vector2(cx, ly), Vector2(minf(cx + col_w * 0.85, r.end.x - h * 0.2), ly), Color(0.55, 0.53, 0.48, 0.55), maxf(1.6, h * 0.035))
+					ly += h * 0.12
+				cx += col_w
 
 
 static func _flowerbed(c: Object, sign: Dictionary, h: float) -> void:
