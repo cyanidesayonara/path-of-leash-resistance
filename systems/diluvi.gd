@@ -12,7 +12,6 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const Panot := preload("res://world/panot.gd")
 const Surfaces := preload("res://world/surfaces.gd")
-const PORXO_EARTH_R := 28.0          # the soft ground round a tree's trunk
 const RING_SEGS := 12
 const PORXO_PUDDLE_SEGS := 28
 const PILLAR_STONE := Color(0.58, 0.53, 0.47)
@@ -270,15 +269,7 @@ static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 # El Porxo is paved and packed from wall to wall: past the gate it handles as
 # paving, bar the soft ground round its trees' trunks and its dig spots.
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.y >= m.GATE_Y - 40.0:
-		return -1
-	for pp: Dictionary in m.park_props:
-		if String(pp.kind) in ["dig", "planter", "shrub"] and p.distance_to(pp.pos) < PORXO_EARTH_R:
-			return Surfaces.S.GRASS
-	for t: Vector2 in m.trees:
-		if p.distance_to(t) < PORXO_EARTH_R:
-			return Surfaces.S.GRASS
-	return Surfaces.S.PAVEMENT
+	return Surfaces.paved_past_gate(m, p, m.trees)
 
 
 # El Porxo, past the gate

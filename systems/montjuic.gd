@@ -1047,15 +1047,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 # The esplanade is gravel from parapet to parapet: it handles as paving, bar
 # the soft ground of its tree pits and planters. The hill keeps the default.
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.y >= m.GATE_Y - 40.0:
-		return -1
-	for pp: Dictionary in m.park_props:
-		if String(pp.kind) in ["dig", "planter", "shrub"] and p.distance_to(pp.pos) < ESPLANADE_EARTH_R:
-			return Surfaces.S.GRASS
-	for t: Vector2 in m.trees:
-		if p.distance_to(t) < ESPLANADE_EARTH_R:
-			return Surfaces.S.GRASS
-	return Surfaces.S.PAVEMENT
+	return Surfaces.paved_past_gate(m, p, m.trees, ESPLANADE_EARTH_R)
 
 
 # no grass on the cactus bed, round the fountain, or past the hill's rims

@@ -3189,9 +3189,18 @@ func night_lights() -> Array[Vector3]:
 	if walk_mod != null and walk_mod.has_method("night_lights"):
 		_night_lights.append_array(walk_mod.night_lights(self))
 		return _night_lights
+	_night_lights.append_array(street_night_lights())
+	return _night_lights
+
+
+# The street's own lamps: its lampposts, and a wall lamp every so often down
+# the building line where no lamppost is near. A walk's night_lights hook
+# that only adds lights of its own starts from these.
+func street_night_lights() -> Array[Vector3]:
+	var out: Array[Vector3] = []
 	for i in range(deco_pole_count):
 		if is_lamppost(i):
-			_night_lights.append(Vector3(poles[i].x, poles[i].y + 16.0, NIGHT_LAMP_R))
+			out.append(Vector3(poles[i].x, poles[i].y + 16.0, NIGHT_LAMP_R))
 	var side := -1.0
 	var y := START_Y - 60.0
 	while y > GATE_Y + 120.0:
@@ -3200,15 +3209,15 @@ func night_lights() -> Array[Vector3]:
 		var e := building_line(y)
 		var at := Vector2(e.x + 8.0 if side < 0.0 else e.y - 8.0, y)
 		var near := false
-		for l: Vector3 in _night_lights:
+		for l: Vector3 in out:
 			if Vector2(l.x, l.y).distance_to(at) < NIGHT_GAP:
 				near = true
 				break
 		if not near:
-			_night_lights.append(Vector3(at.x, at.y, NIGHT_WALL_R))
+			out.append(Vector3(at.x, at.y, NIGHT_WALL_R))
 		side = -side
 		y -= NIGHT_WALL_STEP
-	return _night_lights
+	return out
 
 
 # The lit doorways, shopfronts and windows of the street after dark
@@ -5016,12 +5025,29 @@ func _freedom_sign(c: Object, r: Rect2, txt: String, gloss := "") -> void:
 			14, Color(0.9, 0.9, 0.82, 0.8))
 
 
+# the walks whose off-leash area draws its worn patch soft at the edge, one to
+# a line so walks added side by side do not collide; the rest keep the flat
+# disc until they are polished
+const SOFT_WEAR: Array[String] = [
+]
+
+
+# the patch worn into the middle of a yard, a clearing or a plaça: a flat
+# disc, or on a SOFT_WEAR walk a gradient a little wider and denser at its
+# heart, so it reads the same size and weight without an edge
+func _worn_patch(c: Object, at: Vector2, radius: float, col: Color) -> void:
+	if lvl in SOFT_WEAR:
+		c.glow(at, radius * 1.4, Color(col.r, col.g, col.b, minf(1.0, col.a * 1.15)), 0.3)
+	else:
+		c.draw_circle(at, radius, col)
+
+
 func _draw_yard(c: Object, gravel: bool) -> void:
 	# the municipal dog park: grass (or a gravel compound on the industrial
 	# walks), a worn patch in the middle where every dog plays, and a fence
 	var r := _freedom_rect()
 	c.draw_rect(r, Color(0.40, 0.38, 0.34) if gravel else Color(0.34, 0.5, 0.32))
-	c.draw_circle(r.get_center(), 150.0,
+	_worn_patch(c, r.get_center(), 150.0,
 		Color(0.34, 0.32, 0.29, 0.5) if gravel else Color(0.42, 0.44, 0.3, 0.35))
 	if gravel:
 		# grit, in place of the grass tufts
@@ -5071,7 +5097,7 @@ func _draw_placa(c: Object) -> void:
 		c.draw_line(Vector2(r.position.x, gy), Vector2(r.end.x, gy), Color(0.56, 0.50, 0.43, 0.5), 1.5)
 		gy += 56.0
 	# worn pale where every dog in the barri plays
-	c.draw_circle(r.get_center() + Vector2(-80.0, 40.0), 140.0, Color(0.74, 0.68, 0.58, 0.35))
+	_worn_patch(c, r.get_center() + Vector2(-80.0, 40.0), 140.0, Color(0.74, 0.68, 0.58, 0.35))
 	# the house fronts along the top and both sides, each with its cornice,
 	# its balconies (shutters either side of the window, an iron rail, a
 	# stone slab, a pot of something), and its door in a stone surround
@@ -5165,7 +5191,7 @@ func _draw_clearing(c: Object) -> void:
 		walk_mod.draw_clearing(self, c, r)
 		return
 	c.draw_rect(r, Color(0.30, 0.42, 0.26))
-	c.draw_circle(r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))   # trodden earth
+	_worn_patch(c, r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))   # trodden earth
 	# Sixteen, not forty. Forty of these cost 5.7ms of a 9ms frame, measured -
 	# a ring of trees does not read forty times better than a ring of sixteen.
 	# The ring of trees is not drawn here any more. It was decoration you could

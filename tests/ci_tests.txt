@@ -745,6 +745,10 @@
 
 # Ground surface test
 --headless --path . --script res://tests/test_surfaces.gd
+# The shared ground-past-the-gate helpers a walk's surface hook returns
+--headless --path . --script res://tests/test_surface_helpers.gd
+# The shared stamped stones for riprap, breakwaters and groins
+--headless --path . --script res://tests/test_stones.gd
 
 # Natural terrain test
 --headless --path . --script res://tests/test_terrain.gd

@@ -2,6 +2,15 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - One helper for the ground past the gate
+
+- Four walk polishes each wrote their own copy of one surface hook: the off-leash area paved wall to wall, soft only round its trees, planters, shrubs and dig spots. It is one helper now, `Surfaces.paved_past_gate(m, p, trees, earth_r)`, beside `Surfaces.lawn_past_gate(m, p)` for a lawn wall to wall. Both answer -1 short of the line 40 past the gate, so a walk's `surface` hook returns them as they stand. El Mercat, El Gòtic, Montjuïc and El Diluvi call the paved one, El Parc and La Rambla the lawn one; nothing plays or draws differently (`surface_at` over a 20-unit grid of each off-leash area is the same as before on all six, bar El Diluvi's dig spots, which are placed afresh every run).
+- `tests/test_surface_helpers.gd` covers both.
+- The worn patch in the middle of the shared yard, clearing and plaça is drawn by one function, `_worn_patch`: the flat disc as before, or on a walk listed in `main.SOFT_WEAR` a gradient with no edge. The list starts empty, so nothing draws differently; a polished walk adds itself on its own line.
+- The street's default lamps after dark (its lampposts, and a wall lamp down the building line where none is near) come from `main.street_night_lights()`, so a walk's `night_lights` hook can start from them and add or leave out its own instead of copying the rule. Night shots of La Rambla and El Besòs are pixel-identical.
+- `world/stones.gd` stamps rough angular stones (riprap, a breakwater, a groin) into a ShapeBatch from a few outlines built once, so a walk's bank of stones needs no circles in a row and no triangulation per frame; `tests/test_stones.gd` covers it. Nothing calls it yet.
+- `tests/test_cross_section.gd` lists the walks whose off-leash area may be paved one to a line (`PAVED_FREEDOM`, El Mercat, El Gòtic and El Diluvi among them), so walks added side by side do not collide on one line.
+
 ## 2026-11-18 - The bosses look like their films in the walk
 
 - Els Senglars' stampede (`entities/boar_threat.gd`): the boars were round dark blobs with a row of grey dots. Each is now the film's sow from above: a heavy wedge, all shoulders, with the hackles raised in a ragged crest down the spine (grizzled tips that lift with her stride), grizzled hair swept back along the flanks, ears flat back, curved pointed tusks hooking out of the jaw, and red eyes glowing under a heavy scowl. Piglets keep their stripes on the same body.

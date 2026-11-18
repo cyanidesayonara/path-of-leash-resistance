@@ -390,9 +390,7 @@ static func draw_yard(_m: Node2D, c: Object, r: Rect2) -> void:
 # past the gate the Pipicà is lawn all the way across: the boulevard's fill
 # stops 40 past the gate, so its handling must stop there too
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.y < m.GATE_Y - 40.0:
-		return Surfaces.S.GRASS
-	return -1
+	return Surfaces.lawn_past_gate(m, p)
 
 
 static func build_layer(m: Node2D) -> void:

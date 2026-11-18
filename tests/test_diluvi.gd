@@ -91,7 +91,7 @@ func _run() -> void:
 		var fp := Vector2(fr.position.x + fr.size.x * fx, fr.position.y + fr.size.y * 0.45)
 		var by_tree := false
 		for t: Vector2 in m.trees:
-			by_tree = by_tree or fp.distance_to(t) < m.walk_mod.PORXO_EARTH_R
+			by_tree = by_tree or fp.distance_to(t) < m.Surfaces.PAVED_EARTH_R
 		if not by_tree:
 			_check(m.surface_at(fp) == m.Surfaces.S.PAVEMENT, "El Porxo at %s handles as paving (%d)" % [fp, m.surface_at(fp)])
 	for t: Vector2 in m.trees:
