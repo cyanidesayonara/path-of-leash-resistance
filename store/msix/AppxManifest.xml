@@ -35,7 +35,11 @@
   </Dependencies>
 
   <Resources>
+    <!-- the languages the game speaks (LANGUAGE in SETTINGS), which are also
+         the languages its Store listing is written in -->
     <Resource Language="en-us" />
+    <Resource Language="ca-es" />
+    <Resource Language="es-es" />
   </Resources>
 
   <Applications>

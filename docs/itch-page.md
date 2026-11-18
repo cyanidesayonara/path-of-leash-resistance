@@ -132,6 +132,30 @@ Single player. No ads, no purchases, no account. The download plays offline; the
 Made in Godot by Santtu Nykänen.
 ```
 
+## En català
+
+```
+El teu humà va enganxat al mòbil i camina amb el pilot automàtic. Tu ets a l'altre cap de la corretja. Porta'l a casa amb el mòbil sencer mentre aprofites per fer tants assumptes de gos com puguis.
+
+El teu humà pesa quatre cops més que tu i guanya totes les estrebades directes. Així que guanyes com un gos: planta't en el moment just, enrotlla la corretja a un fanal per frenar-lo en sec i borda per aturar-lo a la vorera. Enrotlla'l a un pal i continua estirant, i sortirà voltant com una pilota lligada. Una estirada constant el guia; si l'estires sense parar, se li acaba la paciència («Ei!» i corretja curta).
+
+Quaranta-dos passejos per Barcelona i els voltants (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, L'Estació, Els Búnquers, Plaça Reial, La Cremada, El Fòrum, La Diagonal, Carrer de Blai, La Carretera de les Aigües, Festa de Gràcia, El Laberint d'Horta, El Port, Plaça d'Espanya, El Poble Espanyol, L'Aeroport, Les Obres, Dia de Partit, La Ferralla, Montserrat i Rambla del Raval), amb cinc gossos, reptes musicals, persecucions i quatre caps estàtua. Cada passeig acaba sense corretja i es pot jugar amb pluja, vent, neu o de nit.
+
+Teclat, comandament o tàctil. Un jugador. Sense anuncis, sense compres, sense compte. Fet amb Godot per Santtu Nykänen.
+```
+
+## En español
+
+```
+Tu humano va pegado al móvil y camina con el piloto automático. Tú estás al otro lado de la correa. Llévalo a casa con el móvil intacto mientras aprovechas para hacer tantos asuntos de perro como puedas.
+
+Tu humano pesa cuatro veces más que tú y gana todos los tirones directos. Así que ganas como un perro: plántate en el momento justo, enrolla la correa en una farola para frenarlo en seco y ladra para pararlo en el bordillo. Enróllalo en un poste y sigue tirando, y saldrá dando vueltas como una pelota atada. Un tirón constante lo guía; si tiras sin parar, se le acaba la paciencia («¡Oye!» y correa corta).
+
+Cuarenta y dos paseos por Barcelona y sus alrededores (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, L'Estació, Els Búnquers, Plaça Reial, La Cremada, El Fòrum, La Diagonal, Carrer de Blai, La Carretera de les Aigües, Festa de Gràcia, El Laberint d'Horta, El Port, Plaça d'Espanya, El Poble Espanyol, L'Aeroport, Les Obres, Dia de Partit, La Ferralla, Montserrat y Rambla del Raval), con cinco perros, retos musicales, persecuciones y cuatro jefes estatua. Cada paseo acaba sin correa y puede jugarse con lluvia, viento, nieve o de noche.
+
+Teclado, mando o táctil. Un jugador. Sin anuncios, sin compras, sin cuenta. Hecho con Godot por Santtu Nykänen.
+```
+
 ## What's new in 1.75
 
 For a devlog post or the top of the body. Everything since v1.74, from

@@ -1,10 +1,10 @@
 """The website's copy, from the sources the release checklist already keeps
 current, so the site cannot drift from the game or the Store.
 
-Fills every <!-- gen:NAME --> ... <!-- /gen:NAME --> block in site/index.html
-and site/press/index.html:
+Fills every <!-- gen:NAME --> ... <!-- /gen:NAME --> block in all six static
+pages (English, Catalan and Spanish landing pages and press kits):
 
-    count        the walk count in words ("Thirty-nine"), from Game.LEVELS
+    count        the walk count in words ("Forty-six", "Quaranta-sis", ...), from Game.LEVELS
     walks        the walk names in campaign order, from Game.LEVEL_NAMES
     features     the Store's product features (store/listing.md)
     whatsnew     the Store's "What's new in this version"
@@ -31,10 +31,14 @@ SRC = ROOT
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import store_listing  # noqa: E402
 
-# each page and the blocks it must carry; a missing or unclosed marker fails
+# each page: (language, blocks it must carry); a missing or unclosed marker fails
 PAGES = {
-    "site/index.html": ["features", "whatsnew", "count", "walks"],
-    "site/press/index.html": ["description"],
+    "site/index.html": ("en", ["features", "whatsnew", "count", "walks"]),
+    "site/press/index.html": ("en", ["description"]),
+    "site/ca/index.html": ("ca", ["features", "whatsnew", "count", "walks"]),
+    "site/ca/press/index.html": ("ca", ["description"]),
+    "site/es/index.html": ("es", ["features", "whatsnew", "count", "walks"]),
+    "site/es/press/index.html": ("es", ["description"]),
 }
 
 ONES = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
@@ -43,14 +47,45 @@ ONES = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
 TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy",
         "eighty", "ninety"]
 
+CA_ONES = ["zero", "un", "dos", "tres", "quatre", "cinc", "sis", "set", "vuit",
+           "nou", "deu", "onze", "dotze", "tretze", "catorze", "quinze", "setze",
+           "disset", "divuit", "dinou"]
+CA_TENS = ["", "", "vint", "trenta", "quaranta", "cinquanta", "seixanta",
+           "setanta", "vuitanta", "noranta"]
 
-def words(n: int) -> str:
-    if n < 20:
-        w = ONES[n]
-    elif n < 100:
-        w = TENS[n // 10] + ("-" + ONES[n % 10] if n % 10 else "")
+ES_LOW = ["cero", "un", "dos", "tres", "cuatro", "cinco", "seis", "siete",
+          "ocho", "nueve", "diez", "once", "doce", "trece", "catorce", "quince",
+          "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte",
+          "veintiún", "veintidós", "veintitrés", "veinticuatro", "veinticinco",
+          "veintiséis", "veintisiete", "veintiocho", "veintinueve"]
+ES_TENS = ["", "", "", "treinta", "cuarenta", "cincuenta", "sesenta",
+           "setenta", "ochenta", "noventa"]
+
+
+def words(n: int, lang: str = "en") -> str:
+    if lang == "ca":
+        if n < 20:
+            w = CA_ONES[n]
+        elif n < 30:
+            w = "vint" + ("-i-" + CA_ONES[n % 10] if n % 10 else "")
+        elif n < 100:
+            w = CA_TENS[n // 10] + ("-" + CA_ONES[n % 10] if n % 10 else "")
+        else:
+            w = str(n)
+    elif lang == "es":
+        if n < 30:
+            w = ES_LOW[n]
+        elif n < 100:
+            w = ES_TENS[n // 10] + (" y " + ES_LOW[n % 10] if n % 10 else "")
+        else:
+            w = str(n)
     else:
-        w = str(n)
+        if n < 20:
+            w = ONES[n]
+        elif n < 100:
+            w = TENS[n // 10] + ("-" + ONES[n % 10] if n % 10 else "")
+        else:
+            w = str(n)
     return w[0].upper() + w[1:]
 
 
@@ -70,16 +105,16 @@ def walks() -> list:
     return [names[i] for i in ids]
 
 
-def blocks() -> dict:
+def blocks(lang: str = "en") -> dict:
     md = open(os.path.join(SRC, "store/listing.md"), encoding="utf-8").read()
-    f = store_listing.fields(md)
+    f = store_listing.fields(md, lang)
     names = walks()
     def e(t):
         return html.escape(t, quote=False)
     news = [ln.lstrip("-* ").strip() for ln in f["ReleaseNotes"].splitlines() if ln.strip()]
     paras = [p.strip() for p in re.split(r"\n\s*\n", f["Description"]) if p.strip()]
     return {
-        "count": words(len(names)),
+        "count": words(len(names), lang),
         "walks": "\n".join(f"  <li>{e(n)}</li>" for n in names),
         "features": "\n".join(f"  <li>{e(x)}</li>" for x in f["Features"]),
         "whatsnew": "\n".join(f"  <li>{e(x)}</li>" for x in news),
@@ -126,14 +161,14 @@ def main() -> int:
     for a in sys.argv[1:]:
         if a.startswith("--from="):
             SRC = os.path.abspath(a[len("--from="):])
-    vals = blocks()
+    by_lang = {lang: blocks(lang) for lang in ("en", "ca", "es")}
     stale = []
-    for rel, want in PAGES.items():
+    for rel, (lang, want) in PAGES.items():
         p = os.path.join(ROOT, rel)
         with open(p, encoding="utf-8", newline="") as fh:
             old = fh.read()
         markers_ok(rel, old, want)
-        new = fill(old, vals)
+        new = fill(old, by_lang[lang])
         if new != old:
             stale.append(rel)
             if not check:
