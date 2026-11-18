@@ -9,11 +9,27 @@ extends RefCounted
 # level_build turns into bodies and bypasser blockers.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_column", "draw_live", "draw_overhead", "draw_stall", "draw_van", "surface"]
+const HOOKS := [
+	"draw_column", "draw_edge_layer", "draw_freedom_beyond", "draw_live",
+	"draw_over_walkway", "draw_overhead", "draw_stall", "draw_threshold", "draw_van", "draw_yard", "surface",
+]
+const SOFT_WEAR := true
 
 
 const LevelBuild := preload("res://world/level_build.gd")
 const Surfaces := preload("res://world/surfaces.gd")
+const Gotic := preload("res://world/gotic.gd")
+const WALL_D := 24.0
+const HALL_ROOF_W := 240.0
+const STREET_SLAB_W := 80.0
+const STREET_SLAB_H := 56.0
+const PLACA_PAVE := Color(0.66, 0.60, 0.52)
+const PLACA_JOINT := Color(0.56, 0.50, 0.43, 0.5)
+const STREET_PAVE := Color(0.71, 0.67, 0.60)
+const STREET_DOORS: Array = [
+	[-30.0, -1.0], [140.0, -1.0], [-270.0, 1.0], [10.0, 1.0],
+	[-4910.0, -1.0], [-4910.0, 1.0],
+]
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 # along the hall's walls, in the stretches between the wall stalls:
 # [y, west wall?, kind]
@@ -580,6 +596,464 @@ static func draw_van(m: Node2D, c: Object, v: Vector2) -> void:
 
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
+
+static func _batch_for(target: Object) -> ShapeBatch:
+	if target is ShapeBatch:
+		return target as ShapeBatch
+	return ShapeBatch.new(target)
+
+
+# Street flagstones outside the hall, indoor terrazzo bay dividers, the
+# granite threshold sills under both arches, and the plaça stone-flag apron
+# carrying into the gateposts (cached on ground_layer).
+static func draw_over_walkway(m: Node2D, wc: Object, vt: float, vb: float) -> void:
+	var b := _batch_for(wc)
+	var gate_y: float = float(m.GATE_Y)
+	var arch_y: float = LevelBuild.MERCAT_ARCH_Y
+	var door_y: float = LevelBuild.MERCAT_DOOR_Y
+	var y_lo := maxf(vt - 80.0, gate_y - 40.0)
+	var y_hi := minf(vb + 80.0, float(m.START_Y) + 560.0)
+	if y_hi <= y_lo:
+		if not (wc is ShapeBatch):
+			b.flush()
+		return
+
+	# 1. Plaça stone flags carried from freedomlayer's bottom (-5030) to the stone sill (-5000)
+	if y_lo < gate_y and y_hi > gate_y - 40.0:
+		var t0 := maxf(y_lo, gate_y - 40.0)
+		var t1 := minf(y_hi, gate_y)
+		var ge0: Vector2 = m.walk_edges(t0)
+		var ge1: Vector2 = m.walk_edges(t1)
+		var pad := 4.0 if t0 < gate_y - 30.0 else 0.0
+		b.polygon(PackedVector2Array([
+			Vector2(ge0.x - pad, t0), Vector2(ge0.y + pad, t0),
+			Vector2(ge1.y, t1), Vector2(ge1.x, t1),
+		]), PLACA_PAVE)
+		var gx := 70.0 + ceilf((maxf(ge0.x, ge1.x) - 70.0) / 56.0) * 56.0
+		var gx_max := minf(ge0.y, ge1.y) - 2.0
+		while gx <= gx_max:
+			b.line(Vector2(gx, t0), Vector2(gx, t1), PLACA_JOINT, 1.5)
+			gx += 56.0
+
+	# 2. Outdoor stone flagstones on the approach street and exit street
+	if y_hi > arch_y:
+		_draw_street_slabs(m, b, maxf(y_lo, arch_y), y_hi)
+	if y_lo < door_y and y_hi > gate_y:
+		_draw_street_slabs(m, b, maxf(y_lo, gate_y), minf(y_hi, door_y))
+
+	# 3. Indoor terrazzo bay divider strips and aisle bands inside the hall
+	if y_lo < arch_y and y_hi > door_y:
+		_draw_terrazzo_bays(m, b, maxf(y_lo, door_y), minf(y_hi, arch_y))
+
+	# 4. Wall-foot shadows cast onto the paving (west wall casts east; east wall subtle AO)
+	var sy := maxf(y_lo, gate_y)
+	var sh_col := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.12)
+	while sy < y_hi - 0.1:
+		var sy_next := minf(sy + 32.0, y_hi)
+		if sy < door_y and sy_next > door_y:
+			sy_next = door_y
+		elif sy < arch_y and sy_next > arch_y:
+			sy_next = arch_y
+		var ea: Vector2 = m.walk_edges(sy)
+		var eb: Vector2 = m.walk_edges(sy_next)
+		b.polygon(PackedVector2Array([
+			Vector2(ea.x, sy), Vector2(ea.x + 12.0, sy),
+			Vector2(eb.x + 12.0, sy_next), Vector2(eb.x, sy_next),
+		]), sh_col)
+		b.polygon(PackedVector2Array([
+			Vector2(ea.y - 5.0, sy), Vector2(ea.y, sy),
+			Vector2(eb.y, sy_next), Vector2(eb.y - 5.0, sy_next),
+		]), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.08))
+		sy = sy_next
+
+	# 5. Projecting granite doorway steps on the outdoor street
+	for d: Array in STREET_DOORS:
+		var dy := float(d[0])
+		if dy < y_lo - 30.0 or dy > y_hi + 30.0:
+			continue
+		var side := float(d[1])
+		var de: Vector2 = m.walk_edges(dy)
+		var wx: float = de.x if side < 0.0 else de.y
+		var sx := wx if side < 0.0 else wx - 12.0
+		b.rect(Rect2(sx, dy - 16.0, 12.0, 32.0), Color(0.60, 0.57, 0.52))
+		var rim_x := wx + 10.0 if side < 0.0 else wx - 12.0
+		b.rect(Rect2(rim_x, dy - 16.0, 2.0, 32.0), Color(0.74, 0.70, 0.64))
+		var dsh_x := wx + 2.0 if side < 0.0 else wx - 14.0
+		b.rect(Rect2(dsh_x, dy - 15.0, 12.0, 30.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.13))
+
+	# 6. Dressed granite threshold sills and iron grate channels under both arches
+	for ty: float in [arch_y, door_y]:
+		if ty > y_lo - 44.0 and ty < y_hi + 44.0:
+			_draw_arch_sill(m, b, ty)
+
+	if not (wc is ShapeBatch):
+		b.flush()
+
+
+static func _draw_street_slabs(m: Node2D, b: ShapeBatch, y0: float, y1: float) -> void:
+	if y1 <= y0 + 0.1:
+		return
+	var row := int(floorf(y0 / STREET_SLAB_H))
+	var ry := float(row) * STREET_SLAB_H
+	while ry < y1 - 0.1:
+		var r_top := maxf(ry, y0)
+		var r_bot := minf(ry + STREET_SLAB_H, y1)
+		if r_bot > r_top + 0.1:
+			var e0: Vector2 = m.walk_edges(r_top)
+			var e1: Vector2 = m.walk_edges(r_bot)
+			b.polygon(PackedVector2Array([
+				Vector2(e0.x, r_top), Vector2(e0.y, r_top),
+				Vector2(e1.y, r_bot), Vector2(e1.x, r_bot),
+			]), STREET_PAVE)
+			var off := STREET_SLAB_W * 0.5 if posmod(row, 2) == 1 else 0.0
+			var in_l := maxf(e0.x, e1.x) + 2.0
+			var in_r := minf(e0.y, e1.y) - 2.0
+			var max_r := maxf(e0.y, e1.y)
+			var rx := floorf(minf(e0.x, e1.x) / STREET_SLAB_W) * STREET_SLAB_W + off
+			if r_bot - r_top >= 20.0:
+				var cx := rx
+				while cx < max_r:
+					if cx >= in_l and cx + STREET_SLAB_W <= in_r:
+						var h := Gotic.roof_hash(int(floorf(cx / STREET_SLAB_W)), row) % 11
+						if h < 2:
+							b.rect(Rect2(cx + 1.0, r_top + 1.0, STREET_SLAB_W - 2.0, r_bot - r_top - 2.0), STREET_PAVE.lightened(0.032))
+						elif h == 2:
+							b.rect(Rect2(cx + 1.0, r_top + 1.0, STREET_SLAB_W - 2.0, r_bot - r_top - 2.0), STREET_PAVE.darkened(0.035))
+					cx += STREET_SLAB_W
+			if absf(r_top - ry) < 0.5 and r_top > y0 + 2.0:
+				b.line(Vector2(e0.x, r_top), Vector2(e0.y, r_top), Color(0, 0, 0, 0.085), 1.6)
+				b.line(Vector2(e0.x, r_top + 1.5), Vector2(e0.y, r_top + 1.5), Color(1, 1, 1, 0.045), 1.0)
+			var vx := rx
+			while vx < max_r:
+				if vx > in_l and vx < in_r:
+					b.line(Vector2(vx, r_top), Vector2(vx, r_bot), Color(0, 0, 0, 0.085), 1.6)
+				vx += STREET_SLAB_W
+		ry += STREET_SLAB_H
+		row += 1
+
+
+static func _draw_terrazzo_bays(m: Node2D, b: ShapeBatch, y0: float, y1: float) -> void:
+	if y1 <= y0 + 0.1:
+		return
+	var strip := Color(0.56, 0.51, 0.43, 0.22)
+	var brass := Color(0.84, 0.76, 0.56, 0.16)
+	var ty := ceilf(y0 / 150.0) * 150.0
+	while ty < y1 - 1.0:
+		var e: Vector2 = m.walk_edges(ty)
+		b.line(Vector2(e.x + 2.0, ty), Vector2(e.y - 2.0, ty), strip, 2.0)
+		b.line(Vector2(e.x + 2.0, ty + 1.5), Vector2(e.y - 2.0, ty + 1.5), brass, 1.0)
+		ty += 150.0
+	var straight_top := maxf(y0, LevelBuild.MERCAT_DOOR_Y + 160.0)
+	var straight_bot := minf(y1, LevelBuild.MERCAT_ARCH_Y - 120.0)
+	if straight_bot > straight_top:
+		for lx: float in [390.0, 520.0, 760.0, 890.0]:
+			b.line(Vector2(lx, straight_top), Vector2(lx, straight_bot), strip, 1.8)
+
+
+static func _draw_arch_sill(m: Node2D, b: ShapeBatch, ty: float) -> void:
+	var half := 36.0
+	var et: Vector2 = m.walk_edges(ty - half)
+	var eb: Vector2 = m.walk_edges(ty + half)
+	b.polygon(PackedVector2Array([
+		Vector2(et.x, ty - half), Vector2(et.y, ty - half),
+		Vector2(eb.y, ty + half), Vector2(eb.x, ty + half),
+	]), Color(0.64, 0.60, 0.54))
+	# Outer dressed granite border courses visible either side of the 52 px arch
+	var et_in: Vector2 = m.walk_edges(ty - 26.0)
+	var eb_in: Vector2 = m.walk_edges(ty + 26.0)
+	b.polygon(PackedVector2Array([
+		Vector2(et.x, ty - half), Vector2(et.y, ty - half),
+		Vector2(et_in.y, ty - 26.0), Vector2(et_in.x, ty - 26.0),
+	]), Color(0.68, 0.64, 0.57))
+	b.polygon(PackedVector2Array([
+		Vector2(eb_in.x, ty + 26.0), Vector2(eb_in.y, ty + 26.0),
+		Vector2(eb.y, ty + half), Vector2(eb.x, ty + half),
+	]), Color(0.60, 0.56, 0.50))
+	var x0 := maxf(et.x, eb.x) + 4.0
+	var x1 := minf(et.y, eb.y) - 4.0
+	var sx := x0 + 36.0
+	while sx < x1 - 4.0:
+		b.line(Vector2(sx, ty - half), Vector2(sx, ty + half), Color(0.46, 0.43, 0.38, 0.55), 1.5)
+		sx += 36.0
+	b.line(Vector2(et.x, ty - half), Vector2(et.y, ty - half), Color(0.78, 0.74, 0.67), 2.0)
+	b.line(Vector2(eb.x, ty + half), Vector2(eb.y, ty + half), Color(0, 0, 0, 0.18), 2.0)
+	var em: Vector2 = m.walk_edges(ty)
+	b.line(Vector2(em.x + 2.0, ty), Vector2(em.y - 2.0, ty), Color(0.24, 0.24, 0.26), 3.0)
+
+
+# Soldier course of granite setts laid flush against the south face of the
+# stone gate sill at GATE_Y, tying the exit street into Plaça dels Gossos.
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var gate_y: float = float(m.GATE_Y)
+	var e: Vector2 = m.walk_edges(gate_y + 12.0)
+	var y0 := gate_y + 6.0
+	var h := 14.0
+	b.rect(Rect2(e.x, y0, e.y - e.x, h), Color(0.56, 0.52, 0.46))
+	var sx := e.x
+	while sx < e.y - 2.0:
+		var w := minf(22.0, e.y - sx)
+		var odd := int(floorf(sx / 22.0)) % 2
+		b.rect(Rect2(sx + 1.0, y0 + 1.0, w - 2.0, h - 2.0), Color(0.65, 0.61, 0.54) if odd == 0 else Color(0.61, 0.57, 0.50))
+		sx += 22.0
+	b.rect(Rect2(e.x, y0 + h, e.y - e.x, 3.0), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20))
+
+
+# Continuous edge layer: street-hugging old-town roofs outside the market hall,
+# the glazed iron-truss hall roof cleanly bounded to MERCAT_DOOR_Y..MERCAT_ARCH_Y,
+# smooth angled wall faces along the entrance/exit flares, and the north
+# plaça cornice return at GATE_Y - 30.
+static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	var b := _batch_for(c)
+	var gate_top: float = float(m.GATE_Y) - 30.0
+	var arch_y: float = LevelBuild.MERCAT_ARCH_Y
+	var door_y: float = LevelBuild.MERCAT_DOOR_Y
+	var y_lo := maxf(vt - 320.0, gate_top)
+	var y_hi := vb + 320.0
+	if y_hi <= y_lo:
+		if not (c is ShapeBatch):
+			b.flush()
+		return
+
+	var base := Color(0.44, 0.38, 0.34)
+	# 1. Continuous masonry base fill following walk_edges smoothly
+	var sy := y_lo
+	while sy < y_hi - 0.1:
+		var sy_next := minf(sy + 40.0, y_hi)
+		if sy < door_y and sy_next > door_y:
+			sy_next = door_y
+		elif sy < arch_y and sy_next > arch_y:
+			sy_next = arch_y
+		var ea: Vector2 = m.walk_edges(sy)
+		var eb: Vector2 = m.walk_edges(sy_next)
+		b.quad(Vector2(-900.0, sy), Vector2(ea.x, sy), Vector2(eb.x, sy_next), Vector2(-900.0, sy_next), base)
+		b.quad(Vector2(ea.y, sy), Vector2(2200.0, sy), Vector2(2200.0, sy_next), Vector2(eb.y, sy_next), base)
+		sy = sy_next
+
+	# 2. Outer old-town roofscape (everywhere outside the hall wings)
+	var hall_out_l: float = 640.0 - LevelBuild.MERCAT_HALL_HALF - WALL_D - 5.0 - HALL_ROOF_W
+	var hall_out_r: float = 640.0 + LevelBuild.MERCAT_HALL_HALF + WALL_D + 5.0 + HALL_ROOF_W
+	var iy0 := int(floorf((y_lo - Gotic.ROOF_Y0) / Gotic.ROOF_H))
+	var iy1 := int(ceilf((y_hi - Gotic.ROOF_Y0) / Gotic.ROOF_H))
+	for iy in range(iy0, iy1):
+		var r0 := maxf(float(iy) * Gotic.ROOF_H + Gotic.ROOF_Y0, gate_top)
+		var r1 := minf(float(iy + 1) * Gotic.ROOF_H + Gotic.ROOF_Y0, y_hi)
+		if r1 - r0 < 12.0:
+			continue
+		# Split roof rows cleanly at door_y and arch_y so outdoor blocks never bleed into the hall
+		var segs: Array[Vector2] = []
+		if r0 < door_y and r1 > door_y:
+			segs.append(Vector2(r0, door_y))
+			segs.append(Vector2(door_y, r1))
+		elif r0 < arch_y and r1 > arch_y:
+			segs.append(Vector2(r0, arch_y))
+			segs.append(Vector2(arch_y, r1))
+		else:
+			segs.append(Vector2(r0, r1))
+		for seg: Vector2 in segs:
+			var sa := seg.x
+			var sb := seg.y
+			if sb - sa < 10.0:
+				continue
+			var mid := (sa + sb) * 0.5
+			if mid > door_y and mid < arch_y:
+				_draw_roof_row(m, b, iy, -900.0, hall_out_l, sa, sb)
+				_draw_roof_row(m, b, iy, hall_out_r, 2200.0, sa, sb)
+			else:
+				var lim_l := INF
+				var lim_r := -INF
+				for t: float in [0.0, 0.5, 1.0]:
+					var e: Vector2 = m.walk_edges(lerpf(sa, sb, t))
+					lim_l = minf(lim_l, e.x)
+					lim_r = maxf(lim_r, e.y)
+				_draw_roof_row(m, b, iy, -900.0, lim_l - 110.0, sa, sb)
+				_draw_roof_row(m, b, iy, lim_r + 110.0, 2200.0, sa, sb)
+				_draw_front_terracotta(m, b, iy, sa, sb, lim_l - 110.0, lim_r + 110.0)
+
+	# 3. Market hall glazed iron-truss roof wings (strictly door_y .. arch_y)
+	if y_lo < arch_y and y_hi > door_y:
+		_draw_hall_roof_wings(m, b, maxf(y_lo, door_y), minf(y_hi, arch_y), hall_out_l, hall_out_r)
+
+	# 4. Smooth inclined masonry wall faces and coping along walk_edges
+	_draw_wall_faces(m, b, y_lo, y_hi, base)
+
+	# 5. Recessed shop/street doorways on the outdoor stretches
+	for d: Array in STREET_DOORS:
+		var dy := float(d[0])
+		if dy < y_lo - 40.0 or dy > y_hi + 40.0:
+			continue
+		var side := float(d[1])
+		var wx: float = m.walk_edges(dy).x if side < 0.0 else m.walk_edges(dy).y
+		b.rect(Rect2(minf(wx, wx + side * 24.0), dy - 20.0, 24.0, 40.0), Color(0.52, 0.46, 0.40))
+		b.rect(Rect2(minf(wx, wx + side * 22.0), dy - 18.0, 22.0, 36.0), Color(0.22, 0.19, 0.17))
+		var leaf_x := wx + side * 15.0
+		b.rect(Rect2(minf(leaf_x, leaf_x + side * 7.0), dy - 15.0, 7.0, 30.0), Color(0.16, 0.12, 0.10))
+		b.rect(Rect2(minf(leaf_x, leaf_x + side * 7.0), dy - 15.0, 2.0, 30.0), Color(0.30, 0.23, 0.18))
+		b.circle(Vector2(leaf_x + side * 3.0, dy + 7.0), 1.6, Color(0.80, 0.70, 0.42))
+
+	# 6. North Plaça cornice return and corner quoin piers at GATE_Y - 30
+	if y_lo <= gate_top + 16.0 and y_hi >= gate_top - 4.0:
+		var ge: Vector2 = m.walk_edges(float(m.GATE_Y))
+		var coping_col := Color(0.70, 0.65, 0.57)
+		var frieze_col := Color(0.52, 0.47, 0.40)
+		var soffit_col := Color(0.32, 0.28, 0.24)
+		b.rect(Rect2(-900.0, gate_top, ge.x + 900.0, 5.0), coping_col)
+		b.rect(Rect2(-900.0, gate_top + 5.0, ge.x + 900.0, 5.0), frieze_col)
+		b.line(Vector2(-900.0, gate_top + 10.0), Vector2(ge.x, gate_top + 10.0), soffit_col, 2.0)
+		b.rect(Rect2(ge.y, gate_top, 2200.0 - ge.y, 5.0), coping_col)
+		b.rect(Rect2(ge.y, gate_top + 5.0, 2200.0 - ge.y, 5.0), frieze_col)
+		b.line(Vector2(ge.y, gate_top + 10.0), Vector2(2200.0, gate_top + 10.0), soffit_col, 2.0)
+		b.rect(Rect2(ge.x - WALL_D - 5.0, gate_top, WALL_D + 5.0, 30.0), Color(0.60, 0.55, 0.47))
+		b.rect(Rect2(ge.x - WALL_D - 2.0, gate_top + 3.0, WALL_D - 1.0, 24.0), Color(0.68, 0.63, 0.55))
+		b.rect(Rect2(ge.y, gate_top, WALL_D + 5.0, 30.0), Color(0.60, 0.55, 0.47))
+		b.rect(Rect2(ge.y + 3.0, gate_top + 3.0, WALL_D - 1.0, 24.0), Color(0.68, 0.63, 0.55))
+
+	if not (c is ShapeBatch):
+		b.flush()
+
+
+static func _draw_roof_row(m: Node2D, b: ShapeBatch, iy: int, x_lo: float, x_hi: float, y_lo: float, y_hi: float) -> void:
+	if x_hi - x_lo < 34.0 or y_hi - y_lo < 26.0:
+		return
+	var off := float(Gotic.roof_hash(7, iy) % int(Gotic.ROOF_W))
+	var ix0 := int(floorf((x_lo - off) / Gotic.ROOF_W))
+	var ix1 := int(ceilf((x_hi - off) / Gotic.ROOF_W))
+	for ix in range(ix0, ix1):
+		var x0 := maxf(off + float(ix) * Gotic.ROOF_W, x_lo)
+		var x1 := minf(off + float(ix + 1) * Gotic.ROOF_W, x_hi)
+		if x1 - x0 >= 30.0:
+			Gotic.draw_block(m, b, Rect2(x0 + 2.0, y_lo + 2.0, x1 - x0 - 4.0, y_hi - y_lo - 4.0), Gotic.roof_hash(ix, iy))
+
+
+static func _draw_front_terracotta(m: Node2D, b: ShapeBatch, iy: int, y0: float, y1: float, out_l: float, out_r: float) -> void:
+	var tile_l: Color = Gotic.TILE[Gotic.roof_hash(iy, 11) % Gotic.TILE.size()]
+	var tile_r: Color = Gotic.TILE[Gotic.roof_hash(iy, 23) % Gotic.TILE.size()]
+	var sy := y0
+	while sy < y1 - 0.1:
+		var sy_next := minf(sy + 24.0, y1)
+		var ea: Vector2 = m.walk_edges(sy)
+		var eb: Vector2 = m.walk_edges(sy_next)
+		var in_la := ea.x - WALL_D - 5.0
+		var in_lb := eb.x - WALL_D - 5.0
+		var in_ra := ea.y + WALL_D + 5.0
+		var in_rb := eb.y + WALL_D + 5.0
+		if in_la > out_l + 4.0 and in_lb > out_l + 4.0:
+			b.quad(Vector2(out_l, sy), Vector2(in_la, sy), Vector2(in_lb, sy_next), Vector2(out_l, sy_next), tile_l)
+		if out_r > in_ra + 4.0 and out_r > in_rb + 4.0:
+			b.quad(Vector2(in_ra, sy), Vector2(out_r, sy), Vector2(out_r, sy_next), Vector2(in_rb, sy_next), tile_r)
+		sy = sy_next
+	var cy := y0 + 6.0
+	while cy < y1 - 1.0:
+		var ec: Vector2 = m.walk_edges(cy)
+		if ec.x - WALL_D - 6.0 > out_l + 2.0:
+			b.line(Vector2(out_l + 2.0, cy), Vector2(ec.x - WALL_D - 6.0, cy), tile_l.darkened(0.22), 1.8)
+		if out_r - 2.0 > ec.y + WALL_D + 6.0:
+			b.line(Vector2(ec.y + WALL_D + 6.0, cy), Vector2(out_r - 2.0, cy), tile_r.darkened(0.22), 1.8)
+		cy += 12.5
+	b.line(Vector2(out_l + 4.5, y0), Vector2(out_l + 4.5, y1), tile_l.lightened(0.26), 4.0)
+	b.line(Vector2(out_r - 4.5, y0), Vector2(out_r - 4.5, y1), tile_r.lightened(0.26), 4.0)
+
+
+static func _draw_hall_roof_wings(m: Node2D, b: ShapeBatch, y0: float, y1: float, out_l: float, out_r: float) -> void:
+	if y1 <= y0 + 0.1:
+		return
+	var door_y: float = LevelBuild.MERCAT_DOOR_Y
+	var arch_y: float = LevelBuild.MERCAT_ARCH_Y
+	var glass := Color(0.58, 0.64, 0.64)
+	var sy := y0
+	while sy < y1 - 0.1:
+		var sy_next := minf(sy + 24.0, y1)
+		var ea: Vector2 = m.walk_edges(sy)
+		var eb: Vector2 = m.walk_edges(sy_next)
+		b.quad(Vector2(out_l, sy), Vector2(ea.x - WALL_D - 5.0, sy),
+			Vector2(eb.x - WALL_D - 5.0, sy_next), Vector2(out_l, sy_next), glass)
+		b.quad(Vector2(ea.y + WALL_D + 5.0, sy), Vector2(out_r, sy),
+			Vector2(out_r, sy_next), Vector2(eb.y + WALL_D + 5.0, sy_next), glass)
+		sy = sy_next
+	# Longitudinal iron purlins along the side bays
+	var iron_dark := Color(0.50, 0.18, 0.14)
+	for px: float in [80.0, 165.0]:
+		b.line(Vector2(px, y0), Vector2(px, y1), iron_dark, 6.0)
+		b.line(Vector2(1280.0 - px, y0), Vector2(1280.0 - px, y1), iron_dark, 6.0)
+	# Transverse red iron trusses every 48 px aligned to the hall
+	var iron := Color(0.56, 0.20, 0.16)
+	var glint := Color(0.80, 0.86, 0.86, 0.45)
+	var ty := door_y + ceilf((y0 - door_y) / 48.0) * 48.0
+	while ty <= y1 + 0.5:
+		var et: Vector2 = m.walk_edges(clampf(ty, door_y, arch_y))
+		var lx_in := et.x - WALL_D - 5.0
+		var rx_in := et.y + WALL_D + 5.0
+		b.line(Vector2(out_l, ty), Vector2(lx_in, ty), iron, 5.0)
+		b.line(Vector2(rx_in, ty), Vector2(out_r, ty), iron, 5.0)
+		if ty + 5.0 < y1:
+			b.line(Vector2(out_l, ty + 5.0), Vector2(lx_in, ty + 5.0), glint, 1.5)
+			b.line(Vector2(rx_in, ty + 5.0), Vector2(out_r, ty + 5.0), glint, 1.5)
+		ty += 48.0
+	# Outer iron eave beams and arch-line gable headers at door_y and arch_y
+	var beam := Color(0.46, 0.16, 0.13)
+	b.line(Vector2(out_l + 3.0, y0), Vector2(out_l + 3.0, y1), beam, 6.0)
+	b.line(Vector2(out_r - 3.0, y0), Vector2(out_r - 3.0, y1), beam, 6.0)
+	for gy: float in [door_y, arch_y]:
+		if gy >= y0 - 4.0 and gy <= y1 + 4.0:
+			var eg: Vector2 = m.walk_edges(gy)
+			b.line(Vector2(out_l, gy), Vector2(eg.x - WALL_D - 5.0, gy), beam, 7.0)
+			b.line(Vector2(eg.y + WALL_D + 5.0, gy), Vector2(out_r, gy), beam, 7.0)
+
+
+static func _draw_wall_faces(m: Node2D, b: ShapeBatch, y0: float, y1: float, base: Color) -> void:
+	var arch_y: float = LevelBuild.MERCAT_ARCH_Y
+	var door_y: float = LevelBuild.MERCAT_DOOR_Y
+	var wy := y0
+	while wy < y1 - 0.1:
+		var wy_next := minf(wy + 24.0, y1)
+		if wy < door_y and wy_next > door_y:
+			wy_next = door_y
+		elif wy < arch_y and wy_next > arch_y:
+			wy_next = arch_y
+		var ea: Vector2 = m.walk_edges(wy)
+		var eb: Vector2 = m.walk_edges(wy_next)
+		for i in range(6):
+			var t0 := float(i) / 6.0
+			var t1 := float(i + 1) / 6.0
+			var lo0 := -WALL_D + WALL_D * t0
+			var lo1 := -WALL_D + WALL_D * t1 + 0.6
+			b.quad(Vector2(ea.x + lo0, wy), Vector2(ea.x + lo1, wy),
+				Vector2(eb.x + lo1, wy_next), Vector2(eb.x + lo0, wy_next), base.darkened(0.52 - t0 * 0.34))
+			var hi0 := WALL_D - WALL_D * t1 - 0.6
+			var hi1 := WALL_D - WALL_D * t0
+			b.quad(Vector2(ea.y + hi0, wy), Vector2(ea.y + hi1, wy),
+				Vector2(eb.y + hi1, wy_next), Vector2(eb.y + hi0, wy_next), base.darkened(0.56 - t0 * 0.34))
+		b.quad(Vector2(ea.x - WALL_D - 5.0, wy), Vector2(ea.x - WALL_D, wy),
+			Vector2(eb.x - WALL_D, wy_next), Vector2(eb.x - WALL_D - 5.0, wy_next), base.lightened(0.30))
+		b.quad(Vector2(ea.y + WALL_D, wy), Vector2(ea.y + WALL_D + 5.0, wy),
+			Vector2(eb.y + WALL_D + 5.0, wy_next), Vector2(eb.y + WALL_D, wy_next), base.lightened(0.24))
+		wy = wy_next
+
+
+# Roofs round the plaça on freedomlayer: keep main's northern roofs, and fill
+# the west and east margins past the plaça's side house fronts.
+static func draw_freedom_beyond(m: Node2D, c: Object) -> void:
+	m._draw_freedom_beyond(c)
+	var r: Rect2 = m._freedom_rect()
+	var b := _batch_for(c)
+	var iy0 := int(floorf((r.position.y - 46.0 - Gotic.ROOF_Y0) / Gotic.ROOF_H))
+	var iy1 := int(ceilf((r.end.y - Gotic.ROOF_Y0) / Gotic.ROOF_H))
+	for iy in range(iy0, iy1):
+		var y0 := maxf(float(iy) * Gotic.ROOF_H + Gotic.ROOF_Y0, r.position.y - 46.0)
+		var y1 := minf(float(iy + 1) * Gotic.ROOF_H + Gotic.ROOF_Y0, r.end.y)
+		if y1 - y0 >= 26.0:
+			_draw_roof_row(m, b, iy, -400.0, r.position.x - 40.0, y0, y1)
+			_draw_roof_row(m, b, iy, r.end.x + 40.0, 1700.0, y0, y1)
+	if not (c is ShapeBatch):
+		b.flush()
+
+
+# Close the 70 px south-corner house fronts on the plaça's flanks where main's
+# 130 px module loop stops short of GATE_Y - 30.
+static func draw_yard(m: Node2D, c: Object, r: Rect2) -> void:
+	var corner_y := r.end.y - 70.0
+	m._draw_house_front(c, Vector2(r.position.x - 40.0, corner_y), Vector2.DOWN, Vector2.RIGHT, 70.0, 40.0, 2)
+	m._draw_house_front(c, Vector2(r.end.x + 40.0, corner_y), Vector2.DOWN, Vector2.LEFT, 70.0, 40.0, 2)
+
 
 # the hall's arches over the walk: MERCAT at the street end, PLAÇA at the
 # square end
