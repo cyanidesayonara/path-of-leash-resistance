@@ -51,6 +51,13 @@ const CROSS_HALF := 37.5               # half a cross street's roadway
 const BIKE_L := WALL_L + 68.0          # the bike lanes, inside each tree line
 const BIKE_R := TRACK_L - 108.0
 const BIKE_W := 44.0                   # two-way, as the Diagonal's are
+# The walk's name and gloss lie across the promenade like every walk's, but
+# centred between the two bike lanes and fitted inside them, not on the
+# middle of the walls with the lanes under their ends.
+const NAME_X := (BIKE_L + BIKE_W + BIKE_R) * 0.5
+const NAME_ROOM := BIKE_R - (BIKE_L + BIKE_W) - 24.0
+# the turned camera puts the usual spot under the top bar: a little nearer
+const NAME_DOWN := 70.0
 
 # the tram: on a timer, a bell RING_LEAD before it reaches her stretch
 const TRAM_LEN := 300.0
@@ -1442,3 +1449,8 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 		k += 1
 	b.line(prev, Vector2(TRACK_X, top), WIRE, 1.6)
 	b.flush()
+
+
+# where main lays the walk's name and gloss (main.name_place)
+static func name_place(_m: Node2D) -> Dictionary:
+	return {"x": NAME_X, "room": NAME_ROOM, "down": NAME_DOWN}

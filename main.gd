@@ -5424,7 +5424,13 @@ func build_signs() -> void:
 		# long one breaks onto two lines or, where it cannot, comes down in size
 		var span := name_span()
 		var nroom := minf(span.y - span.x - NAME_MARGIN, NAME_MAX_W)
-		var nm := WorldSign.build_name(name, Vector2((span.x + span.y) * 0.5, NAME_Y), NAME_H, mat, 4.0, nroom)
+		var np := name_place()
+		var nm: Dictionary
+		if np.is_empty():
+			nm = WorldSign.build_name(name, Vector2((span.x + span.y) * 0.5, NAME_Y), NAME_H, mat, 4.0, nroom)
+		else:
+			nm = WorldSign.build_name(name, Vector2(float(np.x), NAME_Y + float(np.get("down", 0.0))), NAME_H, mat, 4.0,
+				float(np.room))
 		nm.born = born
 		signs.append(nm)
 		_name_baseline = float(nm.baseline)
@@ -5509,7 +5515,22 @@ func _draw_ground_title() -> void:
 	# under the name as the walk begins, and it has to read on any ground.
 	var gloss := Game.gloss("tutorial" if tutorial_mode else lvl)
 	if gloss != "":
-		_draw_gloss(Vector2(mid, gloss_baseline(y)), gloss)
+		var np := name_place()
+		if np.is_empty():
+			_draw_gloss(Vector2(mid, gloss_baseline(y)), gloss)
+		else:
+			_draw_gloss(Vector2(float(np.x), gloss_baseline(y)), gloss, float(np.room))
+
+
+# Where a walk centres its name and gloss across the path when the middle of
+# its walls is not the middle of its ground: its module's name_place(m) gives
+# the centre ("x"), the room either side of it together ("room") and how far
+# down the walk from NAME_Y it lies ("down", for a turned camera). Empty
+# for every walk that centres them between its edges.
+func name_place() -> Dictionary:
+	if walk_mod != null and walk_mod.has_method("name_place"):
+		return walk_mod.name_place(self)
+	return {}
 
 
 # The stretch of path every row of a walk's name and its gloss lies on, as
@@ -5539,19 +5560,21 @@ func gloss_baseline(fallback_y := START_Y - 190.0) -> float:
 # apart. Drawn so the night tint cannot grey it.
 const GLOSS_PX := 24
 const GLOSS_EDGE := 4
-func _draw_gloss(at: Vector2, txt: String) -> void:
+func _draw_gloss(at: Vector2, txt: String, room := -1.0) -> void:
 	if gloss_a <= 0.01:
 		return
 	var f: Font = load("res://hud/ui_kit.gd").body()
 	# on the path too: a long gloss on a narrow walk comes down in size
-	var ge := walk_edges(at.y)
+	if room < 0.0:
+		var ge := walk_edges(at.y)
+		room = ge.y - ge.x - NAME_MARGIN
 	var px := GLOSS_PX
 	var w: float = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-	if w > ge.y - ge.x - NAME_MARGIN:
-		px = maxi(18, int(float(GLOSS_PX) * (ge.y - ge.x - NAME_MARGIN) / w))
+	if w > room:
+		px = maxi(18, int(float(GLOSS_PX) * room / w))
 		w = f.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
 	var x0 := at.x - w * 0.5
-	if not started and menu_step == 2 and cam != null:
+	if not started and menu_step == 2 and cam != null and name_place().is_empty():
 		var vw: float = get_viewport_rect().size.x / cam.zoom.x
 		x0 = maxf(x0, cam.position.x - vw * 0.5 + GLOSS_CLEAR_X / cam.zoom.x)
 	var o := Vector2(x0, at.y)

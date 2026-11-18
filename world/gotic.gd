@@ -58,7 +58,9 @@ static func draw_street(m: Node2D, vt: float, vb: float) -> void:
 			var acx := (e0.x + e0.y) * 0.5
 			b.line(Vector2(acx - 14.0, ry), Vector2(acx - 14.0, ry + 56.0), Color(0, 0, 0, 0.09), 1.5)
 			b.line(Vector2(acx + 14.0, ry), Vector2(acx + 14.0, ry + 56.0), Color(0, 0, 0, 0.09), 1.5)
-			if row % 6 == 0:
+			# no grate under the walk's name and its gloss
+			var under_name: bool = ry + 56.0 > float(m.NAME_Y) - float(m.NAME_H) * 1.6 and ry < float(m.NAME_Y) + 90.0
+			if row % 6 == 0 and not under_name:
 				b.rect(Rect2(acx - 10.0, ry + 16.0, 20.0, 24.0), Color(0.18, 0.18, 0.20))
 				b.rect(Rect2(acx - 8.0, ry + 18.0, 16.0, 20.0), Color(0.10, 0.10, 0.12))
 				for g in range(3):
