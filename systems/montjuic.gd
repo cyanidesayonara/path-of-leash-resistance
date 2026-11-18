@@ -4,6 +4,7 @@ extends RefCounted
 const EventFeed := preload("res://hud/event_feed.gd")
 const CableCar := preload("res://systems/cable_car.gd")
 const Detour := preload("res://systems/detour.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 # MONTJUÏC, the climb (La Pujada). A top-down view has no up, so the climb is
 # sold by everything round it at once:
@@ -431,7 +432,7 @@ static func draw_esplanade(m: Node2D, c: Object) -> void:
 	for i in range(140):
 		var sp := r.position + Vector2(fmod(float(i) * 97.0, r.size.x), fmod(float(i) * 61.0, r.size.y))
 		b.circle(sp, 1.6 + float(i % 3) * 0.6, Color(0.62, 0.56, 0.46, 0.6))
-	b.circle(r.get_center() + Vector2(-80.0, 40.0), 150.0, Color(0.80, 0.74, 0.62, 0.35))
+	b.glow(r.get_center() + Vector2(-80.0, 40.0), 260.0, Color(0.82, 0.76, 0.64, 0.40), 0.3)
 	for sx: float in [r.position.x - 34.0, r.end.x]:
 		b.rect(Rect2(sx, r.position.y, 34.0, r.size.y), RAMPART)
 		b.rect(Rect2(sx + (28.0 if sx < r.position.x else 0.0), r.position.y, 6.0, r.size.y), RAMPART.darkened(0.25))
@@ -627,17 +628,17 @@ static func draw_font(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var c0 := r.get_center()
 
 	# Carles Buïgas concentric brass jet manifolds below water
-	for ring_frac: float in [0.20, 0.36]:
+	# outer first: each ring's water fill would cover a ring inside it
+	for ring_frac: float in [0.36, 0.20]:
 		var rad_x := r.size.x * ring_frac
 		var rad_y := r.size.y * (ring_frac * 0.92)
-		b.polygon(_oval_pts(c0, rad_x + 1.8, rad_y + 1.8), Color(0.14, 0.28, 0.40, 0.45))
-		b.polygon(_oval_pts(c0, rad_x, rad_y), Color(0.74, 0.66, 0.36, 0.60))
-		b.polygon(_oval_pts(c0, rad_x - 1.8, rad_y - 1.8), deep)
+		b.polygon(_oval_pts(c0, rad_x + 1.8, rad_y + 1.8, 40), Color(0.14, 0.28, 0.40, 0.45))
+		b.polygon(_oval_pts(c0, rad_x, rad_y, 40), Color(0.74, 0.66, 0.36, 0.60))
+		b.polygon(_oval_pts(c0, rad_x - 1.8, rad_y - 1.8, 40), deep)
 
 	# submerged illumination projector glow radiating through the water
 	var glow_tint := Color(0.30, 0.78, 0.92) if not night else Color.from_hsv(fmod(t * 0.05, 1.0), 0.6, 1.0)
-	b.circle(c0, r.size.x * 0.42, Color(glow_tint.r, glow_tint.g, glow_tint.b, 0.08 * (0.35 + lv)))
-	b.circle(c0, r.size.x * 0.24, Color(glow_tint.r, glow_tint.g, glow_tint.b, 0.14 * (0.35 + lv)))
+	b.glow(c0, r.size.y * 0.5, Color(glow_tint.r, glow_tint.g, glow_tint.b, 0.20 * (0.35 + lv)), 0.2)
 
 	# ripples, more of them in the show
 	for i in range(6):
@@ -714,6 +715,10 @@ const HILL := Color(0.46, 0.50, 0.30)         # dry Mediterranean scrub
 const STONE := Color(0.70, 0.64, 0.54)
 const HAZE := Color(0.72, 0.78, 0.84)
 const SEA := Color(0.30, 0.50, 0.68)
+const CITY_STREET := Color(0.50, 0.49, 0.48)
+const CITY_SHADE := Color(0.34, 0.33, 0.34)
+const RIM_SHADE_W := 70.0
+const ESPLANADE_EARTH_R := 24.0     # a tree pit's earth, as draw_esplanade rings it
 
 
 # The hillside, under the path: a polygon between its rims, which narrow as it
@@ -927,10 +932,10 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	# up to the gate: past it the esplanade draws its own sea and haze
 	var y := floorf((maxf(vt, m.GATE_Y) - 300.0) / 60.0) * 60.0
 	y = maxf(y, m.GATE_Y - 60.0)
-	var street := Color(0.60, 0.58, 0.56)
+	var street := CITY_STREET
 	while y < vb + 300.0:
 		var h := climb(m, y + 30.0)
-		var haze := 0.18 + 0.55 * h
+		var haze := 0.18 + 0.55 * h * h
 		var e: Vector2 = m.walk_edges(y + 30.0)
 		var cx := (e.x + e.y) * 0.5
 		var hh := hill_half(m, y + 30.0) - 30.0
@@ -941,10 +946,11 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		y += 60.0
 	# the blocks, on their own grid so they do not jump between strips
 	var cell := 64.0
+	var lit: float = Game.lamp_glow()
 	var by := maxf(floorf((vt - 300.0) / cell) * cell, m.GATE_Y - 40.0)
 	while by < vb + 300.0:
 		var h2 := climb(m, by)
-		var haze2 := 0.18 + 0.55 * h2
+		var haze2 := 0.18 + 0.55 * h2 * h2
 		var s := lerpf(1.0, 0.45, h2)            # further below, smaller
 		var e2: Vector2 = m.walk_edges(by)
 		var cx2 := (e2.x + e2.y) * 0.5
@@ -956,9 +962,34 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		while bx < 1320.0:
 			if (bx + step < cx2 - hh2 or bx > cx2 + hh2) and bx > sea2 + 6.0:
 				_block(b, Vector2(bx, by), step, haze2)
+				if lit > 0.0 and (int(bx / step) + int(by / step)) % 2 == 0:
+					b.glow(Vector2(bx, by), 5.0 + 9.0 * s, Color(1.0, 0.86, 0.56, lit * (1.0 - haze2 * 0.3)), 0.5)
 			bx += step
 		by += step
+	_rim_shadow(m, b, vt, vb)
 	b.flush(c)
+
+
+# The hill's shade on the city below, just past each rim: one feathered strip
+# a side, following the rim's wobble as draw_ground draws it.
+static func _rim_shadow(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var y := maxf(floorf((vt - 300.0) / 20.0) * 20.0, m.GATE_Y - 40.0)
+	var left := PackedVector2Array()
+	var right := PackedVector2Array()
+	var rows := PackedFloat32Array()
+	while y < vb + 300.0:
+		var e: Vector2 = m.walk_edges(y)
+		var cx := (e.x + e.y) * 0.5
+		var hh := hill_half(m, y) + sin(y * 0.013) * 26.0
+		left.append_array([Vector2(cx - hh, y), Vector2(cx - hh - RIM_SHADE_W, y)])
+		right.append_array([Vector2(cx + hh, y), Vector2(cx + hh + RIM_SHADE_W * 1.4, y)])
+		rows.append(1.0)
+		y += 20.0
+	if rows.size() < 2:
+		return
+	var fade := PackedFloat32Array([1.0, 0.0])
+	b.band(left, 2, Color(0.10, 0.12, 0.16, 0.30), rows, fade)
+	b.band(right, 2, Color(0.10, 0.12, 0.16, 0.38), rows, fade)
 
 
 # one Eixample block from above: chamfered corners, a ring of roofs, the
@@ -972,10 +1003,19 @@ static func _block(b: ShapeBatch, at: Vector2, step: float, haze: float) -> void
 	var roof: Color = [Color(0.74, 0.46, 0.34), Color(0.70, 0.64, 0.56), Color(0.80, 0.68, 0.50)][int(n * 3.0)]
 	var oct := PackedVector2Array([o + Vector2(ch, 0), o + Vector2(w - ch, 0), o + Vector2(w, ch), o + Vector2(w, w - ch),
 		o + Vector2(w - ch, w), o + Vector2(ch, w), o + Vector2(0, w - ch), o + Vector2(0, ch)])
+	var drop := Vector2(step * 0.05, step * 0.07)
+	var shade := PackedVector2Array()
+	for q: Vector2 in oct:
+		shade.append(q + drop)
+	b.polygon(shade, CITY_SHADE.lerp(HAZE, haze))
 	b.polygon(oct, roof.lerp(HAZE, haze))
+	# the sunlit north-west half of the ring, a shade lighter than the rest
+	b.polygon(PackedVector2Array([oct[7], oct[0], oct[1], o + Vector2(w * 0.5, w * 0.5), oct[6]]),
+		roof.lightened(0.10).lerp(HAZE, haze))
 	var yard := w * 0.42
-	b.rect(Rect2(o + Vector2((w - yard) * 0.5, (w - yard) * 0.5), Vector2(yard, yard)),
-		Color(0.40, 0.50, 0.34).lerp(HAZE, haze))
+	var yo := o + Vector2((w - yard) * 0.5, (w - yard) * 0.5)
+	b.rect(Rect2(yo, Vector2(yard, yard)), Color(0.40, 0.50, 0.34).lerp(HAZE, haze))
+	b.rect(Rect2(yo, Vector2(yard, yard * 0.22)), CITY_SHADE.lerp(HAZE, haze))
 
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
@@ -1002,6 +1042,20 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 static func draw_freedom(m: Node2D, c: Object) -> void:
 	draw_castle_beyond(m, c)
 	draw_esplanade(m, c)
+
+
+# The esplanade is gravel from parapet to parapet: it handles as paving, bar
+# the soft ground of its tree pits and planters. The hill keeps the default.
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y >= m.GATE_Y - 40.0:
+		return -1
+	for pp: Dictionary in m.park_props:
+		if String(pp.kind) in ["dig", "planter", "shrub"] and p.distance_to(pp.pos) < ESPLANADE_EARTH_R:
+			return Surfaces.S.GRASS
+	for t: Vector2 in m.trees:
+		if p.distance_to(t) < ESPLANADE_EARTH_R:
+			return Surfaces.S.GRASS
+	return Surfaces.S.PAVEMENT
 
 
 # no grass on the cactus bed, round the fountain, or past the hill's rims

@@ -2,6 +2,16 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish Montjuïc
+
+- The city below the rims read as a floor of tiles. Each Eixample block now casts a short shadow and catches the light on its north-west half, its courtyard is shaded under the inner wall, the streets between are a shade darker, and the hill throws a feathered shadow onto the city just past each rim (`_rim_shadow`, one band a side in the cached edge layer).
+- After dark the city below was unlit. Every other street corner now carries a soft warm light, scaled by `Game.lamp_glow()` and drawn in the same cached layer, so it adds no draw call.
+- The haze over the city now rises with the square of the climb, so the lower and middle city reads clearly and the top still meets the esplanade's haze.
+- The Font Màgica's outer ring drew its water over the inner ring, which never showed; both brass rings now show, with 40 segments instead of 16. Its underwater light is one soft gradient instead of two flat discs.
+- The esplanade's sheen was a hard-edged flat disc; it is a gradient now (`ShapeBatch.glow`).
+- The esplanade's gravel handled as grass at its sides (surface-check mismatches over the walk went from 1937 to 1194, almost all of the rest past the rims, where nobody walks): `Montjuic.surface` makes it paving, except the soft ground of its tree pits and planters.
+- `tests/test_montjuic_polish.gd` covers the esplanade's surface and the city's night lights; `test_walk_hooks` lists the new hook.
+
 ## 2026-11-18 - Polish El Gòtic
 
 - The off-leash plaça handled as lawn either side of the middle while drawn as stone paving (504 surface-check mismatches in its frame alone): the walk's module (`systems/detour.gd`) gains a `surface` hook that makes it pavement, with the earth of the tree pits, planters and shrubs still soft.

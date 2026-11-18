@@ -15,7 +15,7 @@ extends SceneTree
 # here, made on purpose.
 const HOOKS := {
 	"street": ["build_layer", "tick"],
-	"montjuic": ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "grass_blocked", "tick"],
+	"montjuic": ["build_layer", "draw_bollard", "draw_conveyor", "draw_edge_layer", "draw_freedom", "draw_ground", "draw_live", "grass_blocked", "surface", "tick"],
 	"guell": ["cam_lean", "draw_bollard", "draw_clearing", "draw_column", "draw_live", "hush_banner", "idle_status", "on_bark", "surface", "tick", "tick_crowd", "urgent_status"],
 	"scrap": ["draw_bollard", "draw_column", "draw_grove", "draw_live", "draw_log_prop", "draw_overhead", "draw_top", "draw_van", "draw_verge", "draw_yard", "idle_status"],
 	"trail": ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked"],

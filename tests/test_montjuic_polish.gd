@@ -52,6 +52,36 @@ func _run() -> void:
 	# Verify cactus bed is intact
 	_check(M.CACTI.size() == 5, "5 specimen cacti in botanical garden")
 
+	# the esplanade's gravel handles as paving, its tree pits as soft ground;
+	# the hill below the gate keeps the default
+	var S: Dictionary = load("res://world/surfaces.gd").S
+	var fr: Rect2 = m._freedom_rect()
+	for fx: float in [0.12, 0.3, 0.7, 0.88]:
+		var fp := Vector2(fr.position.x + fr.size.x * fx, fr.position.y + fr.size.y * 0.55)
+		var near_tree := false
+		for t: Vector2 in m.trees:
+			near_tree = near_tree or fp.distance_to(t) < M.ESPLANADE_EARTH_R
+		if not near_tree:
+			_check(m.surface_at(fp) == S.PAVEMENT, "esplanade gravel at %s handles as paving (%d)" % [fp, m.surface_at(fp)])
+	for t: Vector2 in m.trees:
+		if t.y < m.GATE_Y - 40.0:
+			_check(m.surface_at(t) == S.GRASS, "the esplanade's tree pit at %s is soft ground" % t)
+	var hy := -1500.0
+	var he: Vector2 = m.walk_edges(hy)
+	_check(m.surface_at(Vector2((he.x + he.y) * 0.5, hy)) == S.PAVEMENT, "the hill path is still the path")
+	_check(m.surface_at(Vector2(he.x - 60.0, hy)) == S.GRASS, "the hillside is still grass")
+
+	# the city below is lit after dark, and only then
+	var hour_was: String = game.hour
+	var counts := {}
+	for hour: String in ["day", "night"]:
+		game.hour = hour
+		var sb: ShapeBatch = load("res://systems/shape_batch.gd").new()
+		M.draw_edge_layer(m, sb, -3000.0, -2300.0)
+		counts[hour] = sb._points.size()
+	game.hour = hour_was
+	_check(counts["night"] > counts["day"], "night adds the city's lights (%d vs %d)" % [counts["night"], counts["day"]])
+
 	# a couple of real frames: a draw error here fails the run (SCRIPT ERROR)
 	await process_frame
 	await process_frame
