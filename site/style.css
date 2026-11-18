@@ -72,8 +72,45 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 header.top {
-  padding: 44px 0 8px;
+  padding: 24px 0 8px;
   text-align: center;
+}
+
+nav.lang {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 16px;
+}
+
+nav.lang a {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--navy);
+  color: var(--ink-soft);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+nav.lang a:hover {
+  border-color: var(--turquoise);
+  color: var(--turquoise);
+}
+
+nav.lang a:focus-visible {
+  outline: 2px solid var(--turquoise);
+  outline-offset: 2px;
+}
+
+nav.lang a[aria-current="page"] {
+  background: var(--saffron);
+  border-color: var(--saffron);
+  color: var(--navy-deep);
 }
 
 .top img.logo {

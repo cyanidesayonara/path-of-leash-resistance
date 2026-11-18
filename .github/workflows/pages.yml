@@ -111,14 +111,15 @@ jobs:
           rm -f site/img/shot-*.jpg
           cp rel/site/img/* site/img/
 
-      # main's pages, filled from the release's listing and walk list on a
-      # release, from main's otherwise
+      # main's pages (EN, CA, ES) and the walk pages, filled from the release's
+      # listing and walk list on a release, from main's otherwise
       - name: Fill in the copy and walk pages
         env:
           FROM: ${{ github.event_name == 'workflow_run' && '--from=rel' || '' }}
         run: |
           python3 tools/site_copy.py ${FROM}
           python3 tools/site_walks.py ${FROM}
+          python3 tools/site_copy.py --check ${FROM}
 
       - name: Assemble the site
         env:
@@ -130,6 +131,9 @@ jobs:
           mkdir -p _site/play
           cp -r site/. _site/
           rm -f _site/.gdignore
+          for p in index.html press/index.html ca/index.html ca/press/index.html es/index.html es/press/index.html; do
+            test -f "_site/${p}"
+          done
           # the game's two faces and their licences
           mkdir -p _site/fonts
           cp fonts/*.ttf fonts/OFL-*.txt _site/fonts/
