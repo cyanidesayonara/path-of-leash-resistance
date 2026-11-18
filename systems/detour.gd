@@ -6,6 +6,7 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
 const GoticCastellers := preload("res://systems/gotic_castellers.gd")
 const PilonesRetractils := preload("res://systems/pilones_retractils.gd")
+const Surfaces := preload("res://world/surfaces.gd")
 
 # ARTSY DETOURS ("EXPOSICIÓ - ENTRADA LLIURE"):
 # Hidden-in-plain-sight side rooms off major Barcelona walks.
@@ -106,6 +107,8 @@ const DRAC_SCULPTURE_OFFSETS: Array[Vector2] = [
 
 # The Mosaic Dragon / Salamander ("El Drac") resting on curved trencadís bench
 const DRAC_SALAMANDER_POS := Vector2(380.0, 180.0)
+
+const PLACA_EARTH_R := 28.0                      # a tree pit or planter's soft ground
 
 static var droop_t: Array[float] = [0.0, 0.0, 0.0, 0.0]
 static var ladder_cooldown: Array[float] = [0.0, 0.0, 0.0]
@@ -431,6 +434,21 @@ static func walk_edges(m: Node2D, _y: float) -> Vector2:
 # --- main's walk hooks (main.WALK_MODULES): El Gòtic's picture, in world/gotic.gd
 
 # the alley, up to the gate
+# The plaça past the gate is paved stone from wall to wall, not the lawn a
+# park's dog run would be: only the earth of its tree pits, planters and
+# shrubs is soft. The street and the galleries fall through to main.
+static func surface(m: Node2D, p: Vector2) -> int:
+	if p.y >= m.GATE_Y - 40.0:
+		return -1
+	for pp: Dictionary in m.park_props:
+		if String(pp.kind) in ["dig", "planter", "shrub"] and p.distance_to(pp.pos) < PLACA_EARTH_R:
+			return Surfaces.S.GRASS
+	for t: Vector2 in LevelBuild.placa_trees(m):
+		if p.distance_to(t) < PLACA_EARTH_R:
+			return Surfaces.S.GRASS
+	return Surfaces.S.PAVEMENT
+
+
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	if m.scooter:
 		m.scooter.draw(m, wc, vt, vb)

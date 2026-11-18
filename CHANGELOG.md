@@ -2,6 +2,14 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - Polish El Gòtic
+
+- The off-leash plaça handled as lawn either side of the middle while drawn as stone paving (504 surface-check mismatches in its frame alone): the walk's module (`systems/detour.gd`) gains a `surface` hook that makes it pavement, with the earth of the tree pits, planters and shrubs still soft.
+- The delivery van that waits at the retractable bollards was a cream box with a windscreen: it has a bonnet, mirrors, roof ribs, a stripe down each flank, the back doors' seam and lamps at both ends now (`PilonesRetractils._draw_delivery_van`).
+- The Pont del Bisbe's lantern lit the alley with four stacked flat discs that read as rings; it is one soft gradient now (`ShapeBatch.glow`).
+- The last stretch before the plaça was bare flagstones: a pair of geranium pots by each of its doors, like the rest of the alley.
+- `tests/test_gotic.gd` covers the plaça's surface; `test_walk_hooks` lists the new hook.
+
 ## 2026-11-18 - Polish El Mercat
 
 - El Mercat's ten wall stalls drew as bare brown slabs: the Rambla's stall drawer has no case for a market trade, and the fish counter drawn for #153 (`Mercat.draw_fish_counter`) was never called. A new walk hook, `draw_stall`, that only El Mercat has, lays each out as its trade with its customers queueing: the fish on ice, crates of fruit, the juice bar's cups, legs of ham with paper cones of slices, trays of olives and pickles, and sweets with jars on the back shelf. Every other walk's stalls draw as before.

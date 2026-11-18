@@ -23,6 +23,9 @@ const BARK_R := 110.0
 const VAN_SPEED := 95.0
 const VAN_WAIT_GAP := 92.0
 const VAN_SPAN := 240.0
+const VAN_BODY := Color(0.94, 0.93, 0.90)
+const VAN_GLASS := Color(0.24, 0.32, 0.40)
+const VAN_STRIPE := Color(0.20, 0.52, 0.56)
 
 
 static func _ensure(m: Node2D) -> Array[Dictionary]:
@@ -182,11 +185,34 @@ static func draw(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 static func _draw_delivery_van(wc: ShapeBatch, p: Vector2, dir: float, waiting: bool, t: float) -> void:
 	var w := 24.0
 	var h := 44.0
-	wc.rect(Rect2(p.x - w + 3.0, p.y - h + 4.0, w * 2.0, h * 2.0), Color(0, 0, 0, 0.22))
-	wc.rect(Rect2(p.x - w, p.y - h, w * 2.0, h * 2.0), Color(0.90, 0.89, 0.86))
-	wc.rect(Rect2(p.x - w + 3.0, p.y - h + 3.0, (w - 3.0) * 2.0, (h - 3.0) * 2.0), Color(0.96, 0.95, 0.92))
-	var cab_y := p.y + dir * (h - 14.0)
-	wc.rect(Rect2(p.x - w + 4.0, cab_y - 6.0, (w - 4.0) * 2.0, 12.0), Color(0.24, 0.32, 0.40))
+	# from above, front toward `dir`: the box, the cab's bonnet and windscreen
+	# with its mirrors out either side, roof ribs, the firm's stripe down both
+	# flanks, the back doors' seam, and the lamps at either end
+	var front := p.y + dir * h
+	var back := p.y - dir * h
+	wc.rect(Rect2(p.x - w + 4.0, p.y - h + 6.0, w * 2.0, h * 2.0), Color(0, 0, 0, 0.22))
+	wc.rect(Rect2(p.x - w, p.y - h, w * 2.0, h * 2.0), VAN_BODY.darkened(0.22))
+	wc.rect(Rect2(p.x - w + 2.0, p.y - h + 2.0, w * 2.0 - 4.0, h * 2.0 - 4.0), VAN_BODY)
+	var bonnet_y := minf(front, front - dir * 14.0)
+	wc.rect(Rect2(p.x - w + 3.0, bonnet_y, w * 2.0 - 6.0, 14.0), VAN_BODY.darkened(0.06))
+	var screen_y := front - dir * 14.0
+	wc.quad(Vector2(p.x - w + 3.0, screen_y), Vector2(p.x + w - 3.0, screen_y),
+		Vector2(p.x + w - 6.0, screen_y - dir * 11.0), Vector2(p.x - w + 6.0, screen_y - dir * 11.0), VAN_GLASS)
+	wc.line(Vector2(p.x - w + 7.0, screen_y - dir * 2.5), Vector2(p.x - 2.0, screen_y - dir * 9.0), Color(1, 1, 1, 0.22), 2.0)
+	for sx: float in [-1.0, 1.0]:
+		wc.rect(Rect2(p.x + sx * (w + 2.0) - 3.0, screen_y - dir * 4.0 - 2.5, 6.0, 5.0), Color(0.16, 0.16, 0.18))
+	var roof_lo := minf(screen_y - dir * 13.0, back + dir * 3.0)
+	var roof_hi := maxf(screen_y - dir * 13.0, back + dir * 3.0)
+	var ry := roof_lo + 8.0
+	while ry < roof_hi - 4.0:
+		wc.line(Vector2(p.x - w + 5.0, ry), Vector2(p.x + w - 5.0, ry), VAN_BODY.darkened(0.10), 1.6)
+		ry += 13.0
+	for sx: float in [-1.0, 1.0]:
+		wc.rect(Rect2(p.x + sx * (w - 3.5) - 1.5, roof_lo, 3.0, roof_hi - roof_lo), VAN_STRIPE)
+	wc.line(Vector2(p.x, back), Vector2(p.x, back + dir * 7.0), VAN_BODY.darkened(0.30), 1.4)
+	for sx: float in [-1.0, 1.0]:
+		wc.rect(Rect2(p.x + sx * (w - 4.0) - 2.5, back if dir > 0.0 else back - 3.0, 5.0, 3.0), Color(0.80, 0.14, 0.12))
+		wc.circle(Vector2(p.x + sx * (w - 6.0), front - dir * 2.0), 2.6, Color(1.0, 0.97, 0.86))
 	if waiting and fmod(t * 4.0, 2.0) < 1.0:
 		for sx: float in [-w + 3.0, w - 3.0]:
 			wc.circle(Vector2(p.x + sx, p.y + dir * (h - 2.0)), 3.2, Color(1.0, 0.72, 0.14))
