@@ -1545,12 +1545,13 @@ func _pose(t: float) -> Dictionary:
 	var o := {
 		"eye": 1.0, "eye_col": EYE_RED if (enraged and hp > 0.0) else EYE_AMBER,
 		"wave": 2.0, "phase": t * 2.0, "tail_wag": 0.5, "tail_phase": t * 4.0,
-		"flash": flash, "feet": leg_poles,
+		"flash": flash, "feet": leg_poles, "bristle": 1.0,
 	}
 	match state:
 		State.AWAKEN:
 			var k := clampf(state_t / AWAKEN_TIME, 0.0, 1.0)
 			o["eye"] = clampf(state_t / 0.35, 0.0, 1.0)
+			o["bristle"] = clampf(state_t / 0.8, 0.0, 1.0)
 			o["tail_bend"] = CURL * (1.0 - clampf(k * 2.0, 0.0, 1.0))
 			o["wave"] = 7.0 * k
 			o["phase"] = t * 7.0
@@ -1563,6 +1564,7 @@ func _pose(t: float) -> Dictionary:
 			o["wave"] = 9.0
 			o["phase"] = t * 24.0
 			o["mouth"] = 1.0
+			o["bristle"] = 1.4
 			o["tail_wag"] = 1.6
 			o["tail_phase"] = t * 22.0
 			o["flash"] = maxf(flash, 0.35 + 0.35 * sin(t * 30.0))
@@ -1601,6 +1603,7 @@ func _pose(t: float) -> Dictionary:
 			o["step"] = t * 24.0
 		State.STUNNED:
 			o["dazed"] = true
+			o["bristle"] = 0.0
 			o["wave"] = 0.0
 			o["tail_bend"] = 0.7
 			o["tail_wag"] = 0.1
@@ -1608,10 +1611,12 @@ func _pose(t: float) -> Dictionary:
 			o["mouth"] = 1.0 - clampf(ls_jet_cd / JET_WARN, 0.0, 1.0) if last_jet_warning() else 0.0
 		State.WRAPPED:
 			o["mouth"] = 0.7
+			o["bristle"] = 1.3
 			o["wave"] = 6.0
 			o["phase"] = t * 26.0
 		State.SLIDE:
 			o["dazed"] = true
+			o["bristle"] = 0.0
 			o["wave"] = 4.0 if state_t > 0.0 else 0.0
 			o["phase"] = t * 18.0
 			o["tail_bend"] = 0.5
@@ -1705,7 +1710,9 @@ static func draw_asleep(b: ShapeBatch, at: Vector2, f: Vector2, t: float, conten
 # (radians over its length), `tail_wag`/`tail_phase` swing it, `tail_len`
 # stretches it, `eye` opens the eyes (`eye_col`), `happy`, `dazed`, `mouth`
 # opens the mouth, `feet` are where the four feet are planted (his own legs'
-# places when empty), `step` walks them, `flash` whitens him when hit.
+# places when empty), `step` walks them, `flash` whitens him when hit,
+# `bristle` raises the crest into spikes, his threat display in the film
+# (intro/film_drac.gd): orange spines fanned out either side of his back.
 static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o: Dictionary) -> void:
 	if f.length_squared() < 0.01:
 		f = Vector2.DOWN
@@ -1722,6 +1729,7 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 	var mouth: float = o.get("mouth", 0.0)
 	var white: float = o.get("flash", 0.0)
 	var step: float = o.get("step", -1.0)
+	var bristle: float = o.get("bristle", 0.0)
 	var x := Transform2D(f, f.orthogonal(), at)
 
 	# the spine, in his frame: head and trunk laid out along it, the tail
@@ -1813,7 +1821,19 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 			var lit := nrm[i].dot(-Shade.light) * mid
 			col = col.lightened(0.16 * lit) if lit > 0.0 else col.darkened(-0.22 * lit)
 			b.quad(q0, q1, q2, q3, col.lerp(Color.WHITE, white * 0.55))
-	# the crest: a bright boss on every other joint of his back
+	# the crest: a bright boss on every other joint of his back, and raised,
+	# a spine either side of it, swept back, quivering
+	if bristle > 0.0:
+		for i in range(5, BODY_N + 4, 2):
+			var tn := (pts[i - 1] - pts[i + 1]).normalized()
+			var reach := (7.0 + 11.0 * bristle) * clampf(rad[i] / 20.0, 0.55, 1.0)
+			reach += sin(t * 31.0 + float(i)) * 1.2 * bristle
+			for sd: float in [-1.0, 1.0]:
+				var base := pts[i] + nrm[i] * sd * 3.0
+				var tip := pts[i] + nrm[i] * sd * reach - tn * reach * 0.55
+				b.polygon(PackedVector2Array([base + tn * 6.4, tip - tn * 1.6 + nrm[i] * sd * 1.6, base - tn * 4.4]), INK)
+				b.polygon(PackedVector2Array([base + tn * 4.6, tip, base - tn * 2.8]), TILE_ORANGE.lerp(Color.WHITE, white * 0.5))
+				b.line(base + tn * 1.0, tip.lerp(base, 0.3), TILE_YELLOW, 1.4)
 	for i in range(3, BODY_N + 4, 2):
 		b.circle(pts[i], 3.6, INK)
 		b.circle(pts[i] - Shade.light * 0.8, 2.6, TILE_WHITE)
@@ -1828,13 +1848,25 @@ static func draw_salamander(b: ShapeBatch, at: Vector2, f: Vector2, t: float, o:
 	# the head: nostrils, the mouth when it opens, and the eyes up on top
 	var tan0 := (pts[0] - pts[1]).normalized()
 	if mouth > 0.03:
-		b.circle(pts[0] + tan0 * 2.0, 3.0 + 6.0 * mouth, INK)
-		b.circle(pts[0] + tan0 * 2.0, 1.5 + 4.6 * mouth, Color(0.62, 0.16, 0.14))
+		var mc := pts[0] + tan0 * 2.0
+		var mr := 1.5 + 5.6 * mouth
+		b.circle(mc, mr + 1.8, INK)
+		b.circle(mc, mr, Color(0.62, 0.16, 0.14))
+		# teeth round the gape, pointing in
+		if mouth > 0.3:
+			var tl := (mr * 0.55) * clampf((mouth - 0.3) / 0.4, 0.0, 1.0)
+			for k in range(7):
+				var a := tan0.angle() + (float(k) / 6.0 - 0.5) * 3.6
+				var rim := mc + Vector2.from_angle(a) * mr
+				var sw := Vector2.from_angle(a).orthogonal() * 1.5
+				b.polygon(PackedVector2Array([rim + sw, rim - Vector2.from_angle(a) * tl, rim - sw]), TILE_WHITE)
 	for sd: float in [-1.0, 1.0]:
 		b.circle(pts[0] - tan0 * 3.0 + nrm[0] * sd * 4.6, 1.5, INK)
 	var hi := 2
 	for sd: float in [-1.0, 1.0]:
 		var ep: Vector2 = pts[hi] + nrm[hi] * sd * 12.5
+		if eye > 0.05 and not (happy or dazed):
+			b.glow(ep, (16.0 + 8.0 * bristle) * eye, Color(eye_col.r, eye_col.g * 0.85, eye_col.b, 0.42 + 0.12 * bristle), 0.15)
 		b.circle(ep, 8.4, INK)
 		if dazed:
 			b.circle(ep, 6.6, TILE_WHITE)

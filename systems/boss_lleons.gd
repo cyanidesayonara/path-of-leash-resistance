@@ -1688,6 +1688,14 @@ func _draw_head(b: ShapeBatch, lion: Dictionary, mx: Transform2D, hx: Transform2
 			var w: Vector2 = nose_dir.orthogonal() * 1.8
 			b.quad(fang - w, back, back, fang + w, FANG)
 
+	var happy := state == State.CONTENT or (state == State.SAT and bool(lion.booped))
+	var open: float = clampf(float(lion.eye), 0.0, 1.0)
+	if state == State.IDLE:
+		open = 0.0
+	# the snarl, as the film has it (intro/film_lleons.gd): awake and not
+	# beaten, the lip curls off the fangs and the muzzle creases
+	var snarl := open if not happy and pose != Pose.DAZED else 0.0
+
 	# skull and muzzle
 	var hc: Vector2 = hx * Vector2.ZERO
 	b.circle(hc, 12.6 * DRAW_K, BRONZE_DEEP)
@@ -1708,11 +1716,21 @@ func _draw_head(b: ShapeBatch, lion: Dictionary, mx: Transform2D, hx: Transform2
 		for w in range(2):
 			b.circle(hx * Vector2(10.0 + float(w) * 3.0, s2 * 3.2), 0.9, BRONZE_DEEP)
 
+	if snarl > 0.05 and jaw <= 0.02:
+		# the fangs, bared under the curled lip at the front of the muzzle
+		for s2: float in [-1.0, 1.0]:
+			var root: Vector2 = hx * Vector2(15.0, s2 * 4.2)
+			var fang: Vector2 = hx * Vector2(19.0 + 1.5 * snarl, s2 * 4.8)
+			var w: Vector2 = nose_dir.orthogonal() * 1.5
+			b.quad(root - w * 1.5, fang + nose_dir * 1.2, fang + nose_dir * 1.2, root + w * 1.5, BRONZE_DEEP)
+			b.quad(root - w, fang, fang, root + w, FANG)
+	if snarl > 0.05:
+		# the creases across the bridge of the nose, either side
+		for s2: float in [-1.0, 1.0]:
+			for w in range(3):
+				var cx2 := 6.5 + float(w) * 2.6
+				b.line(hx * Vector2(cx2, s2 * 1.2), hx * Vector2(cx2 - 1.6, s2 * (4.4 + snarl * 0.8)), BRONZE_DEEP, 1.3)
 	# brow and eyes
-	var happy := state == State.CONTENT or (state == State.SAT and bool(lion.booped))
-	var open: float = clampf(float(lion.eye), 0.0, 1.0)
-	if state == State.IDLE:
-		open = 0.0
 	var eye_col: Color = EYE_RED if phase >= 2 else EYE_AMBER
 	for s2: float in [-1.0, 1.0]:
 		var ep: Vector2 = hx * Vector2(4.6, s2 * 6.2)
@@ -1728,7 +1746,9 @@ func _draw_head(b: ShapeBatch, lion: Dictionary, mx: Transform2D, hx: Transform2
 			b.glow(ep, 10.0 * open, Color(eye_col.r, eye_col.g, eye_col.b, 0.55))
 			b.circle(ep, 3.0 * DRAW_K, BRONZE_DEEP)
 			b.circle(ep, 2.2 * DRAW_K * open, eye_col)
-			b.circle(ep + nose_dir * 0.6, 1.0 * open, BRONZE_DEEP)
+			# a slit pupil, narrowed on the dog
+			var sl: Vector2 = nose_dir * 1.9 * DRAW_K * open
+			b.capsule(ep - sl, ep + sl, 0.55 * DRAW_K, BRONZE_DEEP)
 		if not happy and pose != Pose.DAZED:
 			# the brow, drawn down toward the nose: a glower
 			b.line(hx * Vector2(-0.5, s2 * 9.6), hx * Vector2(2.6 + 1.0 * open, s2 * 3.4), BRONZE_DEEP, 2.4)
