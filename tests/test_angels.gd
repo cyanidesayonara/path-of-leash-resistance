@@ -83,6 +83,20 @@ class FakeMain:
 	func _freedom_rect() -> Rect2:
 		return freedom_rect
 
+	const STREET_LAMP := Vector3(640.0, -1000.0, 260.0)
+	var side_lamps_asked: Array = []
+
+	func street_night_lights() -> Array[Vector3]:
+		return [STREET_LAMP]
+
+	func freedom_side_lamps(fracs: Array[float], inset: float, reach: float) -> Array[Vector3]:
+		side_lamps_asked = [fracs, inset, reach]
+		var out: Array[Vector3] = []
+		for f: float in fracs:
+			out.append(Vector3(freedom_rect.position.x + inset, freedom_rect.position.y + freedom_rect.size.y * f, reach))
+			out.append(Vector3(freedom_rect.end.x - inset, freedom_rect.position.y + freedom_rect.size.y * f, reach))
+		return out
+
 
 class FakeLeash:
 	var contact_pole := Vector2(INF, INF)
@@ -304,6 +318,21 @@ func _run() -> void:
 	Angels.draw_live(m, batch, -3600.0, -1000.0)
 	Angels.draw_overhead(m, batch)
 	_check(true, "Angels draw methods executed successfully")
+
+	# 8. The cloister: its trees without forest roots, and lamps on its side
+	# walls after dark, each on a bracket
+	var hooks: Array[String] = []
+	var angels_script: GDScript = load("res://systems/angels.gd")
+	for md: Dictionary in angels_script.get_script_method_list():
+		hooks.append(String(md.name))
+	_check("draw_grove" in hooks, "the cloister's trees stand in the flags without forest roots")
+	var lights: Array[Vector3] = Angels.night_lights(m)
+	_check(lights.size() == 1 + Angels.CLAUSTRE_LAMPS.size() * 2 and lights[0] == FakeMain.STREET_LAMP,
+		"the street's lamps and the cloister's wall lamps (%d in all)" % lights.size())
+	_check(m.side_lamps_asked == [Angels.CLAUSTRE_LAMPS, Angels.CLAUSTRE_LAMP_IN, Angels.CLAUSTRE_LAMP_R],
+		"the cloister's lamps go down both side walls")
+	var lamp_r: float = (load("res://main.gd") as GDScript).get_script_constant_map()["NIGHT_LAMP_R"]
+	_check(Angels.CLAUSTRE_LAMP_R < lamp_r, "on brackets, under main.NIGHT_LAMP_R")
 
 	game.records = saved_records
 	game.gate_open = saved_open
