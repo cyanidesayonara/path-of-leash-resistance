@@ -6,6 +6,7 @@ Append-only session history, newest first.
 
 - Four walk polishes each wrote their own copy of one surface hook: the off-leash area paved wall to wall, soft only round its trees, planters, shrubs and dig spots. It is one helper now, `Surfaces.paved_past_gate(m, p, trees, earth_r)`, beside `Surfaces.lawn_past_gate(m, p)` for a lawn wall to wall. Both answer -1 short of the line 40 past the gate, so a walk's `surface` hook returns them as they stand. El Mercat, El Gòtic, Montjuïc and El Diluvi call the paved one, El Parc and La Rambla the lawn one; nothing plays or draws differently (`surface_at` over a 20-unit grid of each off-leash area is the same as before on all six, bar El Diluvi's dig spots, which are placed afresh every run).
 - `tests/test_surface_helpers.gd` covers both.
+- The worn patch in the middle of the shared yard, clearing and plaça is drawn by one function, `_worn_patch`: the flat disc as before, or on a walk listed in `main.SOFT_WEAR` a gradient with no edge. The list starts empty, so nothing draws differently; a polished walk adds itself on its own line.
 - `tests/test_cross_section.gd` lists the walks whose off-leash area may be paved one to a line (`PAVED_FREEDOM`, El Mercat, El Gòtic and El Diluvi among them), so walks added side by side do not collide on one line.
 
 ## 2026-11-18 - The bosses look like their films in the walk
