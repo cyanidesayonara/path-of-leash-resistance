@@ -2,6 +2,13 @@
 
 Append-only session history, newest first.
 
+## 2026-11-18 - The menus and HUD in Catalan and Spanish
+
+- The LANGUAGE setting now translates every menu screen (main menu, walk select, GET READY, the wardrobe, YOUR WALKS, settings, the pause grid, THIS WALK, the questions, results), the prompt bar, the banner, the goal texts and their readouts, the toasts and the dare card, the loss and catch cards, the tips, the moods and the rotate prompt. Walk shouts, speech bubbles, the tutorial's lessons, combo names and the dare-givers' lines stay in English for now (part two).
+- One string table, `hud/i18n.gd` (`I18n.t(key)`, falling back to English): snake_case keys with en, ca and es side by side, placeholders and `{tokens}` kept as in the English, place names in Catalan in every language. Central Barcelona Catalan and Spain's Spanish: "corretja"/"correa", "el teu humà"/"tu humano".
+- Changing the language in SETTINGS rewrites the open screen at once: the menus are drawn from the model every frame, labels set once bind through `I18n.set_text` (like `Prompts.set_text`) and refill on `I18n.set_language`, which `Game.language`'s setter calls; the HUD, the tip on screen and the walk's signs' glosses are rebuilt as it changes.
+- Text the game keeps in English data (chase profiles, prizes and carried things, the goal definitions) is looked up by its English through `I18n.of_english`, so English plays exactly as before: a full shot sweep and an English sweep of every menu screen came out pixel-identical.
+- `tests/test_i18n.gd` in CI: every key in all three languages and none empty, placeholders and tokens kept, capitals where the English has them, every character in both fonts, translated titles no smaller than the English, bound labels refilling, every goal, prize, carried thing and chase line covered, and no menu or HUD file writing an English literal straight to the screen. `tests/test_menu_tree.gd` walks the whole tree in each language and changes LANGUAGE with real presses. `tools/lang_sweep.sh LANG` shoots every menu screen, settings, results, the goal list and the HUD in one language at three sizes with a contact sheet.
 ## 2026-11-18 - Chapters in the walk select, theme colours on the film cards
 
 - The campaign is in chapters (`Game.chapters()`): the carousel cut after each boss walk (`BOSS_WALKS`), so every chapter ends on a boss, and a run longer than `CHAPTER_MAX` (12) between bosses halved; five chapters of 7 to 12 walks today. Derived, so it follows the carousel when the order is locked.
