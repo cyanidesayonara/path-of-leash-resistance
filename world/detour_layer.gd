@@ -267,20 +267,28 @@ func _draw_street_doorway(b: ShapeBatch, _t: float) -> void:
 		b.rect(Rect2(bp + Vector2(-46.0, -15.0), Vector2(92.0, 2.2)), C_RED)
 		b.rect(Rect2(bp + Vector2(-46.0, 13.0), Vector2(92.0, 2.2)), C_BLUE)
 	else:
-		# Stone arch doorway cutout in Gothic wall
-		var door_rect := Rect2(dp.x - 32.0, dp.y - 48.0, 44.0, 96.0)
-		b.rect(door_rect, Color(0.12, 0.10, 0.11))
+		# Carved Gothic sandstone portal set cleanly into the alley wall (clearing the wallcat ledge below)
+		var stone_outer := Color(0.56, 0.51, 0.44)
+		var stone_inner := Color(0.68, 0.62, 0.54)
+		var stone_trim := Color(0.76, 0.70, 0.62)
+		b.rect(Rect2(dp.x - 14.0, dp.y - 38.0, 28.0, 76.0), stone_outer)
+		b.rect(Rect2(dp.x - 11.0, dp.y - 35.0, 25.0, 70.0), stone_inner)
+		b.line(Vector2(dp.x + 14.0, dp.y - 38.0), Vector2(dp.x + 14.0, dp.y + 38.0), stone_trim, 2.0)
+		b.rect(Rect2(dp.x - 8.0, dp.y - 30.0, 22.0, 60.0), Color(0.12, 0.10, 0.11))
+		# Stone threshold step projecting under the carpet runner
+		b.rect(Rect2(dp.x + 14.0, dp.y - 24.0, 8.0, 48.0), stone_inner)
+		b.line(Vector2(dp.x + 22.0, dp.y - 24.0), Vector2(dp.x + 22.0, dp.y + 24.0), stone_trim, 1.8)
 		# Warm golden interior light spill
 		var glow := PackedVector2Array([
-			dp + Vector2(10.0, -44.0),
-			dp + Vector2(58.0, -32.0),
-			dp + Vector2(58.0, 32.0),
-			dp + Vector2(10.0, 44.0),
+			dp + Vector2(14.0, -30.0),
+			dp + Vector2(58.0, -24.0),
+			dp + Vector2(58.0, 24.0),
+			dp + Vector2(14.0, 30.0),
 		])
 		b.polygon(glow, Color(1.0, 0.88, 0.55, 0.22))
 
 		# Red carpet runner leading out onto pavement
-		var carpet_rect := Rect2(dp.x + 8.0, dp.y - 18.0, 46.0, 36.0)
+		var carpet_rect := Rect2(dp.x + 12.0, dp.y - 18.0, 42.0, 36.0)
 		b.rect(carpet_rect, C_CARPET)
 		b.line(carpet_rect.position, carpet_rect.position + Vector2(carpet_rect.size.x, 0.0), C_CARPET_GOLD, 2.0)
 		b.line(carpet_rect.position + Vector2(0.0, carpet_rect.size.y), carpet_rect.end, C_CARPET_GOLD, 2.0)
@@ -296,8 +304,8 @@ func _draw_street_doorway(b: ShapeBatch, _t: float) -> void:
 
 		# Sandwich board easel
 		var easel_p := dp + Vector2(62.0, 38.0)
-		b.rect(Rect2(easel_p + Vector2(-8.0, -12.0), Vector2(16.0, 24.0)), Color(0.24, 0.18, 0.12))
-		b.rect(Rect2(easel_p + Vector2(-6.0, -10.0), Vector2(12.0, 20.0)), Color(0.10, 0.10, 0.12))
+		b.rect(Rect2(easel_p + Vector2(-19.0, -12.0), Vector2(38.0, 24.0)), Color(0.24, 0.18, 0.12))
+		b.rect(Rect2(easel_p + Vector2(-17.0, -10.0), Vector2(34.0, 20.0)), Color(0.10, 0.10, 0.12))
 
 		# Gallery Greeter in stylish beret
 		var gp := dp + Vector2(38.0, -38.0)
@@ -309,9 +317,9 @@ func _draw_street_doorway(b: ShapeBatch, _t: float) -> void:
 
 		# Overhead hanging banner
 		var bp := dp + Vector2(26.0, -56.0)
-		b.rect(Rect2(bp + Vector2(-42.0, -14.0), Vector2(84.0, 28.0)), C_BANNER)
-		b.rect(Rect2(bp + Vector2(-44.0, -15.0), Vector2(88.0, 2.0)), C_CARPET_GOLD)
-		b.rect(Rect2(bp + Vector2(-44.0, 13.0), Vector2(88.0, 2.0)), C_CARPET_GOLD)
+		b.rect(Rect2(bp + Vector2(-64.0, -14.0), Vector2(128.0, 28.0)), C_BANNER)
+		b.rect(Rect2(bp + Vector2(-66.0, -15.0), Vector2(132.0, 2.0)), C_CARPET_GOLD)
+		b.rect(Rect2(bp + Vector2(-66.0, 13.0), Vector2(132.0, 2.0)), C_CARPET_GOLD)
 
 
 # --- INSIDE L'ESTEL GALLERY (Joan Miró Homage) ---
@@ -1106,10 +1114,10 @@ func _draw_labels() -> void:
 			var easel_p := dp + Vector2(64.0, 38.0)
 			draw_string(f, easel_p + Vector2(-8.0, 0.0), "«L'ESTEL»", HORIZONTAL_ALIGNMENT_CENTER, 16, 7, C_WHITE)
 		else:
-			draw_string(f, bp + Vector2(-40.0, -1.0), "EXPOSICIÓ - ENTRADA LLIURE", HORIZONTAL_ALIGNMENT_CENTER, 80, 8, Color.WHITE)
-			draw_string(f, bp + Vector2(-40.0, 9.0), "«EL SOMNI»", HORIZONTAL_ALIGNMENT_CENTER, 80, 9, C_CARPET_GOLD)
+			draw_string(f, bp + Vector2(-62.0, -1.0), "EXPOSICIÓ - ENTRADA LLIURE", HORIZONTAL_ALIGNMENT_CENTER, 124, 8, Color.WHITE)
+			draw_string(f, bp + Vector2(-62.0, 9.0), "«EL SOMNI»", HORIZONTAL_ALIGNMENT_CENTER, 124, 9, C_CARPET_GOLD)
 			var easel_p := dp + Vector2(62.0, 38.0)
-			draw_string(f, easel_p + Vector2(-8.0, 0.0), "GALERIA", HORIZONTAL_ALIGNMENT_CENTER, 16, 7, Color.WHITE)
+			draw_string(f, easel_p + Vector2(-17.0, 2.0), "GALERIA", HORIZONTAL_ALIGNMENT_CENTER, 34, 7, Color.WHITE)
 
 	# Detour gallery labels
 	var o: Vector2 = DetourScript.origin_for(main)

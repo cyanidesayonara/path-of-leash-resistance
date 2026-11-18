@@ -439,11 +439,29 @@ static func surface(m: Node2D, p: Vector2) -> int:
 	return Surfaces.paved_past_gate(m, p, LevelBuild.placa_trees(m))
 
 
+static func draw_cross_section(m: Node2D, wc: Object, top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
+	if m.detour_active:
+		return
+	Gotic.draw_cross_section(m, wc, top, bottom, ctop, vt, vb)
+
+
+static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	if m.detour_active:
+		return
+	Gotic.draw_edge_layer(m, c, vt, vb)
+
+
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	if m.detour_active:
+		return
 	if m.scooter:
 		m.scooter.draw(m, wc, vt, vb)
-	Gotic.draw_street(m, maxf(vt, m.GATE_Y - 30.0), vb)
+	Gotic.draw_live(m, wc, maxf(vt, m.GATE_Y - 30.0), vb)
 	PilonesRetractils.draw(m, wc, vt, vb)
+
+
+static func night_fronts(m: Node2D) -> Array[Dictionary]:
+	return Gotic.night_fronts(m)
 
 
 # the Pont del Bisbe over the alley, above everyone
