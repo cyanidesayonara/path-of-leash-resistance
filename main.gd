@@ -11961,7 +11961,7 @@ func on_ball_returned(thrower: Node2D) -> void:
 			extra = I18n.t("w_on_the_bounce")
 		if b.out_t < b.QUICK_S:
 			reward += 2
-			extra += " quick"
+			extra += I18n.t("w_quick")
 	bones += reward
 	Sfx.play("fetch")
 	combo.add("FETCH", reward)

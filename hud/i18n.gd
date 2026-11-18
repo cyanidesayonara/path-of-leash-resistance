@@ -1117,6 +1117,7 @@ const T := {
 	"w_the_camera": {"en": "the camera", "ca": "la càmera", "es": "la cámara"},
 	"w_the_laser": {"en": "the laser", "ca": "el làser", "es": "el láser"},
 	"w_first_walk": {"en": "First Walk", "ca": "Primer Passeig", "es": "Primer Paseo"},
+	"w_quick": {"en": " quick", "ca": " ràpid", "es": " rápido"},
 	"w_aw_hello_there": {"en": "Aw, hello there!", "ca": "Ai, hola, maco!", "es": "¡Ay, hola, guapo!"},
 	"w_say_hello": {"en": "Say hello!", "ca": "Digues hola!", "es": "¡Saluda!"},
 	"w_don_t_worry_he_s_friendly": {"en": "Don't worry, he's friendly!", "ca": "Tranquil, que és bo!", "es": "¡Tranquilo, que es bueno!"},
