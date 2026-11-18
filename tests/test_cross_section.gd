@@ -26,6 +26,7 @@ const PAVED_FREEDOM: Array[String] = [
 	"scrap",
 	"site",
 	"station",
+	"tibidabo",
 ]
 
 var checks := 0
