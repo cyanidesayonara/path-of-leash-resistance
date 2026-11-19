@@ -166,9 +166,9 @@ func film_clock(t: float) -> void:
 	_film_t = t
 
 
-# the film is over. A skip goes silent now and starts the title from the top
-# once it is ready; a film that played out has the title take over from the
-# phrase where it has got to, so the melody carries on.
+# the film is over. A skip goes silent now and starts the menus' tune from the
+# top once it is ready; a film that played out has dropped into the title
+# theme on the bark, and the menus' tune fades in under it from the top.
 func handoff(skipped: bool, fade_sec: float) -> void:
 	if not music_on:
 		return
@@ -200,9 +200,9 @@ func _process(delta: float) -> void:
 	if _music_hold > 0.0:
 		_music_hold -= delta
 	elif _music_want != _music_now and music_on:
-		# anything but the title after the film (a walk picked before the
-		# title finished rendering) is an ordinary change
-		if _handoff_on and _music_want != "title":
+		# anything but the menus' tune after the film (a walk picked before
+		# it finished rendering) is an ordinary change
+		if _handoff_on and _music_want != "menu":
 			_handoff_on = false
 		if _music_want == "" or _music_cache.has(_music_want):
 			var from := 0.0
@@ -210,9 +210,8 @@ func _process(delta: float) -> void:
 			if _music_want == "intro":
 				from = _film_t
 			elif _handoff_on:
-				if not _handoff_skip and _music_now == "intro" and music_player.playing:
-					# the score's lead-in comes before the title theme starts in it
-					from = maxf(0.0, music_player.get_playback_position() - Music.intro_lead_sec())
+				# the film's score has dropped into the title theme on the
+				# bark; the menus' own tune fades in under it from the top
 				fade = _handoff_fade
 				_handoff_on = false
 			if _music_want.begins_with("dare_") or _music_now.begins_with("dare_") or _music_want == "":

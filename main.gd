@@ -1535,7 +1535,7 @@ func _music_cue() -> String:
 	if intro_playing:
 		return "intro"
 	if not started:
-		return "title"
+		return _menu_music()
 	if finished:
 		return "won"
 	# frozen and not paused, mid-walk: a card the walk ended on
@@ -1550,6 +1550,16 @@ func _music_cue() -> String:
 			return ""
 		if challenge.phase == "live":
 			return challenge_giver.tune()
+	return Music.walk_style(lvl)
+
+
+# Before a walk: the menus' own tune on the main menu and the screens it
+# opens (the wardrobe, YOUR WALKS, settings, controls, credits), and the shown
+# walk's tune on the walk select and GET READY, so browsing walks is hearing
+# them.
+func _menu_music() -> String:
+	if menu_step == 0 or in_shop or in_settings or in_controls or in_progress_view or in_credits:
+		return "menu"
 	return Music.walk_style(lvl)
 
 
@@ -1569,9 +1579,9 @@ func _dare_tempo() -> float:
 func _music_next() -> String:
 	# the phrase is playing and the full title theme is the one being built
 	if intro_playing:
-		return "title"
+		return "menu"
 	if not started:
-		return Music.walk_style(lvl)
+		return Music.walk_style(lvl) if _menu_music() == "menu" else "menu"
 	if phase == "freedom":
 		return Music.walk_style(lvl)
 	# a dare on offer: its tune, ready for when she takes it
