@@ -50,6 +50,14 @@ const TURBO_MULT := 1.7
 const TURBO_ACCEL := 3200.0
 # the collision circle every walk is built round; a breed's gap_mult scales it
 const BODY_RADIUS := 14.0
+# A breed drawn on another's frame: the proportions, gait and muzzle are the
+# frame's, and only what makes her herself (ears, tail, markings) is her own.
+# The ratonero is a smaller, squarer mongrel; the podenco a galgo's frame.
+const BODY_PLAN := {"ratonero bodeguero": "mongrel", "podenco": "galgo"}
+const DRAW_SCALE := {"ratonero bodeguero": 0.84}
+# the white of a tricolor's or a podenco's markings, whatever the coat
+const MARK_WHITE := Color(0.93, 0.91, 0.87)
+const MARK_TAN := Color(0.74, 0.52, 0.30)
 var tumble_t := 0.0
 # riding a loose tile (ride()): time left, of, and the carried velocity
 var ride_t := 0.0
@@ -579,7 +587,7 @@ func _draw_speed() -> float:
 func _draw_xf(local_pos := Vector2.ZERO, local_rotation := 0.0,
 		local_scale := Vector2.ONE) -> void:
 	_b.draw_set_transform(presentation_offset + _q_shift + local_pos.rotated(presentation_rotation),
-		presentation_rotation + local_rotation, local_scale * _q_scale)
+		presentation_rotation + local_rotation, local_scale * _q_scale * float(DRAW_SCALE.get(_dog_breed(), 1.0)))
 
 
 # How far into each part of her quirk she is this frame (0 with none playing).
@@ -590,6 +598,8 @@ var _q_sit := 0.0         # Mochi: sat down
 var _q_snort := 0.0       # ...the puff of a snort, 0..1 as it spreads
 var _q_lie := 0.0         # Bruna: lying down, head up
 var _q_tilt := 0.0        # Tito: the head tilt after the tremble
+var _q_dig := 0.0         # Perla: a quick scrabble at the ground
+var _q_perk := 0.0        # Duna: ears up tall, listening
 var _q_look := 0.0        # how far her head is turned to your human
 var _q_look_ang := 0.0
 
@@ -605,6 +615,8 @@ func _quirk_pose(t: float) -> void:
 	_q_lie = 0.0
 	_q_tilt = 0.0
 	_q_look = 0.0
+	_q_dig = 0.0
+	_q_perk = 0.0
 	if quirk == "":
 		return
 	var u := quirk_u
@@ -628,6 +640,14 @@ func _quirk_pose(t: float) -> void:
 		"lie":
 			_q_lie = smoothstep(0.0, 0.2, u) * (1.0 - smoothstep(0.85, 1.0, u))
 			_q_look = _q_lie
+		"scrabble":
+			# the ratter at a smell in the ground: a quick dig, then a look up
+			_q_dig = smoothstep(0.0, 0.1, u) * (1.0 - smoothstep(0.55, 0.65, u))
+			_q_look = smoothstep(0.65, 0.75, u) * (1.0 - smoothstep(0.9, 1.0, u))
+		"listen":
+			# the hound hears something: ears up tall, her head turning to it
+			_q_perk = smoothstep(0.0, 0.12, u) * (1.0 - smoothstep(0.85, 1.0, u))
+			_q_sweep = sin(u * PI * 1.5) * 0.6 * _q_perk
 		"tremble":
 			var shake := smoothstep(0.0, 0.08, u) * (1.0 - smoothstep(0.5, 0.58, u))
 			_q_shift = side * sin(t * 62.0) * 0.8 * shake + facing * sin(t * 47.0) * 0.4 * shake
@@ -644,7 +664,11 @@ func _quirk_pose(t: float) -> void:
 func _cadence() -> float:
 	var mult := 1.0
 	var breed := _dog_breed()
-	if breed == "french bulldog":
+	if breed == "ratonero bodeguero":
+		mult = 1.22
+	elif breed == "podenco":
+		mult = 0.98
+	elif breed == "french bulldog":
 		mult = 1.25
 	elif breed == "galgo":
 		mult = 0.95
@@ -665,7 +689,11 @@ func _cadence() -> float:
 func _stride() -> float:
 	var mult := 1.0
 	var breed := _dog_breed()
-	if breed == "french bulldog":
+	if breed == "ratonero bodeguero":
+		mult = 0.86
+	elif breed == "podenco":
+		mult = 1.14
+	elif breed == "french bulldog":
 		mult = 0.80
 	elif breed == "galgo":
 		mult = 1.20
@@ -702,6 +730,11 @@ static func _body_points(a: Vector2, b: Vector2, ra: float, rb: float) -> Packed
 	return pts
 
 
+# the head radius of the frame a pricked-eared breed is drawn on
+static func head_r_of(podenco: bool) -> float:
+	return 5.8 if podenco else 7.0
+
+
 func _draw_shapes() -> void:
 	var t := AnimClock.msec() / 1000.0
 	# a squashed contact shadow, offset as if the light is up and to the
@@ -732,14 +765,17 @@ func _draw_shapes() -> void:
 	var fur_dark: Color = cd.dark
 	var grizzle: Color = cd.mark
 	var crouching := peeing or squat_t > 0.0 or squat_ui > 0.0
-	var dig_u := clampf(digging, 0.0, 1.0)
+	var dig_u := maxf(clampf(digging, 0.0, 1.0), _q_dig)
 	var sniff_u := maxf(clampf(sniffing, 0.0, 1.0), _q_sniff)
 	var drink_u := clampf(drinking, 0.0, 1.0)
 	var bk := sin(clampf(bark_anim / 0.35, 0.0, 1.0) * PI) if bark_anim > 0.0 else 0.0
 	var mood_id := int(main.mood.active) if (main != null and main.mood != null) else 0
 	var mood_int := clampf(float(main.mood.intensity), 0.0, 1.0) if (main != null and main.mood != null) else 0.0
 	var side := facing.orthogonal()
-	var breed := _dog_breed()
+	var look := _dog_breed()
+	var breed: String = BODY_PLAN.get(look, look)
+	var is_perla := look == "ratonero bodeguero"
+	var is_duna := look == "podenco"
 	var is_galgo := breed == "galgo"
 	var is_frenchie := breed == "french bulldog"
 	var is_gos := breed == "gos d'atura"
@@ -792,7 +828,17 @@ func _draw_shapes() -> void:
 			wag_speed = maxf(wag_speed, 15.5)
 			wag_amp = maxf(wag_amp, 0.44)
 	var tail_curl_sgn := 1.0 if facing.x >= -0.01 else -1.0
-	if is_frenchie:
+	if is_perla:
+		# the ratonero's short tail, carried up and wagged hard
+		var tdir := hip_dir.rotated(tail_angle_bias)
+		var tp := hip + hip_dir * 3.5
+		for s in range(2):
+			tdir = tdir.rotated(sin(t * wag_speed * 1.2 - float(s) * 0.8) * wag_amp * 1.1)
+			var nxt := tp + tdir * (6.0 - float(s) * 1.6) * tail_len_scale
+			_b.draw_line(tp, nxt, fur_dark, 3.0 - float(s) * 0.9)
+			tp = nxt
+		_b.draw_circle(tp, 1.2, MARK_WHITE)
+	elif is_frenchie:
 		# French bulldog natural short screw / stub tail, wiggling merrily on the rump
 		var nub_wag := sin(t * wag_speed) * (wag_amp * 0.75)
 		var tdir := hip_dir.rotated(tail_angle_bias + nub_wag)
@@ -893,10 +939,17 @@ func _draw_shapes() -> void:
 		shoulder_r += 1.6 * _q_lie - 1.2 * _q_stretch
 		hip_r += 1.8 * _q_sit + 2.0 * _q_lie
 	var rim := Vector2(1.2, 1.6)
-	_b.draw_colored_polygon(_body_points(shoulder + rim, hip + rim, shoulder_r, hip_r), fur_dark.darkened(0.25))
-	_b.draw_colored_polygon(_body_points(shoulder, hip, shoulder_r, hip_r), fur)
+	# the ratonero is a white dog, her coat's colour a saddle over her back
+	var body_fur: Color = MARK_WHITE if is_perla else fur
+	_b.draw_colored_polygon(_body_points(shoulder + rim, hip + rim, shoulder_r, hip_r), body_fur.darkened(0.25) if is_perla else fur_dark.darkened(0.25))
+	_b.draw_colored_polygon(_body_points(shoulder, hip, shoulder_r, hip_r), body_fur)
+	if is_perla:
+		_b.draw_colored_polygon(_body_points(shoulder.lerp(hip, 0.42), shoulder.lerp(hip, 0.80), shoulder_r * 0.55, hip_r * 0.58), fur)
 	_b.draw_colored_polygon(_body_points(shoulder + LIGHT_DIR * 2.6, hip + LIGHT_DIR * 2.6, (2.8 if is_tito else (5.0 if is_gos else (5.6 if is_frenchie else (4.6 if is_galgo else 4.2)))), (2.4 if is_tito else (4.4 if is_gos else (4.0 if is_frenchie else (3.4 if is_galgo else 4.6))))),
 		fur.lightened(0.10))
+	if is_duna:
+		# the podenco's white chest
+		_b.draw_circle(shoulder + facing * 1.5, shoulder_r * 0.5, MARK_WHITE)
 	if is_gos:
 		# Soft backward-swept shaggy locks along the flanks and haunches
 		for fi in range(3):
@@ -977,7 +1030,7 @@ func _draw_shapes() -> void:
 	if _q_tilt > 0.0:
 		head += hs * 2.0 * _q_tilt
 	var flop := sin(gait) * 1.6
-	var ear_perk := 2.2 * sniff_u + 1.8 * bk - (2.4 * mood_int if mood_id == 1 else 0.0)
+	var ear_perk := 2.2 * sniff_u + 1.8 * bk - (2.4 * mood_int if mood_id == 1 else 0.0) + 3.0 * _q_perk
 	var ear_flare := 1.8 * bk + (0.9 * mood_int if mood_id == 4 else 0.0)
 	var speed_ratio := clampf(_draw_speed() / b_spd, 0.0, 1.8)
 	var turbo_f := 1.0 if turbo_active else 0.0
@@ -998,7 +1051,28 @@ func _draw_shapes() -> void:
 		if flick < 0.3:
 			twitch = sin(flick / 0.3 * TAU) * 3.2 * _q_lie
 			twitch_side = -1.0 if int(quirk_u * 5.0) % 2 == 0 else 1.0
-	if is_frenchie:
+	if is_duna or is_perla:
+		# pricked ears, seen from above as triangles standing out to the sides
+		# and a little back: the podenco's huge, a hound listening for
+		# rabbits; the ratonero's small and sharp, the tips folded forward
+		var big := is_duna
+		for sg: float in [-1.0, 1.0]:
+			var tw: float = twitch if sg == twitch_side else 0.0
+			var root := head + hs * (head_r_of(big) * 0.55) * sg - hf * 1.2
+			var back := (0.55 if big else 0.35) + wind_trail * 0.05 - ear_perk * 0.06 + tw * 0.08
+			var ear_up := (hs * sg - hf * back).normalized().rotated(0.5 * _q_tilt)
+			var ear_out := ear_up.orthogonal()
+			var ear_h := (13.0 if big else 8.4) + ear_perk * (0.9 if big else 0.6)
+			var base_w := 3.6 if big else 3.2
+			var tip := root + ear_up * ear_h
+			_b.draw_colored_polygon(PackedVector2Array([root - ear_out * base_w, root + ear_out * base_w, tip]), fur_dark)
+			var inner_col := Color(clampf(fur_dark.r * 1.4 + 0.24, 0.0, 1.0),
+				clampf(fur_dark.g * 1.1 + 0.15, 0.0, 1.0), clampf(fur_dark.b * 1.1 + 0.15, 0.0, 1.0))
+			_b.draw_colored_polygon(PackedVector2Array([root - ear_out * (base_w * 0.45) + ear_up * 1.5,
+				root + ear_out * (base_w * 0.45) + ear_up * 1.5, tip - ear_up * (ear_h * 0.25)]), inner_col)
+			if not big:
+				_b.draw_line(tip, tip + hf * 1.8 - ear_up * 0.6, fur_dark.darkened(0.2), 1.6)
+	elif is_frenchie:
 		# Iconic Frenchie "bat ears": upright, tall, broad-based with rounded tops,
 		# facing forward/outward with warm inner ear leather visible
 		for sg: float in [-1.0, 1.0]:
@@ -1115,6 +1189,13 @@ func _draw_shapes() -> void:
 	var head_r := 5.5 if is_tito else (7.8 if is_gos else (8.2 if is_frenchie else (5.8 if is_galgo else 7.0)))
 	_b.draw_circle(head + rim * 0.7, head_r, fur_dark.darkened(0.25))
 	_b.draw_circle(head, head_r, fur)
+	if is_perla or is_duna:
+		# a white blaze up the middle of her face; the ratonero's tan
+		# eyebrow spots either side of it
+		_b.draw_line(head - hf * (head_r * 0.7), head + hf * (head_r * 0.9), MARK_WHITE, 2.2 if is_perla else 1.8)
+		if is_perla:
+			for sg5: float in [-1.0, 1.0]:
+				_b.draw_circle(head + hf * 0.4 + hs * 2.6 * sg5, 1.3, MARK_TAN)
 	# open jaw and pink tongue during a bark or while lapping water
 	if bk > 0.05:
 		var jaw_at := head + hf * ((4.8 if is_tito else (6.2 if is_frenchie else 9.5)) + bk * 2.2)

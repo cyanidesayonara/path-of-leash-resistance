@@ -191,6 +191,8 @@ const T := {
 	"dog_trait_mochi": {"en": "Plants hard, slow", "ca": "Es planta fort, lent", "es": "Se planta fuerte, lento"},
 	"dog_trait_bruna": {"en": "Herds your human, collects muck", "ca": "Guia el teu humà, s'embruta", "es": "Guía a tu humano, se ensucia"},
 	"dog_trait_tito": {"en": "Slips through gaps, easily reeled in", "ca": "Passa per tot, fàcil d'arrossegar", "es": "Se cuela por todo, fácil de arrastrar"},
+	"dog_trait_perla": {"en": "Digs anything up, quick on her feet", "ca": "Ho desenterra tot, àgil", "es": "Lo desentierra todo, ágil"},
+	"dog_trait_duna": {"en": "Leaps benches, long stride", "ca": "Salta bancs, gambada llarga", "es": "Salta bancos, zancada larga"},
 
 	# --- the walk select ------------------------------------------------------
 	"walk_tutorial_line": {"en": "About three minutes, nothing to get in the way. No stars, no score.", "ca": "Uns tres minuts, res pel mig. Sense estrelles ni punts.", "es": "Unos tres minutos, nada por medio. Sin estrellas ni puntos."},
@@ -276,7 +278,7 @@ const T := {
 	"ach_stars_50_name": {"en": "Fifty Gold Stickers", "ca": "Cinquanta daurades", "es": "Cincuenta doradas"},
 	"ach_stars_50_hint": {"en": "Earn 50 stars in total", "ca": "Aconsegueix 50 estrelles", "es": "Consigue 50 estrellas"},
 	"ach_all_dogs_name": {"en": "The Whole Pack", "ca": "Tota la colla", "es": "Toda la manada"},
-	"ach_all_dogs_hint": {"en": "Finish a walk with all 5 dogs", "ca": "Acaba un passeig amb els 5 gossos", "es": "Termina un paseo con los 5 perros"},
+	"ach_all_dogs_hint": {"en": "Finish a walk with every dog", "ca": "Acaba un passeig amb cada gos", "es": "Termina un paseo con cada perro"},
 	"ach_wardrobe_set_name": {"en": "Dressed for la Rambla", "ca": "Mudat per a la Rambla", "es": "Arreglado para la Rambla"},
 	"ach_wardrobe_set_hint": {"en": "Own a bought collar, bandana and coat", "ca": "Compra un collar, mocador i pelatge", "es": "Compra un collar, bandana y pelaje"},
 	"ach_all_gallery_bones_name": {"en": "Four Secret Bones", "ca": "Quatre ossos secrets", "es": "Cuatro huesos secretos"},
@@ -309,6 +311,9 @@ const T := {
 	"skill_dig_in": {"en": "Dig in and trip your human %d times", "ca": "Fes ensopegar l'humà %d cops", "es": "Haz tropezar a tu humano %d veces"},
 	"skill_herd": {"en": "Herd your human for %d seconds", "ca": "Guia el teu humà %d segons", "es": "Guía a tu humano %d segundos"},
 	"skill_squeeze": {"en": "Slip through %d gaps only you fit", "ca": "Passa per %d forats estrets", "es": "Cuélate por %d huecos estrechos"},
+	"skill_dig": {"en": "Dig up %d holes", "ca": "Desenterra %d forats", "es": "Desentierra %d hoyos"},
+	"skill_leap": {"en": "Leap %d benches", "ca": "Salta %d bancs", "es": "Salta %d bancos"},
+	"skill_leap_pop": {"en": "Hup!", "ca": "Hop!", "es": "¡Hop!"},
 	"skill_squeeze_pop": {"en": "Squeeze!", "ca": "Per un pèl!", "es": "¡Por los pelos!"},
 	"toast_skill": {"en": "%s'S SKILL", "ca": "HABILITAT DE %s", "es": "HABILIDAD DE %s"},
 	"find_dug": {"en": "BURIED FIND!", "ca": "TRESOR ENTERRAT!", "es": "¡TESORO ENTERRADO!"},

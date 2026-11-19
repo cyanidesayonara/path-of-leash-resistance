@@ -566,6 +566,13 @@ var skill_herd_t := 0.0
 var skill_squeezes := 0
 var skill_squeeze_t := 0.0
 var skill_squeeze_at := Vector2.INF
+# Duna's standing jump over a bench (systems/dog_skills.gd): how far through
+# it she is, the bench she is clearing, and how many she has cleared
+var skill_leaps := 0
+var leap_t := 0.0
+var leap_body: StaticBody2D = null
+var leap_dir := Vector2.ZERO
+var leap_cd := 0.0
 var skill_gaps_scanned := false
 var skill_scan_y := INF
 var skill_scan_spots: Array = []
@@ -11162,7 +11169,7 @@ func _pickups(delta: float) -> void:
 						digging_now = true
 						pp.prog = float(pp.prog) + delta
 						_freedom_dirty()
-						if float(pp.prog) >= 1.1:
+						if float(pp.prog) >= 1.1 / Game.dog_dig_mult():
 							pp.done = true
 							digs_done += 1
 							bones += 6

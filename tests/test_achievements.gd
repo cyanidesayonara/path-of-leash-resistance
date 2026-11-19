@@ -271,7 +271,7 @@ func _run() -> void:
 	for dk: String in game.DOG_KEYS:
 		game.dog = dk
 		_finish_walk(main, "barri", false)
-	_check(Ach.has("all_dogs") and game.dogs_walked.size() == 5, "walking every dog unlocks all_dogs")
+	_check(Ach.has("all_dogs") and game.dogs_walked.size() == game.DOG_KEYS.size(), "walking every dog unlocks all_dogs")
 
 	# 11. Full count and final dog-pack toast check
 	_check(Ach.unlocked_count() == 24 and game.achievements.size() == 24,
@@ -286,7 +286,7 @@ func _run() -> void:
 	_check(game.achievements.is_empty() and game.dogs_walked.is_empty() and game.gallery_bones.is_empty(),
 		"_reset_persisted_state clears achievement arrays")
 	game.load_records()
-	_check(game.achievements.size() == 24 and game.dogs_walked.size() == 5 and game.gallery_bones.size() == 4,
+	_check(game.achievements.size() == 24 and game.dogs_walked.size() == game.DOG_KEYS.size() and game.gallery_bones.size() == 4,
 		"save/load restores achievements (%d), dogs_walked (%d), gallery_bones (%d)" % [
 			game.achievements.size(), game.dogs_walked.size(), game.gallery_bones.size()])
 

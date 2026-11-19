@@ -407,8 +407,41 @@ const DOGS := {
 		"reel_mult": 1.65,
 		"gap_mult": 0.57,
 	},
+	# the ratonero bodeguero, the Andalusian ratter of the wine cellars:
+	# small, square and busy, and digs anything up in no time
+	"perla": {
+		"name": "Perla",
+		"breed": "Ratonero bodeguero",
+		"stars": 55,
+		"trait": "Digs anything up, quick on her feet",
+		"desc": "A tricolor ratter from the bodegas who digs faster than anyone",
+		"speed_mult": 1.04,
+		"accel_mult": 1.18,
+		"plant_mult": 0.80,
+		"mass_mult": 0.70,
+		"gap_mult": 0.82,
+		"nose_mult": 1.15,
+		"dig_mult": 1.9,
+		"quirk": "scrabble",
+		"bark": "bark_perla",
+	},
+	# the podenco, the island hound: long legs, huge ears, and a standing
+	# jump that clears a bench as if it were not there
+	"duna": {
+		"name": "Duna",
+		"breed": "Podenco",
+		"stars": 65,
+		"trait": "Leaps benches, long stride",
+		"desc": "A red and white podenco who clears a bench from standing",
+		"speed_mult": 1.12,
+		"accel_mult": 1.06,
+		"plant_mult": 0.72,
+		"leaps": true,
+		"quirk": "listen",
+		"bark": "bark_duna",
+	},
 }
-const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna", "tito"]
+const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna", "tito", "perla", "duna"]
 const DEFAULT_DOG := "millie"
 
 const SAVE_PATH := "user://records.cfg"
@@ -925,6 +958,16 @@ func finds_count(d := "") -> int:
 
 
 # how far her nose reaches, against the breed's: each level of NOSE a tenth
+# how much faster than Millie she digs (buried finds, a yard's dig patches)
+func dog_dig_mult(k := "") -> float:
+	return float(dog_data(k).get("dig_mult", 1.0))
+
+
+# whether she clears a bench in a standing jump (systems/dog_skills.gd)
+func dog_leaps(k := "") -> bool:
+	return bool(dog_data(k).get("leaps", false))
+
+
 func dog_nose_mult(k := "") -> float:
 	var key := k if k != "" else dog
 	return float(dog_data(key).get("nose_mult", 1.0)) + float(get_dog_stat(key, "nose")) * 0.10
@@ -1380,6 +1423,9 @@ func _reset_persisted_state() -> void:
 	agility_best = 0.0
 	gate_open = []
 	dog_upgrades = {}
+	training = {}
+	finds_found = {}
+	skills_done = {}
 	achievements = []
 	dogs_walked = []
 	gallery_bones = []

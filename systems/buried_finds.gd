@@ -168,7 +168,7 @@ static func tick(m: Node2D, delta: float) -> bool:
 		if still and dp.distance_to(f.pos) < DIG_R:
 			digging = true
 			f.prog = float(f.prog) + delta
-			if float(f.prog) >= DIG_TIME:
+			if float(f.prog) >= DIG_TIME / Game.dog_dig_mult():
 				_dug(m, f)
 		else:
 			f.prog = maxf(0.0, float(f.prog) - delta * 0.6)
@@ -207,7 +207,7 @@ static func draw(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var p: Vector2 = f.pos
 		if p.y < vt - 40.0 or p.y > vb + 40.0:
 			continue
-		var prog := clampf(float(f.prog) / DIG_TIME, 0.0, 1.0)
+		var prog := clampf(float(f.prog) / (DIG_TIME / Game.dog_dig_mult()), 0.0, 1.0)
 		if bool(f.dug):
 			prog = 1.0
 		elif prog <= 0.0:

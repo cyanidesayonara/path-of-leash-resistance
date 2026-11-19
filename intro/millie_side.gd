@@ -59,6 +59,8 @@ static func breed_id_of(breed: Variant) -> int:
 		"mochi": return 2
 		"tito": return 3
 		"bruna": return 4
+		# drawn side on on another's frame, as from above (entities/dog.gd BODY_PLAN)
+		"duna": return 1
 	return 0
 
 

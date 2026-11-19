@@ -175,6 +175,48 @@ func _run() -> void:
 	_check(bool(m.skill_gaps_scanned) and (m.skill_quest as Dictionary).is_empty(), "El Barri has none, so Tito has no skill goal there")
 	await _free(m)
 
+	# Perla: anything dug up counts, finds and a yard's dig patches, and she
+	# digs it in about half the time
+	m = await _load(game, "park", "perla")
+	m.finds_dug = 1
+	m.digs_done = 1
+	DogSkills.tick(m, 1.0 / 60.0)
+	_check(bool(m.skill_done_run), "Perla meets hers by digging up two holes")
+	_check(game.dog_dig_mult("perla") > 1.5 and is_equal_approx(game.dog_dig_mult("millie"), 1.0), "and she digs faster than Millie")
+	await _free(m)
+
+	# Duna: running into a bench, she goes over it
+	m = await _load(game, "park", "duna")
+	_check(not (m.benches as Array).is_empty(), "El Parc has benches to leap")
+	var bn: Vector2 = m.benches[0]
+	m.frozen = true
+	m.dog.global_position = bn + Vector2(0, 40)
+	await physics_frame
+	await physics_frame
+	m.dog.velocity = Vector2(0, -300)
+	m.dog.move_and_slide()
+	var hit: StaticBody2D = DogSkills.bench_hit(m)
+	_check(hit != null, "running at a bench, she meets it")
+	DogSkills.tick_leap(m, 1.0 / 60.0)
+	_check(int(m.skill_leaps) == 1 and float(m.leap_t) > 0.0, "and leaps it")
+	_check(hit != null and m.dog.get_collision_exceptions().has(hit), "the bench lets her through while she is over it")
+	for f in range(40):
+		DogSkills.tick_leap(m, 1.0 / 60.0)
+	_check(float(m.leap_t) == 0.0 and is_zero_approx(float(m.dog.hop)), "she lands")
+	_check(hit != null and not m.dog.get_collision_exceptions().has(hit), "and the bench is solid again")
+	_check(int(m.skill_leaps) == 1, "one bench, one leap: landing does not leap it again")
+	await _free(m)
+	m = await _load(game, "park", "millie")
+	_check(not game.dog_leaps("millie") and game.dog_leaps("duna"), "only Duna leaps")
+	await _free(m)
+
+	# a reset save forgets what the dogs have done
+	game.skills_done = {"millie": ["park"]}
+	game.training = {"millie": 3}
+	game._reset_persisted_state()
+	_check((game.skills_done as Dictionary).is_empty() and (game.training as Dictionary).is_empty() and (game.finds_found as Dictionary).is_empty(),
+		"resetting the save clears training, finds and skill goals")
+
 	# the tutorial has none
 	m = await _load(game, "park", "millie")
 	m.tutorial_mode = true
