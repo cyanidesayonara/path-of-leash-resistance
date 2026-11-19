@@ -12,7 +12,7 @@ extends RefCounted
 # - Living statues on weathered stone pedestals with tipping coin dishes
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["build_layer", "draw_grove", "draw_yard", "surface", "tick"]
+const HOOKS := ["build_layer", "draw_grove", "draw_scenery", "draw_threshold", "draw_yard", "surface", "tick"]
 
 
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
@@ -95,6 +95,12 @@ static func draw_pavement_waves(m: Node2D, b: ShapeBatch, vt: float, vb: float) 
 static var _wave_cache := {}
 
 
+static func _wave_edge_x(m: Node2D, y: float) -> Vector2:
+	var we: Vector2 = m.walk_edges(y)
+	# keep the waves inside the promenade kerb and clear of the east bike lane
+	return Vector2(we.x + 12.0, minf(we.y, m.BLANE_L) - 12.0)
+
+
 static func _wave_row(m: Node2D, wy: float) -> ShapeBatch:
 	var key := Vector2(float(m.get_instance_id() % 1000003), wy)
 	var row: ShapeBatch = _wave_cache.get(key)
@@ -103,23 +109,29 @@ static func _wave_row(m: Node2D, wy: float) -> ShapeBatch:
 	if _wave_cache.size() > 64:
 		_wave_cache.clear()
 	row = ShapeBatch.new()
-	var we: Vector2 = m.walk_edges(wy)
-	var wx0 := we.x + 12.0
-	var wx1 := we.y - 12.0
-	if wx1 > wx0 + 60.0:
+	var top_e := _wave_edge_x(m, wy)
+	var bot_e := _wave_edge_x(m, wy + WAVE_ROW)
+	if top_e.y > top_e.x + 60.0 and bot_e.y > bot_e.x + 60.0:
 		var top := PackedVector2Array()
-		var x := wx0
-		while x < wx1:
+		var x := top_e.x
+		while x < top_e.y:
 			top.append(Vector2(x, wy + sin(x * WAVE_K) * WAVE_AMP))
 			x += 16.0
-		top.append(Vector2(wx1, wy + sin(wx1 * WAVE_K) * WAVE_AMP))
+		top.append(Vector2(top_e.y, wy + sin(top_e.y * WAVE_K) * WAVE_AMP))
+		var bot := PackedVector2Array()
+		x = bot_e.x
+		while x < bot_e.y:
+			bot.append(Vector2(x, wy + WAVE_ROW + sin(x * WAVE_K) * WAVE_AMP))
+			x += 16.0
+		bot.append(Vector2(bot_e.y, wy + WAVE_ROW + sin(bot_e.y * WAVE_K) * WAVE_AMP))
 		var band := top.duplicate()
-		for i in range(top.size() - 1, -1, -1):
-			band.append(top[i] + Vector2(0.0, WAVE_ROW))
+		for i in range(bot.size() - 1, -1, -1):
+			band.append(bot[i])
 		row.polygon(band, WAVE_CREAM)
 		for i in range(top.size() - 1):
 			row.line(top[i], top[i + 1], WAVE_SEAM, 2.0)
-			row.line(top[i] + Vector2(0.0, WAVE_ROW), top[i + 1] + Vector2(0.0, WAVE_ROW), WAVE_SEAM, 2.0)
+		for i in range(bot.size() - 1):
+			row.line(bot[i], bot[i + 1], WAVE_SEAM, 2.0)
 	_wave_cache[key] = row
 	return row
 
@@ -364,6 +376,211 @@ static func draw_tree_leaf_drifts(m: Node2D, b: ShapeBatch, vt: float, vb: float
 			var la := float(lf) * 1.7 + p.x
 			var lp := p + Vector2.from_angle(la) * (20.0 + fmod(float(lf) * 4.3, 12.0))
 			b.polygon(PackedVector2Array([lp, lp + Vector2(3, -2), lp + Vector2(5, 1), lp + Vector2(2, 3)]), Color(0.72, 0.50, 0.24))
+
+
+static func _draw_stone_apron(m: Node2D, b: ShapeBatch, r: Rect2) -> void:
+	b.rect(r, m.STRIP_SIDEWALK)
+	var jx := ceilf(r.position.x / 48.0) * 48.0
+	while jx < r.end.x - 4.0:
+		b.line(Vector2(jx, r.position.y), Vector2(jx, r.end.y), m.STRIP_JOINT, 1.5)
+		jx += 48.0
+	var jy := r.position.y + 22.0
+	while jy < r.end.y - 4.0:
+		b.line(Vector2(r.position.x, jy), Vector2(r.end.x, jy), m.STRIP_JOINT, 1.5)
+		jy += 28.0
+
+
+static func _draw_bollard_dot(m: Node2D, b: ShapeBatch, at: Vector2) -> void:
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.25)
+	b.circle(at + Shade.light * 3.5, 4.6, sh)
+	b.circle(at, 4.5, Color(0.16, 0.17, 0.19))
+	b.circle(at - Shade.light * 1.2, 2.2, Color(0.38, 0.40, 0.44))
+
+
+static func _draw_bike_cap(m: Node2D, b: ShapeBatch, cx: float, base_y: float, dir: float) -> void:
+	var bl_col := Color(0.4, 0.31, 0.29)
+	var bl_line := Color(0.90, 0.88, 0.82, 0.78)
+	var rx: float = (float(m.BLANE_R) - float(m.BLANE_L)) * 0.5
+	var ry := 22.0
+	var segs := 18
+	var outer := PackedVector2Array()
+	var inner := PackedVector2Array()
+	var line_pts := PackedVector2Array()
+	for si in range(segs + 1):
+		var a := PI * float(si) / float(segs)
+		var ca := cos(a)
+		var sa := sin(a) * dir
+		outer.append(Vector2(cx + ca * (rx + 2.5), base_y + sa * (ry + 2.5)))
+		inner.append(Vector2(cx + ca * rx, base_y + sa * ry))
+		line_pts.append(Vector2(cx + ca * (rx - 5.0), base_y + sa * (ry - 4.5)))
+	b.polygon(outer, m.COL_SEAM)
+	b.polygon(inner, bl_col)
+	for si in range(segs):
+		b.line(line_pts[si], line_pts[si + 1], bl_line, 2.0)
+
+
+# join La Rambla's promenade, side street, bike lane and flanking city blocks cleanly into Pipicà
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y: float = float(m.GATE_Y) - 40.0
+	var fence_y: float = float(m.GATE_Y) - 30.0
+	var gate_post_y: float = float(m.GATE_Y) - 16.0
+	var e: Vector2 = m.walk_edges(y + 2.0)
+	var f: Vector2 = m.frontage(y + 2.0)
+	var ge: Vector2 = m.walk_edges(gate_post_y)
+	var gl := maxf(float(m.gate_l), ge.x)
+	var gr := minf(float(m.gate_r), ge.y)
+	var mx := (gl + gr) * 0.5
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	var surround := Color(0.27, 0.4, 0.27)
+
+	# clean grass and park surround between the path-end line (-5040) and Pipicà's south edge (-5030)
+	b.rect(Rect2(-400.0, y, 470.0, fence_y - y), surround)
+	b.rect(Rect2(1180.0, y, 520.0, fence_y - y), surround)
+	b.rect(Rect2(70.0, y, e.x - 70.0, fence_y - y), YARD_GRASS)
+	b.rect(Rect2(e.y, y, 1180.0 - e.y, fence_y - y), YARD_GRASS)
+
+	# finish both flanking city blocks cleanly at fence_y with coping and corner piers
+	var roof_base := Color(0.38, 0.35, 0.37)
+	var roof_cap := roof_base.lightened(0.26)
+	var roof_shade := roof_base.darkened(0.30)
+	var block_bot := float(m.GATE_Y) + 12.0
+	for span: Vector2 in [Vector2(-400.0, f.x), Vector2(f.y, 1700.0)]:
+		b.rect(Rect2(span.x, fence_y - 4.0, span.y - span.x, 4.0), Color(sh.r, sh.g, sh.b, 0.16))
+		b.rect(Rect2(span.x, fence_y, span.y - span.x, block_bot - fence_y), roof_base)
+		b.rect(Rect2(span.x, fence_y, span.y - span.x, 5.0), roof_cap)
+		b.rect(Rect2(span.x, fence_y + 5.0, span.y - span.x, 2.0), roof_shade)
+	for pier_x: float in [f.x - 27.0, f.y]:
+		b.rect(Rect2(pier_x, fence_y, 27.0, 32.0), roof_cap)
+		b.rect(Rect2(pier_x + 3.0, fence_y + 3.0, 21.0, 26.0), roof_base.lightened(0.10))
+
+	# west side street and sidewalk: stone apron across to the promenade kerb, stop bar and bollards
+	var apron_h := 38.0
+	_draw_stone_apron(m, b, Rect2(f.x, fence_y, e.x - f.x, apron_h))
+	var road_l: float = f.x + m.ROAD_PAVEMENT
+	var kerb_y := fence_y + apron_h
+	b.rect(Rect2(road_l, kerb_y - 1.0, e.x - road_l, 4.0), sh)
+	b.rect(Rect2(road_l, kerb_y - 5.0, e.x - road_l, 6.0), m.XING_KERB)
+	b.line(Vector2(road_l, kerb_y - 5.0), Vector2(e.x, kerb_y - 5.0), m.STRIP_KERB, 1.5)
+	b.rect(Rect2(road_l + 4.0, kerb_y + 14.0, e.x - road_l - 8.0, 4.0), m.COL_STRIPE)
+	_draw_bollard_dot(m, b, Vector2(lerpf(road_l, e.x, 0.28), kerb_y - 2.0))
+	_draw_bollard_dot(m, b, Vector2(lerpf(road_l, e.x, 0.72), kerb_y - 2.0))
+
+	# east bike lane and shoulder: stone apron and rounded turnaround cap
+	_draw_stone_apron(m, b, Rect2(e.y, fence_y, f.y - e.y, apron_h))
+	_draw_bike_cap(m, b, (m.BLANE_L + m.BLANE_R) * 0.5, float(m.GATE_Y), -1.0)
+	b.line(Vector2(e.y, fence_y), Vector2(e.y, kerb_y), m.COL_SEAM, 3.0)
+	b.line(Vector2(e.x, fence_y), Vector2(e.x, kerb_y), m.COL_SEAM, 3.0)
+
+	# center promenade threshold: worn tongue into Pipicà, granite kerb and grass blades
+	var walkway: Color = m.walkway_col()
+	b.glow(Vector2(mx, y - m.THRESH_TONGUE * 0.45), m.THRESH_GAP * 0.75, Color(walkway.r, walkway.g, walkway.b, 0.42), 0.3)
+	b.glow(Vector2(mx, y - 12.0), m.THRESH_GAP * 0.62, Color(walkway.r, walkway.g, walkway.b, 0.62), 0.45)
+	for seg: Vector2 in [Vector2(e.x, mx - m.THRESH_GAP * 0.5), Vector2(mx + m.THRESH_GAP * 0.5, e.y)]:
+		if seg.y - seg.x < 4.0:
+			continue
+		b.rect(Rect2(seg.x, y - m.THRESH_KERB_W * 0.5 + 3.0, seg.y - seg.x, m.THRESH_KERB_W), sh)
+		b.rect(Rect2(seg.x, y - m.THRESH_KERB_W * 0.5, seg.y - seg.x, m.THRESH_KERB_W), m.THRESH_KERB)
+		b.rect(Rect2(seg.x, y - m.THRESH_KERB_W * 0.5, seg.y - seg.x, 2.5), m.THRESH_KERB.lightened(0.18))
+		var jx := seg.x + 30.0
+		while jx < seg.y - 4.0:
+			b.line(Vector2(jx, y - m.THRESH_KERB_W * 0.5), Vector2(jx, y + m.THRESH_KERB_W * 0.5), m.THRESH_KERB.darkened(0.18), 1.2)
+			jx += 30.0
+		var tx := seg.x + 6.0
+		while tx < seg.y - 6.0:
+			var h := fmod(sin(tx * 12.9898) * 43758.5453, 1.0)
+			h = h if h >= 0.0 else h + 1.0
+			if h > 0.35:
+				var g: Color = (m.COL_GRASS as Color).darkened(0.08 + 0.12 * h)
+				b.line(Vector2(tx, y - 2.0), Vector2(tx - 3.0, y + 5.0 + h * 5.0), g, 2.0)
+				b.line(Vector2(tx, y - 2.0), Vector2(tx + 3.0, y + 4.0 + h * 4.0), g, 2.0)
+			tx += 9.0 + h * 8.0
+
+	# carry Pipicà's chain-link fence visibly across the stone aprons and return it to the gateposts
+	var fence_col := Color(0.62, 0.63, 0.60)
+	var post_col := Color(0.50, 0.50, 0.48)
+	var mesh_col := Color(0.66, 0.68, 0.66, 0.25)
+	for run: Array in [[70.0, gl - 10.0], [gr + 10.0, 1180.0]]:
+		var x0: float = float(run[0])
+		var x1: float = float(run[1])
+		b.line(Vector2(x0, fence_y - 3.0), Vector2(x1, fence_y - 3.0), mesh_col, 5.0)
+		b.line(Vector2(x0, fence_y), Vector2(x1, fence_y), fence_col, 3.0)
+		var px := x0
+		while px < x1 - 12.0:
+			b.circle(Vector2(px, fence_y), 3.2, post_col)
+			px += 60.0
+		b.circle(Vector2(x1, fence_y), 3.4, post_col)
+	for gx: float in [gl - 10.0, gr + 10.0]:
+		b.line(Vector2(gx, fence_y), Vector2(gx, gate_post_y), fence_col, 3.0)
+	var fx := 86.0
+	while fx < 1170.0:
+		if fx <= e.x - 10.0 or fx >= e.y + 10.0:
+			var fh := fmod(absf(sin(fx * 19.31) * 43758.54), 1.0)
+			if fh > 0.3:
+				var g := YARD_GRASS.darkened(0.14 + fh * 0.10)
+				b.line(Vector2(fx, fence_y - 2.0), Vector2(fx - 2.5, fence_y - 7.0 - fh * 3.0), g, 1.8)
+				b.line(Vector2(fx, fence_y - 2.0), Vector2(fx + 2.5, fence_y - 6.0 - fh * 3.0), g, 1.8)
+		fx += 24.0
+
+
+static func _draw_drac_forecourt(m: Node2D, b: ShapeBatch) -> void:
+	var dp: Vector2 = m.detour_door_pos
+	var depth: float = m.ZEBRA_DEPTH
+	var z0 := dp.y - depth * 0.5
+	var z1 := z0 + depth
+	var e0: Vector2 = m.walk_edges(z0)
+	var e1: Vector2 = m.walk_edges(z1)
+	var f0: Vector2 = m.frontage(z0)
+	var f1: Vector2 = m.frontage(z1)
+	var lane_l: float = maxf(f0.x, f1.x) + m.ROAD_PAVEMENT
+	var lane_r := minf(e0.x, e1.x)
+	if lane_r - lane_l < 30.0:
+		return
+	# a zebra over the side road from the building pavement to the gallery
+	# door, the kerb dropped flush at both ends, the traffic's stop lines
+	var white := Color(0.95, 0.94, 0.90, 0.92)
+	var zx := lane_l + 4.0
+	while zx + m.XING_BAR * 0.5 <= lane_r - 2.0:
+		b.rect(Rect2(zx, z0, m.XING_BAR * 0.5, depth), white)
+		zx += m.XING_BAR
+	for kx: float in [lane_l - 2.0, lane_r - 2.0]:
+		b.rect(Rect2(kx, z0 - 4.0, 4.0, depth + 8.0), m.XING_KERB)
+	for sy: float in [z0 - 12.0, z1 + 12.0]:
+		var se: Vector2 = m.walk_edges(sy)
+		var sf: Vector2 = m.frontage(sy)
+		var sl: float = sf.x + m.ROAD_PAVEMENT + 2.0
+		b.rect(Rect2(sl, sy - 2.0, se.x - sl - 2.0, 4.0), Color(0.92, 0.90, 0.84, 0.85))
+
+
+static func draw_scenery(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	if not m.detour_active and m.detour_door_pos != Vector2.ZERO:
+		var dy: float = m.detour_door_pos.y
+		if dy > vt - 140.0 and dy < vb + 140.0:
+			_draw_drac_forecourt(m, b)
+	if vb > float(m.START_Y) + 10.0:
+		var kerb_y := float(m.HOME_Y) - 26.0
+		var apron_bot := float(m.HOME_Y) + 40.0
+		var se: Vector2 = m.walk_edges(kerb_y)
+		var sf: Vector2 = m.frontage(kerb_y)
+		var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+		# continuous south footway apron in front of the apartment block across road and bike lane
+		_draw_stone_apron(m, b, Rect2(sf.x, kerb_y, se.x - sf.x, apron_bot - kerb_y))
+		_draw_stone_apron(m, b, Rect2(se.y, kerb_y, sf.y - se.y, apron_bot - kerb_y))
+		var road_l: float = sf.x + m.ROAD_PAVEMENT
+		b.rect(Rect2(road_l, kerb_y - 3.0, se.x - road_l, 3.0), sh)
+		b.rect(Rect2(road_l, kerb_y, se.x - road_l, 5.0), m.XING_KERB)
+		b.line(Vector2(road_l, kerb_y + 5.0), Vector2(se.x, kerb_y + 5.0), m.STRIP_KERB, 1.5)
+		b.rect(Rect2(road_l + 4.0, kerb_y - 18.0, se.x - road_l - 8.0, 4.0), m.COL_STRIPE)
+		_draw_bollard_dot(m, b, Vector2(lerpf(road_l, se.x, 0.28), kerb_y + 2.0))
+		_draw_bollard_dot(m, b, Vector2(lerpf(road_l, se.x, 0.72), kerb_y + 2.0))
+		# east bike lane turnaround cap above the south footway kerb
+		var cap_y := kerb_y - 26.0
+		b.rect(Rect2(m.BLANE_L, cap_y, m.BLANE_R - m.BLANE_L, kerb_y - cap_y), m.STRIP_SIDEWALK)
+		_draw_bike_cap(m, b, (m.BLANE_L + m.BLANE_R) * 0.5, cap_y, 1.0)
+		b.rect(Rect2(se.y, kerb_y - 3.0, m.BLANE_R - se.y, 3.0), sh)
+		b.rect(Rect2(se.y, kerb_y, m.BLANE_R - se.y, 5.0), m.XING_KERB)
+		b.line(Vector2(se.y, kerb_y + 5.0), Vector2(m.BLANE_R, kerb_y + 5.0), m.STRIP_KERB, 1.5)
+		b.line(Vector2(se.x, kerb_y), Vector2(se.x, apron_bot), m.COL_SEAM, 3.0)
+		b.line(Vector2(se.y, cap_y), Vector2(se.y, apron_bot), m.COL_SEAM, 3.0)
 
 
 # the Pipicà's trees are broadleaves standing in its lawn
