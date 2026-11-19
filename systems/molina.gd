@@ -113,6 +113,8 @@ const SNOWMAN := Vector2(842.0, -3560.0)
 # the top: the xalet's terrace, its picnic tables, the grill
 const TERRACE_Y := -4300.0
 const TERRACE_TOP := -4760.0
+# snow drifts this far onto / off the boards so the piste does not cut them
+const TERRACE_SEAM := 56.0
 const TABLES: Array[Rect2] = [
 	Rect2(390.0, -4620.0, 92.0, 40.0),
 	Rect2(798.0, -4620.0, 92.0, 40.0),
@@ -466,15 +468,20 @@ static func _draw_terrace(wc: ShapeBatch, lo: float, hi: float) -> void:
 	var top := maxf(lo, TERRACE_TOP)
 	if hi <= top:
 		return
-	# the terrace's boards, cleared of snow, a dusting at the edges
-	var r := Rect2(PATH_L, top, PATH_R - PATH_L, minf(hi, TERRACE_Y) - top)
+	# the terrace's boards, cleared of snow; ends stop short of the joins so
+	# the snow banks can cover the cut into the piste
+	var inset := 16.0
+	var board_top: float = maxf(top, TERRACE_TOP + inset)
+	var board_bot: float = minf(hi, TERRACE_Y - inset)
+	var r := Rect2(PATH_L, board_top, PATH_R - PATH_L, board_bot - board_top)
 	if r.size.y > 0.0:
 		wc.rect(r, WOOD)
 		var y := floorf(r.position.y / 18.0) * 18.0
 		while y < r.end.y:
 			wc.rect(Rect2(r.position.x, y, r.size.x, 1.6), WOOD_DARK)
 			y += 18.0
-		wc.rect(Rect2(PATH_L, TERRACE_Y - 10.0, PATH_R - PATH_L, 10.0), Color(SNOW, 0.85))
+	if hi > TERRACE_TOP - 80.0 and lo < TERRACE_Y + 80.0:
+		_draw_terrace_seams(wc)
 	for t: Rect2 in TABLES:
 		if t.end.y < lo or t.position.y > hi:
 			continue
@@ -498,6 +505,33 @@ static func _draw_terrace(wc: ShapeBatch, lo: float, hi: float) -> void:
 		for i in range(3):
 			var sp := g + Vector2(-20.0 + float(i) * 20.0, 0.0)
 			wc.capsule(sp + Vector2(-8.0, -1.0), sp + Vector2(8.0, 1.0), 3.4, Color(0.54, 0.26, 0.20))
+
+
+# snow softens both ends of the cleared boards into the corduroy either side.
+# a near-opaque bank sits on the join so the wood edge never reads as a cut,
+# then fades onto the boards and out over the piste
+static func _draw_terrace_seams(wc: ShapeBatch) -> void:
+	_terrace_seam_at(wc, TERRACE_Y, 1.0)
+	_terrace_seam_at(wc, TERRACE_TOP, -1.0)
+
+
+static func _terrace_seam_at(wc: ShapeBatch, y: float, toward_piste: float) -> void:
+	var lip := TERRACE_SEAM
+	var d := toward_piste
+	# onto the boards (opposite the piste)
+	wc.band(PackedVector2Array([
+		Vector2(PATH_L - 6.0, y), Vector2(PATH_R + 6.0, y),
+		Vector2(PATH_L - 6.0, y - d * 14.0), Vector2(PATH_R + 6.0, y - d * 14.0),
+		Vector2(PATH_L + 8.0, y - d * (lip * 0.55)), Vector2(PATH_R - 8.0, y - d * (lip * 0.55)),
+		Vector2(PATH_L + 28.0, y - d * lip), Vector2(PATH_R - 28.0, y - d * lip),
+	]), 2, SNOW, PackedFloat32Array([1.0, 0.85, 0.4, 0.0]))
+	# over the piste, covering the corduroy cut
+	wc.band(PackedVector2Array([
+		Vector2(PATH_L - 6.0, y), Vector2(PATH_R + 6.0, y),
+		Vector2(PATH_L - 6.0, y + d * 18.0), Vector2(PATH_R + 6.0, y + d * 18.0),
+		Vector2(PATH_L - 6.0, y + d * 40.0), Vector2(PATH_R + 6.0, y + d * 40.0),
+		Vector2(PATH_L - 6.0, y + d * 64.0), Vector2(PATH_R + 6.0, y + d * 64.0),
+	]), 2, SNOW, PackedFloat32Array([1.0, 0.7, 0.3, 0.0]))
 
 
 static func _draw_cannons(wc: ShapeBatch, lo: float, hi: float) -> void:
