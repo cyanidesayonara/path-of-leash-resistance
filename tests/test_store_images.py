@@ -225,6 +225,33 @@ class StoreImages(unittest.TestCase):
                                         languages={"en-US", "ca-ES", "es-ES"})
         self.assertEqual(sorted(sub["Listings"]), ["ca-ES", "en-us", "es-ES"])
 
+    def test_redact_drops_the_upload_link_from_json_and_from_wrapped_log_lines(self):
+        sig = "SECRET%3D"
+        raw = ("info: Submission properly configured. FileUploadUrl https://ingestion\n"
+               "packagesprod1.blob.core.windows.net/ingestion/abc\n"
+               "?skoid=1&sv=2024-05-04\n&sig=" + sig + "\n"
+               + json.dumps({"FileUploadUrl": URL, "Notes": "see " + URL,
+                             "Listings": {}}) + "\ndone\n")
+        out = store_images.redact_text(raw)
+        for piece in ("blob.core", "sig=", "sv=2024", "skoid", sig):
+            self.assertNotIn(piece, out)
+        self.assertIn('"FileUploadUrl": "<redacted', out)
+        self.assertIn("done", out)
+
+    def test_verify_counts_the_package_and_every_image_pending_upload(self):
+        images = store_images.listing_images(self.images)
+        staged = store_images.stage(draft(), draft(), images)
+        self.assertEqual(store_images.pending_uploads(staged), 1 + len(images))
+        after = copy.deepcopy(staged)
+        after["ApplicationPackages"] = after["ApplicationPackages"][:1]
+        self.assertTrue(store_images.verify(staged, after))
+
+    def test_no_staging_while_a_submission_is_in_certification(self):
+        self.assertTrue(store_images.check_draftable("Submission Status = Certification"))
+        self.assertTrue(store_images.check_draftable("Submission Status = CommitStarted"))
+        self.assertEqual(store_images.check_draftable("Submission Status = PendingCommit"), [])
+        self.assertEqual(store_images.check_draftable("Submission Status = Published"), [])
+
     def test_the_listings_whats_new_is_readable(self):
         md = (ROOT / "store" / "listing.md").read_text(encoding="utf-8")
         self.assertTrue(store_listing.fields(md, "en")["ReleaseNotes"])

@@ -28,6 +28,16 @@ with these commands (ported from Stemma's scripts/stage_store_images.py):
         after updateMetadata: the draft read back must list the staged
         images as PendingUpload; reports the publish mode
 
+    python tools/store_images.py redact FILE [--out OUT]
+        what msstore printed, without the draft's upload link: FileUploadUrl
+        is a write-capable Azure blob SAS link (anyone holding it can replace
+        what the Store ingests at commit), and this repository's Actions logs
+        and artifacts are public. Everything the workflow shows from msstore
+        goes through here
+
+    python tools/store_images.py check-draftable --status STATUS
+        refuses while a submission is in certification or publishing
+
     python tools/store_images.py mode RAW
         reports the draft's TargetPublishMode, warning when it is Manual
 
@@ -257,6 +267,65 @@ def write_zip(path: Path, msix: Path, package_name: str,
             archive.write(local, name, compress_type=zipfile.ZIP_STORED)
 
 
+REDACTED = "<redacted: write-capable upload link>"
+SAS_LINK = re.compile(r"https://[^\"\s]*\.blob\.core\.windows\.net/[^\"\s]*", re.I)
+# a log line holding any piece of a SAS link: msstore wraps long lines, so the
+# query can sit on a line of its own, away from the host
+SAS_PIECE = re.compile(r"blob\.core|(?:^|[?&\s])(?:sig|sv|skoid|sktid|skt|ske|sks|skv|se|sr|sp)=",
+                       re.I)
+
+
+def redact(value):
+    """A copy of *value* without upload links, recursively (after Stemma's
+    scripts/redact_submission.py): FileUploadUrl is dropped, and any other
+    blob link replaced."""
+    if isinstance(value, dict):
+        return {k: (REDACTED if k.lower() == "fileuploadurl" else redact(v))
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [redact(v) for v in value]
+    if isinstance(value, str):
+        return SAS_LINK.sub(REDACTED, value)
+    return value
+
+
+def redact_text(raw: str) -> str:
+    """What msstore printed, fit for a public log: its JSON redacted and
+    pretty-printed, and every other line holding a piece of a link dropped."""
+    import json
+    start, end = raw.find("{"), raw.rfind("}")
+    head, body, tail = raw, "", ""
+    if start >= 0 and end > start:
+        try:
+            data = json.loads(raw[start:end + 1])
+            head, tail = raw[:start], raw[end + 1:]
+            body = json.dumps(redact(data), indent=2, ensure_ascii=False) + "\n"
+        except json.JSONDecodeError:
+            pass
+
+    def lines(text: str) -> str:
+        return "".join("<redacted line>\n" if SAS_PIECE.search(ln) else ln + "\n"
+                       for ln in text.splitlines())
+    return lines(head) + body + lines(tail)
+
+
+DRAFTABLE = {"PendingCommit", "CommitFailed", "Published", "Canceled",
+             "PreProcessingFailed", "CertificationFailed", "ReleaseFailed",
+             "PublishFailed", "None"}
+
+
+def check_draftable(status: str) -> list[str]:
+    """update_draft must not run while a submission is on its way through
+    certification: staging would touch the one in progress."""
+    m = re.search(r"Submission Status\s*=\s*(\w+)", status)
+    if not m:
+        return []  # no submission yet
+    if m[1] not in DRAFTABLE:
+        return [f"A submission is {m[1]}: wait until it is published (or has "
+                "failed) before staging the next one."]
+    return []
+
+
 def upload_url_masks(url: str) -> list[str]:
     """Every form of the upload URL a log can show: as is, as msstore's JSON
     prints it (& as \\u0026), and its signature alone, which is the secret."""
@@ -306,8 +375,21 @@ def publish_mode_note(sub: dict) -> str:
     return f"TargetPublishMode is {mode}."
 
 
+def pending_uploads(sub: dict) -> int:
+    """Entries the draft expects in the upload zip: packages and images."""
+    return (sum(p.get("FileStatus") == "PendingUpload"
+                for p in sub.get("ApplicationPackages") or [])
+            + sum(i.get("FileStatus") == "PendingUpload"
+                  for lst in (sub.get("Listings") or {}).values()
+                  for i in (lst.get("BaseListing") or {}).get("Images") or []))
+
+
 def verify(staged: dict, after: dict) -> list[str]:
     problems = []
+    want, got = pending_uploads(staged), pending_uploads(after)
+    if got != want:
+        problems.append(f"the draft read back has {got} entries pending upload, "
+                        f"expected {want} (the package and the images)")
     for key, listing in (staged.get("Listings") or {}).items():
         want = [(i["FileName"], i["ImageType"]) for i in listing["BaseListing"]["Images"]
                 if i["FileStatus"] == "PendingUpload"]
@@ -348,6 +430,8 @@ def cmd_verify(args) -> int:
     note = publish_mode_note(after)
     if after.get("TargetPublishMode") == "Manual":
         print(f"::warning::{note}")
+    lines.append(f"- {pending_uploads(after)} entries pending upload in all "
+                 f"(expected {pending_uploads(staged)}: the package and the images)")
     _summary(["Draft read back:", *lines, "", note])
     for p in problems:
         print(f"::error::{p}")
@@ -428,6 +512,11 @@ def main(argv: list[str] | None = None) -> int:
     v = sub.add_parser("verify")
     v.add_argument("--staged", type=Path, required=True)
     v.add_argument("--after", type=Path, required=True)
+    x = sub.add_parser("redact")
+    x.add_argument("file", type=Path)
+    x.add_argument("--out", type=Path, help="write here instead of printing")
+    d = sub.add_parser("check-draftable")
+    d.add_argument("--status", type=Path, required=True)
     m = sub.add_parser("mode")
     m.add_argument("draft", type=Path)
     c = sub.add_parser("check-submit")
@@ -458,6 +547,18 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.cmd == "verify":
         return cmd_verify(args)
+    if args.cmd == "redact":
+        text = redact_text(Path(args.file).read_text(encoding="utf-8", errors="replace"))
+        if args.out:
+            Path(args.out).write_text(text, encoding="utf-8", newline="\n")
+        else:
+            sys.stdout.write(text)
+        return 0
+    if args.cmd == "check-draftable":
+        problems = check_draftable(Path(args.status).read_text(encoding="utf-8", errors="replace"))
+        for p in problems:
+            print(f"::error::{p}")
+        return 1 if problems else 0
     if args.cmd == "mode":
         draft = _read_json(args.draft)
         if draft.get("TargetPublishMode") == "Manual":

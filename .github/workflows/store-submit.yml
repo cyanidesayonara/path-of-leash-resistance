@@ -120,32 +120,44 @@ jobs:
             --clientSecret "${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}"
           msstore info
 
-      # msstore prints the draft's FileUploadUrl, a write-access link to its
-      # upload blob, in its own logs: every msstore output below goes
-      # through redact, and the URL is masked as soon as it is known.
+      # A draft's FileUploadUrl is a write-capable Azure blob SAS link: anyone
+      # holding it can replace what the Store ingests at commit, and this
+      # repository's logs and artifacts are public. So: never --verbose on
+      # msstore publish, submission get or submission publish (they then log
+      # it, wrapped across lines); every msstore output goes to a file and is
+      # shown only through tools/store_images.py redact; and the link and its
+      # signature are masked as soon as they are known, as a backstop.
       - name: Upload the MSIX into a draft
         if: ${{ inputs.mode == 'update_draft' }}
         run: |
           set -euo pipefail
-          redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
-          msstore publish pkg/*.msix --appId "$PRODUCT_ID" --noCommit --verbose 2>&1 | redact
+          show() { python3 tools/store_images.py redact "$1"; }
+          # never while a submission is in certification or publishing
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 || true
+          show status.txt
+          python3 tools/store_images.py check-draftable --status status.txt
+          msstore publish pkg/*.msix --appId "$PRODUCT_ID" --noCommit > publish.txt 2>&1 \
+            || { show publish.txt; exit 1; }
+          show publish.txt
 
       - name: Stage the listing text and images
         if: ${{ inputs.mode == 'update_draft' }}
         run: |
           set -euo pipefail
-          redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > submission.json
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > submission.json 2> get.err \
+            || { show get.err; exit 1; }
           python3 tools/store_images.py upload-url submission.json --masks
+          show get.err
           # description, short description, features, keywords, What's new and
           # the notes for certification: everything under "## Current listing"
           # (only in the languages the release's package declares: the Store
           # refuses a listing in any other)
           python3 tools/store_listing.py submission.json store/listing.md metadata.json \
             --manifest rel/store/msix/AppxManifest.xml
-          # every image the Store has becomes PendingDelete and the rendered
-          # ones PendingUpload; upload.zip is the MSIX plus those images, and
-          # replaces the upload msstore publish just made
+          # the images of the restaged types become PendingDelete and the
+          # rendered ones PendingUpload; upload.zip is the MSIX plus those
+          # images, and replaces the upload msstore publish just made
           python3 tools/store_images.py stage --draft submission.json --submission metadata.json \
             --images build/store-listing --msix pkg/*.msix --zip upload.zip
           upload_url="$(python3 tools/store_images.py upload-url submission.json)"
@@ -155,16 +167,22 @@ jobs:
             -H "x-ms-version: 2020-04-08" \
             --upload-file upload.zip "$upload_url" -o /dev/null
           echo "Uploaded the package and the listing images ($(du -h upload.zip | cut -f1))."
-          msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" --verbose 2>&1 | redact
+          msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" > update-result.json 2>&1 \
+            || { show update-result.json; exit 1; }
+          show update-result.json
 
       - name: Read the staged draft back
         if: ${{ inputs.mode == 'update_draft' }}
         run: |
           set -euo pipefail
-          redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > after.json
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > after.json 2> get.err \
+            || { show get.err; exit 1; }
           python3 tools/store_images.py upload-url after.json --masks
-          redact < after.json
+          show get.err
+          show after.json
+          # fails unless the draft lists the package and every image as
+          # PendingUpload
           python3 tools/store_images.py verify --staged metadata.json --after after.json
           echo "Staged. Partner Center's page shows it only after commit: check the JSON above, then run this workflow again with mode submit." | tee -a "$GITHUB_STEP_SUMMARY"
 
@@ -172,26 +190,33 @@ jobs:
         if: ${{ inputs.mode == 'submit' }}
         run: |
           set -euo pipefail
-          redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > submission.json 2> get.err \
+            || { show get.err; exit 1; }
+          python3 tools/store_images.py upload-url submission.json --masks
           # msstore prints "Submission Status = ..." through its logger, on
           # stderr: capture both streams or the check never sees it
-          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose 2>&1 | redact | tee status.txt
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > submission.json
-          python3 tools/store_images.py upload-url submission.json --masks
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1
+          show status.txt
           # commit only a draft still staged, with this tag's package and the
           # listing's What's new
           python3 tools/store_images.py check-submit --status status.txt --draft submission.json \
             --tag "$TAG" --listing store/listing.md
-          msstore submission publish "$PRODUCT_ID" --verbose 2>&1 | redact
+          msstore submission publish "$PRODUCT_ID" > commit.txt 2>&1 \
+            || { show commit.txt; exit 1; }
+          show commit.txt
           echo "Committed $TAG. Partner Center now shows it in certification; run mode get_draft to follow it." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Print the draft
         if: ${{ inputs.mode == 'get_draft' }}
         run: |
           set -euo pipefail
-          redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
-          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose 2>&1 | redact
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > submission.json
-          python3 tools/store_images.py upload-url submission.json --masks || true
-          redact < submission.json
-          python3 tools/store_images.py mode submission.json || true
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > submission.json 2> get.err \
+            || { show get.err; exit 1; }
+          python3 tools/store_images.py upload-url submission.json --masks
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 || true
+          show status.txt
+          show get.err
+          show submission.json
+          python3 tools/store_images.py mode submission.json

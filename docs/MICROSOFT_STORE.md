@@ -236,21 +236,41 @@ the three Store logos from it with Godot under xvfb (`tools/store_images.py
 render`), and keeps them as the run's `store-listing-images` artifact. A
 render that fails stops the run before the draft is touched. Then
 `tools/store_images.py stage` marks the draft's images of those four types
-`PendingDelete` (other art added in Partner Center is left alone), adds the rendered ones as `PendingUpload` (Screenshot,
-StoreLogo9x16, StoreLogoSquare, Icon), and builds one zip: the release MSIX
-under the draft's pending package name, plus the images. The workflow PUTs
-that zip to the draft's FileUploadUrl (masked in the log, and every msstore
-output is redacted, since msstore prints it), replacing the upload `msstore
-publish --noCommit` made, and sends the JSON with `msstore submission
+`PendingDelete` (other art added in Partner Center is left alone), adds the
+rendered ones as `PendingUpload` (Screenshot, StoreLogo9x16,
+StoreLogoSquare, Icon), and builds one zip: the release MSIX under the
+draft's pending package name, plus the images. The workflow PUTs that zip
+to the draft's FileUploadUrl, replacing the upload `msstore publish
+--noCommit` made, and sends the JSON with `msstore submission
 updateMetadata`. A rerun drops the entries an earlier run staged instead of
-adding more. The read-back must show the staged images as PendingUpload.
-msstore's image model has no description field, so screenshot captions are
-not sent. A shot's walk must exist at the tag: a list naming a newer walk
-fails the render for an older tag.
+adding more. The run fails unless the read-back lists as many entries
+pending upload as were staged (the package plus every image). msstore's
+image model has no description field, so screenshot captions are not sent.
+A shot's walk must exist at the tag: a list naming a newer walk fails the
+render for an older tag.
 
+`update_draft` refuses while a submission is in certification or
+publishing (`check-draftable`): staging would touch the one in progress.
 `submit` commits only when the status is PendingCommit, the draft's pending
 package is this tag's (`PathOfLeashResistance-X.Y.0.0.msix`), and its
-What's new is main's `store/listing.md` What's new in this version.
+What's new is main's `store/listing.md` What's new in this version. Every
+mode reports the draft's TargetPublishMode in the run summary; Manual means
+a release that passes certification still waits for someone to select
+Publish now.
+
+**Keep the upload link private.** A draft's FileUploadUrl is a
+write-capable Azure blob SAS link: anyone holding it can replace the
+package and images the Store ingests when the draft is committed, and this
+repository's Actions logs and artifacts are public. So the workflow never
+runs `msstore publish`, `submission get` or `submission publish` with
+`--verbose` (msstore then logs the link, wrapped across several lines,
+where no mask or pattern catches all of it); every msstore output goes to a
+file and reaches the log only through `tools/store_images.py redact`, which
+drops FileUploadUrl and any blob link, and any line holding a piece of one;
+and the link and its signature are masked with `::add-mask::` as soon as
+they are known. Keep it that way in any change to the workflow, never paste
+a draft's JSON anywhere public, and if a link does reach a log, delete that
+run (`gh run delete <id>`) and start a fresh draft before committing.
 
 Each release:
 
