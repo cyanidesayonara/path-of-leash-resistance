@@ -264,12 +264,14 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		var sea_top := vt - 40.0
 		var sea_h := (vb - vt) + 80.0
 
-		# Deep Mediterranean sea water
-		b.rect(Rect2(SEAWALL_EDGE_X + 16.0, sea_top, 1280.0 - SEAWALL_EDGE_X - 16.0, sea_h), SEA_DEEP)
-
-		# Coastal shallows margin
-		b.rect(Rect2(SEAWALL_EDGE_X + 16.0, sea_top, 60.0, sea_h), SEA_SHALLOW)
-		b.rect(Rect2(SEAWALL_EDGE_X + 76.0, sea_top, 40.0, sea_h), SEA_MID)
+		# Deep water, the shallows feathering out from the tetrapods.
+		var sea_x := SEAWALL_EDGE_X + 16.0
+		var sea_bot := sea_top + sea_h
+		b.rect(Rect2(sea_x, sea_top, 1280.0 - sea_x, sea_h), SEA_DEEP)
+		b.band(PackedVector2Array([
+			Vector2(sea_x, sea_top), Vector2(sea_x + 46.0, sea_top), Vector2(sea_x + 110.0, sea_top), Vector2(sea_x + 190.0, sea_top),
+			Vector2(sea_x, sea_bot), Vector2(sea_x + 46.0, sea_bot), Vector2(sea_x + 110.0, sea_bot), Vector2(sea_x + 190.0, sea_bot),
+		]), 4, SEA_SHALLOW, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.78, 0.40, 0.14, 0.0]))
 
 		# Animated rhythmic coastal waves
 		var wave_step := 110.0
@@ -596,7 +598,14 @@ static func draw_freedom(m: Node2D, ci: Object) -> void:
 	var sea_basin_x := 840.0
 	var sea_rect := Rect2(sea_basin_x, r.position.y, r.end.x - sea_basin_x, r.size.y)
 	b.rect(sea_rect, SEA_MID)
-	b.rect(Rect2(sea_basin_x, r.position.y, 40.0, r.size.y), SEA_SHALLOW)
+	# shallow by the steps, deepening out into the basin
+	var bx := sea_basin_x
+	var by := r.position.y
+	var bh := r.size.y
+	b.band(PackedVector2Array([
+		Vector2(bx, by), Vector2(bx + 34.0, by), Vector2(bx + 96.0, by),
+		Vector2(bx, by + bh), Vector2(bx + 34.0, by + bh), Vector2(bx + 96.0, by + bh),
+	]), 3, SEA_SHALLOW, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.75, 0.28, 0.0]))
 
 	# Wave ripples in bathing basin
 	var wy := r.position.y + 30.0
