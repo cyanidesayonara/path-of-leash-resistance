@@ -36,6 +36,23 @@ func setup(
 	visible = false
 
 
+# in her jaws: a ball bulging out round her muzzle, or a branch crosswise
+# the way every dog carries a stick, wider than her head
+func draw_held(c: ShapeBatch, bite: Vector2, fwd: Vector2, side: Vector2, _jaw: float) -> void:
+	if kind == "ball":
+		var at := bite + fwd * 7.0
+		c.circle(at, 7.0, Color(0.42, 0.34, 0.10, 0.9))
+		c.circle(at, 6.3, Color(0.90, 0.76, 0.24))
+		c.line(at + fwd.rotated(1.2) * 5.6, at + fwd.rotated(2.0) * 5.6, Color(0.95, 0.94, 0.86), 1.3)
+		return
+	var tilt := side.rotated(0.18)
+	var a := bite - fwd * 1.0 + tilt * 13.0
+	var b := bite - fwd * 1.0 - tilt * 11.0
+	c.capsule(a, b, 2.9, Color(0.20, 0.13, 0.07))
+	c.capsule(a, b, 2.2, Color(0.40, 0.27, 0.15))
+	c.line(a.lerp(b, 0.25), a.lerp(b, 0.25) + fwd * 4.5, Color(0.30, 0.20, 0.12), 1.8)
+
+
 func is_carried() -> bool:
 	return state == State.CARRIED
 
@@ -62,16 +79,19 @@ func tick(delta: float) -> void:
 			main.on_stream_find_grabbed(global_position)
 	elif state == State.CARRIED:
 		global_position = main.dog.global_position + main.dog.facing * 22.0
+		main.dog.held = self
 		if absf(global_position.y - stream_y) > stream_half + BANK_CLEAR:
 			state = State.RETURNED
 			main.dog_carrying = false
+			if main.dog.held == self:
+				main.dog.held = null
 			main.on_stream_find_returned(kind, global_position)
 			visible = false
 	Redraw.later(self)
 
 
 func _draw() -> void:
-	if state == State.RETURNED or state == State.MISSED:
+	if state == State.RETURNED or state == State.MISSED or state == State.CARRIED:
 		return
 	var b := ShapeBatch.new(self)
 	for y: float in [-5.0, 5.0]:

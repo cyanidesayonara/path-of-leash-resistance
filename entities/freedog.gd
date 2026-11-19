@@ -259,6 +259,30 @@ func hear_roar() -> void:
 	lap_t = 2.4
 
 
+# the rope toy in her jaws: in a tug its far end runs off to the other dog
+# (drawn by the games layer), otherwise its free end dangles out in front,
+# offered, and the other knot pokes out of the corner of her mouth
+func _draw_held(c: ShapeBatch, bite: Vector2, fwd: Vector2, side: Vector2, jaw: float) -> void:
+	if state == S.TUG:
+		FreedomGames.draw_rope_bite(c, bite, fwd, side, jaw, -1.0)
+		return
+	var end := rope_end() - global_position
+	var pts := PackedVector2Array([bite + side * (jaw + FreedomGames.ROPE_TAIL) - fwd * 2.5,
+		bite + side * (jaw + 1.0) - fwd * 0.5, bite])
+	for i in range(1, 5):
+		var u := float(i) / 4.0
+		pts.append(bite.lerp(end, u) + side * sin(u * PI) * 2.5)
+	FreedomGames.draw_rope_path(c, pts, true, true)
+
+
+# the middle of her jaws, in the world
+func mouth_point() -> Vector2:
+	var at := global_position + DogAppearanceScript.mouth_offset(appearance_profile, face)
+	if lean > 0.01:
+		at += face * lean * 3.0
+	return at
+
+
 func rope_end() -> Vector2:
 	var sway := face.orthogonal() * sin(bow * 6.0) * 4.0
 	return global_position + face * 38.0 + sway
@@ -351,15 +375,11 @@ func _draw_shapes() -> void:
 		Vector2.ZERO,
 		face,
 		b,
-		t * (18.0 if state == S.PLAY else 12.0) + seed_o
+		t * (18.0 if state == S.PLAY else 12.0) + seed_o,
+		0.0,
+		Callable(self, "_draw_held") if rope or state == S.TUG else Callable()
 	)
 	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-	# the rope toy, an end dangling from her mouth (in a tug the rope is drawn
-	# between the two of them instead)
-	if rope and state != S.TUG:
-		var mouth := face * 15.0
-		var end := rope_end() - global_position
-		FreedomGames.draw_rope(_b, mouth, end)
 	# what she is up to, in the only language a top-down view has room for
 	match state:
 		S.SNIFF:

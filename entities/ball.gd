@@ -58,6 +58,28 @@ func is_carried() -> bool:
 	return state == State.CARRIED
 
 
+# in her jaws: the ball bulges out either side of her muzzle and past its tip
+func draw_held(c: ShapeBatch, bite: Vector2, fwd: Vector2, _side: Vector2, _jaw: float) -> void:
+	var at := bite + fwd * 6.5
+	c.circle(at, 5.7, Color(0.36, 0.38, 0.10, 0.9))
+	c.circle(at, 5.0, Color(0.82, 0.86, 0.3))
+	# one felt seam curling over the top, not two marks that read as eyes
+	var seam := Color(0.95, 0.95, 0.9)
+	var c0 := at + fwd.rotated(0.3) * 4.4
+	var c1 := at + fwd.rotated(1.0) * 2.2
+	var c2 := at + fwd.rotated(1.9) * 4.4
+	c.line(c0, c1, seam, 1.1)
+	c.line(c1, c2, seam, 1.1)
+
+
+# held: in her mouth, drawn by her between her head and her muzzle
+func _hold(d: Node2D) -> void:
+	if state == State.CARRIED:
+		d.held = self
+	elif d.held == self:
+		d.held = null
+
+
 func _throw() -> void:
 	state = State.THROWN
 	snatched = false
@@ -81,6 +103,7 @@ func _physics_process(delta: float) -> void:
 	bob += delta
 	if state != State.CARRIED:
 		out_t += delta
+	_hold(dog)
 	match state:
 		State.THROWN:
 			position += vel * delta
@@ -119,6 +142,8 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
+	if state == State.CARRIED:
+		return
 	var y := -arc
 	# the ball's shadow separates from it as it flies, which is the only cue
 	# that says airborne in a top-down view

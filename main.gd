@@ -1459,6 +1459,7 @@ func _ready() -> void:
 		human.global_position = Vector2(640.0, GATE_Y - 120.0)
 		cam.position = dog.global_position
 		_enter_freedom()
+		FreedomGames.shot_setup(self)
 	Sfx.start_music()
 	# the intro, on a plain launch, once a session (intro/intro_player.gd)
 	if not started and IntroPlayer.should_play(self):
