@@ -41,6 +41,8 @@ func _process(_delta: float) -> void:
 
 # her end of the rope, between her jaws (entities/dog.gd calls this)
 func draw_held(c: ShapeBatch, bite: Vector2, fwd: Vector2, side: Vector2, jaw: float) -> void:
+	if not visible or main.phase != "freedom":
+		return
 	if main.tug != null:
 		FreedomGames.draw_rope_bite(c, bite, fwd, side, jaw, 1.0)
 	elif main.rope_carry_t > 0.0:

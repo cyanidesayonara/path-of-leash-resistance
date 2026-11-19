@@ -94,6 +94,7 @@ func _physics_process(delta: float) -> void:
 	if main.frozen or main.phase != "freedom":
 		return
 	spin += delta * (14.0 if state == State.FLYING else 0.0)
+	_hold(dog)
 	match state:
 		State.WAIT:
 			wait_t -= delta
@@ -135,6 +136,26 @@ func _physics_process(delta: float) -> void:
 	Redraw.later(self)
 
 
+# in her jaws by the rim: the disc out in front of her nose, the muzzle over its edge
+func draw_held(c: ShapeBatch, bite: Vector2, fwd: Vector2, _side: Vector2, _jaw: float) -> void:
+	var at := bite + fwd * 8.5
+	var rot := fwd.angle()
+	c.polygon(_ellipse(at, Vector2(8.0, 9.8), rot), Color(0.12, 0.1, 0.09))
+	c.polygon(_ellipse(at, Vector2(6.8, 8.5), rot), Color(0.95, 0.42, 0.2))
+	c.polygon(_ellipse(at + fwd * 1.2 + Vector2(-0.6, -1.04), Vector2(3.6, 4.6), rot), Color(1.0, 0.62, 0.36))
+	var ridge := _ellipse(at, Vector2(5.0, 6.2), rot)
+	for i in range(ridge.size()):
+		c.line(ridge[i], ridge[(i + 1) % ridge.size()], Color(0.76, 0.28, 0.12, 0.55), 0.9)
+
+
+# held: in her mouth, drawn by her between her head and her muzzle
+func _hold(d: Node2D) -> void:
+	if state == State.CARRIED:
+		d.held = self
+	elif d.held == self:
+		d.held = null
+
+
 func _caught(air: bool) -> void:
 	state = State.CARRIED
 	main.dog_carrying = true
@@ -150,6 +171,8 @@ var _b: ShapeBatch
 
 
 func _draw() -> void:
+	if state == State.CARRIED:
+		return
 	_b = ShapeBatch.new(self)
 	# where it will come down: a ring on the grass, filling as it gets there
 	if state == State.FLYING:

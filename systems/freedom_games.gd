@@ -90,17 +90,19 @@ static func begin(m: Node2D) -> void:
 
 
 # --at-freedom with --shot-tug starts a tug on the spot, and --shot-carry=rope
-# or ball puts that in her mouth, so how a held toy is drawn can be
+# ball or frisbee puts that in her mouth, so how a held toy is drawn can be
 # photographed without playing up to it.
 static func shot_setup(m: Node2D) -> void:
 	var args := OS.get_cmdline_user_args()
 	var fd: Node2D = m.tug_dog
+	if "--shot-tug" in args or (args as Array).any(func(x: String) -> bool: return x.begins_with("--shot-carry=")):
+		m.urge_y = -INF     # no business call over the photograph
 	for a: String in args:
 		if a.begins_with("--shot-dog-at="):
 			var xy := a.substr(14).split(",")
 			m.dog.global_position = Vector2(float(xy[0]), float(xy[1]))
 	if "--shot-tug" in args and is_instance_valid(fd):
-		fd.global_position = m.dog.global_position + Vector2(-70.0, 22.0)
+		fd.global_position = m.dog.global_position + Vector2(66.0, 0.0)
 		m.tug = RopeTug.new(m.dog.global_position, fd.global_position)
 		m.tug_prev = m.dog.global_position
 		m.tug_phase_was = m.tug.phase
@@ -114,8 +116,21 @@ static func shot_setup(m: Node2D) -> void:
 				fd.rope = false
 			m.dog_carrying = true
 			m.rope_carry_t = 999.0
-		elif a == "--shot-carry=ball" and is_instance_valid(m.ball):
+		elif a == "--shot-carry=ball":
+			if not is_instance_valid(m.ball):
+				m._spawn_romp_ball()
 			m.ball.state = m.ball.State.CARRIED
+			m.dog_carrying = true
+		elif a == "--shot-carry=frisbee":
+			if is_instance_valid(m.ball):
+				m.ball.queue_free()
+				m.ball = null
+			var f: Node2D = Frisbee.new()
+			f.z_index = 10
+			m.add_child(f)
+			f.setup(m, m.dog, m.human, m._freedom_rect(), int(m.GATE_Y) ^ 0xF15B)
+			m.frisbee = f
+			f.state = f.State.CARRIED
 			m.dog_carrying = true
 
 
@@ -471,8 +486,8 @@ const ROPE_INK := Color(0.16, 0.13, 0.11, 0.85)
 const ROPE_SEGS := 8
 const ROPE_R := 2.1           # half its thickness
 const TWIST := 3.0            # px along the rope per strand crossing
-const KNOT_R := 4.0           # the knot's half width
-const ROPE_TAIL := 7.0        # how far a gripped end shows past the jaw
+const KNOT_R := 2.8           # the knot's half width
+const ROPE_TAIL := 5.0        # how far a gripped end shows past the jaw
 
 
 # a rope from a to b, sagging `bend` px sideways at its middle; a knot at
@@ -540,19 +555,17 @@ static func draw_rope_path(c: ShapeBatch, pts: PackedVector2Array, knot_a := tru
 # with the dyed strand round it and the frayed cotton tassel past it
 static func draw_knot(c: ShapeBatch, at: Vector2, out: Vector2) -> void:
 	var side := out.orthogonal()
-	var k := at + out * 1.5
-	for f in range(5):
-		var spread := (float(f) - 2.0) * 0.32
-		var tip := k + out.rotated(spread) * (KNOT_R + 3.2 + float(f % 2) * 1.3)
-		c.line(k, tip, ROPE_INK, 1.5)
-		c.line(k, tip - out * 0.4, ROPE_B.darkened(0.04), 0.9)
-	c.capsule(k - out * 1.6, k + out * 1.0, KNOT_R + 0.8, ROPE_INK)
-	c.capsule(k - out * 1.6, k + out * 1.0, KNOT_R, ROPE_B)
-	for s2: float in [-1.0, 0.0, 1.0]:
-		var w := k + out * s2 * 1.6
-		c.line(w - side * KNOT_R * 0.9 - out * 0.9, w + side * KNOT_R * 0.9 + out * 0.9,
-			ROPE_A if s2 == 0.0 else ROPE_GROOVE, 1.4 if s2 == 0.0 else 0.6)
-	c.circle(k - side * 1.4 - Clay.LIGHT * 0.8, 1.1, Color(1.0, 0.98, 0.92, 0.55))
+	var k := at + out * 1.0
+	for f in range(4):
+		var spread := (float(f) - 1.5) * 0.36
+		var tip := k + out.rotated(spread) * (KNOT_R + 1.6 + float(f % 2) * 0.9)
+		c.line(k, tip, ROPE_INK, 1.1)
+		c.line(k, tip - out * 0.4, ROPE_B.darkened(0.04), 0.6)
+	c.capsule(k - out * 1.0, k + out * 0.6, KNOT_R + 0.7, ROPE_INK)
+	c.capsule(k - out * 1.0, k + out * 0.6, KNOT_R, ROPE_B)
+	c.line(k - side * KNOT_R * 0.9 - out * 0.8, k + side * KNOT_R * 0.9 + out * 0.8, ROPE_A, 1.2)
+	c.line(k - side * KNOT_R * 0.8 + out * 1.0, k + side * KNOT_R * 0.8 + out * 2.0, ROPE_GROOVE, 0.6)
+	c.circle(k - side * 1.0 - Clay.LIGHT * 0.7, 0.8, Color(1.0, 0.98, 0.92, 0.55))
 
 
 # What a dog's mouth holds, drawn in her own space between her head and her
@@ -562,9 +575,10 @@ static func draw_knot(c: ShapeBatch, at: Vector2, out: Vector2) -> void:
 # her mouth on side `sd`.
 static func draw_rope_bite(c: ShapeBatch, bite: Vector2, fwd: Vector2, side: Vector2,
 		jaw: float, sd: float) -> void:
-	var out := (side * sd * 1.0 - fwd * 0.35).normalized()
-	var pts := PackedVector2Array([bite + fwd * 2.0, bite, bite + out * (jaw + 1.0),
-		bite + out * (jaw + ROPE_TAIL)])
+	var out := (side * sd - fwd * 0.2).normalized()
+	var corner := bite - fwd * 1.5
+	var pts := PackedVector2Array([bite + fwd * 2.0, corner, corner + out * (jaw + 1.0),
+		corner + out * (jaw + ROPE_TAIL)])
 	draw_rope_path(c, pts, false, true)
 
 

@@ -5,6 +5,7 @@ const StreamFind := preload("res://entities/stream_find.gd")
 class FakeDog:
 	extends Node2D
 	var facing := Vector2.RIGHT
+	var held: Object = null
 
 
 class FakeMain:
@@ -56,10 +57,13 @@ func _run() -> void:
 	m.dog.global_position = find.global_position
 	find.tick(0.01)
 	_check(find.is_carried() and m.dog_carrying, "Millie intercepts the loose find")
+	find.tick(0.01)
+	_check(m.dog.held == find, "the carried find is drawn in her mouth, by her")
 	m.dog.global_position = Vector2(54.0, -2370.0)
 	find.tick(0.01)
 	_check(find.state == find.State.RETURNED and m.rewards == 1 and not m.dog_carrying,
 		"carrying the find onto dry ground earns the positive outcome")
+	_check(m.dog.held == null, "a returned find is out of her mouth")
 
 	var missed := Node2D.new()
 	missed.set_script(StreamFind)
