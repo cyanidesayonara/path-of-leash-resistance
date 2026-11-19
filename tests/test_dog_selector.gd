@@ -4,7 +4,7 @@ extends SceneTree
 # 1. Dog catalog: default Millie (Mongrel), Pipa (Galgo, 15*), Mochi (French Bulldog, 25*).
 # 2. Multipliers: Millie balanced (1.0x), Pipa fast (1.20x speed, 0.55x plant), Mochi anchor (0.84x speed, 1.70x plant).
 # 3. Unlock gating: star thresholds (0, 15, 25) and free_play override.
-# 4. Cycle and persistence: cycle_dog wraps through all 3 dogs, save/load records roundtrip.
+# 4. Cycle and persistence: cycle_dog wraps through every dog, save/load records roundtrip.
 # 5. Live entity dynamics: dog.base_speed(), base_accel(), plant_grip_mult(), _dog_breed().
 # 6. Leash tug integration: dog plant grip scaling (23.8x mass for Mochi vs 14.0x Millie vs 7.7x Pipa).
 # 7. Menu flow (GET READY): dog row, cycling, lock nudge on locked dogs.
@@ -95,6 +95,8 @@ func _test_catalog_and_traits(game: Node) -> void:
 	_check(is_equal_approx(game.dog_mass_mult("tito"), 0.45), "tito mass mult is 0.45")
 	_check(is_equal_approx(game.dog_reel_mult("tito"), 1.65), "tito reel mult is 1.65")
 	_check(is_equal_approx(game.dog_gap_mult("tito"), 0.57), "tito gap mult is 0.57")
+	_check(game.dog_breed("perla") == "ratonero bodeguero" and game.dog_breed("duna") == "podenco", "perla is a ratonero, duna a podenco")
+	_check(int(game.DOGS.perla.stars) < int(game.DOGS.duna.stars) and int(game.DOGS.tito.stars) < int(game.DOGS.perla.stars), "they unlock after tito, perla first")
 
 
 func _test_unlocks(game: Node) -> void:
@@ -163,9 +165,17 @@ func _test_cycle_and_persistence(game: Node) -> void:
 	game.cycle_dog(1)
 	_check(game.dog == "tito", "cycle +1 moves bruna to tito")
 	game.cycle_dog(1)
-	_check(game.dog == "millie", "cycle +1 wraps tito back to millie")
+	_check(game.dog == "perla", "cycle +1 moves tito to perla")
+	game.cycle_dog(1)
+	_check(game.dog == "duna", "cycle +1 moves perla to duna")
+	game.cycle_dog(1)
+	_check(game.dog == "millie", "cycle +1 wraps duna back to millie")
 	game.cycle_dog(-1)
-	_check(game.dog == "tito", "cycle -1 wraps millie to tito")
+	_check(game.dog == "duna", "cycle -1 wraps millie to duna")
+	game.cycle_dog(-1)
+	_check(game.dog == "perla", "cycle -1 moves duna to perla")
+	game.cycle_dog(-1)
+	_check(game.dog == "tito", "cycle -1 moves perla to tito")
 	game.cycle_dog(-1)
 	_check(game.dog == "bruna", "cycle -1 moves tito to bruna")
 	game.cycle_dog(-1)
