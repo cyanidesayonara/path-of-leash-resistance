@@ -203,13 +203,13 @@ static func _agility_finish(m: Node2D, secs: float, faults: int, medal := "") ->
 	if medal != "":
 		line = I18n.t("w_medal_secs") % [I18n.of_english(medal), secs]
 	if faults == 0:
-		line += I18n.t("w_agility_clean")
+		line += "  " + I18n.t("w_agility_clean")
 	if best <= 0.0 or secs < best:
 		Game.agility_best = secs
 		Game.save_records()
 		if best > 0.0:
 			reward += AGILITY_BEST_BONES
-			line += I18n.t("w_agility_new_best")
+			line += "  " + I18n.t("w_agility_new_best")
 	m.bones += reward
 	m.agility_runs += 1
 	m.combo.add("AGILITY", reward)
@@ -351,7 +351,7 @@ static func on_frisbee_caught(m: Node2D, air: bool) -> void:
 			m.hop_t = HOP_S
 		var shout := I18n.t("w_leap_catch") if leap else I18n.t("w_air_catch")
 		if streak > 1:
-			shout += I18n.t("w_x_in_a_row") % streak
+			shout += "  " + I18n.t("w_x_in_a_row") % streak
 		m.feed.say(shout, EventFeed.Tone.GOOD)
 		m.float_text(m.dog.global_position, I18n.t("w_word_score") % [word, pay], Color(0.85, 1.0, 0.85))
 		Sfx.play("star", 1.2 + 0.08 * float(mini(streak, 5)))

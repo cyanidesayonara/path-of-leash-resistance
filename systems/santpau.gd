@@ -99,7 +99,7 @@ const COURTYARD_FOUNTAIN := Vector2(640.0, -5360.0)
 const FOUNTAIN_AXIS := Vector2(640.0, -2310.0)
 const DARE_POS := Vector2(780.0, -1580.0)
 const PRIZE := Vector2(548.0, -4320.0)
-const PRIZE_TEXT := "snatch the candied orange off the garden bench"
+const PRIZE_TEXT := "pinch the candied orange off the garden bench"
 
 # Bitter-orange trees standing in the garden beds (registered as TREE_PIT poles)
 const ORANGE_TREES: Array[Vector2] = [

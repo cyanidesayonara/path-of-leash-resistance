@@ -30,15 +30,28 @@ The leash is real rope physics. Your human outweighs you four to one and wins ev
 
 Your human answers the leash like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-Forty-two walks through a sunny, slightly chaotic Barcelona and its edges, each its own place: the neighborhood park, La Rambla with its crowds, the city park, Badalona's seafront and its pier, the dawn cleanup sweeper, old town alleys, Montjuïc, a covered market hall, a downpour, a floodable river park, the waterfall cascade and stone mammoth of La Ciutadella, the dog beach at Platja de Llevant, the cut-corner crossings of L'Eixample, Tibidabo's mountain road, an indoor vet clinic escape in El Veterinari, the old village of Sarrià at first light with the bells of Sant Vicenç, a forest trail, the skate plaza at Els Àngels, a chestnut festival, the wild boar trails of Els Senglars, tiled terraces, the play streets of La Superilla, the rush-hour metro under a rainy street in El Metro, the train station, the Civil War bunkers above the city, the arcaded Plaça Reial, Badalona's devil night with the Dimoni float in La Cremada, the seaside esplanade at El Fòrum, Avinguda Diagonal slicing across the grid with its tram, the pintxos bars of Carrer de Blai at night, the old water road along Collserola, the festival street of Festa de Gràcia, the cypress maze of Horta, the fishing harbor at El Port, the fountain avenue of Plaça d'Espanya, the walled village of El Poble Espanyol, the long pier of the airport's Terminal 1 with security on your tail, a work site, match day in Les Corts, a junkyard, the mountain trail at Montserrat with its wild goats, and, to finish, the Rambla del Raval, where a fat bronze cat climbs down off his plinth. Every walk ends off the leash, with tug-of-war, a frisbee and fetch (and an agility course in El Barri, pigeons to stalk in a plaça, waves to outrun at the dog beach, squirrels to tree in a woodland clearing): a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in.
+Seven dogs, each her own. Millie the mongrel has the best nose, Pipa the galgo sprints, Mochi the French bulldog plants like a tank, Bruna the sheepdog herds your human, Tito the chihuahua slips through gaps, Perla the ratonero digs anything up, and Duna the podenco clears a bench from standing. Each has a skill goal of her own on every walk. Sniff out the finds buried along the way and meet your skill goals to earn training, then spend it on her stats, a level at a time.
+
+Forty-six walks and a tutorial, in five chapters through a sunny, slightly chaotic Barcelona and its edges.
+Chapter one, the neighborhood: El Barri's little park, La Rambla's crowds, the city park, Badalona's seafront, the old town alleys, Montjuïc, the market hall and a downpour, ending at La Ciutadella, where the stone mammoth steps off its plinth.
+Chapter two, up and out: the dog beach at Llevant, the cut corners of L'Eixample, Tibidabo's fairground, the old village of Sarrià, a forest trail, the skate plaza at Els Àngels and the chestnut festival, ending in the mosaic park, where El Drac comes to life.
+Chapter three, the city at work: the car-free Superilla, rush hour on the metro and at the train station, the bunkers above the city at sunset, the arcaded Plaça Reial, Badalona's devil night, and the solar pergola at El Fòrum.
+Chapter four, the long way round: the Diagonal and its tram, the pintxos bars of Carrer de Blai, the old water road along Collserola, Gràcia's festival, the cypress maze of Horta and the ski slopes of La Molina, ending at the fishing harbor, where the bronze lions of El Port come down to meet you.
+Chapter five, all of it: the fountains of Plaça d'Espanya, the gardens of Sant Pau, El Poble Espanyol, Sitges, the airport, a work site, the cliff path, match day, a junkyard and Montserrat, ending on the Rambla del Raval, where a fat bronze cat climbs down off his plinth.
+
+Nine walks are chases: the dawn street sweeper, the river surge on El Besòs, the vet clinic's assistants with their cones of shame, the wild boars down Els Senglars, the correfoc's fire devils through Gràcia, the Dimoni's rolling firework float in La Cremada, airport security, La Molina's runaway snow groomer and Montserrat's wild goats.
+
+Every walk ends off the leash, with tug-of-war, a frisbee and fetch, in a dog park, a dog beach, a clearing in the woods, a yard or a plaça with a fountain to jump in. There are pigeons to stalk, waves to outrun and squirrels to tree, and an agility course in El Barri.
 
 What happens on a walk changes how you feel, and how you feel changes how you move. A fright leaves you jumpy and half blind to smells, a good bark-off makes you barky, time off the leash brings on the zoomies, and running yourself empty leaves you flat. The ground matters too: grass and mud slow you down but hold far more scent than sidewalk, sand drags at your paws, and wet ground and snow make you skid.
 
 Other dogs have lives of their own. They sniff and mark the posts you pass, and you can read who was there; meet one and it comes over to say hello, unless it is the grumpy sort, who lunges and barks at the end of its leash. Their owners are people too: on a call, carrying a coffee, stopping to type.
 
-Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, take on dares from the characters you meet (each with their own tune), and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and bones to spend on collars, bandanas and coats.
+Every walk has its own list of goals: sniff the good spots, mark your territory, fetch, greet other dogs, herd a runaway friend home, take on dares from the characters you meet (each with their own tune), and pull off tricks: swing around a pole on the leash, run a figure eight, thread the needle between two people, and ride ledges and handrails with the zoomies. Earn stars to unlock new walks and dogs, and bones to spend on collars, bandanas and coats.
 
-Eight walks are chases: dragging your human home ahead of the street sweeper, racing the river surge on El Besòs, escaping the vet clinic in El Veterinari with clinic assistants giving chase with giant cones of shame, outrunning the wild boars down Els Senglars, keeping ahead of the correfoc's fire devils through Gràcia, outrunning the Dimoni's rolling firework float in La Cremada, getting out of the airport with security on your tail, and running down Montserrat ahead of the wild goats. Rain, wind, snow and night change how every walk plays, and everyone dresses for the weather. There is a three-part tutorial for anyone new.
+Pick the sky and the hour for a walk: clear, breeze, fog, drizzle, downpour, storm, gale, snow or Sahara dust, from dawn to night. They change how it plays, and who is out.
+
+In English, Catalan and Spanish. Screen shake and flashes can be turned off, text made larger, and every control rebound. There is a three-part tutorial for anyone new.
 
 Single player. No ads, no purchases, no account, and it plays offline. Keyboard or controller.
 ```
@@ -46,7 +59,7 @@ Single player. No ads, no purchases, no account, and it plays offline. Keyboard 
 ### Short description
 
 ```
-A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through forty-two walks in and around Barcelona, and get them home with the phone intact.
+A dog walk as a physics comedy. Your human walks on autopilot, glued to their phone, and the leash is real rope. Dig in, wrap lampposts and bark your way through forty-six walks in and around Barcelona with any of seven dogs, and get them home with the phone intact.
 ```
 
 ### Product features
@@ -54,20 +67,22 @@ A dog walk as a physics comedy. Your human walks on autopilot, glued to their ph
 ```
 The leash is real rope physics: wrap it around poles, dig in, win the tug of war
 A human who answers the leash: a steady pull leads them, constant hauling runs out their patience
-Forty-two hand-built walks through Barcelona, in any weather, by day or at night
+Forty-six hand-built walks through Barcelona and a tutorial, in any weather, by day or at night
+Seven dogs, each with a skill and a skill goal of her own
+Buried finds to sniff out, and training to spend on her stats
 Every walk ends off the leash, with agility, tug-of-war and a frisbee
 Goal lists on every walk, with stars that unlock new walks
 A dare-giver on every walk, each with their own tune
 Leash tricks: pole swings, figure eights, threading the needle, ledge and handrail rides
-Six chase walks: the street sweeper, the river flood, the clinic escape, the wild boars, the correfoc and the Dimoni float
+Nine chase walks: the street sweeper, the river flood, the clinic escape, the wild boars, the correfoc, the Dimoni float, airport security, the runaway snow groomer and the mountain goats
 Four statue boss fights: El Mamut the stone mammoth, Els Lleons the twin bronze lions, El Drac the mosaic salamander, and El Gat a bronze cat the size of a car
 Dog moods: scared, barky, zoomies and flat, each changing how you move and what you notice
 Ground you can feel: grass and mud hold scent, sand drags, wet ground and snow skid
 Other dogs and their people with lives of their own: they sniff, mark, greet and tangle
-Rain, wind, snow and night change how each walk plays
+Nine skies and six times of day that change how each walk plays
 Bones to spend on collars, bandanas and coats
-A three-part tutorial and first-time tips for new players
-Full controller support
+In English, Catalan and Spanish, with screen shake, flashes, text size and controls all adjustable
+Full controller support, and a three-part tutorial for new players
 No ads, no purchases, no account, and it plays offline
 ```
 
@@ -121,15 +136,28 @@ La corretja té física real de corda. El teu humà pesa quatre cops més que tu
 
 El teu humà respon a la corretja com una persona. Una estirada constant el guia cap on vols anar. Si l'estires sense parar, se li acaba la paciència: aixeca la vista del mòbil, rondina i després et diu «Ei!» amb una corretja més curta. Camina bé i el rodet et donarà més corda. Tot el que farà, ho avisa abans: «Ring, ring!», «Oh!». No dona per a gaire més.
 
-Quaranta-dos passejos per una Barcelona assolellada, una mica caòtica, i els seus voltants, cadascun amb personalitat pròpia: el parquet del barri, La Rambla i les seves gentades, el parc de la ciutat, el passeig marítim de Badalona i el seu pont, l'escombradora de trenc d'alba, els carrerons del barri vell, Montjuïc, el mercat cobert, un xàfec, un parc fluvial inundable, la cascada i el mamut de pedra de La Ciutadella, la platja per a gossos de Platja de Llevant, els xamfrans de L'Eixample, la carretera de muntanya del Tibidabo, la fugida d'El Veterinari, l'antic poble de Sarrià a primera hora amb les campanes de Sant Vicenç, un sender pel bosc, la plaça de patinadors d'Els Àngels, una festa de la castanyada, els camins de senglars d'Els Senglars, terrasses de trencadís, els carrers pacificats de La Superilla, el metro en hora punta sota un carrer plujós a El Metro, l'estació de tren, els búnquers de la Guerra Civil sobre la ciutat, la Plaça Reial porticada, la nit del Dimoni a Badalona amb la carrossa de La Cremada, l'esplanada vora el mar d'El Fòrum, l'Avinguda Diagonal tallant la quadrícula amb el seu tramvia, els bars de pintxos del Carrer de Blai de nit, l'antic camí de les aigües per Collserola, el carrer guarnit de Festa de Gràcia, el laberint de xiprers d'Horta, el port pesquer d'El Port, l'avinguda de les fonts a Plaça d'Espanya, el recinte emmurallat d'El Poble Espanyol, el llarg dic de la Terminal 1 a L'Aeroport amb els de seguretat al darrere, unes obres, dia de partit a Les Corts, un desballestament, el camí de muntanya de Montserrat amb les seves cabres salvatges i, per acabar, la Rambla del Raval, on un gat gros de bronze baixa del seu pedestal. Cada passeig acaba sense corretja, amb estira-i-arronsa, frisbi i pilota (a més d'un circuit d'agilitat a El Barri, coloms per empaitar a plaça, onades per esquivar a la platja per a gossos i esquirols per fer pujar als arbres en una clariana): un pipicà, una platja de gossos, una clariana al bosc, un pati o una plaça amb font on capbussar-se.
+Set gossos, cadascun amb el seu caràcter. La Millie, mestissa, té el millor nas; la Pipa, una llebrera, és la més ràpida; la Mochi, una bulldog francesa, es planta com un tanc; la Bruna, una gossa d'atura, guia el teu humà; el Tito, un chihuahua, s'escola per tot arreu; la Perla, una ratonera, ho desenterra tot; i la Duna, una podenca, salta un banc sense agafar carrerilla. Cadascun té la seva pròpia fita d'habilitat a cada passeig. Ensuma els tresors enterrats pel camí i compleix les fites d'habilitat per guanyar entrenament, i gasta'l en les seves qualitats, nivell a nivell.
+
+Quaranta-sis passejos i un tutorial, en cinc capítols per una Barcelona assolellada, una mica caòtica, i els seus voltants.
+Capítol u, el barri: el parquet d'El Barri, les gentades de La Rambla, el parc de la ciutat, el passeig marítim de Badalona, els carrerons del barri vell, Montjuïc, el mercat cobert i un xàfec, i per acabar La Ciutadella, on el mamut de pedra baixa del seu pedestal.
+Capítol dos, amunt i enfora: la platja per a gossos de Llevant, els xamfrans de L'Eixample, la fira del Tibidabo, l'antic poble de Sarrià, un sender pel bosc, la plaça de patinadors d'Els Àngels i la castanyada, i per acabar el parc del mosaic, on El Drac cobra vida.
+Capítol tres, la ciutat que treballa: La Superilla sense cotxes, l'hora punta al metro i a l'estació de tren, els búnquers sobre la ciutat a la posta, la Plaça Reial porticada, la nit del Dimoni a Badalona i la pèrgola solar d'El Fòrum.
+Capítol quatre, la volta llarga: la Diagonal i el seu tramvia, els bars de pintxos del Carrer de Blai, l'antic camí de les aigües per Collserola, la festa de Gràcia, el laberint de xiprers d'Horta i les pistes de La Molina, i per acabar el port pesquer, on els lleons de bronze d'El Port baixen a rebre't.
+Capítol cinc, tot plegat: les fonts de Plaça d'Espanya, els jardins de Sant Pau, El Poble Espanyol, Sitges, l'aeroport, unes obres, el camí de ronda, dia de partit, un desballestament i Montserrat, i per acabar la Rambla del Raval, on un gat gros de bronze baixa del seu pedestal.
+
+Nou passejos són persecucions: l'escombradora de trenc d'alba, la crescuda del riu a El Besòs, els ajudants de la clínica amb els seus cons de la vergonya, els senglars d'Els Senglars, els diables del correfoc per Gràcia, la carrossa de focs del Dimoni a La Cremada, la seguretat de l'aeroport, la trepitjaneu desbocada de La Molina i les cabres salvatges de Montserrat.
+
+Cada passeig acaba sense corretja, amb estira-i-arronsa, frisbi i pilota, en un pipicà, una platja de gossos, una clariana al bosc, un pati o una plaça amb font on capbussar-se. Hi ha coloms per empaitar, onades per esquivar i esquirols per fer pujar als arbres, i un circuit d'agilitat a El Barri.
 
 El que passa al passeig canvia com et sents, i com et sents canvia com et mous. Un ensurt et deixa nerviós i mig cec a les olors, una bona sessió de bordar et posa bordador, l'estona sense corretja et porta la bogeria i esgotar-te et deixa fet pols. El terra també compta: la gespa i el fang t'alenteixen però guarden molta més olor que la vorera, la sorra s'enfonsa sota les potes i el terra mullat i la neu et fan relliscar.
 
 Els altres gossos tenen vida pròpia. Ensumen i marquen els pals per on passes i pots llegir qui hi ha estat; si et creues amb un, s'acosta a saludar, llevat que sigui dels rondinaires, que es llancen i borden al cap de la corretja. Els seus humans també fan la seva: parlen per telèfon, porten un cafè, s'aturen a escriure.
 
-Cada passeig té la seva llista de fites: ensumar els bons racons, marcar el territori, tornar la pilota, saludar altres gossos, fer tornar a casa una amiga escapada, acceptar reptes dels personatges que trobes (cadascun amb la seva melodia) i clavar trucs: fer la volta a un pal amb la corretja, dibuixar un vuit, passar pel mig de dues persones i lliscar per vores i baranes amb la bogeria. Guanya estrelles per obrir nous passejos i ossos per gastar en collars, mocadors i pelatges.
+Cada passeig té la seva llista de fites: ensumar els bons racons, marcar el territori, tornar la pilota, saludar altres gossos, fer tornar a casa una amiga escapada, acceptar reptes dels personatges que trobes (cadascun amb la seva melodia) i clavar trucs: fer la volta a un pal amb la corretja, dibuixar un vuit, passar pel mig de dues persones i lliscar per vores i baranes amb la bogeria. Guanya estrelles per obrir nous passejos i gossos, i ossos per gastar en collars, mocadors i pelatges.
 
-Vuit passejos són persecucions: arrossegar el teu humà a casa davant de l'escombradora, fugir de la crescuda del riu a El Besòs, escapar de la clínica a El Veterinari amb ajudants perseguint-te amb cons de la vergonya gegants, fugir dels senglars a Els Senglars, avançar-te als diables del correfoc per Gràcia, escapar de la carrossa encesa del Dimoni a La Cremada, sortir de l'aeroport amb seguretat al darrere i baixar corrent de Montserrat davant de les cabres salvatges. La pluja, el vent, la neu i la nit canvien com es juga cada passeig, i tothom es vesteix per al temps que fa. Hi ha un tutorial en tres parts per a qui comenci de nou.
+Tria el cel i l'hora de cada passeig: serè, brisa, boira, plugim, xàfec, tempesta, ventada, neu o pols del Sàhara, de l'alba a la nit. Canvien com es juga i qui hi ha pel carrer.
+
+En anglès, català i castellà. Pots desactivar la vibració de pantalla i els flaixos, fer el text més gran i canviar tots els controls. Hi ha un tutorial en tres parts per a qui comenci de nou.
 
 Un jugador. Sense anuncis, sense compres, sense compte, i funciona sense connexió. Teclat o comandament.
 ```
@@ -137,7 +165,7 @@ Un jugador. Sense anuncis, sense compres, sense compte, i funciona sense connexi
 ### Short description
 
 ```
-Un passeig de gos en clau de comèdia física. El teu humà camina amb el pilot automàtic, enganxat al mòbil, i la corretja és corda de veritat. Planta't, enrotlla fanals i borda al llarg de quaranta-dos passejos per Barcelona i els voltants, i torna'l a casa amb el mòbil intacte.
+Un passeig de gos en clau de comèdia física. El teu humà camina amb el pilot automàtic, enganxat al mòbil, i la corretja és corda de veritat. Planta't, enrotlla fanals i borda al llarg de quaranta-sis passejos per Barcelona i els voltants amb qualsevol dels set gossos, i torna'l a casa amb el mòbil intacte.
 ```
 
 ### Product features
@@ -145,20 +173,22 @@ Un passeig de gos en clau de comèdia física. El teu humà camina amb el pilot 
 ```
 La corretja té física real de corda: enrotlla-la als pals, planta't i guanya l'estira-i-arronsa
 Un humà que respon a la corretja: una estirada constant el guia, estirar sense parar li esgota la paciència
-Quaranta-dos passejos fets a mà per Barcelona, faci el temps que faci, de dia o de nit
+Quaranta-sis passejos fets a mà per Barcelona i un tutorial, faci el temps que faci, de dia o de nit
+Set gossos, cadascun amb la seva habilitat i la seva fita d'habilitat
+Tresors enterrats per ensumar, i entrenament per gastar en les seves qualitats
 Cada passeig acaba sense corretja, amb agilitat, estira-i-arronsa i frisbi
 Llista de fites a cada passeig, amb estrelles que obren nous passejos
 Un personatge amb reptes a cada passeig, cadascun amb la seva melodia
 Trucs de corretja: voltes a pals, vuits, passar entre dues persones i lliscar per vores i baranes
-Sis passejos de persecució: l'escombradora, la riuada, la clínica, els senglars, el correfoc i la carrossa del Dimoni
+Nou passejos de persecució: l'escombradora, la riuada, la clínica, els senglars, el correfoc, la carrossa del Dimoni, la seguretat de l'aeroport, la trepitjaneu desbocada i les cabres de muntanya
 Quatre caps estàtua: El Mamut de pedra, Els Lleons de bronze, El Drac de trencadís i El Gat, un gat de bronze de la mida d'un cotxe
 Estats d'ànim del gos: por, bordades, bogeria i cansament, que canvien com et mous i què notes
 Terra que se sent: la gespa i el fang guarden l'olor, la sorra frena i el terra mullat i la neu fan relliscar
 Altres gossos i els seus humans amb vida pròpia: ensumen, marquen, saluden i s'emboliquen
-La pluja, el vent, la neu i la nit canvien com es juga cada passeig
+Nou cels i sis hores del dia que canvien com es juga cada passeig
 Ossos per gastar en collars, mocadors i pelatges
-Un tutorial en tres parts i consells inicials per a nous jugadors
-Compatibilitat total amb comandament
+En anglès, català i castellà, amb la vibració de pantalla, els flaixos, la mida del text i els controls ajustables
+Compatibilitat total amb comandament, i un tutorial en tres parts per a nous jugadors
 Sense anuncis, sense compres, sense compte, i funciona sense connexió
 ```
 
@@ -196,15 +226,28 @@ La correa tiene física real de cuerda. Tu humano pesa cuatro veces más que tú
 
 Tu humano responde a la correa como una persona. Un tirón constante lo guía adonde quieres ir. Si tiras sin parar, se le acaba la paciencia: levanta la vista del móvil, refunfuña y luego suelta un «¡Oye!» con una correa más corta. Camina bien y el carrete te dará más cuerda. Todo lo que va a hacer, lo avisa antes: «¡Ring, ring!», «¡Oh!». No da para mucho más.
 
-Cuarenta y dos paseos por una Barcelona soleada, algo caótica, y sus alrededores, cada uno con carácter propio: el parquecito del barrio, La Rambla con sus multitudes, el parque de la ciudad, el paseo marítimo de Badalona y su espigón, la barredora del amanecer, los callejones del casco antiguo, Montjuïc, un mercado cubierto, un chaparrón, un parque fluvial inundable, la cascada y el mamut de piedra de La Ciutadella, la playa para perros de Platja de Llevant, los chaflanes de L'Eixample, la carretera de montaña del Tibidabo, la fuga de El Veterinari, el antiguo pueblo de Sarrià al alba con las campanas de Sant Vicenç, un sendero por el bosque, la plaza de patinadores de Els Àngels, una fiesta de la castanyada, los caminos de jabalíes de Els Senglars, terrazas de trencadís, las calles pacificadas de La Superilla, el metro en hora punta bajo una calle lluviosa en El Metro, la estación de tren, los búnkeres de la Guerra Civil sobre la ciudad, la Plaça Reial porticada, la noche del Dimoni en Badalona con la carroza de La Cremada, la explanada junto al mar de El Fòrum, la Avinguda Diagonal cortando la cuadrícula con su tranvía, los bares de pintxos de Carrer de Blai de noche, la antigua pista del agua por Collserola, la calle engalanada de Festa de Gràcia, el laberinto de cipreses de Horta, el puerto pesquero de El Port, la avenida de las fuentes de Plaça d'Espanya, el recinto amurallado de El Poble Espanyol, el largo espigón de la Terminal 1 de L'Aeroport con los de seguridad pisándote los talones, una obra, día de partido en Les Corts, un desguace, el sendero de montaña de Montserrat con sus cabras salvajes y, para terminar, la Rambla del Raval, donde un gato gordo de bronce baja de su pedestal. Cada paseo acaba sin correa, con tira y afloja, frisbi y pelota (además de un circuito de agilidad en El Barri, palomas a las que acechar en la plaza, olas que esquivar en la playa para perros y ardillas a las que subir a los árboles en un claro del bosque): un pipicán, una playa para perros, un claro en el bosque, un patio o una plaza con fuente donde chapotear.
+Siete perros, cada uno con su carácter. Millie, una mestiza, tiene el mejor olfato; Pipa, una galga, es la más rápida; Mochi, una bulldog francesa, se planta como un tanque; Bruna, una gos d'atura, guía a tu humano; Tito, un chihuahua, se cuela por todas partes; Perla, una ratonera, lo desentierra todo; y Duna, una podenca, salta un banco sin coger carrerilla. Cada uno tiene su propia meta de habilidad en cada paseo. Olfatea los tesoros enterrados por el camino y cumple tus metas de habilidad para ganar entrenamiento, y gástalo en sus cualidades, nivel a nivel.
+
+Cuarenta y seis paseos y un tutorial, en cinco capítulos por una Barcelona soleada, algo caótica, y sus alrededores.
+Capítulo uno, el barrio: el parquecito de El Barri, el gentío de La Rambla, el parque de la ciudad, el paseo marítimo de Badalona, los callejones del casco antiguo, Montjuïc, el mercado cubierto y un chaparrón, y para acabar La Ciutadella, donde el mamut de piedra baja de su pedestal.
+Capítulo dos, arriba y afuera: la playa para perros de Llevant, los chaflanes de L'Eixample, la feria del Tibidabo, el antiguo pueblo de Sarrià, un sendero por el bosque, la plaza de skaters de Els Àngels y la castañada, y para acabar el parque del mosaico, donde El Drac cobra vida.
+Capítulo tres, la ciudad que trabaja: La Superilla sin coches, la hora punta en el metro y en la estación de tren, los búnkeres sobre la ciudad al atardecer, la Plaça Reial porticada, la noche del Dimoni en Badalona y la pérgola solar de El Fòrum.
+Capítulo cuatro, la vuelta larga: la Diagonal y su tranvía, los bares de pintxos del Carrer de Blai, la antigua carretera de las aguas por Collserola, la fiesta de Gràcia, el laberinto de cipreses de Horta y las pistas de La Molina, y para acabar el puerto pesquero, donde los leones de bronce de El Port bajan a recibirte.
+Capítulo cinco, todo junto: las fuentes de Plaça d'Espanya, los jardines de Sant Pau, El Poble Espanyol, Sitges, el aeropuerto, unas obras, el camino de ronda, día de partido, un desguace y Montserrat, y para acabar la Rambla del Raval, donde un gato gordo de bronce baja de su pedestal.
+
+Nueve paseos son persecuciones: la barredora del amanecer, la crecida del río en El Besòs, los ayudantes de la clínica con sus conos de la vergüenza, los jabalíes de Els Senglars, los diablos del correfoc por Gràcia, la carroza de fuegos del Dimoni en La Cremada, la seguridad del aeropuerto, la pisanieves desbocada de La Molina y las cabras salvajes de Montserrat.
+
+Cada paseo acaba sin correa, con tira y afloja, frisbi y pelota, en un pipicán, una playa para perros, un claro en el bosque, un patio o una plaza con fuente donde zambullirse. Hay palomas que acechar, olas que esquivar y ardillas que hacer subir a los árboles, y un circuito de agility en El Barri.
 
 Lo que ocurre en el paseo cambia cómo te sientes, y cómo te sientes cambia cómo te mueves. Un susto te deja nervioso y medio ciego a los olores, una buena tanda de ladridos te pone ladrador, el rato sin correa te trae la locura y vaciarte corriendo te deja agotado. El suelo también importa: el césped y el barro te frenan pero guardan mucho más olor que la acera, la arena te lastra las patas y el suelo mojado y la nieve te hacen patinar.
 
 Los otros perros tienen vida propia. Olfatean y marcan los postes por los que pasas y puedes leer quién estuvo allí; si te cruzas con uno, se acerca a saludar, salvo que sea de los gruñones, que se lanzan y ladran al final de la correa. Sus humanos también van a lo suyo: hablan por teléfono, llevan un café, se paran a escribir.
 
-Cada paseo tiene su lista de metas: olfatear los buenos rincones, marcar tu territorio, traer la pelota, saludar a otros perros, llevar a casa a una amiga escapada, aceptar retos de los personajes que encuentras (cada uno con su melodía) y clavar trucos: girar alrededor de un poste con la correa, trazar un ocho, pasar entre dos personas y deslizarte por bordillos y barandillas con la locura. Gana estrellas para desbloquear nuevos paseos y huesos para gastar en collares, bandanas y pelajes.
+Cada paseo tiene su lista de metas: olfatear los buenos rincones, marcar tu territorio, traer la pelota, saludar a otros perros, llevar a casa a una amiga escapada, aceptar retos de los personajes que encuentras (cada uno con su melodía) y clavar trucos: girar alrededor de un poste con la correa, trazar un ocho, pasar entre dos personas y deslizarte por bordillos y barandillas con la locura. Gana estrellas para abrir nuevos paseos y perros, y huesos para gastar en collares, pañuelos y pelajes.
 
-Ocho paseos son persecuciones: arrastrar a tu humano a casa delante de la barredora, escapar de la crecida del río en El Besòs, huir de la clínica en El Veterinari con auxiliares persiguiéndote con conos de la vergüenza gigantes, correr delante de los jabalíes en Els Senglars, adelantarte a los diablos del correfoc por Gràcia, huir de la carroza en llamas del Dimoni en La Cremada, salir del aeropuerto con seguridad detrás y bajar corriendo de Montserrat delante de las cabras salvajes. La lluvia, el viento, la nieve y la noche cambian cómo se juega cada paseo, y todo el mundo se viste para el tiempo que hace. Hay un tutorial en tres partes para quienes empiezan.
+Elige el cielo y la hora de cada paseo: despejado, brisa, niebla, llovizna, chaparrón, tormenta, vendaval, nieve o polvo del Sáhara, del alba a la noche. Cambian cómo se juega y quién hay por la calle.
+
+En inglés, catalán y castellano. Puedes desactivar las sacudidas de pantalla y los destellos, agrandar el texto y cambiar todos los controles. Hay un tutorial en tres partes para quien empiece de cero.
 
 Un jugador. Sin anuncios, sin compras, sin cuenta, y funciona sin conexión. Teclado o mando.
 ```
@@ -212,7 +255,7 @@ Un jugador. Sin anuncios, sin compras, sin cuenta, y funciona sin conexión. Tec
 ### Short description
 
 ```
-Un paseo de perro en clave de comedia física. Tu humano camina en piloto automático, pegado al móvil, y la correa es cuerda de verdad. Plántate, rodea farolas y ladra a lo largo de cuarenta y dos paseos por Barcelona y sus alrededores, y llévalo a casa con el móvil intacto.
+Un paseo de perro en clave de comedia física. Tu humano camina en piloto automático, pegado al móvil, y la correa es cuerda de verdad. Plántate, rodea farolas y ladra a lo largo de cuarenta y seis paseos por Barcelona y sus alrededores con cualquiera de los siete perros, y llévalo a casa con el móvil intacto.
 ```
 
 ### Product features
@@ -220,20 +263,22 @@ Un paseo de perro en clave de comedia física. Tu humano camina en piloto autom�
 ```
 La correa tiene física real de cuerda: enróllala en postes, plántate y gana el tira y afloja
 Un humano que responde a la correa: un tirón constante lo guía, tirar sin parar le agota la paciencia
-Cuarenta y dos paseos hechos a mano por Barcelona, haga el tiempo que haga, de día o de noche
+Cuarenta y seis paseos hechos a mano por Barcelona y un tutorial, haga el tiempo que haga, de día o de noche
+Siete perros, cada uno con su habilidad y su meta de habilidad
+Tesoros enterrados que olfatear, y entrenamiento para gastar en sus cualidades
 Cada paseo acaba sin correa, con agilidad, tira y afloja y frisbi
 Listas de metas en cada paseo, con estrellas que desbloquean nuevos paseos
 Un personaje con retos en cada paseo, cada uno con su melodía
 Trucos de correa: giros en postes, ochos, pasar entre dos personas y deslizarse por bordillos y barandillas
-Seis paseos de persecución: la barredora, la riada, la clínica, los jabalíes, el correfoc y la carroza del Dimoni
+Nueve paseos de persecución: la barredora, la riada, la clínica, los jabalíes, el correfoc, la carroza del Dimoni, la seguridad del aeropuerto, la pisanieves desbocada y las cabras de montaña
 Cuatro jefes estatua: El Mamut de piedra, Els Lleons de bronce, El Drac de trencadís y El Gat, un gato de bronce del tamaño de un coche
 Estados de ánimo del perro: miedo, ladridos, locura y cansancio, que cambian cómo te mueves y qué percibes
 Suelo que se siente: el césped y el barro guardan el olor, la arena frena y el suelo mojado y la nieve hacen patinar
 Otros perros y sus humanos con vida propia: olfatean, marcan, saludan y se enredan
-La lluvia, el viento, la nieve y la noche cambian cómo se juega cada paseo
+Nueve cielos y seis horas del día que cambian cómo se juega cada paseo
 Huesos para gastar en collares, bandanas y pelajes
-Un tutorial en tres partes y consejos iniciales para nuevos jugadores
-Compatibilidad total con mando
+En inglés, catalán y castellano, con sacudidas de pantalla, destellos, tamaño del texto y controles ajustables
+Compatibilidad total con mando, y un tutorial en tres partes para nuevos jugadores
 Sin anuncios, sin compras, sin cuenta, y funciona sin conexión
 ```
 

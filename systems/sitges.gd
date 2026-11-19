@@ -56,7 +56,7 @@ const CHURCH_RECT := Rect2(684.0, -4480.0, 226.0, 430.0)
 const BELL_POS := Vector2(720.0, -4375.0)
 const BELL_BARK_R := 195.0
 const PRIZE := Vector2(658.0, -4300.0)
-const PRIZE_TEXT := "snatch the plate of xató off the beach bar"
+const PRIZE_TEXT := "swipe the plate of xató off the beach bar"
 
 const NAPKIN_MAX := 10
 const NAPKIN_CATCH_R := 26.0

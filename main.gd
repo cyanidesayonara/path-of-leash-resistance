@@ -6616,7 +6616,7 @@ func on_combo_banked(score: int, mult: int, bonus: int) -> void:
 	var col := Color(1.0, 0.85, 0.4) if mult < 5 else Color(1.0, 0.7, 0.85)
 	var msg := I18n.t("w_combo_banked") % [mult, score]
 	if bonus > 0:
-		msg += I18n.t("w_combo_bonus") % bonus
+		msg += "   " + I18n.t("w_combo_bonus") % bonus
 	float_text(dog.global_position + Vector2(0, -26), msg, col)
 	if mult >= 5:
 		_slowmo()
@@ -10758,7 +10758,7 @@ func on_rival_snatch(at: Vector2, what: String) -> void:
 	shake_t = maxf(shake_t, 0.3)
 	Sfx.play("bark", 0.7, -5.0)
 	var label := I18n.t("w_my_ball") if what == "ball" else I18n.t("w_my_bone")
-	float_text(at + Vector2(0, -30), label + I18n.t("w_bark_at_him"), Color(1, 0.7, 0.6))
+	float_text(at + Vector2(0, -30), label + " " + I18n.t("w_bark_at_him"), Color(1, 0.7, 0.6))
 	_update_hud()
 
 
@@ -12037,10 +12037,10 @@ func on_ball_returned(thrower: Node2D) -> void:
 	if is_instance_valid(b):
 		if b.snatched:
 			reward += 2
-			extra = I18n.t("w_on_the_bounce")
+			extra = " " + I18n.t("w_on_the_bounce")
 		if b.out_t < b.QUICK_S:
 			reward += 2
-			extra += I18n.t("w_quick")
+			extra += " " + I18n.t("w_quick")
 	bones += reward
 	Sfx.play("fetch")
 	combo.add("FETCH", reward)

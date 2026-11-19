@@ -129,7 +129,7 @@ const LANE := Vector2(70.0, 10.0)
 
 # under the police line on the way home (systems/march.gd HORSE_X[1])
 const PRIZE := Vector2(830.0, -3254.0)
-const PRIZE_TEXT := "snatch the sausage from under the police horses"
+const PRIZE_TEXT := "steal the sausage from under the police horses"
 
 
 static func is_on(m: Node2D) -> bool:

@@ -129,7 +129,7 @@ const VENDING := Rect2(402.0, -4360.0, 40.0, 60.0)
 const LAMPS: Array[Vector2] = [Vector2(436.0, 150.0), Vector2(436.0, -200.0)]
 const ROUNDEL_POSTS: Array[Vector2] = [Vector2(470.0, -300.0), Vector2(820.0, -4985.0)]
 const PRIZE := Vector2(450.0, -2870.0)
-const PRIZE_TEXT := "snatch the croissant off the platform bench"
+const PRIZE_TEXT := "swipe the croissant off the platform bench"
 
 # --- the train ------------------------------------------------------------
 const BOARD_IN := 70.0                 # this far inside the car, they are aboard

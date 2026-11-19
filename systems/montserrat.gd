@@ -132,7 +132,7 @@ const CHEESE_STALL_RECT := Rect2(430.0, -3325.0, 70.0, 50.0)
 
 # Summit Prize: The Jar of Mountain Honey with Fresh Mató Cheese
 const PRIZE := Vector2(640.0, -4680.0)
-const PRIZE_TEXT := "snatch the artisanal honey and mato cheese jar"
+const PRIZE_TEXT := "nab the jar of honey and mató"
 
 # Plaça de Santa Maria starts at the head of the last stair; the atrium's
 # inlaid ring lies beyond the arcade

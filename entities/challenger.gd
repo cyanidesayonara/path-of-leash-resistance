@@ -85,7 +85,7 @@ const FOOTPRINT := {"kid": Vector2(28.0, 62.0), "statue": Vector2(30.0, 30.0), "
 const AGAIN := "Another go? %d tricks in %d seconds!"
 const COUNT := "%d more! Keep going!"
 const LAST := "One more trick!"
-const TAKE := " Bark if you're in!"
+const TAKE := "Bark if you're in!"
 const GET_READY := "Get ready..."
 const LINES := {
 	"kid": {"idle": "Hey, dog! Want a dare?", "dare": "Bet you can't do %d tricks in %d seconds!",
@@ -918,7 +918,7 @@ func _line() -> String:
 	if mine and String(ch.phase) == "offer":
 		var dare: String = I18n.of_english(AGAIN if bool(ch.retry) else String(said["dare"])) % [int(ch.target),
 			int(round(float(ch.duration)))]
-		return dare + I18n.of_english(TAKE) if bool(ch.waiting) else I18n.of_english(GET_READY)
+		return dare + " " + I18n.of_english(TAKE) if bool(ch.waiting) else I18n.of_english(GET_READY)
 	if mine and String(ch.phase) == "live":
 		var left := int(ch.target) - int(ch.count)
 		return I18n.of_english(COUNT) % left if left > 1 else I18n.of_english(LAST)

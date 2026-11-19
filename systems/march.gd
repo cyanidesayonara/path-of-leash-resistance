@@ -208,7 +208,7 @@ func _stand_home(m: Node2D, dt: float) -> void:
 		_bodies_at(m)
 		if not m.prize_taken:
 			m.prize_pos = horses[1] + Vector2(0.0, 26.0)
-			m.prize_text = "snatch the sausage from under the police horses"
+			m.prize_text = "steal the sausage from under the police horses"
 	if not home_line:
 		return
 	_shift_in -= dt
