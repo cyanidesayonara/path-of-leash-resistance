@@ -89,6 +89,8 @@ const LEVEL_GOAL_IDS := {
 	"santpau": ["mark", "sniff", "phone", "paws", "bag", "fetch", "drink", "santpau_tour", "santpau_chime", "santpau_lavender", "combo", "prize", "spell", "jamon", "clock"],
 	# Camí de Ronda: brace for the tramuntana gust, admire the coves, bark at the boats
 	"ronda": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ronda_gust", "ronda_coves", "ronda_boats", "combo", "prize", "spell", "jamon", "clock"],
+	# Els Encants: hold clear of the stall spill, bark at the auction, steal a sock
+	"encants": ["mark", "sniff", "phone", "paws", "bag", "fetch", "carry", "encants_spill", "encants_auction", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	# Sarrià: the bells of Sant Vicenç, the two bakeries, the balcony gardener
 	"sarria": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bells", "bread", "gardener", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
@@ -199,6 +201,8 @@ static func defs(m: Node2D) -> Dictionary:
 		"ronda_gust": {"text": "Keep to the landward side through a gust", "target": 1, "fn": func() -> int: return m.ronda_gust_held},
 		"ronda_coves": {"text": "Sniff along the rail over %d coves", "target": 2, "fn": func() -> int: return m.ronda_coves_seen.size()},
 		"ronda_boats": {"text": "Bark at %d fishing boats below", "target": 2, "fn": func() -> int: return m.ronda_boats_barked.size()},
+		"encants_spill": {"text": "Plant and hold your human clear of a spill", "target": 1, "fn": func() -> int: return m.encants_spill_held},
+		"encants_auction": {"text": "Bark at the auction", "target": 1, "fn": func() -> int: return 1 if m.encants_auction_barked else 0},
 		"bells": {"text": "Howl along with the church bells", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.howled else 0},
 		"bread": {"text": "Sniff the bread at %d bakeries", "target": 2, "fn": func() -> int: return Sarria.bread_sniffed(m)},
 		"gardener": {"text": "Bark good morning to the balcony gardener", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.greeted else 0},

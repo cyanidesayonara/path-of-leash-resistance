@@ -183,6 +183,15 @@ func _run() -> void:
 	m = await _load("ronda", "rain", "day")
 	_check(m.ronda_sitters.is_empty(), "nobody sits on Ronda benches in the rain")
 
+	# Els Encants: browsers stay under the canopy in rain; sellers by day
+	_check(Outdoors.flea_browsers("rain", "day") > 0.5, "flea browsers fill the market in the rain")
+	_check(Outdoors.flea_sellers("rain", "day") and not Outdoors.flea_sellers("rain", "night"),
+		"flea sellers out by day in any weather, not after dark")
+	_check(not Outdoors.sunbathers("rain", "day") and not Outdoors.icecream_open("rain", "day"),
+		"sunbathers and ice-cream stay home in Encants rain")
+	m = await _load("encants", "rain", "day")
+	_check(m.encants_browsers.size() > 0, "Encants has browsers in the rain (%d)" % m.encants_browsers.size())
+
 	if _level != null:
 		_level.get_parent().remove_child(_level)
 		_level.free()

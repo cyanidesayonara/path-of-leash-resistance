@@ -311,3 +311,19 @@ static func coastal_hikers(weather: String, hour: String) -> float:
 		return 0.0
 	var base := float(COASTAL_HIKER_FILL.get(hour, 0.4))
 	return base * 0.65 if weather == "wind" else base
+
+
+# Els Encants: flea-market browsers and sellers stay out under the canopy in
+# rain (that is the point of the roof). Sunbathers and the ice-cream cart stay
+# home; those rules already refuse rain. Fill is high by day, thinner at night.
+const FLEA_BROWSER_FILL := {"dawn": 0.35, "day": 0.85, "dusk": 0.70, "night": 0.25}
+
+
+static func flea_browsers(weather: String, hour: String) -> float:
+	if weather == "snow":
+		return 0.15
+	return float(FLEA_BROWSER_FILL.get(hour, 0.5))
+
+
+static func flea_sellers(_weather: String, hour: String) -> bool:
+	return hour != "night"

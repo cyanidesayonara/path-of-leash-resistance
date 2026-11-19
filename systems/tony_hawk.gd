@@ -50,6 +50,7 @@ const CLOCK_TARGETS := {
 	"blai": 185,        # a narrow street, people everywhere
 	"santpau": 180,     # calm garden stroll through the modernista grounds
 	"ronda": 185,       # cliff-path wind and two headland turns
+	"encants": 175,     # flea-market lanes and a spill dodge
 	"metro": 185,    # the turnstiles, the surge and one stop on the train
 	"sarria": 175,
 	"angels": 180,
@@ -99,6 +100,7 @@ const JAMON_POS := {
 	"blai": Vector2(640.0, -3560.0),
 	"santpau": Vector2(360.0, -2310.0),
 	"ronda": Vector2(490.0, -2450.0),
+	"encants": Vector2(500.0, -2550.0),
 	"metro": Vector2(846.0, -4330.0),   # by the platform edge at Sant Gos, past the last pillar
 	"sarria": Vector2(300.0, -3010.0),
 	"angels": Vector2(380.0, -2950.0),

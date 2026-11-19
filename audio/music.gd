@@ -196,6 +196,9 @@ const STYLES := {
 	# Costa Brava sea breeze
 	"ronda": {"bpm": 124, "key": 7, "minor": false, "lead": "guitar", "lead2": ["marimba", 12], "comp": "arp",
 		"bass": "walk", "drums": "shaker", "swing": 0.06, "verb": 0.26},
+	# Els Encants: rainy flea-market shuffle, accordion and vibes under the canopy
+	"encants": {"bpm": 112, "key": 3, "minor": true, "lead": "accordion", "lead2": ["vibes", 12], "comp": "skank",
+		"bass": "walk", "drums": "brushsoft", "swing": 0.08, "verb": 0.32},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
@@ -578,6 +581,13 @@ const DARES := {
 			[4, 0.5, 76], [4.5, 0.5, 79], [5, 1, 83], [6, 1, 81], [7, 1, 79],
 			[8, 0.5, 76], [8.5, 0.5, 79], [9, 0.5, 84], [9.5, 0.5, 88], [10, 1, 86], [11, 1, 83],
 			[12, 0.5, 81], [12.5, 0.5, 79], [13, 0.5, 78], [13.5, 0.5, 76], [14, 2, 74]]},
+	# the haggler: busy market accordion and vibes over a soft brush shuffle
+	"haggler": {"bpm": 128, "lead": "accordion", "lead2": ["vibes", 7], "comp": "skank", "bass": "walk",
+		"drums": "brushsoft", "verb": 0.28, "chords": [[60, "min"], [63, "maj"], [55, "maj"], [58, "min7"]],
+		"mel": [[0, 0.5, 72], [0.5, 0.5, 75], [1, 1, 79], [2, 0.5, 77], [2.5, 0.5, 75], [3, 1, 72],
+			[4, 0.5, 70], [4.5, 0.5, 72], [5, 1, 75], [6, 1, 74], [7, 1, 72],
+			[8, 0.5, 70], [8.5, 0.5, 72], [9, 0.5, 77], [9.5, 0.5, 79], [10, 1, 75], [11, 1, 72],
+			[12, 0.5, 70], [12.5, 0.5, 68], [13, 0.5, 67], [13.5, 0.5, 65], [14, 2, 60]]},
 }
 
 # --- the score: what plays when ---------------------------------------------
