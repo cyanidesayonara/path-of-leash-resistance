@@ -260,6 +260,10 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 		var sy := floorf(y_top / mod) * mod
 		while sy < y_bot:
 			var r_top := maxf(sy, gate_y - 30.0)
+			# a sliver too short for a block of its own goes to the block below,
+			# so the roofs run on to the courtyard's wall
+			if r_top - (gate_y - 30.0) < 44.0:
+				r_top = gate_y - 30.0
 			var r_bot := minf(sy + mod, start_y + 560.0)
 			# Clip module against cross-street mouths
 			for cy: float in CROSS_YS:
@@ -428,10 +432,15 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	# 1. Base dark reclaimed Poblenou asphalt across the corridor
 	b.rect(Rect2(WALL_L, y0, WALL_R - WALL_L, y1 - y0), ASPHALT_DARK)
 	# Subtle central asphalt paver seam and aggregate tonal bands
+	# clipped at the gate: past its soldier course is the courtyard's paving
+	var at_gate := y0 <= gate_y - 40.0
 	var seam_y := floorf(y0 / 160.0) * 160.0
 	while seam_y < y1:
-		b.rect(Rect2(ROAD_L + 8.0, seam_y, ROAD_R - ROAD_L - 16.0, 72.0), ASPHALT_LIGHT)
-		b.line(Vector2(ROAD_L, seam_y), Vector2(ROAD_R, seam_y), Color(0.16, 0.16, 0.18, 0.45), 1.5)
+		var band_top := maxf(seam_y, y0) if at_gate else seam_y
+		if seam_y + 72.0 > band_top:
+			b.rect(Rect2(ROAD_L + 8.0, band_top, ROAD_R - ROAD_L - 16.0, seam_y + 72.0 - band_top), ASPHALT_LIGHT)
+		if seam_y >= y0 or not at_gate:
+			b.line(Vector2(ROAD_L, seam_y), Vector2(ROAD_R, seam_y), Color(0.16, 0.16, 0.18, 0.45), 1.5)
 		seam_y += 160.0
 	b.line(Vector2(640.0, y0), Vector2(640.0, y1), Color(0.18, 0.18, 0.20, 0.35), 1.5)
 
@@ -440,7 +449,14 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	var slab := SIDEWALK_W * 0.5
 	var sy := floorf(y0 / slab) * slab
 	while sy < y1:
-		if not _in_cross_street(sy + slab * 0.5):
+		if at_gate and sy < y0:
+			# the row the gate's soldier course crosses: plain slab, cut at the course
+			var cut := SIDEWALK_PANOT.darkened(0.02)
+			b.rect(Rect2(WALL_L, y0, SIDEWALK_W, sy + slab - 1.5 - y0), cut)
+			b.rect(Rect2(ROAD_R, y0, SIDEWALK_W, sy + slab - 1.5 - y0), cut)
+			b.rect(Rect2(ROAD_L - 5.0, y0, 5.0, sy + slab - 1.0 - y0), CURB_STONE)
+			b.rect(Rect2(ROAD_R, y0, 5.0, sy + slab - 1.0 - y0), CURB_STONE)
+		elif not _in_cross_street(sy + slab * 0.5):
 			var row := absi(int(floorf(sy / slab)))
 			var tone := SIDEWALK_PANOT.lightened(0.03) if row % 2 == 0 else SIDEWALK_PANOT.darkened(0.02)
 			# Left and right sidewalk slabs
@@ -465,6 +481,8 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 			# West building cast shadow across the west sidewalk
 			b.rect(Rect2(WALL_L, sy, 26.0, slab), Color(0.04, 0.04, 0.07, 0.14))
 			b.rect(Rect2(WALL_R - 8.0, sy, 8.0, slab), Color(0.04, 0.04, 0.07, 0.10))
+		else:
+			_draw_mouth_corner_row(b, sy, sy + slab)
 		sy += slab
 
 	# 3. Tactile paving & corner curb ramps at the 3 cross-street intersections
@@ -550,6 +568,28 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 		_draw_orxateria_terrace(b)
 
 	b.flush(wc)
+
+
+# The side street's pavement turns the corner into the walk's own, where the
+# walk's slab rows stop at the mouth, out to a kerb that turns with it.
+static func _draw_mouth_corner_row(b: ShapeBatch, r0: float, r1: float) -> void:
+	var sw := 26.0
+	for cy: float in CROSS_YS:
+		for band: Vector2 in [Vector2(cy - CROSS_HALF, cy - CROSS_HALF + sw), Vector2(cy + CROSS_HALF - sw, cy + CROSS_HALF)]:
+			var t := maxf(r0, band.x)
+			var e := minf(r1, band.y)
+			if e <= t:
+				continue
+			var top_band := band.x < cy
+			var kerb_y := band.y - 4.0 if top_band else band.x
+			for x0: float in [WALL_L, ROAD_R]:
+				b.rect(Rect2(x0, t, SIDEWALK_W, e - t), SIDEWALK_PANOT)
+				var kt := maxf(t, kerb_y)
+				var ke := minf(e, kerb_y + 4.0)
+				if ke > kt:
+					b.rect(Rect2(x0, kt, SIDEWALK_W, ke - kt), CURB_STONE)
+			b.rect(Rect2(ROAD_L - 5.0, t, 5.0, e - t), CURB_STONE)
+			b.rect(Rect2(ROAD_R, t, 5.0, e - t), CURB_STONE)
 
 
 static func _draw_tactical_play_grid(b: ShapeBatch, at: Vector2, seed_i: int) -> void:
