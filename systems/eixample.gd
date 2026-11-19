@@ -791,11 +791,39 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	b.rect(Rect2(r.position.x - 20.0, r.position.y - 20.0, r.size.x + 40.0, 20.0), Color(0.86, 0.84, 0.78))
 	b.rect(Rect2(r.position.x - 20.0, r.position.y, 20.0, r.size.y), Color(0.86, 0.84, 0.78))
 	b.rect(Rect2(r.end.x, r.position.y, 20.0, r.size.y), Color(0.86, 0.84, 0.78))
+	_garden_backs(b, gate_y - 40.0)
 	b.flush(c)
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, BENCH_WOOD)
 	if m.has_method("_freedom_sign"):
 		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_garden_inside_the_block_off"))
+
+
+# Where the street's last blocks meet the garden: the left block shows the
+# garden its rear galleries, as the far end does, and the basilica's precinct
+# keeps its stone coping and railing round the corner, so neither stops in a
+# bare cut against the sauló. `edge` is where the edge layer stops.
+static func _garden_backs(b: ShapeBatch, edge: float) -> void:
+	var gallery := Color(0.86, 0.84, 0.78)
+	var x := -440.0
+	var k := 3
+	var stop := CX - HALF - 8.0
+	b.rect(Rect2(x, edge - 26.0, stop - x, 26.0), gallery)
+	while x < stop:
+		var w := minf(120.0 + _h(k * 7) * 80.0, stop - x)
+		b.rect(Rect2(x, edge - 26.0, 3.0, 26.0), gallery.darkened(0.18))
+		for i in range(int((w - 20.0) / 26.0)):
+			b.rect(Rect2(x + 12.0 + float(i) * 26.0, edge - 20.0, 14.0, 10.0), TRENCADIS[(k + i) % TRENCADIS.size()].lightened(0.3))
+		x += w
+		k += 1
+	b.line(Vector2(-440.0, edge - 27.0), Vector2(stop, edge - 27.0), PARAPET, 3.0)
+	var front := CX + HALF
+	b.rect(Rect2(front, edge - 12.0, 1720.0 - front, 12.0), STONE)
+	b.line(Vector2(front + 2.0, edge - 6.0), Vector2(1720.0, edge - 6.0), IRON, 3.0)
+	var px := front + 2.0
+	while px < 1720.0:
+		b.circle(Vector2(px, edge - 6.0), 2.4, IRON)
+		px += 14.0
 
 
 # the interior garden's trees are broadleaves standing in its lawn
