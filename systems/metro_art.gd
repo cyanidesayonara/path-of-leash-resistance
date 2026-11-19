@@ -206,6 +206,23 @@ static func _ground(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
 		_footprints(wc, lo, hi)
 	_lamp_pools(wc, lo, hi)
 	_chamfers(m, wc, lo, hi)
+	if M.PLAT_A0 > lo - 50.0 and M.PLAT_A0 < hi + 10.0:
+		_platform_joint(m, wc, M.PLAT_A0)
+
+
+# Where the passage's small tiles meet the platform's slabs: a steel
+# expansion strip across, the passage's tone running on a step past it.
+static func _platform_joint(m: Node2D, wc: ShapeBatch, y: float) -> void:
+	var e: Vector2 = m.walk_edges(y)
+	_sp.resize(4)
+	_sp[0] = Vector2(e.x, y - 44.0)
+	_sp[1] = Vector2(e.y, y - 44.0)
+	_sp[2] = Vector2(e.x, y)
+	_sp[3] = Vector2(e.y, y)
+	wc.band(_sp, 2, Color(PASS_FLOOR.r, PASS_FLOOR.g, PASS_FLOOR.b, 0.5), _rise2)
+	wc.rect(Rect2(e.x, y - 3.0, e.y - e.x, 6.0), STEEL)
+	wc.rect(Rect2(e.x, y - 3.0, e.y - e.x, 1.5), STEEL_LIT)
+	wc.rect(Rect2(e.x, y + 3.0, e.y - e.x, 1.5), STEEL_DARK)
 
 
 # Where the walls splay from one width to the next, the floor's rectangle
@@ -288,6 +305,7 @@ static func _street(wc: ShapeBatch, x0: float, x1: float, lo: float, hi: float, 
 static var _sp := PackedVector2Array()
 static var _fade3 := PackedFloat32Array([0.0, 1.0, 0.0])
 static var _fade2 := PackedFloat32Array([1.0, 0.0])
+static var _rise2 := PackedFloat32Array([0.0, 1.0])
 static var _ones2 := PackedFloat32Array([1.0, 1.0])
 
 
@@ -735,6 +753,24 @@ static func _tracks(b: ShapeBatch, lo: float, hi: float) -> void:
 		# the far wall, tiled, the station's colour along it
 		b.rect(Rect2(x0 + 170.0, c.x, 30.0, c.y - c.x), TILE)
 		b.rect(Rect2(x0 + 170.0, c.x, 6.0, c.y - c.x), PARAIGUES if sec.y == M.PLAT_A0 else SANT_GOS)
+	# where each platform ends, the track runs on into its tunnel: the dark
+	# reaching out along the rails, under the headwall across the mouth.
+	# `side` is where the tunnel lies (1 south, -1 north).
+	for mouth: Vector2 in [Vector2(M.PLAT_A0, 1.0), Vector2(M.PLAT_B1, -1.0)]:
+		var my := mouth.x
+		var side := mouth.y
+		if my < lo - 120.0 or my > hi + 120.0:
+			continue
+		_sp.resize(4)
+		_sp[0] = Vector2(880.0, my - side * 140.0)
+		_sp[1] = Vector2(1050.0, my - side * 140.0)
+		_sp[2] = Vector2(880.0, my)
+		_sp[3] = Vector2(1050.0, my)
+		b.band(_sp, 2, Color(0.02, 0.02, 0.03, 0.9), _rise2)
+		var hy := my if side > 0.0 else my - 26.0
+		b.rect(Rect2(876.0, hy, 208.0, 26.0), LINING)
+		b.rect(Rect2(876.0, my if side > 0.0 else my - 2.0, 208.0, 2.0), SLAB_LIT)
+		b.rect(Rect2(876.0, hy + 23.0 if side > 0.0 else hy, 208.0, 3.0), LINING_DARK)
 
 
 # the station names and the way out, on the walls
@@ -884,6 +920,24 @@ static func _street_edges(m: Node2D, b: ShapeBatch, lo: float, hi: float, wet: b
 		while zx < x0 - 14.0:
 			b.rect(Rect2(zx, zy, 12.0, 60.0), ZEBRA)
 			zx += 24.0
+	# the road ends at the plaça's kerb; the far pavement runs on into it
+	# over a soldier course of setts
+	var gy := float(m.GATE_Y) - 40.0
+	if not south and gy > lo - 20.0 and gy < hi + 20.0:
+		b.rect(Rect2(x0 - 160.0, gy + 4.5, 160.0, 3.0), SHADOW)
+		b.rect(Rect2(x0 - 160.0, gy - 4.5, 160.0, 9.0), KERB)
+		b.rect(Rect2(x0 - 160.0, gy - 4.5, 160.0, 2.5), KERB_LIT)
+		var jx := x0 - 130.0
+		while jx < x0 - 4.0:
+			b.rect(Rect2(jx, gy - 4.5, 1.2, 9.0), KERB.darkened(0.18))
+			jx += 30.0
+		var pave := PAVE_WET if wet else PAVE
+		b.rect(Rect2(x0 - 210.0, gy - 6.0, 50.0, 12.0), pave.darkened(0.16))
+		var sx := x0 - 210.0
+		while sx < x0 - 162.0:
+			var w := minf(22.0, x0 - 160.0 - sx)
+			b.rect(Rect2(sx + 1.0, gy - 5.0, w - 2.0, 10.0), pave.darkened(0.06 + 0.05 * float(int(absf(sx) / 22.0) % 2)))
+			sx += 22.0
 	# the far pavement and its roofs, the buildings' shadow along it
 	var s0 := M.STAIR_FOOT if south else float(m.GATE_Y) - 40.0
 	var s1 := float(m.START_Y) + 700.0 if south else M.STAIR_B0
