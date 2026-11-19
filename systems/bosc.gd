@@ -9,7 +9,14 @@ extends RefCounted
 # its off-leash area's worn patch is soft at the edge (main.soft_wear)
 const SOFT_WEAR := true
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_trough_prop", "grass_blocked", "surface"]
+const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_threshold", "draw_trough_prop", "grass_blocked", "surface"]
+
+# La Clariana's lawn (main._draw_clearing), let down over the forest floor
+const CLEARING_LAWN := Color(0.30, 0.42, 0.26)
+# and the wood round it (main.draw_freedom_onto's clearing surround)
+const CLEARING_SURROUND := Color(0.20, 0.30, 0.19)
+const CLEARING_SPILL := 110.0    # how far the clearing's light runs back down the verges
+const TRAIL_TONGUE := 90.0       # how far the trail's dirt runs on through the gate
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -37,13 +44,24 @@ static func _draw_wood(m: Node2D, vt: float, vb: float) -> void:
 	var step := 56.0
 	# stops at the gate: the clearing beyond has its own ring of trees
 	var sy := maxf(floorf((vt - 80.0) / step) * step, m.GATE_Y + 100.0)
+	var first: float = m.GATE_Y + 100.0
 	while sy < vb + 80.0:
 		var e: Vector2 = m.walk_edges(sy + step * 0.5)
 		var row := int(absf(sy) / step)
 		for side: float in [-1.0, 1.0]:
 			var line: float = (e.x - out) if side < 0.0 else (e.y + out)
 			var far_x: float = line + side * 12.0
-			b.rect(Rect2(minf(far_x, far_x + side * 700.0), sy, 700.0, step + 1.0), Color(0.12, 0.20, 0.12))
+			var deep := Rect2(minf(far_x, far_x + side * 700.0), sy, 700.0, step + 1.0)
+			if sy < first + 1.0:
+				# the wood's first row toward the clearing thins out rather
+				# than stopping in a ruled line
+				b.band(PackedVector2Array([
+					Vector2(deep.position.x, sy - 14.0), Vector2(deep.end.x, sy - 14.0),
+					Vector2(deep.position.x, sy + 30.0), Vector2(deep.end.x, sy + 30.0),
+					Vector2(deep.position.x, deep.end.y), Vector2(deep.end.x, deep.end.y),
+				]), 2, Color(0.12, 0.20, 0.12), PackedFloat32Array([0.0, 1.0, 1.0]))
+			else:
+				b.rect(deep, Color(0.12, 0.20, 0.12))
 			for k in range(5):
 				var h := fmod(absf(sin(float(row * 7 + k) * 12.9898 + side * 3.1) * 43758.5453), 1.0)
 				var cx: float = line + side * (26.0 + float(k) * 60.0 + h * 18.0)
@@ -279,6 +297,51 @@ static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> vo
 	for lr: Rect2 in m.LevelBuild.trail_logs(m):
 		if lr.position.y > vt - 60.0 and lr.position.y < vb + 60.0:
 			_draw_fallen_log(m, lr)
+
+
+# Where the trail comes out into La Clariana: no kerb in a wood. The lawn's
+# light spills back down the verges either side, fading into the forest
+# floor, and the trail's packed dirt runs on through the gate as a worn way.
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y: float = m.GATE_Y - 40.0
+	var e: Vector2 = m.walk_edges(y + 2.0)
+	var ge: Vector2 = m.walk_edges(m.GATE_Y - 16.0)
+	var gl := maxf(float(m.gate_l), ge.x)
+	var gr := minf(float(m.gate_r), ge.y)
+	var mx := (gl + gr) * 0.5
+	var rows := PackedFloat32Array([0.0, 1.0, 0.55, 0.0])
+	var ys := [y - 24.0, y, y + CLEARING_SPILL * 0.36, y + CLEARING_SPILL]
+	# the lawn inside the ring of trees, the wood's own floor outside it
+	var spills := [
+		[CLEARING_LAWN, [-400.0, 40.0, 100.0, e.x - 10.0, e.x + 60.0], [0.0, 0.0, 1.0, 1.0, 0.0]],
+		[CLEARING_LAWN, [e.y - 60.0, e.y + 10.0, 1150.0, 1210.0, 1700.0], [0.0, 1.0, 1.0, 0.0, 0.0]],
+		[CLEARING_SURROUND, [-400.0, -200.0, 0.0, 40.0, 100.0], [1.0, 1.0, 1.0, 1.0, 0.0]],
+		[CLEARING_SURROUND, [1150.0, 1210.0, 1300.0, 1500.0, 1700.0], [0.0, 1.0, 1.0, 1.0, 1.0]],
+	]
+	for sp: Array in spills:
+		var pts := PackedVector2Array()
+		for sy: float in ys:
+			for sx: float in sp[1]:
+				pts.append(Vector2(sx, sy))
+		b.band(pts, 5, sp[0], rows, PackedFloat32Array(sp[2]))
+	# the trail's dirt across its whole width runs a step on into the lawn
+	# and fades there, rather than stopping on the line
+	var lip := PackedVector2Array()
+	for row: Vector2 in [Vector2(y + 2.0, 0.0), Vector2(y - 16.0, 10.0), Vector2(y - 34.0, 24.0)]:
+		lip.append_array([
+			Vector2(e.x - 30.0 + row.y, row.x), Vector2(e.x + 50.0 + row.y, row.x),
+			Vector2(e.y - 50.0 - row.y, row.x), Vector2(e.y + 30.0 - row.y, row.x),
+		])
+	b.band(lip, 4, m.TRAIL_DIRT, PackedFloat32Array([1.0, 0.55, 0.0]), PackedFloat32Array([0.0, 1.0, 1.0, 0.0]))
+	# and the worn way people walk on in by, the gate's width, fading
+	var mouth := (gr - gl) * 0.5
+	var tpts := PackedVector2Array()
+	for tr: Vector3 in [Vector3(y + 2.0, mx - mouth, mx + mouth),
+			Vector3(y - TRAIL_TONGUE * 0.4, mx - mouth * 0.9, mx + mouth * 0.9),
+			Vector3(y - TRAIL_TONGUE, mx - mouth * 0.6, mx + mouth * 0.6)]:
+		for k in range(5):
+			tpts.append(Vector2(lerpf(tr.y, tr.z, float(k) / 4.0), tr.x))
+	b.band(tpts, 5, m.TRAIL_DIRT, PackedFloat32Array([0.7, 0.45, 0.0]), PackedFloat32Array([0.0, 1.0, 1.0, 1.0, 0.0]))
 
 
 # the trail's own ragged edges in place of kerbs
