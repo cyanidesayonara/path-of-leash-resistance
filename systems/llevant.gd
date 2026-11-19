@@ -71,7 +71,8 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 		if py < vb and py > vt:
 			bdeck.line(Vector2(380.0, py), Vector2(490.0, py), Color(0.34, 0.20, 0.15), 2.0)
 		py -= 22.0
-	bdeck.flush(wc)
+	if ftop > vt - 60.0 and ftop < vb + 60.0:
+		_gate_edging(m, bdeck, ftop)
 	wc.draw_rect(Rect2(490.0, ftop, 80.0, bottom - ftop), Color(0.80, 0.78, 0.72))
 	var ddy := minf(m.START_Y + 200.0, vb + 64.0 - fmod(vb, 64.0))
 	while ddy > m.GATE_Y and ddy > vt - 64.0:
@@ -85,6 +86,8 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 			wc.draw_line(Vector2(560.0, sy), Vector2(980.0, sy), Color(0.73, 0.70, 0.64), 2.0)
 		sy -= 150.0
 	wc.draw_rect(Rect2(980.0, ftop, 210.0, bottom - ftop), Color(0.76, 0.73, 0.66))
+	# the deck's planks and the gate's edging, over the strips beside it: one call
+	bdeck.flush(wc)
 	wc.draw_rect(Rect2(1190.0, ctop, 510.0, bottom - ctop), Color(0.36, 0.35, 0.33))
 	Passeig._roofs(m, vt, vb)
 	_landmarks(m, vt, vb)
@@ -107,6 +110,48 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, top: float, bottom: fl
 	for ti in range(m.towels.size()):
 		if (m.towels[ti].rect as Rect2).end.y > vt - 40.0 and (m.towels[ti].rect as Rect2).position.y < vb + 40.0:
 			Passeig._towel(m, m.towels[ti], ti)
+
+
+# Where the seafront meets the dog beach, either side of main's kerb across
+# the path: the same granite kerb runs on over the bike lane and the paving
+# by the buildings, the boardwalk ends on a header board, and sand blows back
+# over all three. Matches main._draw_threshold's kerb so the line reads as one.
+static func _gate_edging(m: Node2D, b: ShapeBatch, ftop: float) -> void:
+	var y: float = m.GATE_Y - 40.0
+	var e: Vector2 = m.walk_edges(y + 2.0)
+	var kw: float = m.THRESH_KERB_W
+	var kerb: Color = m.THRESH_KERB
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	var sand: Color = m.BEACH_SAND
+	# sand feathering down onto the paving and the deck, unevenly along the line
+	var n := 15
+	var pts := PackedVector2Array()
+	var col_a := PackedFloat32Array()
+	for row: float in [ftop, ftop + 30.0]:
+		for k in range(n):
+			pts.append(Vector2(lerpf(380.0, 1190.0, float(k) / float(n - 1)), row))
+	for k in range(n):
+		col_a.append(0.55 + 0.45 * absf(sin(float(k) * 2.37 + 0.6)))
+	b.band(pts, n, Color(sand.r, sand.g, sand.b, 0.55), PackedFloat32Array([1.0, 0.0]), col_a)
+	# the boardwalk's header board, sand banked against it
+	b.rect(Rect2(380.0, ftop, 110.0, 6.0), Color(0.34, 0.20, 0.15))
+	b.rect(Rect2(380.0, ftop, 110.0, 2.0), Color(0.56, 0.38, 0.28))
+	for seg: Vector2 in [Vector2(490.0, e.x), Vector2(e.y, 1190.0)]:
+		if seg.y - seg.x < 4.0:
+			continue
+		b.rect(Rect2(seg.x, y - kw * 0.5 + 3.0, seg.y - seg.x, kw), sh)
+		b.rect(Rect2(seg.x, y - kw * 0.5, seg.y - seg.x, kw), kerb)
+		b.rect(Rect2(seg.x, y - kw * 0.5, seg.y - seg.x, 2.5), kerb.lightened(0.18))
+		var jx := seg.x + 30.0
+		while jx < seg.y - 4.0:
+			b.line(Vector2(jx, y - kw * 0.5), Vector2(jx, y + kw * 0.5), kerb.darkened(0.18), 1.2)
+			jx += 30.0
+	var tx := 386.0
+	while tx < 1184.0:
+		var h := fmod(absf(sin(tx * 12.9898) * 43758.5453), 1.0)
+		if tx < 490.0 or tx < e.x or tx > e.y:
+			b.circle(Vector2(tx, y + 6.0 + h * 10.0), 2.0 + h * 2.0, Color(0.90, 0.82, 0.62, 0.55))
+		tx += 9.0 + h * 8.0
 
 
 static func _landmarks(m: Node2D, vt: float, vb: float) -> void:
