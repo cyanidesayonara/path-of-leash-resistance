@@ -65,7 +65,7 @@ func _run() -> void:
 	_check(game.CAMPAIGN_SKY.get("ronda", []) == ["wind", "day"], "CAMPAIGN_SKY ronda == [wind, day]")
 	_check(game.WALKS_SINCE_GATES.has("ronda"), "WALKS_SINCE_GATES includes ronda")
 	_check(String(game.LEVEL_NAMES.get("ronda", "")) == "Camí de Ronda", "LEVEL_NAMES ronda")
-	_check(String(game.LEVEL_SUBTITLES.get("ronda", "")) == "The cliff path", "LEVEL_SUBTITLES ronda")
+	_check(String(game.LEVEL_SUBTITLES.get("ronda", "")) == "The cliff path above the coves", "LEVEL_SUBTITLES ronda")
 	_check(String(game.LEVEL_SUBTITLES_CA.get("ronda", "")).length() > 0, "LEVEL_SUBTITLES_CA ronda")
 	_check(String(game.LEVEL_SUBTITLES_ES.get("ronda", "")).length() > 0, "LEVEL_SUBTITLES_ES ronda")
 

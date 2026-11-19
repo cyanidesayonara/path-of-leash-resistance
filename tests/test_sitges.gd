@@ -99,7 +99,7 @@ func _run() -> void:
 	_check(String(game.CHASE_GATE.get("sitges", "")) == "cremada", "CHASE_GATE is cremada")
 	_check(game.CAMPAIGN_SKY["sitges"] == ["wind", "day"], "CAMPAIGN_SKY is wind/day")
 	_check(String(game.LEVEL_NAMES["sitges"]) == "Sitges", "named Sitges")
-	_check(String(game.LEVEL_SUBTITLES["sitges"]) == "The town by the sea", "subtitle The town by the sea")
+	_check(String(game.LEVEL_SUBTITLES["sitges"]) == "Whitewashed streets by the sea", "subtitle The town by the sea")
 	_check(G.LEVEL_GOAL_IDS.has("sitges") and G.LEVEL_GOAL_IDS["sitges"].size() == 15, "15 goals registered")
 	for g: String in ["dry", "wave_dodge", "napkin", "punta_bark"]:
 		_check(G.LEVEL_GOAL_IDS["sitges"].has(g), "has goal %s" % g)

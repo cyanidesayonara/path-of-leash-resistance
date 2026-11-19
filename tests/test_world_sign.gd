@@ -175,9 +175,9 @@ func _run() -> void:
 	# the gloss follows the language, and falls back to English
 	var keep: String = game.language
 	game.language = "ca"
-	_check(game.gloss("market") == "El mercat cobert", "Catalan gloss")
+	_check(game.gloss("market") == "El mercat cobert a primera hora", "Catalan gloss")
 	game.language = "es"
-	_check(game.gloss("market") == "El mercado cubierto", "Spanish gloss")
+	_check(game.gloss("market") == "El mercado cubierto al abrir", "Spanish gloss")
 	_check(game.gloss("nowhere") == "", "no gloss for no walk")
 	game.language = "en"
 	_check(game.gloss("tutorial") == "Learn the leash, trick by trick", "English gloss")
