@@ -19,8 +19,11 @@ extends RefCounted
 #      event: the parakeets mob your human's croissant; bark them off.
 #   7. The dog area past the gate, off the leash.
 
+# its off-leash area's worn patch is soft at the edge (main.soft_wear)
+const SOFT_WEAR := true
+
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["cam_lean", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "grass_blocked", "hush_banner", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind", "urgent_status"]
+const HOOKS := ["cam_lean", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_threshold", "grass_blocked", "hush_banner", "idle_status", "is_lamp", "on_bark", "surface", "tick", "tree_kind", "urgent_status"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -129,7 +132,7 @@ static func build(m: Node2D) -> Array:
 		Vector2(420.0, -1380.0), Vector2(860.0, -1720.0), Vector2(420.0, -4560.0),
 	], TYPE_VECTOR2, &"", null)
 	m.bins = Array([
-		Vector2(372.0, -410.0), Vector2(908.0, -40.0), Vector2(860.0, -1240.0),
+		Vector2(372.0, -410.0), Vector2(908.0, 28.0), Vector2(860.0, -1240.0),
 		Vector2(420.0, -1920.0), Vector2(905.0, -3560.0), Vector2(860.0, -4420.0),
 	], TYPE_VECTOR2, &"", null)
 	# your human steps round the plinth once the mammoth is back on it
@@ -168,10 +171,14 @@ static func solids(_m: Node2D) -> Array[Rect2]:
 	return out
 
 
-# No tufts under the arena's furniture: the chair stacks and the jetty's
-# shore boards are drawn on the ground layer, so grass would grow over them.
+# No tufts under the arena's furniture: the chair stacks, the jetty's shore
+# boards and El Mamut's plinth surround are drawn on the ground layer, so
+# grass would grow over them.
 static func grass_blocked(_m: Node2D, p: Vector2) -> bool:
 	if BossMamut.JETTY.grow(10.0).has_point(p):
+		return true
+	if Rect2(BossMamut.PLINTH - BossMamut.PLINTH_HALF - Vector2(26.0, 22.0),
+			BossMamut.PLINTH_HALF * 2.0 + Vector2(52.0, 44.0)).has_point(p):
 		return true
 	for c: Vector2 in BossMamut.CHAIR_STACKS:
 		if absf(p.x - c.x) < 26.0 and p.y > c.y - 34.0 and p.y < c.y + 24.0:
@@ -179,22 +186,46 @@ static func grass_blocked(_m: Node2D, p: Vector2) -> bool:
 	return false
 
 
+static func _gravel_span(m: Node2D, y: float) -> Vector2:
+	var e: Vector2 = m.walk_edges(y)
+	var cx := (e.x + e.y) * 0.5
+	if y >= -2080.0:
+		return Vector2(cx - 165.0, cx + 165.0)
+	if y > -2240.0:
+		var t := clampf((-2080.0 - y) / 160.0, 0.0, 1.0)
+		t = t * t * (3.0 - 2.0 * t)
+		return Vector2(lerpf(cx - 165.0, e.x, t), lerpf(cx + 165.0, e.x + 54.0, t))
+	if y >= -3200.0:
+		return Vector2(e.x, e.x + 54.0)
+	if y > -3360.0:
+		var t := clampf((-3200.0 - y) / 160.0, 0.0, 1.0)
+		t = t * t * (3.0 - 2.0 * t)
+		return Vector2(e.x, lerpf(e.x + 54.0, e.y, t))
+	if y >= -3920.0:
+		return Vector2(e.x, e.y)
+	if y > -4080.0:
+		var t := clampf((-3920.0 - y) / 160.0, 0.0, 1.0)
+		t = t * t * (3.0 - 2.0 * t)
+		return Vector2(lerpf(e.x, cx - 165.0, t), lerpf(e.y, cx + 165.0, t))
+	return Vector2(cx - 165.0, cx + 165.0)
+
+
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.y <= float(m.GATE_Y):
-		return -1
+	var past: int = Surfaces.lawn_past_gate(m, p)
+	if past >= 0:
+		return past
 	if p.y > GATE_TOP:
 		return Surfaces.S.PAVEMENT
 	var e: Vector2 = m.walk_edges(p.y)
-	var cx := (e.x + e.y) * 0.5
-	if p.y > AVENUE_TOP or p.y < CASCADA_TOP:
-		return Surfaces.S.PAVEMENT if absf(p.x - cx) < 165.0 else Surfaces.S.GRASS
-	if p.y > ARENA_TOP:
-		if Rect2(BossMamut.PLINTH - BossMamut.PLINTH_HALF, BossMamut.PLINTH_HALF * 2.0).grow(8.0).has_point(p):
-			return Surfaces.S.PAVEMENT
-		return Surfaces.S.PAVEMENT if p.x < e.x + 54.0 else Surfaces.S.GRASS
 	if p.y > POOL_TOP and p.y < POOL_BOT and p.x < e.x + POOL_LIP:
+		if p.distance_to(DRINK) < 22.0:
+			return Surfaces.S.PAVEMENT
 		return Surfaces.S.WATER
-	return Surfaces.S.PAVEMENT
+	if p.y < -2160.0 and p.y > -3240.0:
+		if Rect2(BossMamut.PLINTH - BossMamut.PLINTH_HALF, BossMamut.PLINTH_HALF * 2.0).grow(22.0).has_point(p):
+			return Surfaces.S.PAVEMENT
+	var gs := _gravel_span(m, p.y)
+	return Surfaces.S.PAVEMENT if p.x >= gs.x and p.x <= gs.y else Surfaces.S.GRASS
 
 
 static func tree_kind(m: Node2D, p: Vector2) -> int:
@@ -312,6 +343,11 @@ static func _tick_birds(m: Node2D, delta: float) -> void:
 				bd.state = "home"
 
 
+static func _hash(a: float, b: float) -> float:
+	var h := fmod(sin(a * 12.9898 + b * 78.233) * 43758.5453, 1.0)
+	return h if h >= 0.0 else h + 1.0
+
+
 # --- The ground: cached with the walk's cross-section -----------------------
 
 static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float, _ctop: float,
@@ -326,6 +362,10 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	var sy := floorf(y0 / step) * step
 	while sy < y1:
 		var sb := minf(sy + step, y1)
+		for split_y: float in [POOL_TOP, POOL_BOT, GATE_TOP, PASSEIG_TOP]:
+			if sy < split_y and sb > split_y:
+				sb = split_y
+				break
 		var ym := (sy + sb) * 0.5
 		var ea: Vector2 = m.walk_edges(sy)
 		var eb: Vector2 = m.walk_edges(sb)
@@ -336,8 +376,14 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 			# terracotta tiles in courses, a pale stone band down the middle
 			var col := Color(0.72, 0.50, 0.40) if row % 2 == 0 else Color(0.69, 0.47, 0.38)
 			b.quad(Vector2(ea.x, sy), Vector2(ea.y, sy), Vector2(eb.y, sb), Vector2(eb.x, sb), col)
-			b.rect(Rect2(cxa - 90.0, sy, 180.0, sb - sy), Color(0.80, 0.74, 0.64))
-			b.line(Vector2(ea.x, sy), Vector2(ea.y, sy), Color(0.56, 0.36, 0.28, 0.45), 1.4)
+			b.quad(Vector2(cxa - 90.0, sy), Vector2(cxa + 90.0, sy), Vector2(cxb + 90.0, sb), Vector2(cxb - 90.0, sb), Color(0.80, 0.74, 0.64))
+			b.line(Vector2(ea.x, sy), Vector2(cxa - 90.0, sy), Color(0.56, 0.36, 0.28, 0.45), 1.4)
+			b.line(Vector2(cxa + 90.0, sy), Vector2(ea.y, sy), Color(0.56, 0.36, 0.28, 0.45), 1.4)
+			if row % 2 == 0:
+				b.line(Vector2(cxa - 90.0, sy), Vector2(cxa + 90.0, sy), Color(0.66, 0.60, 0.50, 0.45), 1.2)
+			for side: float in [-1.0, 1.0]:
+				b.line(Vector2(cxa + side * 90.0, sy), Vector2(cxb + side * 90.0, sb), Color(0.64, 0.56, 0.46), 3.0)
+				b.line(Vector2(cxa + side * 88.0, sy), Vector2(cxb + side * 88.0, sb), Color(0.88, 0.84, 0.76, 0.7), 1.2)
 			var jx := ea.x + 32.0
 			while jx < ea.y:
 				if absf(jx - cxa) > 90.0:
@@ -345,36 +391,102 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 				jx += 32.0
 			for kx: float in [ea.x + 64.0, ea.y - 64.0]:
 				b.line(Vector2(kx, sy), Vector2(kx, sb), Color(0.86, 0.82, 0.74), 4.0)
-			if row % 8 == 0:
-				# the mosaic star set in the stone band
-				var c := Vector2(cxa, ym)
-				b.circle(c, 30.0, Color(0.62, 0.42, 0.30))
-				b.circle(c, 24.0, Color(0.88, 0.82, 0.70))
-				for i in range(8):
-					var d := Vector2.from_angle(float(i) * TAU / 8.0)
-					b.line(c, c + d * 22.0, Color(0.62, 0.42, 0.30), 3.0)
-				b.circle(c, 6.0, Color(0.86, 0.58, 0.22))
 		elif ym > GATE_TOP:
 			var g := Color(0.60, 0.58, 0.55) if row % 2 == 0 else Color(0.57, 0.55, 0.52)
 			b.quad(Vector2(ea.x, sy), Vector2(ea.y, sy), Vector2(eb.y, sb), Vector2(eb.x, sb), g)
 			b.line(Vector2(ea.x, sy), Vector2(ea.y, sy), Color(0.42, 0.40, 0.38, 0.6), 1.6)
-		elif ym > AVENUE_TOP or ym < CASCADA_TOP:
-			_lawn(b, ea, eb, sy, sb, row)
-			_gravel(b, cxa - 165.0, cxa + 165.0, cxb - 165.0, cxb + 165.0, sy, sb, row)
-		elif ym > ARENA_TOP:
-			_lawn(b, ea, eb, sy, sb, row)
-			# the promenade along the west of the lawn
-			_gravel(b, ea.x, ea.x + 54.0, eb.x, eb.x + 54.0, sy, sb, row)
 		else:
-			_gravel(b, ea.x, ea.y, eb.x, eb.y, sy, sb, row)
+			var gsa := _gravel_span(m, sy)
+			var gsb := _gravel_span(m, sb)
+			if gsa.x > ea.x + 1.0 or gsa.y < ea.y - 1.0 or gsb.x > eb.x + 1.0 or gsb.y < eb.y - 1.0:
+				_lawn(b, ea, eb, sy, sb, row)
+			_gravel(b, gsa.x, gsa.y, gsb.x, gsb.y, sy, sb, row)
 			if ym > POOL_TOP and ym < POOL_BOT:
-				# the Cascada's pool comes right up to the path, behind a low lip
+				# the Cascada's pool comes right up to the path in the same basin water, behind a stone lip
 				b.rect(Rect2(ea.x, sy, POOL_LIP, sb - sy), Color(0.30, 0.56, 0.68))
-				b.rect(Rect2(ea.x, sy, POOL_LIP - 10.0, sb - sy), Color(0.36, 0.64, 0.76))
 				if row % 2 == 0:
-					b.line(Vector2(ea.x + 6.0, ym), Vector2(ea.x + 26.0, ym), Color(0.80, 0.92, 0.98, 0.6), 1.6)
-				b.line(Vector2(ea.x + POOL_LIP, sy), Vector2(eb.x + POOL_LIP, sb), Color(0.78, 0.74, 0.66), 5.0)
-		sy += step
+					b.line(Vector2(ea.x + 4.0, ym), Vector2(ea.x + POOL_LIP - 10.0, ym), Color(0.78, 0.92, 0.98, 0.35), 2.0)
+				b.rect(Rect2(ea.x + POOL_LIP, sy, 6.0, sb - sy), Color(0.74, 0.70, 0.62))
+				b.line(Vector2(ea.x + POOL_LIP + 1.0, sy), Vector2(eb.x + POOL_LIP + 1.0, sb), Color(0.84, 0.80, 0.72), 2.0)
+		sy = sb
+
+	# mosaic stars along the Passeig's stone band, drawn over the tile courses so no row shears them
+	var star_step := 256.0
+	var st_y := maxf(floorf(y0 / star_step) * star_step, PASSEIG_TOP + 64.0)
+	while st_y < minf(y1, bottom - 32.0):
+		var cy := st_y + 16.0
+		if cy > PASSEIG_TOP + 52.0:
+			var se: Vector2 = m.walk_edges(cy)
+			var c := Vector2((se.x + se.y) * 0.5, cy)
+			b.circle(c, 30.0, Color(0.62, 0.42, 0.30))
+			b.circle(c, 24.0, Color(0.88, 0.82, 0.70))
+			for i in range(8):
+				var d := Vector2.from_angle(float(i) * TAU / 8.0)
+				b.line(c, c + d * 22.0, Color(0.62, 0.42, 0.30), 3.0)
+			b.circle(c, 6.0, Color(0.86, 0.58, 0.22))
+		st_y += star_step
+
+	# dressed granite threshold where the Passeig meets the park gate plaza
+	if PASSEIG_TOP + 24.0 >= y0 and PASSEIG_TOP - 8.0 <= y1:
+		var pe: Vector2 = m.walk_edges(PASSEIG_TOP)
+		b.rect(Rect2(pe.x, PASSEIG_TOP, pe.y - pe.x, 18.0), Color(0.66, 0.63, 0.58))
+		b.line(Vector2(pe.x, PASSEIG_TOP), Vector2(pe.y, PASSEIG_TOP), Color(0.82, 0.78, 0.70), 2.5)
+		b.line(Vector2(pe.x, PASSEIG_TOP + 18.0), Vector2(pe.y, PASSEIG_TOP + 18.0), Color(0.46, 0.42, 0.38), 2.0)
+		var px: float = pe.x + 28.0
+		while px < pe.y - 8.0:
+			b.line(Vector2(px, PASSEIG_TOP), Vector2(px, PASSEIG_TOP + 18.0), Color(0.48, 0.45, 0.40, 0.7), 1.4)
+			px += 28.0
+
+	# dressed granite sill where the grey gate plaza meets the gravel avenue and side lawns
+	if GATE_TOP + 12.0 >= y0 and GATE_TOP - 12.0 <= y1:
+		var ge: Vector2 = m.walk_edges(GATE_TOP)
+		b.rect(Rect2(ge.x, GATE_TOP - 5.0, ge.y - ge.x, 10.0), Color(0.68, 0.65, 0.58))
+		b.line(Vector2(ge.x, GATE_TOP - 5.0), Vector2(ge.y, GATE_TOP - 5.0), Color(0.80, 0.77, 0.69), 1.8)
+		b.line(Vector2(ge.x, GATE_TOP + 5.0), Vector2(ge.y, GATE_TOP + 5.0), Color(0.46, 0.44, 0.40), 1.6)
+		var gx: float = ge.x + 26.0
+		while gx < ge.y - 6.0:
+			b.line(Vector2(gx, GATE_TOP - 5.0), Vector2(gx, GATE_TOP + 5.0), Color(0.50, 0.47, 0.42, 0.7), 1.2)
+			gx += 26.0
+
+	# El Mamut's plinth surround: sauló gravel and granite kerb so it does not sit raw in grass
+	var plinth_r := Rect2(BossMamut.PLINTH - BossMamut.PLINTH_HALF, BossMamut.PLINTH_HALF * 2.0)
+	if plinth_r.end.y + 30.0 >= y0 and plinth_r.position.y - 30.0 <= y1:
+		var pad := plinth_r.grow(24.0)
+		b.rect(pad.grow(5.0), Color(0.68, 0.65, 0.58))
+		b.rect(pad, Color(0.78, 0.70, 0.53))
+		for pk in range(18):
+			var hx := _hash(float(pk), 7.3)
+			var hy := _hash(float(pk), 19.1)
+			var pt := pad.position + Vector2(6.0 + hx * (pad.size.x - 12.0), 6.0 + hy * (pad.size.y - 12.0))
+			b.circle(pt, 1.5, Color(0.62, 0.54, 0.40))
+
+	# boating lake west stone coping: sits on ground_layer so it matches the north/south walls
+	var lake_top := BossMamut.LAKE_TOP - 20.0
+	var lake_bot := BossMamut.LAKE_BOT + 20.0
+	if lake_bot >= y0 and lake_top <= y1:
+		var ly0 := maxf(y0, lake_top)
+		var ly1 := minf(y1, lake_bot)
+		var cx_lip := BossMamut.SHORE_X - 18.0
+		b.rect(Rect2(cx_lip, ly0, 18.0, ly1 - ly0), Color(0.72, 0.68, 0.60))
+		b.line(Vector2(cx_lip, ly0), Vector2(cx_lip, ly1), Color(0.54, 0.50, 0.44), 2.0)
+		b.line(Vector2(BossMamut.SHORE_X - 1.0, ly0), Vector2(BossMamut.SHORE_X - 1.0, ly1), Color(0.84, 0.80, 0.72), 2.0)
+		var jy := floorf(ly0 / 32.0) * 32.0
+		while jy < ly1:
+			if jy >= ly0:
+				b.line(Vector2(cx_lip, jy), Vector2(BossMamut.SHORE_X, jy), Color(0.54, 0.50, 0.44, 0.65), 1.3)
+			jy += 32.0
+
+	# La Cascada pool north/south coping and drinking fountain stone pier
+	if POOL_BOT + 36.0 >= y0 and POOL_TOP - 36.0 <= y1:
+		var pe: Vector2 = m.walk_edges((POOL_TOP + POOL_BOT) * 0.5)
+		b.rect(Rect2(pe.x, POOL_TOP - 30.0, POOL_LIP + 6.0, 30.0), Color(0.74, 0.70, 0.62))
+		b.line(Vector2(pe.x, POOL_TOP - 1.0), Vector2(pe.x + POOL_LIP + 6.0, POOL_TOP - 1.0), Color(0.84, 0.80, 0.72), 2.0)
+		b.rect(Rect2(pe.x, POOL_BOT, POOL_LIP + 6.0, 30.0), Color(0.74, 0.70, 0.62))
+		b.line(Vector2(pe.x, POOL_BOT + 1.0), Vector2(pe.x + POOL_LIP + 6.0, POOL_BOT + 1.0), Color(0.84, 0.80, 0.72), 2.0)
+		if DRINK.y + 24.0 >= y0 and DRINK.y - 24.0 <= y1:
+			var pier := Rect2(pe.x, DRINK.y - 20.0, POOL_LIP + 6.0, 40.0)
+			b.rect(pier, Color(0.70, 0.66, 0.58))
+			b.rect(pier.grow(-4.0), Color(0.80, 0.76, 0.68))
 
 	# the Arc de Triomf's piers: red brick on a stone plinth
 	for r: Rect2 in ARC_PIERS:
@@ -395,18 +507,11 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 			k += 1
 		b.rect(Rect2(r.position + Vector2(14.0, 14.0), r.size - Vector2(28.0, 28.0)), Color(0.76, 0.40, 0.28))
 
-	# the gate line: railings to either side of the opening
+	# the gate line: railings connecting the corridor edge cleanly to the gate piers
 	if -950.0 > y0 and -950.0 < y1:
 		var e: Vector2 = m.walk_edges(-950.0)
-		for side: float in [-1.0, 1.0]:
-			var x0 := e.x if side < 0.0 else e.y
-			b.line(Vector2(x0, -950.0), Vector2(x0 + side * 4.0, -950.0), Color(0.14, 0.15, 0.17), 4.0)
-
-	# off-leash threshold band at the gate
-	if gate_y - 90.0 <= y1 and gate_y + 60.0 >= y0:
-		var te: Vector2 = m.walk_edges(gate_y)
-		b.rect(Rect2(te.x - 10.0, gate_y - 80.0, te.y - te.x + 20.0, 118.0), Color(0.42, 0.32, 0.22))
-		b.rect(Rect2(te.x - 4.0, gate_y - 74.0, te.y - te.x + 8.0, 106.0), Color(0.26, 0.24, 0.22))
+		b.line(Vector2(e.x, -950.0), Vector2(GATE_PIERS[0].x, -950.0), Color(0.14, 0.15, 0.17), 4.0)
+		b.line(Vector2(GATE_PIERS[1].x, -950.0), Vector2(e.y, -950.0), Color(0.14, 0.15, 0.17), 4.0)
 	b.flush(wc)
 
 
@@ -441,65 +546,130 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var y_bot := minf(vb + 240.0, float(m.START_Y) + 560.0)
 	if y_bot <= y_top:
 		return
-	var step := 48.0
+	var step := 32.0
 	var sy := floorf(y_top / step) * step
 	while sy < y_bot:
 		var sb := minf(sy + step, y_bot)
+		for split_y: float in [GATE_TOP, PASSEIG_TOP]:
+			if sy < split_y and sb > split_y:
+				sb = split_y
+				break
 		var ea: Vector2 = m.walk_edges(sy)
 		var eb: Vector2 = m.walk_edges(sb)
 		var ym := (sy + sb) * 0.5
 		var row := absi(int(floorf(sy / step)))
 		if ym > PASSEIG_TOP:
-			# the promenade's side carriageways, then the city blocks
+			# the promenade's side carriageways, and a granite cross-walk before the park
 			for side: float in [-1.0, 1.0]:
 				var xa := ea.x if side < 0.0 else ea.y
 				var xb := eb.x if side < 0.0 else eb.y
 				var far := -480.0 if side < 0.0 else 1760.0
 				b.quad(Vector2(xa, sy), Vector2(far, sy), Vector2(far, sb), Vector2(xb, sb), Color(0.30, 0.31, 0.33))
 				b.line(Vector2(xa, sy), Vector2(xb, sb), Color(0.80, 0.76, 0.68), 6.0)
-				if row % 2 == 0:
-					b.line(Vector2(xa + side * 110.0, sy), Vector2(xa + side * 110.0, sy + 24.0), Color(0.86, 0.84, 0.76), 3.0)
-				var bx := xa + side * 200.0
-				b.rect(Rect2(minf(bx, far), sy, absf(far - bx), sb - sy), Color(0.86, 0.80, 0.68) if row % 5 != 0 else Color(0.80, 0.74, 0.62))
-				b.line(Vector2(bx, sy), Vector2(bx, sb), Color(0.62, 0.56, 0.46), 4.0)
-				if row % 2 == 1:
-					b.rect(Rect2(bx + (6.0 if side > 0.0 else -22.0), sy + 10.0, 16.0, 26.0), Color(0.42, 0.34, 0.28))
-				# palms on the carriageway's verge
-				if row % 3 == 0:
-					var pp := Vector2(xa + side * 54.0, ym)
-					b.circle(pp + Shade.light * 10.0, 24.0, SHADOW)
-					for i in range(7):
-						var d := Vector2.from_angle(float(i) * TAU / 7.0 + float(row))
-						b.line(pp, pp + d * 30.0, Color(0.22, 0.48, 0.24), 6.0)
-					b.circle(pp, 6.0, Color(0.46, 0.36, 0.24))
+				if ym > PASSEIG_TOP + 52.0 and row % 3 == 0:
+					b.line(Vector2(xa + side * 110.0, sy), Vector2(xa + side * 110.0, sy + 20.0), Color(0.86, 0.84, 0.76), 3.0)
 		elif ym > GATE_TOP:
 			for side: float in [-1.0, 1.0]:
 				var xa := ea.x if side < 0.0 else ea.y
 				var xb := eb.x if side < 0.0 else eb.y
 				var far := -480.0 if side < 0.0 else 1760.0
-				b.quad(Vector2(xa, sy), Vector2(far, sy), Vector2(far, sb), Vector2(xb, sb), Color(0.34, 0.52, 0.28))
-			if absf(ym + 950.0) < 30.0:
-				# the iron railings along the park's edge
-				for side: float in [-1.0, 1.0]:
-					var x0 := ea.x if side < 0.0 else ea.y
-					var x1 := -480.0 if side < 0.0 else 1760.0
-					b.line(Vector2(x0, -950.0), Vector2(x1, -950.0), Color(0.14, 0.15, 0.17), 4.0)
-					var x := x0
-					while (x > x1) if side < 0.0 else (x < x1):
-						b.circle(Vector2(x, -950.0), 3.0, Color(0.22, 0.23, 0.26))
-						b.circle(Vector2(x, -950.0), 1.4, Color(0.74, 0.62, 0.30))
-						x += side * 18.0
+				var lawn := Color(0.36, 0.55, 0.27) if (row / 2) % 2 == 0 else Color(0.34, 0.52, 0.26)
+				b.quad(Vector2(xa, sy), Vector2(far, sy), Vector2(far, sb), Vector2(xb, sb), lawn)
+				b.line(Vector2(xa + side * 3.0, sy), Vector2(xb + side * 3.0, sb), Color(0.68, 0.65, 0.58), 6.0)
 		else:
 			for side: float in [-1.0, 1.0]:
 				var xa := ea.x if side < 0.0 else ea.y
 				var xb := eb.x if side < 0.0 else eb.y
 				var far := -480.0 if side < 0.0 else 1760.0
-				var lawn := Color(0.34, 0.53, 0.26) if (row / 2) % 2 == 0 else Color(0.32, 0.51, 0.25)
+				var lawn := Color(0.36, 0.55, 0.27) if (row / 2) % 2 == 0 else Color(0.34, 0.52, 0.26)
 				b.quad(Vector2(xa, sy), Vector2(far, sy), Vector2(far, sb), Vector2(xb, sb), lawn)
-				b.line(Vector2(xa, sy), Vector2(xb, sb), Color(0.26, 0.42, 0.20), 3.0)
-				# a low box hedge along the lawn's edge
-				b.line(Vector2(xa + side * 10.0, sy), Vector2(xb + side * 10.0, sb), Color(0.20, 0.38, 0.18), 9.0)
-		sy += step
+				var no_hedge_l := side < 0.0 and ym > POOL_TOP - 60.0 and ym < POOL_BOT + 60.0
+				var no_hedge_r := side > 0.0 and ym > BossMamut.LAKE_TOP - 24.0 and ym < BossMamut.LAKE_BOT + 24.0
+				if not no_hedge_l and not no_hedge_r:
+					b.line(Vector2(xa, sy), Vector2(xb, sb), Color(0.26, 0.42, 0.20), 3.0)
+					# a low box hedge along the lawn's edge
+					b.line(Vector2(xa + side * 10.0, sy), Vector2(xb + side * 10.0, sb), Color(0.20, 0.38, 0.18), 9.0)
+		sy = sb
+
+	# Passeig city blocks (straight facade line, ending at the cross-street) and curbed palms
+	var blk_top := maxf(y_top, PASSEIG_TOP + 44.0)
+	if y_bot > blk_top:
+		var blk_step := 48.0
+		var bsy := floorf(blk_top / blk_step) * blk_step
+		if bsy < blk_top:
+			bsy = blk_top
+		while bsy < y_bot:
+			var bsb := minf(bsy + blk_step, y_bot)
+			var brow := absi(int(floorf(bsy / blk_step)))
+			for side: float in [-1.0, 1.0]:
+				var bx := 140.0 if side < 0.0 else 1140.0
+				var far := -480.0 if side < 0.0 else 1760.0
+				b.rect(Rect2(minf(bx, far), bsy, absf(far - bx), bsb - bsy),
+					Color(0.86, 0.80, 0.68) if brow % 5 != 0 else Color(0.80, 0.74, 0.62))
+				b.line(Vector2(bx, bsy), Vector2(bx, bsb), Color(0.62, 0.56, 0.46), 4.0)
+				if brow % 2 == 1 and bsb - bsy > 32.0:
+					b.rect(Rect2(bx + (6.0 if side > 0.0 else -22.0), bsy + 10.0, 16.0, 26.0), Color(0.42, 0.34, 0.28))
+			bsy = bsb
+		if y_top <= PASSEIG_TOP + 50.0 and y_bot >= PASSEIG_TOP + 40.0:
+			for side: float in [-1.0, 1.0]:
+				var bx := 140.0 if side < 0.0 else 1140.0
+				var far := -480.0 if side < 0.0 else 1760.0
+				b.line(Vector2(bx, blk_top), Vector2(far, blk_top), Color(0.62, 0.56, 0.46), 5.0)
+	# granite kerb and crosswalk apron where the carriageways meet the park along PASSEIG_TOP
+	if PASSEIG_TOP + 52.0 >= y_top and PASSEIG_TOP - 12.0 <= y_bot:
+		var pe: Vector2 = m.walk_edges(PASSEIG_TOP)
+		for side: float in [-1.0, 1.0]:
+			var x_in: float = pe.x if side < 0.0 else pe.y
+			var far := -480.0 if side < 0.0 else 1760.0
+			var x0 := minf(x_in, far)
+			var w := absf(far - x_in)
+			b.rect(Rect2(x0, PASSEIG_TOP, w, 44.0), Color(0.68, 0.65, 0.58))
+			b.rect(Rect2(x0, PASSEIG_TOP + 8.0, w, 30.0), Color(0.56, 0.54, 0.50))
+			var sx := x0 + 24.0
+			while sx < x0 + w - 16.0:
+				b.rect(Rect2(sx, PASSEIG_TOP + 14.0, 14.0, 18.0), Color(0.84, 0.82, 0.76, 0.75))
+				sx += 32.0
+			b.line(Vector2(x0, PASSEIG_TOP), Vector2(x0 + w, PASSEIG_TOP), Color(0.80, 0.76, 0.68), 4.0)
+	# palms in curbed soil pits along the carriageway
+	var p_step := 144.0
+	var py := floorf(maxf(y_top, PASSEIG_TOP + 120.0) / p_step) * p_step + 24.0
+	while py < y_bot:
+		if py > PASSEIG_TOP + 110.0:
+			var pe: Vector2 = m.walk_edges(py)
+			for side: float in [-1.0, 1.0]:
+				var xa: float = pe.x if side < 0.0 else pe.y
+				var pp := Vector2(xa + side * 54.0, py)
+				b.rect(Rect2(pp - Vector2(14.0, 14.0), Vector2(28.0, 28.0)), Color(0.70, 0.67, 0.60))
+				b.rect(Rect2(pp - Vector2(10.0, 10.0), Vector2(20.0, 20.0)), Color(0.34, 0.27, 0.20))
+				b.circle(pp + Shade.light * 10.0, 24.0, SHADOW)
+				for i in range(7):
+					var d := Vector2.from_angle(float(i) * TAU / 7.0 + py * 0.02)
+					b.line(pp, pp + d * 30.0, Color(0.22, 0.48, 0.24), 6.0)
+				b.circle(pp, 6.0, Color(0.46, 0.36, 0.24))
+		py += p_step
+
+	# iron railings along the park's edge, running all the way behind the gate piers
+	if -950.0 >= y_top - 30.0 and -950.0 <= y_bot + 30.0:
+		for side: float in [-1.0, 1.0]:
+			var x0 := GATE_PIERS[0].x if side < 0.0 else GATE_PIERS[1].x
+			var x1 := -480.0 if side < 0.0 else 1760.0
+			b.line(Vector2(x0, -950.0), Vector2(x1, -950.0), Color(0.14, 0.15, 0.17), 4.0)
+			var x := x0 + side * 20.0
+			while (x > x1) if side < 0.0 else (x < x1):
+				b.circle(Vector2(x, -950.0), 3.0, Color(0.22, 0.23, 0.26))
+				b.circle(Vector2(x, -950.0), 1.4, Color(0.74, 0.62, 0.30))
+				x += side * 18.0
+
+	# rounded shrub caps where the box hedge starts/ends at the gate, lake and dog park
+	for cap_y: float in [GATE_TOP, BossMamut.LAKE_BOT + 24.0, BossMamut.LAKE_TOP - 24.0, gate_y - 30.0]:
+		if cap_y >= y_top - 20.0 and cap_y <= y_bot + 20.0:
+			var ce: Vector2 = m.walk_edges(cap_y)
+			for side: float in [-1.0, 1.0]:
+				if side > 0.0 and (absf(cap_y - GATE_TOP) > 1.0 and absf(cap_y - (gate_y - 30.0)) > 1.0):
+					b.circle(Vector2(ce.y + 10.0, cap_y), 5.5, Color(0.20, 0.38, 0.18))
+				elif absf(cap_y - GATE_TOP) <= 1.0 or absf(cap_y - (gate_y - 30.0)) <= 1.0:
+					var cx: float = (ce.x - 10.0) if side < 0.0 else (ce.y + 10.0)
+					b.circle(Vector2(cx, cap_y), 5.5, Color(0.20, 0.38, 0.18))
 
 	_draw_castle(b, y_top, y_bot)
 	_draw_hivernacle(b, y_top, y_bot)
@@ -693,21 +863,42 @@ static func _draw_cascada(b: ShapeBatch, y0: float, y1: float) -> void:
 
 
 static func _draw_zoo(b: ShapeBatch, y0: float, y1: float) -> void:
-	if y1 < CASCADA_TOP - 900.0 or y0 > CASCADA_TOP:
+	const ZOO_TOP := -4900.0
+	const ZOO_BOT := -4100.0
+	if y1 < ZOO_TOP - 80.0 or y0 > ZOO_BOT + 40.0:
 		return
-	var top := maxf(y0, -4900.0)
-	var bot := minf(y1, CASCADA_TOP - 60.0)
-	if bot <= top:
-		return
-	# the enclosure's sand beyond the wall, the wall with its tiled coping
-	b.rect(Rect2(ZOO_WALL_X + 34.0, top, 900.0, bot - top), Color(0.82, 0.72, 0.52))
-	b.rect(Rect2(ZOO_WALL_X, top, 34.0, bot - top), Color(0.86, 0.72, 0.50))
-	b.rect(Rect2(ZOO_WALL_X, top, 8.0, bot - top), Color(0.62, 0.30, 0.20))
-	var y := floorf(top / 40.0) * 40.0
-	while y < bot:
-		b.line(Vector2(ZOO_WALL_X + 8.0, y), Vector2(ZOO_WALL_X + 34.0, y), Color(0.72, 0.58, 0.40), 1.4)
-		y += 40.0
-	# acacia crowns and a feeding rack in the giraffe yard
+	var top := maxf(y0, ZOO_TOP)
+	var bot := minf(y1, ZOO_BOT)
+	if bot > top:
+		# the enclosure's sand beyond the wall, the wall with its tiled coping
+		b.rect(Rect2(ZOO_WALL_X + 34.0, top, 900.0, bot - top), Color(0.82, 0.72, 0.52))
+		b.rect(Rect2(ZOO_WALL_X, top, 34.0, bot - top), Color(0.86, 0.72, 0.50))
+		b.rect(Rect2(ZOO_WALL_X, top, 8.0, bot - top), Color(0.62, 0.30, 0.20))
+		var y := floorf(top / 40.0) * 40.0
+		while y < bot:
+			b.line(Vector2(ZOO_WALL_X + 8.0, y), Vector2(ZOO_WALL_X + 34.0, y), Color(0.72, 0.58, 0.40), 1.4)
+			y += 40.0
+	# tiled return walls and corner piers closing both ends of the giraffe yard
+	for wy: float in [ZOO_TOP, ZOO_BOT]:
+		if wy >= y0 - 40.0 and wy <= y1 + 40.0:
+			var ry := wy if wy == ZOO_TOP else wy - 34.0
+			b.rect(Rect2(ZOO_WALL_X, ry, 900.0, 34.0), Color(0.86, 0.72, 0.50))
+			var edge_y := ry if wy == ZOO_TOP else ry + 26.0
+			b.rect(Rect2(ZOO_WALL_X, edge_y, 900.0, 8.0), Color(0.62, 0.30, 0.20))
+			var rx := ZOO_WALL_X + 40.0
+			while rx < ZOO_WALL_X + 880.0:
+				b.line(Vector2(rx, ry), Vector2(rx, ry + 34.0), Color(0.72, 0.58, 0.40), 1.4)
+				rx += 40.0
+			var pier := Rect2(ZOO_WALL_X - 4.0, ry - 4.0, 42.0, 42.0)
+			b.rect(pier, Color(0.62, 0.30, 0.20))
+			b.rect(pier.grow(-6.0), Color(0.86, 0.72, 0.50))
+	# park shrubs tucked between the zoo's north wall and the dog-park fence
+	if ZOO_TOP >= y0 - 120.0 and ZOO_TOP - 120.0 <= y1:
+		for sp: Vector2 in [Vector2(960.0, -4965.0), Vector2(1060.0, -4950.0), Vector2(1170.0, -4970.0)]:
+			b.circle(sp + Shade.light * 8.0, 24.0, SHADOW)
+			b.circle(sp, 24.0, Color(0.24, 0.42, 0.20))
+			b.circle(sp - Shade.light * 6.0, 14.0, Color(0.32, 0.52, 0.26))
+	# acacia crowns in the giraffe yard
 	for ap: Vector2 in [Vector2(1180.0, -4380.0), Vector2(1240.0, -4680.0)]:
 		if ap.y > top - 80.0 and ap.y < bot + 80.0:
 			b.circle(ap + Shade.light * 10.0, 60.0, SHADOW)
@@ -719,6 +910,14 @@ static func _draw_parlament(b: ShapeBatch, y0: float, y1: float) -> void:
 	var r := Rect2(-380.0, -4760.0, 640.0, 420.0)
 	if r.end.y < y0 or r.position.y > y1:
 		return
+	# stone terrace forecourt uniting the building, colonnade and reflecting pond
+	var court := Rect2(r.position.x - 16.0, r.position.y - 16.0, r.size.x + 148.0, r.size.y + 32.0)
+	b.rect(court, Color(0.68, 0.64, 0.56))
+	b.rect(court.grow(-4.0), Color(0.76, 0.72, 0.64))
+	var fy := court.position.y + 44.0
+	while fy < court.end.y - 8.0:
+		b.line(Vector2(r.end.x, fy), Vector2(court.end.x - 4.0, fy), Color(0.64, 0.60, 0.52, 0.6), 1.4)
+		fy += 44.0
 	b.rect(Rect2(r.position + Shade.light * 22.0, r.size), SHADOW)
 	b.rect(r, Color(0.84, 0.80, 0.70))
 	b.rect(r.grow(-30.0), Color(0.56, 0.58, 0.62))
@@ -735,6 +934,92 @@ static func _draw_parlament(b: ShapeBatch, y0: float, y1: float) -> void:
 	for i in range(4):
 		b.rect(Rect2(fp + Vector2(4.0, -2.0 + float(i) * 5.0), Vector2(40.0, 2.5)),
 			Color(0.88, 0.16, 0.14) if i % 2 == 0 else Color(0.98, 0.82, 0.18))
+
+
+# --- Off-leash threshold: sauló tongue, granite kerb and feathered grass -----
+
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y: float = float(m.GATE_Y) - 40.0
+	var fence_y: float = float(m.GATE_Y) - 30.0
+	var e: Vector2 = m.walk_edges(y + 2.0)
+	var ge: Vector2 = m.walk_edges(float(m.GATE_Y) - 16.0)
+	var gl := maxf(float(m.gate_l), ge.x)
+	var gr := minf(float(m.gate_r), ge.y)
+	var mx := (gl + gr) * 0.5
+	var grass_in := Color(0.36, 0.56, 0.27)
+	var yard_grass := Color(0.34, 0.50, 0.32)
+	var surround_grass := Color(0.27, 0.40, 0.27)
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	var gs := _gravel_span(m, y)
+	var mouth_l := minf(gs.x, mx - 130.0)
+	var mouth_r := maxf(gs.y, mx + 130.0)
+
+	# continue corridor lawns cleanly to the fence and feather outer verges into the dog-park surround
+	for span: Vector2 in [Vector2(-400.0, 70.0), Vector2(1180.0, 1700.0)]:
+		var pts := PackedVector2Array([
+			Vector2(span.x, fence_y - 36.0), Vector2(span.y, fence_y - 36.0),
+			Vector2(span.x, fence_y + 26.0), Vector2(span.y, fence_y + 26.0),
+		])
+		b.band(pts, 2, Color(0.35, 0.53, 0.26), PackedFloat32Array([0.0, 0.85]))
+		var spts := PackedVector2Array([
+			Vector2(span.x, fence_y - 44.0), Vector2(span.y, fence_y - 44.0),
+			Vector2(span.x, fence_y + 22.0), Vector2(span.y, fence_y + 22.0),
+		])
+		b.band(spts, 2, surround_grass, PackedFloat32Array([0.9, 0.0]))
+	for span: Vector2 in [Vector2(70.0, e.x), Vector2(e.y, 1180.0)]:
+		var pts := PackedVector2Array([
+			Vector2(span.x, fence_y - 36.0), Vector2(span.y, fence_y - 36.0),
+			Vector2(span.x, fence_y + 24.0), Vector2(span.y, fence_y + 24.0),
+		])
+		b.band(pts, 2, yard_grass, PackedFloat32Array([0.85, 0.0]))
+	if mouth_l > e.x:
+		b.rect(Rect2(e.x, y, mouth_l - e.x, fence_y - y), grass_in)
+	if e.y > mouth_r:
+		b.rect(Rect2(mouth_r, y, e.y - mouth_r, fence_y - y), grass_in)
+
+	# worn sauló gravel tongue running continuously from the avenue mouth into the dog park
+	var tongue_half := maxf((mouth_r - mouth_l) * 0.5, 130.0)
+	var gravel := Color(0.79, 0.70, 0.53)
+	var tpts := PackedVector2Array()
+	var trows := PackedFloat32Array([1.0, 0.80, 0.36, 0.0])
+	var tcol := PackedFloat32Array([0.0, 0.88, 1.0, 0.88, 0.0])
+	var ty_specs := [[y + 3.0, 1.0], [y - 22.0, 0.86], [y - 58.0, 0.66], [y - 110.0, 0.44]]
+	for sp: Array in ty_specs:
+		var sy: float = float(sp[0])
+		var hw: float = tongue_half * float(sp[1])
+		tpts.append_array([
+			Vector2(mx - hw, sy), Vector2(mx - hw * 0.55, sy), Vector2(mx, sy),
+			Vector2(mx + hw * 0.55, sy), Vector2(mx + hw, sy),
+		])
+	b.band(tpts, 5, gravel, trows, tcol)
+	for pk in range(22):
+		var hx := _hash(float(pk), 19.3)
+		var hy := _hash(float(pk), 41.7)
+		var py := y - 4.0 - hy * 72.0
+		var spread := (1.0 - hy * 0.5) * (tongue_half - 18.0)
+		var px := mx + (hx - 0.5) * 2.0 * spread
+		var sz := 1.6 + hx * 1.4
+		b.rect(Rect2(px, py, sz, sz), Color(0.64, 0.56, 0.42) if pk % 2 == 0 else Color(0.86, 0.78, 0.62))
+
+	# granite kerb along the lawn threshold, open across the gate mouth
+	for seg: Vector2 in [Vector2(e.x, gl - 12.0), Vector2(gr + 12.0, e.y)]:
+		if seg.y - seg.x < 4.0:
+			continue
+		b.rect(Rect2(seg.x, y - 2.0, seg.y - seg.x, 7.0), sh)
+		b.rect(Rect2(seg.x, y - 3.0, seg.y - seg.x, 6.0), Color(0.70, 0.67, 0.60))
+		b.rect(Rect2(seg.x, y + 2.5, seg.y - seg.x, 1.5), Color(0.50, 0.47, 0.42))
+		var jx := seg.x + 28.0
+		while jx < seg.y - 4.0:
+			b.line(Vector2(jx, y - 3.0), Vector2(jx, y + 3.0), Color(0.50, 0.47, 0.42), 1.2)
+			jx += 28.0
+		var tx := seg.x + 8.0
+		while tx < seg.y - 8.0:
+			var h := _hash(tx, y)
+			if h > 0.30:
+				var gdark := Color(0.24, 0.40, 0.22, 0.85)
+				b.line(Vector2(tx, y - 1.5), Vector2(tx - 2.5, y + 4.5 + h * 4.0), gdark, 1.8)
+				b.line(Vector2(tx, y - 1.5), Vector2(tx + 2.5, y + 3.5 + h * 3.5), gdark, 1.8)
+			tx += 10.0 + h * 8.0
 
 
 # --- What moves: the mammoth, the crowd, the giraffes, the parakeets --------
