@@ -8,7 +8,7 @@ extends RefCounted
 # "barri" there too), so every hook here also runs in the tutorial.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_overhead", "draw_performer", "grass_blocked", "night_fronts", "night_lights", "surface", "tree_kind"]
+const HOOKS := ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_overhead", "draw_performer", "draw_threshold", "grass_blocked", "night_fronts", "night_lights", "surface", "tree_kind"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -183,7 +183,10 @@ static func _draw_pipica(m: Node2D, c: Object) -> void:
 			var pp := o + dir * float(st) * 16.0 + dir.orthogonal() * (4.0 if st % 2 == 0 else -4.0)
 			b.circle(pp, 2.6, Color(0.56, 0.48, 0.35, 0.55))
 	# the fence: across the top and down both sides (the run along the walk's
-	# end is drawn with the gate)
+	# end is drawn with the gate); outside it, a clipped hedge along the
+	# street verge, so the dog park sits in the park rather than in a bare
+	# green void
+	_pipica_verges(b, r)
 	_fence(m, b, r.position, Vector2(r.end.x, r.position.y))
 	_fence(m, b, r.position, Vector2(r.position.x, r.end.y))
 	_fence(m, b, Vector2(r.end.x, r.position.y), r.end)
@@ -202,6 +205,21 @@ static func _draw_pipica(m: Node2D, c: Object) -> void:
 	b.flush(c)
 	m._draw_freedom_benches(c, r, Color(0.42, 0.30, 0.20))
 	m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_off_leash_dog_park"))
+
+
+# Outside the pipicà's east and west fences: a clipped privet hedge on the
+# outer verges, closing the corner where the side streets and blocks end.
+static func _pipica_verges(b: ShapeBatch, r: Rect2) -> void:
+	for side: float in [-1.0, 1.0]:
+		var fx: float = r.position.x if side < 0.0 else r.end.x
+		var hx: float = fx - 24.0 if side < 0.0 else fx + 6.0
+		b.rect(Rect2(hx, r.position.y - 10.0, 18.0, r.size.y + 10.0), Color(0.20, 0.34, 0.20))
+		var hy := r.position.y + 8.0
+		while hy < r.end.y - 6.0:
+			var hc := Vector2(fx + side * 15.0, hy)
+			b.circle(hc, 13.0, Color(0.24, 0.40, 0.23))
+			b.circle(hc - Vector2(3.0, 3.0), 6.5, Color(0.32, 0.48, 0.28))
+			hy += 26.0
 
 
 # a run of the pipicà's fence, a to b: green steel posts and a welded mesh
@@ -241,6 +259,9 @@ static func grass_blocked(m: Node2D, p: Vector2) -> bool:
 # lays its stations out instead
 static func draw_live(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	if m.tutorial_mode:
+		var tb := ShapeBatch.new()
+		_draw_south_pavement(m, tb, vt, vb)
+		tb.flush(m._wc)
 		return
 	var gb := ShapeBatch.new()
 	_draw_gravel(m, gb, vt, vb)
@@ -293,6 +314,44 @@ static func draw_fountain(m: Node2D, f: Vector2) -> void:
 	_font(m, f)
 
 
+# the pipica's threshold: both the square and the pipica are gravel/sauló, so
+# instead of a street's wide soldier course of setts, a granite sill and flush
+# kerb sit on the gate line while the square's worn track feathers into the
+# pipica's sauló through the open mouth.
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var gy: float = float(m.GATE_Y) - 16.0
+	var fy: float = float(m.GATE_Y) - 30.0
+	var sy: float = float(m.GATE_Y) - 41.0
+	var ge: Vector2 = m.walk_edges(gy)
+	var gl: float = maxf(m.gate_l, ge.x)
+	var gr: float = minf(m.gate_r, ge.y)
+	var mx: float = (gl + gr) * 0.5
+	var mw: float = gr - gl
+	# fill the strip between the walk's top (sy) and the gate line (gy) with
+	# sauló inside the mouth, then feather the square's worn path across it
+	b.rect(Rect2(gl - 12.0, sy, mw + 24.0, gy - sy), PIPICA_GROUND)
+	b.glow(Vector2(mx, gy - 28.0), mw * 0.44, Color(0.60, 0.52, 0.39, 0.36), 0.35)
+	b.glow(Vector2(mx, gy + 10.0), mw * 0.40, Color(0.64, 0.56, 0.42, 0.28), 0.35)
+	# granite threshold sill across the gate mouth, flush with the sauló
+	var sill := Rect2(gl - 8.0, gy - 3.5, mw + 16.0, 7.0)
+	b.rect(Rect2(sill.position.x, sill.end.y, sill.size.x, 1.5), Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.18))
+	b.rect(sill, GRANITE_JOINT)
+	var sx := sill.position.x
+	var idx := 0
+	while sx < sill.end.x - 1.0:
+		var sw := minf(24.0, sill.end.x - sx)
+		var gcol := GRANITE.lerp(Color(0.64, 0.62, 0.59), float(idx % 2) * 0.45)
+		b.rect(Rect2(sx + 0.8, sill.position.y + 0.8, sw - 1.6, sill.size.y - 1.6), gcol)
+		sx += 24.0
+		idx += 1
+	# where the square's side granite edging (394..401 and 880..887) meets the
+	# pipica fence line at fy, cap the corners into the gate wings
+	for span: Vector2 in [Vector2(394.0, gl - 10.0), Vector2(gr + 10.0, 887.0)]:
+		if span.y > span.x:
+			b.rect(Rect2(span.x, fy - 2.5, span.y - span.x, 5.0), GRANITE)
+			b.rect(Rect2(span.x, fy - 2.5, span.y - span.x, 1.5), Color(0.76, 0.75, 0.72))
+
+
 # the pipica's fence along the walk's end, out to its corners (main._draw_gate)
 static func draw_gate_fence(m: Node2D, b: ShapeBatch, gl: float, gr: float, gy: float) -> void:
 	# the pipicà's fence along the walk's end, out to its corners, on the
@@ -303,6 +362,18 @@ static func draw_gate_fence(m: Node2D, b: ShapeBatch, gl: float, gr: float, gy: 
 	var sy: float = m.GATE_Y - 41.0
 	b.rect(Rect2(fr.position.x, sy, m.gate_l - 20.0 - fr.position.x, fy - sy), PIPICA_GROUND)
 	b.rect(Rect2(m.gate_r + 20.0, sy, fr.end.x - m.gate_r - 20.0, fy - sy), PIPICA_GROUND)
+	# triangle wedges between the angled gate wings and the threshold sill
+	b.polygon(PackedVector2Array([Vector2(m.gate_l - 20.0, sy), Vector2(gl - 10.0, sy),
+		Vector2(gl - 10.0, gy), Vector2(m.gate_l - 20.0, fy)]), PIPICA_GROUND)
+	b.polygon(PackedVector2Array([Vector2(gr + 10.0, sy), Vector2(m.gate_r + 20.0, sy),
+		Vector2(m.gate_r + 20.0, fy), Vector2(gr + 10.0, gy)]), PIPICA_GROUND)
+	# concrete kerb plinth along the fence's south face, grounding the mesh
+	# where the lawns, pavements and side street meet the pipicà
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.20)
+	for run: Vector2 in [Vector2(fr.position.x - 3.0, m.gate_l - 18.0), Vector2(m.gate_r + 18.0, fr.end.x + 3.0)]:
+		b.rect(Rect2(run.x, fy + 2.5, run.y - run.x, 2.5), sh)
+		b.rect(Rect2(run.x, fy - 3.0, run.y - run.x, 6.0), KERB.darkened(0.06))
+		b.rect(Rect2(run.x, fy - 3.0, run.y - run.x, 1.8), KERB.lightened(0.10))
 	_fence(m, b, Vector2(fr.position.x, fy), Vector2(m.gate_l - 20.0, fy))
 	_fence(m, b, Vector2(m.gate_r + 20.0, fy), Vector2(fr.end.x, fy))
 	_fence(m, b, Vector2(m.gate_l - 20.0, fy), Vector2(gl - 10.0, gy))
@@ -537,7 +608,7 @@ static func _shadow(m: Node2D) -> Color:
 # the gravel itself: granite edging along both sides, a track worn down the
 # middle by every walk, and a band of setts across each end of the square
 static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
-	var lo: float = maxf(top, m.GATE_Y - 30.0)
+	var lo: float = maxf(top, m.GATE_Y - 16.0)
 	var hi: float = minf(bot, _rail_bottom(m))
 	if hi <= lo:
 		return
@@ -609,9 +680,11 @@ static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> vo
 	for g: Vector2 in RAIL_GATES:
 		if g.y < lo - 30.0 or g.y > hi + 30.0:
 			continue
-		_panots(b, 402.0, 878.0, g.y - 18.0, g.y + 18.0, 18.0)
-		b.rect(Rect2(402.0, g.y - 19.0, 476.0, 1.5), GRANITE_JOINT)
-		b.rect(Rect2(402.0, g.y + 18.0, 476.0, 1.5), GRANITE_JOINT)
+		_panots(b, 401.0, 880.0, g.y - 18.0, g.y + 18.0, 18.0)
+		b.rect(Rect2(401.0, g.y - 20.0, 479.0, 2.0), GRANITE)
+		b.rect(Rect2(401.0, g.y + 18.0, 479.0, 2.0), GRANITE)
+		b.rect(Rect2(401.0, g.y - 18.0, 479.0, 1.2), GRANITE_JOINT)
+		b.rect(Rect2(401.0, g.y + 16.8, 479.0, 1.2), GRANITE_JOINT)
 	# things dropped on the gravel: a ball, a dummy, a glove, drifts of leaves
 	# against the edging
 	for dr: Vector3 in LEAF_DRIFTS:
@@ -655,16 +728,46 @@ static func _draw_gravel(m: Node2D, b: ShapeBatch, top: float, bot: float) -> vo
 					b.rect(Rect2(x0, sy - 19.0 + float(row) * 13.0, x1 - x0, 12.0), g)
 				sx += 26.0
 	# the granite edging between the gravel and the lawns, its shadow on the gravel
-	for side: float in [-1.0, 1.0]:
-		var ex: float = 394.0 if side < 0.0 else 880.0
-		b.rect(Rect2(ex + (7.0 if side < 0.0 else -2.0), lo, 2.0, hi - lo), Color(0.40, 0.34, 0.26, 0.30))
-		b.rect(Rect2(ex, lo, 7.0, hi - lo), Color(0.60, 0.59, 0.56))
-		b.rect(Rect2(ex, lo, 7.0, 1.5), Color(0.74, 0.73, 0.70))
-		b.rect(Rect2(ex + 1.0, lo, 2.0, hi - lo), Color(0.72, 0.71, 0.68))
-		var jy := floorf(lo / 64.0) * 64.0
-		while jy < hi:
-			b.rect(Rect2(ex, jy, 7.0, 1.5), Color(0.44, 0.43, 0.41))
-			jy += 64.0
+	var edge_hi: float = minf(hi, float(m.START_Y) + 64.0)
+	if edge_hi > lo:
+		for side: float in [-1.0, 1.0]:
+			var ex: float = 394.0 if side < 0.0 else 880.0
+			b.rect(Rect2(ex + (7.0 if side < 0.0 else -2.0), lo, 2.0, edge_hi - lo), Color(0.40, 0.34, 0.26, 0.30))
+			b.rect(Rect2(ex, lo, 7.0, edge_hi - lo), Color(0.60, 0.59, 0.56))
+			b.rect(Rect2(ex, lo, 7.0, 1.5), Color(0.74, 0.73, 0.70))
+			b.rect(Rect2(ex + 1.0, lo, 2.0, edge_hi - lo), Color(0.72, 0.71, 0.68))
+			var jy := floorf(lo / 64.0) * 64.0
+			while jy < edge_hi:
+				b.rect(Rect2(ex, jy, 7.0, 1.5), Color(0.44, 0.43, 0.41))
+				jy += 64.0
+			# flush threshold stones where the desire paths cross the edging
+			for g: Vector2 in RAIL_GATES:
+				if g.y > lo - 24.0 and g.y < edge_hi + 24.0 and ((side < 0.0 and g.x < 640.0) or (side > 0.0 and g.x > 640.0)):
+					b.rect(Rect2(ex, g.y - 18.0, 7.0, 36.0), GRANITE.lightened(0.06))
+					b.rect(Rect2(ex, g.y - 20.0, 7.0, 2.0), GRANITE_JOINT)
+					b.rect(Rect2(ex, g.y + 18.0, 7.0, 2.0), GRANITE_JOINT)
+	# along the south entrance (where the park meets the home finca's pavement):
+	# a granite border and panot pavement strip across the square and lawns,
+	# right up to the finca's wall at START_Y + 94 so no raw gravel or grass
+	# peeks between the park and the home block's awnings
+	_draw_south_pavement(m, b, lo, hi)
+
+
+static func _draw_south_pavement(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
+	var s_edge: float = float(m.START_Y) + 64.0
+	var s_wall: float = float(m.START_Y) + 96.0
+	if bot <= s_edge - 8.0 or top >= s_wall + 4.0:
+		return
+	var x0: float = -400.0 if m.tutorial_mode else RAIL_W
+	var x1: float = 1700.0 if m.tutorial_mode else RAIL_E
+	_panots(b, x0, x1, s_edge, s_wall, 16.0)
+	b.rect(Rect2(x0, s_edge - 4.0, x1 - x0, 5.0), GRANITE)
+	b.rect(Rect2(x0, s_edge - 4.0, x1 - x0, 1.5), Color(0.78, 0.77, 0.74))
+	b.rect(Rect2(x0, s_edge + 1.0, x1 - x0, 1.5), GRANITE_JOINT)
+	var sjx := x0 + 32.0
+	while sjx < x1 - 4.0:
+		b.rect(Rect2(sjx, s_edge - 4.0, 1.5, 5.0), GRANITE_JOINT)
+		sjx += 32.0
 
 
 static func _draw_neighbourhood(m: Node2D, top: float, bot: float) -> void:
@@ -676,12 +779,26 @@ static func _draw_neighbourhood(m: Node2D, top: float, bot: float) -> void:
 	_draw_east_block(m, b, top, bot)
 	for side: float in [-1.0, 1.0]:
 		var rail: float = RAIL_E if side > 0.0 else RAIL_W
-		# the railing: its rail, a post every few feet
-		b.rect(Rect2(rail - 2.0, top, 4.0, bot - top), RAILING)
-		var py := floorf(top / 16.0) * 16.0
-		while py < bot:
-			b.circle(Vector2(rail, py), 2.6, RAILING)
-			py += 16.0
+		# the railing: its rail, a post every few feet, and a return along the
+		# south lawn edge to the square's granite edging
+		var s_rail: float = float(m.START_Y) + 64.0
+		var r_bot: float = minf(bot, s_rail)
+		if r_bot > top:
+			b.rect(Rect2(rail - 2.0, top, 4.0, r_bot - top), RAILING)
+			var py := floorf(top / 16.0) * 16.0
+			while py < r_bot:
+				b.circle(Vector2(rail, py), 2.6, RAILING)
+				py += 16.0
+		if bot >= s_rail and top <= s_rail + 8.0:
+			var rx0: float = RAIL_W if side < 0.0 else 884.0
+			var rx1: float = 397.0 if side < 0.0 else RAIL_E
+			b.rect(Rect2(rx0, s_rail - 2.0, rx1 - rx0, 4.0), RAILING)
+			var rpx := rx0
+			while rpx <= rx1 + 1.0:
+				b.circle(Vector2(minf(rpx, rx1), s_rail), 2.8, RAILING)
+				rpx += 18.0
+			b.circle(Vector2(rx1 if side < 0.0 else rx0, s_rail), 4.2, RAILING)
+			b.circle(Vector2(rx1 if side < 0.0 else rx0, s_rail), 1.8, RAILING.lightened(0.3))
 	for g: Vector2 in RAIL_GATES:
 		if g.y > top - 30.0 and g.y < bot + 30.0:
 			var gside := 1.0 if g.x > 640.0 else -1.0
@@ -697,7 +814,8 @@ static func _draw_neighbourhood(m: Node2D, top: float, bot: float) -> void:
 		var ty2 := floorf(top / STREET_TREE_STEP) * STREET_TREE_STEP
 		while ty2 < bot + 40.0:
 			var tp := Vector2(rail2 + side * 28.0, ty2 + (70.0 if side > 0.0 else 0.0))
-			if absf(tp.y - BICING_Y) > 150.0 and not (side > 0.0 and _near_shop(tp.y, 60.0)):
+			var clear_ends: bool = tp.y > _rail_top(m) + 34.0 and tp.y < float(m.START_Y) + 54.0
+			if clear_ends and absf(tp.y - BICING_Y) > 150.0 and not (side > 0.0 and _near_shop(tp.y, 60.0)):
 				b.circle(tp + Shade.light * 14.0, 30.0, Color(0, 0, 0, 0.18))
 				b.circle(tp, 30.0, Color(0.24, 0.40, 0.22))
 				b.circle(tp - Shade.light * 8.0, 20.0, Color(0.32, 0.50, 0.28))
@@ -1375,11 +1493,13 @@ static func _desire_paths(_m: Node2D, b: ShapeBatch, top: float, bot: float) -> 
 	for g: Vector2 in RAIL_GATES:
 		if g.y < top - 40.0 or g.y > bot + 40.0:
 			continue
-		var x0: float = minf(g.x, 402.0 if g.x < 640.0 else 878.0)
-		var x1: float = maxf(g.x, 402.0 if g.x < 640.0 else 878.0)
+		var x0: float = minf(g.x, 394.0 if g.x < 640.0 else 887.0)
+		var x1: float = maxf(g.x, 394.0 if g.x < 640.0 else 887.0)
 		_panots(b, x0, x1, g.y - 18.0, g.y + 18.0, 18.0)
 		b.rect(Rect2(x0, g.y - 20.0, x1 - x0, 2.0), GRANITE)
 		b.rect(Rect2(x0, g.y + 18.0, x1 - x0, 2.0), GRANITE)
+		b.rect(Rect2(x0, g.y - 18.0, x1 - x0, 1.2), GRANITE_JOINT)
+		b.rect(Rect2(x0, g.y + 16.8, x1 - x0, 1.2), GRANITE_JOINT)
 
 
 static func _motorbike(b: ShapeBatch, p: Vector2, side: float, v: float) -> void:
@@ -1442,71 +1562,110 @@ static func _bicing(m: Node2D, b: ShapeBatch, at: Vector2) -> void:
 static func _terrats(b: ShapeBatch, x0: float, side: float, top: float, bot: float) -> void:
 	var y := floorf(top / 600.0) * 600.0
 	var k := int(absf(y) / 600.0) * 7
+	var s0 := SIDE_STREET_Y - SIDE_STREET_HALF
+	var s1 := SIDE_STREET_Y + SIDE_STREET_HALF
 	while y < bot:
 		var depth := 70.0 + _h1(k, 1.0) * 60.0
 		var ny := y + depth
 		if ny > top:
-			var r := Rect2(x0 if side > 0.0 else x0 - 520.0, y, 520.0, depth)
-			var face: float = x0 + side * 6.0
-			b.rect(r, PARAPET)
-			var inner := r.grow(-6.0)
-			var tile := TERRAT.lerp(Color(0.66, 0.44, 0.34), _h1(k, 2.0))
-			b.rect(inner, tile)
-			var gx := inner.position.x + 14.0
-			while gx < inner.end.x:
-				b.line(Vector2(gx, inner.position.y), Vector2(gx, inner.end.y), tile.darkened(0.12), 1.0)
-				gx += 14.0
-			# the party wall to the next building
-			b.rect(Rect2(r.position.x, r.end.y - 3.0, r.size.x, 6.0), PARAPET.darkened(0.15))
-			# water tank or staircase caseta near the street front
-			var tx := face + side * (40.0 + _h1(k, 3.0) * 60.0)
-			if k % 3 == 0:
-				b.rect(Rect2(tx - 16.0, y + 14.0, 32.0, 28.0), Color(0.84, 0.80, 0.72))
-				b.rect(Rect2(tx - 12.0, y + 18.0, 24.0, 20.0), tile.darkened(0.08))
-			else:
-				b.circle(Vector2(tx, y + depth * 0.5) + Vector2(4, 6), 12.0, Color(0, 0, 0, 0.22))
-				b.circle(Vector2(tx, y + depth * 0.5), 12.0, Color(0.84, 0.84, 0.82))
-				b.circle(Vector2(tx, y + depth * 0.5), 5.0, Color(0.60, 0.62, 0.64))
-			var sx := face + side * (120.0 + _h1(k, 4.0) * 80.0)
-			b.rect(Rect2(sx - 14.0, y + 14.0, 28.0, 20.0), Color(0.46, 0.62, 0.70))
-			b.line(Vector2(sx - 14.0, y + 24.0), Vector2(sx + 14.0, y + 24.0), Color(0.86, 0.90, 0.92), 1.4)
-			# chimney pots on every second roof
-			if k % 2 == 1 and depth > 86.0:
-				for ci in range(2):
-					b.circle(Vector2(face + side * (22.0 + float(ci) * 10.0), ny - 16.0), 3.2, Color(0.76, 0.44, 0.30))
-			if _h1(k, 5.0) > 0.5:
-				var lx := face + side * 30.0
-				b.line(Vector2(lx, y + 12.0), Vector2(lx, ny - 12.0), Color(0.82, 0.82, 0.80), 1.0)
-				var cy := y + 18.0
-				var ci := 0
-				while cy < ny - 18.0:
-					b.rect(Rect2(lx - 5.0, cy, 10.0, 8.0), WASHING[(k + ci) % WASHING.size()])
-					cy += 16.0
-					ci += 1
-			else:
-				for pk in range(3):
-					var pp := Vector2(face + side * 12.0, y + 14.0 + float(pk) * 16.0)
-					if pp.y < ny - 8.0:
-						b.circle(pp, 5.0, Color(0.62, 0.36, 0.24))
-						b.circle(pp, 3.6, Color(0.30, 0.52, 0.26))
-						b.circle(pp + Vector2(1, -1), 1.6, Color(0.90, 0.24, 0.30))
+			# split only at the side street, never at the view's edge, or a
+			# parapet cap would draw along the top of the screen
+			var y0 := y
+			var y1 := ny
+			var spans: Array[Vector2] = []
+			if side < 0.0 and y0 < s1 and y1 > s0:
+				if y0 < s0:
+					spans.append(Vector2(y0, s0))
+				if y1 > s1:
+					spans.append(Vector2(s1, y1))
+			elif y1 - y0 > 0.5:
+				spans.append(Vector2(y0, y1))
+			for sp: Vector2 in spans:
+				_terrat_roof(b, x0, side, sp.x, sp.y, k)
 		y = ny
 		k += 1
 	if side < 0.0:
 		_side_street(b, x0, top, bot)
 
 
-# The side street's mouth, painted over whatever roofs it cuts: asphalt to the
-# edge of the screen, a kerb along each corner and a zebra across the mouth
+static func _terrat_roof(b: ShapeBatch, x0: float, side: float, y0: float, y1: float, k: int) -> void:
+	var depth := y1 - y0
+	var r := Rect2(x0 if side > 0.0 else x0 - 520.0, y0, 520.0, depth)
+	var face: float = x0 + side * 6.0
+	b.rect(r, PARAPET)
+	var inner := r.grow(-6.0)
+	if inner.size.y <= 2.0:
+		return
+	var tile := TERRAT.lerp(Color(0.66, 0.44, 0.34), _h1(k, 2.0))
+	b.rect(inner, tile)
+	var gx := inner.position.x + 14.0
+	while gx < inner.end.x:
+		b.line(Vector2(gx, inner.position.y), Vector2(gx, inner.end.y), tile.darkened(0.12), 1.0)
+		gx += 14.0
+	# the party wall to the next building, and the parapet cap at the end
+	b.rect(Rect2(r.position.x, r.end.y - 3.0, r.size.x, 6.0), PARAPET.darkened(0.15))
+	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 3.0), PARAPET.darkened(0.10))
+	if depth < 44.0:
+		return
+	# water tank or staircase caseta near the street front
+	var tx := face + side * (40.0 + _h1(k, 3.0) * 60.0)
+	if k % 3 == 0 and depth >= 56.0:
+		b.rect(Rect2(tx - 16.0, y0 + 14.0, 32.0, 28.0), Color(0.84, 0.80, 0.72))
+		b.rect(Rect2(tx - 12.0, y0 + 18.0, 24.0, 20.0), tile.darkened(0.08))
+	else:
+		b.circle(Vector2(tx, y0 + depth * 0.5) + Vector2(4, 6), 12.0, Color(0, 0, 0, 0.22))
+		b.circle(Vector2(tx, y0 + depth * 0.5), 12.0, Color(0.84, 0.84, 0.82))
+		b.circle(Vector2(tx, y0 + depth * 0.5), 5.0, Color(0.60, 0.62, 0.64))
+	if depth >= 48.0:
+		var sx := face + side * (120.0 + _h1(k, 4.0) * 80.0)
+		b.rect(Rect2(sx - 14.0, y0 + 14.0, 28.0, 20.0), Color(0.46, 0.62, 0.70))
+		b.line(Vector2(sx - 14.0, y0 + 24.0), Vector2(sx + 14.0, y0 + 24.0), Color(0.86, 0.90, 0.92), 1.4)
+	# chimney pots on every second roof
+	if k % 2 == 1 and depth > 86.0:
+		for ci in range(2):
+			b.circle(Vector2(face + side * (22.0 + float(ci) * 10.0), y1 - 16.0), 3.2, Color(0.76, 0.44, 0.30))
+	if _h1(k, 5.0) > 0.5:
+		var lx := face + side * 30.0
+		b.line(Vector2(lx, y0 + 12.0), Vector2(lx, y1 - 12.0), Color(0.82, 0.82, 0.80), 1.0)
+		var cy := y0 + 18.0
+		var ci := 0
+		while cy < y1 - 18.0:
+			b.rect(Rect2(lx - 5.0, cy, 10.0, 8.0), WASHING[(k + ci) % WASHING.size()])
+			cy += 16.0
+			ci += 1
+	else:
+		for pk in range(3):
+			var pp := Vector2(face + side * 12.0, y0 + 14.0 + float(pk) * 16.0)
+			if pp.y < y1 - 8.0:
+				b.circle(pp, 5.0, Color(0.62, 0.36, 0.24))
+				b.circle(pp, 3.6, Color(0.30, 0.52, 0.26))
+				b.circle(pp + Vector2(1, -1), 1.6, Color(0.90, 0.24, 0.30))
+
+
+# The side street's mouth, opening between the roofs: panot pavements along
+# both building fronts turning the corner into the main west street, a kerb
+# with corner returns, asphalt to the edge of the screen, and a zebra across
+# the mouth.
 static func _side_street(b: ShapeBatch, x0: float, top: float, bot: float) -> void:
 	var s0 := SIDE_STREET_Y - SIDE_STREET_HALF
 	var s1 := SIDE_STREET_Y + SIDE_STREET_HALF
 	if s1 < top or s0 > bot:
 		return
+	var sw := 14.0
 	b.rect(Rect2(x0 - 520.0, s0, 520.0, s1 - s0), ASPHALT)
-	for ky: float in [s0, s1 - 6.0]:
-		b.rect(Rect2(x0 - 520.0, ky, 520.0, 6.0), KERB)
-	_zebra_across(b, s0 + 12.0, s1 - 12.0, x0 - 44.0, x0 - 8.0)
+	_panots(b, x0 - 520.0, x0, s0, s0 + sw, 14.0)
+	_panots(b, x0 - 520.0, x0, s1 - sw, s1, 14.0)
+	b.rect(Rect2(x0 - 520.0, s0 + sw, 520.0, 5.0), KERB)
+	b.rect(Rect2(x0 - 520.0, s1 - sw - 5.0, 520.0, 5.0), KERB)
+	b.rect(Rect2(x0 - 520.0, s0, 520.0, 2.0), Color(0, 0, 0, 0.14))
+	b.rect(Rect2(x0 - 520.0, s1 - 2.0, 520.0, 2.0), Color(0, 0, 0, 0.14))
+	# stop line and centre dashes down the side street
+	b.rect(Rect2(x0 - 54.0, s0 + sw + 7.0, 3.5, (s1 - s0) * 0.5 - sw - 9.0), Color(0.92, 0.91, 0.87, 0.78))
+	var dx := x0 - 96.0
+	while dx > x0 - 500.0:
+		b.rect(Rect2(dx, SIDE_STREET_Y - 1.2, 24.0, 2.4), Color(0.86, 0.86, 0.82, 0.50))
+		dx -= 52.0
+	_zebra_across(b, s0 + sw + 9.0, s1 - sw - 9.0, x0 - 44.0, x0 - 8.0)
 
 
 # a zebra for a street running east-west: five bars stacked down its width
