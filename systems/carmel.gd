@@ -111,8 +111,8 @@ const VIEW_REACH := 260.0
 const PRIZE := Vector2(710.0, -4520.0)
 const PRIZE_TEXT := "steal the bravas off the sunset picnic blanket"
 
-# how far the summit scrub feathers down the slopes below the off-leash parapet
-const BROW_DROP := 150.0
+# how far the summit scrub feathers down the hillside below the off-leash parapet
+const BROW_DROP := 60.0
 
 # where the sauló climb gives onto the battery's concrete slabs, and how far
 # the grit drifts over them and the ruts fade out before it
@@ -316,8 +316,9 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 	_draw_summit_brow(m, b, vt, vb)
 
 
-# The summit plateau's scrub rolls down over both slopes below its parapet,
-# so the off-leash hilltop and the sides of the climb are one hill.
+# The summit parapet runs along the top of both slopes. The city is far
+# below it on the west, so there only the wall's shadow falls; on the east the
+# plateau's scrub spills a short way down onto the terraced hillside.
 static func _draw_summit_brow(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var wall_y: float = float(m.GATE_Y) - 42.0
 	var foot: float = wall_y + BROW_DROP
@@ -326,23 +327,31 @@ static func _draw_summit_brow(m: Node2D, b: ShapeBatch, vt: float, vb: float) ->
 	var e: Vector2 = m.walk_edges(float(m.GATE_Y) - 40.0)
 	var gap_l: float = m.gate_l - 12.0
 	var gap_r: float = m.gate_r + 12.0
-	for side: Vector2 in [Vector2(-460.0, e.x - 2.0), Vector2(e.y + 2.0, 1720.0)]:
-		b.band(PackedVector2Array([
-			Vector2(side.x, wall_y), Vector2(side.y, wall_y),
-			Vector2(side.x, wall_y + BROW_DROP * 0.45), Vector2(side.y, wall_y + BROW_DROP * 0.45),
-			Vector2(side.x, foot), Vector2(side.y, foot),
-		]), 2, SCRUB_MID, PackedFloat32Array([1.0, 0.7, 0.0]))
+	var sh := Color(0.10, 0.08, 0.10, 0.30)
+	b.band(PackedVector2Array([
+		Vector2(-460.0, wall_y + 14.0), Vector2(e.x - 2.0, wall_y + 14.0),
+		Vector2(-460.0, wall_y + 24.0), Vector2(e.x - 2.0, wall_y + 24.0),
+		Vector2(-460.0, wall_y + 40.0), Vector2(e.x - 2.0, wall_y + 40.0),
+	]), 2, sh, PackedFloat32Array([1.0, 0.45, 0.0]))
+	var ex := e.y + 2.0
+	var fx := PackedFloat32Array([ex, ex + 40.0, ex + 200.0, 1720.0])
+	var pts := PackedVector2Array()
+	for ry: float in [0.0, 0.3, 1.0]:
+		for i in range(fx.size()):
+			var wob := sin(fx[i] * 0.03) * 6.0 * ry
+			pts.append(Vector2(fx[i], wall_y + 14.0 + ry * BROW_DROP + wob))
+	b.band(pts, fx.size(), SCRUB_MID, PackedFloat32Array([0.6, 0.3, 0.0]),
+		PackedFloat32Array([0.4, 1.0, 1.0, 1.0]))
 	var k := 0
-	var x := -440.0
+	var x := ex + 22.0
 	while x < 1700.0:
-		if x < e.x - 24.0 or x > e.y + 24.0:
-			var h := _hash(k * 13 + 5)
-			var p := Vector2(x, wall_y + 18.0 + h * 46.0)
-			b.coarse(p, 9.0 + h * 7.0, SCRUB_OLIVE if k % 3 != 0 else PINE_CROWN)
-			if k % 4 == 1:
-				b.coarse(p + Vector2(6.0, -4.0), 4.5, BROOM_GOLD)
+		var h := _hash(k * 13 + 5)
+		var p := Vector2(x, wall_y + 22.0 + h * 18.0)
+		b.coarse(p, 6.0 + h * 5.0, SCRUB_OLIVE if k % 3 != 0 else PINE_CROWN)
+		if k % 4 == 1:
+			b.coarse(p + Vector2(5.0, -3.0), 3.5, BROOM_GOLD)
 		k += 1
-		x += 34.0 + _hash(k * 7) * 22.0
+		x += 46.0 + _hash(k * 7) * 30.0
 	for run: Vector2 in [Vector2(56.0, gap_l), Vector2(gap_r, 1224.0)]:
 		if run.y <= run.x:
 			continue
