@@ -377,6 +377,24 @@ func _build_library() -> void:
 	lib["drac_click"] = _drac_click()
 	lib["drac_jet"] = _drac_jet()
 	lib["head_bump"] = _head_bump()
+	# each dog's own bark (Game.DOGS' "bark"); "bark" itself is Millie's.
+	# Built last, so the noise every sound above draws from the seeded rng is
+	# as it always was.
+	var ref := _rms_of(lib["bark"])
+	lib["bark_tito"] = _loud_as(_bark_tito(), ref)
+	# Pipa thin and short, Bruna fuller and lower than Millie
+	lib["bark_pipa"] = _loud_as(_bark_samples(0.11, 600.0, 340.0, 0.10, 0.50, 0.30, 0.10), ref)
+	lib["bark_bruna"] = _loud_as(_bark_samples(0.22, 300.0, 140.0, 0.55, 0.60, 0.16, 0.14), ref)
+	lib["bark_mochi"] = _loud_as(_bark_mochi(), ref)
+
+
+# the walking dog's own bark
+func bark(pitch := 1.0, vol_db := -6.0) -> void:
+	play(bark_name(), pitch, vol_db)
+
+
+func bark_name() -> String:
+	return Game.dog_bark() if Game != null else "bark"
 
 
 func _pack(samples: PackedFloat32Array) -> AudioStreamWAV:
@@ -533,6 +551,78 @@ func _bark() -> AudioStreamWAV:
 		var grit := rng.randf_range(-0.12, 0.12) * (1.0 - prog * 0.5)
 		out[i] = (body + chest + bite + grit) * env * 0.65
 	return _pack(out)
+
+
+# _bark's woof with its size: how long, where the pitch falls from and to,
+# and how much chest, body, bite and breath it has
+func _bark_samples(dur: float, f0: float, f1: float, chest_a: float, body_a: float, bite_a: float,
+		grit_a: float) -> PackedFloat32Array:
+	var n := int(dur * RATE)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in range(n):
+		var t := float(i) / RATE
+		var prog := t / dur
+		var f := lerpf(f0, f1, prog)
+		var env := sin(PI * prog)
+		var chest := sin(TAU * (f * 0.5) * t) * chest_a
+		var body := sin(TAU * f * t) * body_a
+		var bite := sin(TAU * f * 2.15 * t) * bite_a
+		var grit := rng.randf_range(-grit_a, grit_a) * (1.0 - prog * 0.5)
+		out[i] = (body + chest + bite + grit) * env * 0.65
+	return out
+
+
+func _bark_tito() -> PackedFloat32Array:
+	# a quick double yap, the second a touch higher
+	var a := _bark_samples(0.065, 1050.0, 720.0, 0.0, 0.55, 0.30, 0.06)
+	var b := _bark_samples(0.07, 1150.0, 780.0, 0.0, 0.55, 0.30, 0.06)
+	var out := PackedFloat32Array()
+	out.resize(a.size() + int(0.045 * RATE) + b.size())
+	for i in range(a.size()):
+		out[i] = a[i]
+	var at := a.size() + int(0.045 * RATE)
+	for i in range(b.size()):
+		out[at + i] = b[i]
+	return out
+
+
+func _bark_mochi() -> PackedFloat32Array:
+	# a short low boof, rough in the throat, and a snort through the nose after
+	var boof := _bark_samples(0.13, 210.0, 105.0, 0.65, 0.55, 0.08, 0.30)
+	var gap := int(0.03 * RATE)
+	var sn := int(0.09 * RATE)
+	var out := PackedFloat32Array()
+	out.resize(boof.size() + gap + sn)
+	for i in range(boof.size()):
+		out[i] = boof[i]
+	var prev := 0.0
+	for i in range(sn):
+		var prog := float(i) / float(sn)
+		prev = lerpf(prev, rng.randf_range(-1.0, 1.0), 0.35)
+		out[boof.size() + gap + i] = prev * sin(PI * prog) * (0.6 + 0.4 * sin(TAU * 34.0 * prog)) * 0.5
+	return out
+
+
+static func _rms_of(s: AudioStreamWAV) -> float:
+	var n := s.data.size() / 2
+	var sum := 0.0
+	for i in range(n):
+		var v := float(s.data.decode_s16(i * 2)) / 32767.0
+		sum += v * v
+	return sqrt(sum / maxf(1.0, float(n)))
+
+
+# scaled to the loudness of the reference: every dog barks as loud as Millie
+func _loud_as(samples: PackedFloat32Array, ref_rms: float) -> AudioStreamWAV:
+	var sum := 0.0
+	for v in samples:
+		sum += v * v
+	var rms := sqrt(sum / maxf(1.0, float(samples.size())))
+	var k := ref_rms / maxf(rms, 0.00001)
+	for i in range(samples.size()):
+		samples[i] *= k
+	return _pack(samples)
 
 
 func _grunt() -> AudioStreamWAV:

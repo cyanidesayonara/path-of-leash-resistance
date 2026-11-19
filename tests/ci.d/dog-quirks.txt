@@ -1,0 +1,3 @@
+# Each dog's own idle quirk and bark (entities/dog.gd, autoload/sfx.gd)
+# cost 70
+--headless --path . --script res://tests/test_dog_quirks.gd
