@@ -268,9 +268,9 @@
       "clock_text": "3:00",
       "freedom_kind": "clearing",
       "gate_text": "FONT DE LA BUDELLERA",
-      "gloss": "The hillside hike",
-      "gloss_ca": "La caminada pel vessant",
-      "gloss_es": "La caminata por la ladera",
+      "gloss": "The old water road on the hill",
+      "gloss_ca": "L'antic camí de l'aigua al turó",
+      "gloss_es": "El viejo camino del agua en el monte",
       "goals": [
         {
           "id": "mark",
@@ -1852,9 +1852,9 @@
       "clock_text": "2:55",
       "freedom_kind": "placa",
       "gate_text": "PLAÇA",
-      "gloss": "The market hall",
-      "gloss_ca": "El mercat cobert",
-      "gloss_es": "El mercado cubierto",
+      "gloss": "The market hall at opening time",
+      "gloss_ca": "El mercat cobert a primera hora",
+      "gloss_es": "El mercado cubierto al abrir",
       "goals": [
         {
           "id": "mark",
@@ -2468,9 +2468,9 @@
       "clock_text": "2:50",
       "freedom_kind": "yard",
       "gate_text": "PIPICÀ",
-      "gloss": "The city park",
-      "gloss_ca": "El parc de la ciutat",
-      "gloss_es": "El parque de la ciudad",
+      "gloss": "The city park and its duck pond",
+      "gloss_ca": "El parc i el seu estany d'ànecs",
+      "gloss_es": "El parque y su estanque de patos",
       "goals": [
         {
           "id": "mark",
@@ -2732,9 +2732,9 @@
       "clock_text": "2:55",
       "freedom_kind": "placa",
       "gate_text": "MOLL DE LA FUSTA",
-      "gloss": "The fishing wharf",
-      "gloss_ca": "El moll dels pescadors",
-      "gloss_es": "El muelle de los pescadores",
+      "gloss": "The fish auction on the wharf",
+      "gloss_ca": "La subhasta de peix al moll",
+      "gloss_es": "La lonja de pescado del muelle",
       "goals": [
         {
           "id": "mark",
@@ -3084,9 +3084,9 @@
       "clock_text": "3:05",
       "freedom_kind": "yard",
       "gate_text": "CALA DEL PINAR",
-      "gloss": "The cliff path",
-      "gloss_ca": "El camí de ronda pels penya-segats",
-      "gloss_es": "El camino de ronda entre acantilados",
+      "gloss": "The cliff path above the coves",
+      "gloss_ca": "El camí de ronda sobre les cales",
+      "gloss_es": "El camino de ronda sobre las calas",
       "goals": [
         {
           "id": "mark",
@@ -3172,9 +3172,9 @@
       "clock_text": "3:00",
       "freedom_kind": "yard",
       "gate_text": "JARDINS DE SANT PAU",
-      "gloss": "The modernista hospital",
-      "gloss_ca": "L'hospital modernista",
-      "gloss_es": "El hospital modernista",
+      "gloss": "The modernista hospital gardens",
+      "gloss_ca": "Els jardins de l'hospital modernista",
+      "gloss_es": "Los jardines del hospital modernista",
       "goals": [
         {
           "id": "mark",
@@ -3348,9 +3348,9 @@
       "clock_text": "2:55",
       "freedom_kind": "lot",
       "gate_text": "EL PATI",
-      "gloss": "The junkyard",
-      "gloss_ca": "El desballestament",
-      "gloss_es": "El desguace",
+      "gloss": "The junkyard after closing",
+      "gloss_ca": "El desballestament ja tancat",
+      "gloss_es": "El desguace después de cerrar",
       "goals": [
         {
           "id": "mark",
@@ -3436,9 +3436,9 @@
       "clock_text": "2:50",
       "freedom_kind": "lot",
       "gate_text": "EL SOLAR",
-      "gloss": "The work site",
-      "gloss_ca": "El carrer en obres",
-      "gloss_es": "La calle en obras",
+      "gloss": "A detour through the roadworks",
+      "gloss_ca": "Un desviament per les obres",
+      "gloss_es": "Un desvío entre las obras",
       "goals": [
         {
           "id": "mark",
@@ -3524,9 +3524,9 @@
       "clock_text": "3:00",
       "freedom_kind": "beach",
       "gate_text": "PLATJA DE LA FRAGATA",
-      "gloss": "The town by the sea",
-      "gloss_ca": "El poble arran de mar",
-      "gloss_es": "El pueblo junto al mar",
+      "gloss": "Whitewashed streets by the sea",
+      "gloss_ca": "Carrers emblanquinats vora el mar",
+      "gloss_es": "Calles encaladas junto al mar",
       "goals": [
         {
           "id": "mark",

@@ -122,7 +122,7 @@ func _run() -> void:
 	_check(int(game.STAR_GATE["santpau"]) == 46, "STAR_GATE is 46")
 	_check(String(game.CHASE_GATE.get("santpau", "")) == "boars", "CHASE_GATE is boars")
 	_check(String(game.LEVEL_NAMES["santpau"]) == "Sant Pau", "named Sant Pau")
-	_check(String(game.LEVEL_SUBTITLES.get("santpau", "")) == "The modernista hospital", "English gloss matches")
+	_check(String(game.LEVEL_SUBTITLES.get("santpau", "")) == "The modernista hospital gardens", "English gloss matches")
 	_check(game.LEVEL_SUBTITLES_CA.has("santpau") and game.LEVEL_SUBTITLES_ES.has("santpau"), "glossed in CA and ES")
 	_check(game.CAMPAIGN_SKY["santpau"] == ["clear", "dusk"], "CAMPAIGN_SKY is clear dusk")
 	var ids: Array = G.LEVEL_GOAL_IDS["santpau"]

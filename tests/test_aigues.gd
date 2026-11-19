@@ -42,7 +42,7 @@ func _run() -> void:
 	_check(game.LEVELS.has("aigues") and game.CAROUSEL.has("aigues"), "in LEVELS and CAROUSEL")
 	_check(int(game.STAR_GATE["aigues"]) == 39, "opens at 39 stars")
 	_check(String(game.LEVEL_NAMES["aigues"]) == "La Carretera de les Aigües", "named La Carretera de les Aigües")
-	_check(String(game.LEVEL_SUBTITLES["aigues"]) == "The hillside hike", "subtitled the hillside hike")
+	_check(String(game.LEVEL_SUBTITLES["aigues"]) == "The old water road on the hill", "subtitled the hillside hike")
 	_check(m.gate_text == "FONT DE LA BUDELLERA", "gate text is FONT DE LA BUDELLERA")
 	_check(m.freedom_kind == "clearing", "ends in the clearing")
 	_check(String(load("res://systems/arrival.gd").place_for("aigues")) == "trailhead", "starts at a trailhead")
