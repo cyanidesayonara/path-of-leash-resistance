@@ -1,0 +1,3 @@
+## 2026-11-18 - Blend Plaça Reial's seams
+
+- The square's granite paving, the terracotta arcade floors, the panot strips along the colonnades and the arcade roofs now run on past the north archway to the gate (`Reial.draw_edge_layer`, `Reial.draw_overhead`), where they stopped 240 px short in a hard line across the whole screen and left a strip of plain asphalt between the archway and the off-leash plaça. The plaça's paving now meets the square's at the gate's soldier course and stone sill, one more pillar pair and window bay carry the colonnade to the end, and the bar fronts nearest the gate glow from the arcade wall instead of floating on the road.
