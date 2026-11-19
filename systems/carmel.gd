@@ -111,6 +111,15 @@ const VIEW_REACH := 260.0
 const PRIZE := Vector2(710.0, -4520.0)
 const PRIZE_TEXT := "steal the bravas off the sunset picnic blanket"
 
+# how far the summit scrub feathers down the hillside below the off-leash parapet
+const BROW_DROP := 60.0
+
+# where the sauló climb gives onto the battery's concrete slabs, and how far
+# the grit drifts over them and the ruts fade out before it
+const SLAB_Y := -3050.0
+const SLAB_DRIFT := 150.0
+const RUT_FADE := 140.0
+
 const FENCE_STEP := 160.0
 const FENCE_IN := 6.0
 
@@ -304,6 +313,50 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 
 	_draw_city_panorama(m, b, top, bot)
 	_draw_hillside_slopes(m, b, top, bot)
+	_draw_summit_brow(m, b, vt, vb)
+
+
+# The summit parapet runs along the top of both slopes. The city is far
+# below it on the west, so there only the wall's shadow falls; on the east the
+# plateau's scrub spills a short way down onto the terraced hillside.
+static func _draw_summit_brow(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var wall_y: float = float(m.GATE_Y) - 42.0
+	var foot: float = wall_y + BROW_DROP
+	if foot < vt or wall_y > vb:
+		return
+	var e: Vector2 = m.walk_edges(float(m.GATE_Y) - 40.0)
+	var gap_l: float = m.gate_l - 12.0
+	var gap_r: float = m.gate_r + 12.0
+	var sh := Color(0.10, 0.08, 0.10, 0.30)
+	b.band(PackedVector2Array([
+		Vector2(-460.0, wall_y + 14.0), Vector2(e.x - 2.0, wall_y + 14.0),
+		Vector2(-460.0, wall_y + 24.0), Vector2(e.x - 2.0, wall_y + 24.0),
+		Vector2(-460.0, wall_y + 40.0), Vector2(e.x - 2.0, wall_y + 40.0),
+	]), 2, sh, PackedFloat32Array([1.0, 0.45, 0.0]))
+	var ex := e.y + 2.0
+	var fx := PackedFloat32Array([ex, ex + 40.0, ex + 200.0, 1720.0])
+	var pts := PackedVector2Array()
+	for ry: float in [0.0, 0.3, 1.0]:
+		for i in range(fx.size()):
+			var wob := sin(fx[i] * 0.03) * 6.0 * ry
+			pts.append(Vector2(fx[i], wall_y + 14.0 + ry * BROW_DROP + wob))
+	b.band(pts, fx.size(), SCRUB_MID, PackedFloat32Array([0.6, 0.3, 0.0]),
+		PackedFloat32Array([0.4, 1.0, 1.0, 1.0]))
+	var k := 0
+	var x := ex + 22.0
+	while x < 1700.0:
+		var h := _hash(k * 13 + 5)
+		var p := Vector2(x, wall_y + 22.0 + h * 18.0)
+		b.coarse(p, 6.0 + h * 5.0, SCRUB_OLIVE if k % 3 != 0 else PINE_CROWN)
+		if k % 4 == 1:
+			b.coarse(p + Vector2(5.0, -3.0), 3.5, BROOM_GOLD)
+		k += 1
+		x += 46.0 + _hash(k * 7) * 30.0
+	for run: Vector2 in [Vector2(56.0, gap_l), Vector2(gap_r, 1224.0)]:
+		if run.y <= run.x:
+			continue
+		b.rect(Rect2(run.x, wall_y, run.y - run.x, 14.0), STONE_WALL)
+		b.line(Vector2(run.x + 4.0, wall_y + 3.0), Vector2(run.y - 4.0, wall_y + 3.0), STONE_TOP, 3.0)
 
 
 static func _draw_city_panorama(m: Node2D, b: ShapeBatch, top: float, bot: float) -> void:
@@ -336,7 +389,7 @@ static func _draw_city_panorama(m: Node2D, b: ShapeBatch, top: float, bot: float
 		var e: Vector2 = m.walk_edges(clampf(cy, m.GATE_Y, float(m.START_Y)))
 		var x_end: float = e.x - 92.0
 		var row := int(absf(cy) / cell)
-		if row % 8 != 0:
+		if row % 8 != 0 and cy >= float(m.GATE_Y) - 42.0:
 			var cx := 186.0
 			while cx + 16.0 < x_end:
 				var col := int((cx - 186.0) / cell)
@@ -382,6 +435,8 @@ static func _draw_hillside_slopes(m: Node2D, b: ShapeBatch, top: float, bot: flo
 	var k_prev := int(absf(y + strip) / strip)
 	var eb: Vector2 = m.walk_edges(clampf(y + strip, m.GATE_Y, float(m.START_Y)))
 	var drop_b := _slope_drop(k_prev)
+	# nothing pokes above the summit parapet that the off-leash plateau draws
+	var lim: float = float(m.GATE_Y) - 42.0
 
 	while y > top - strip:
 		var yc := clampf(y, m.GATE_Y, float(m.START_Y))
@@ -390,17 +445,18 @@ static func _draw_hillside_slopes(m: Node2D, b: ShapeBatch, top: float, bot: flo
 		var drop_a := _slope_drop(k)
 		var h1 := _hash(k * 11 + 1)
 		var h2 := _hash(k * 23 + 7)
+		var yt := maxf(y, lim)
 
 		# Smooth continuous west cliff scrub slope right below the trail edge
 		b.polygon(PackedVector2Array([
-			Vector2(ea.x - drop_a, y),
-			Vector2(ea.x + 2.0, y),
+			Vector2(ea.x - drop_a, yt),
+			Vector2(ea.x + 2.0, yt),
 			Vector2(eb.x + 2.0, y + strip),
 			Vector2(eb.x - drop_b, y + strip),
 		]), SCRUB_DARK)
 		b.polygon(PackedVector2Array([
-			Vector2(ea.x - drop_a * 0.55, y),
-			Vector2(ea.x + 2.0, y),
+			Vector2(ea.x - drop_a * 0.55, yt),
+			Vector2(ea.x + 2.0, yt),
 			Vector2(eb.x + 2.0, y + strip),
 			Vector2(eb.x - drop_b * 0.55, y + strip),
 		]), SCRUB_MID)
@@ -408,13 +464,13 @@ static func _draw_hillside_slopes(m: Node2D, b: ShapeBatch, top: float, bot: flo
 		# Continuous dry-stone retaining terrace wall along the west slope
 		var tw_a := ea.x - drop_a * 0.48
 		var tw_b := eb.x - drop_b * 0.48
-		b.line(Vector2(tw_a, y), Vector2(tw_b, y + strip), STONE_WALL, 4.5)
-		b.line(Vector2(tw_a + 1.8, y), Vector2(tw_b + 1.8, y + strip), STONE_TOP, 2.0)
+		b.line(Vector2(tw_a, yt), Vector2(tw_b, y + strip), STONE_WALL, 4.5)
+		b.line(Vector2(tw_a + 1.8, yt), Vector2(tw_b + 1.8, y + strip), STONE_TOP, 2.0)
 
 		# Smooth continuous east uphill cut bank and terraced hillside
 		b.polygon(PackedVector2Array([
-			Vector2(ea.y - 2.0, y),
-			Vector2(ea.y + 115.0 + drop_a * 0.3, y),
+			Vector2(ea.y - 2.0, yt),
+			Vector2(ea.y + 115.0 + drop_a * 0.3, yt),
 			Vector2(eb.y + 115.0 + drop_b * 0.3, y + strip),
 			Vector2(eb.y - 2.0, y + strip),
 		]), SCRUB_MID)
@@ -423,11 +479,11 @@ static func _draw_hillside_slopes(m: Node2D, b: ShapeBatch, top: float, bot: flo
 		for wall_off: float in [22.0, 96.0, 178.0]:
 			var wx_a := ea.y + wall_off + sin(float(k) * 0.4 + wall_off) * 5.0
 			var wx_b := eb.y + wall_off + sin(float(k - 1) * 0.4 + wall_off) * 5.0
-			b.line(Vector2(wx_a, y), Vector2(wx_b, y + strip), STONE_WALL, 5.5)
-			b.line(Vector2(wx_a - 2.0, y), Vector2(wx_b - 2.0, y + strip), STONE_TOP, 2.2)
+			b.line(Vector2(wx_a, yt), Vector2(wx_b, y + strip), STONE_WALL, 5.5)
+			b.line(Vector2(wx_a - 2.0, yt), Vector2(wx_b - 2.0, y + strip), STONE_TOP, 2.2)
 
 		# Organic olive/rosemary scrub & yellow broom clusters on both slopes
-		var vy := y + strip * 0.5
+		var vy := maxf(y + strip * 0.5, lim + 10.0)
 		var vx_w := ea.x - 18.0 - h1 * (drop_a - 28.0)
 		b.coarse(Vector2(vx_w, vy), 9.0 + h2 * 5.0, SCRUB_OLIVE)
 		if k % 3 == 0:
@@ -546,22 +602,32 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 		wc.line(Vector2(ea.y - 3.0, y), Vector2(eb.y - 3.0, y + step), STONE_WALL, 6.0)
 
 		# Summit battery concrete platform slabs above y = -3050
-		if y < -3050.0:
+		if y < SLAB_Y:
 			var pad_l := ea.x + 36.0
 			var pad_r := ea.y - 42.0
 			if k % 4 != 0:
+				var mid_x := lerpf(pad_l, pad_r, 0.50)
+				# the leading slabs are laid unevenly: one half starts a row later
+				if y > SLAB_Y - step * 2.0:
+					if h < 0.5:
+						pad_l = mid_x
+					else:
+						pad_r = mid_x
 				wc.rect(Rect2(pad_l, y, pad_r - pad_l, step + 0.5), CONCRETE_WARM.lerp(SAULO, 0.35))
 				wc.line(Vector2(pad_l, y), Vector2(pad_r, y), CONCRETE_DARK, 1.4)
-				var mid_x := lerpf(pad_l, pad_r, 0.50)
-				wc.line(Vector2(mid_x, y), Vector2(mid_x, y + step), CONCRETE_DARK, 1.4)
+				if mid_x > pad_l + 1.0 and mid_x < pad_r - 1.0:
+					wc.line(Vector2(mid_x, y), Vector2(mid_x, y + step), CONCRETE_DARK, 1.4)
 		else:
-			# Walking ruts along the sauló switchbacks
-			for f: float in [0.36, 0.64]:
-				wc.line(
-					Vector2(lerpf(ea.x, ea.y, f), y - 0.5),
-					Vector2(lerpf(eb.x, eb.y, f), y + step + 0.5),
-					SAULO_RUT, 8.0
-				)
+			# Walking ruts along the sauló switchbacks, worn out where the slabs begin
+			var rut := SAULO_RUT
+			rut.a = clampf((y - SLAB_Y) / RUT_FADE, 0.0, 1.0)
+			if rut.a > 0.0:
+				for f: float in [0.36, 0.64]:
+					wc.line(
+						Vector2(lerpf(ea.x, ea.y, f), y - 0.5),
+						Vector2(lerpf(eb.x, eb.y, f), y + step + 0.5),
+						rut, 8.0
+					)
 
 		# Diagonal stone water-bar drainage channels (rigoles) across the switchbacks
 		if y < -980.0 and y > -3020.0 and k % 14 == 0:
@@ -578,12 +644,26 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 		eb = ea
 		y -= step
 
+	_draw_slab_drift(m, wc, vt, vb)
 	_draw_barraques_inlays(m, wc, vt, vb)
 	_draw_mirador_terrace(wc, vt, vb)
 	_draw_cannons(wc, vt, vb)
 	_draw_bunker(wc, vt, vb)
 	_draw_fence(m, wc, vt, vb)
 	_draw_overhead_into(m, wc, vt, vb)
+
+
+# Sauló grit kicked up onto the first battery slabs, thinning out up the plateau
+static func _draw_slab_drift(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	var y0 := SLAB_Y - SLAB_DRIFT
+	if SLAB_Y < vt - 30.0 or y0 > vb + 30.0:
+		return
+	var pts := PackedVector2Array()
+	for ry: float in [y0, SLAB_Y - SLAB_DRIFT * 0.45, SLAB_Y]:
+		var e: Vector2 = m.walk_edges(ry)
+		for f: float in [0.0, 0.3, 0.7, 1.0]:
+			pts.append(Vector2(lerpf(e.x + 30.0, e.y - 36.0, f), ry))
+	wc.band(pts, 4, SAULO, PackedFloat32Array([0.0, 0.5, 0.95]), PackedFloat32Array([0.55, 1.0, 0.8, 0.6]))
 
 
 static func _draw_barraques_inlays(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
@@ -945,7 +1025,7 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	]), 2, Color(0.94, 0.62, 0.46, 0.65), PackedFloat32Array([0.0, 1.0]))
 
 	# Outer Turó de la Rovira summit slopes (west & east scrub wings: GRASS surface for x < 300 or x > 980)
-	b.rect(Rect2(50.0, top, 1180.0, free_h), SCRUB_MID)
+	b.rect(Rect2(-460.0, top, 2200.0, free_h), SCRUB_MID)
 	b.rect(Rect2(64.0, top + 12.0, 236.0, free_h - 24.0), SCRUB_OLIVE)
 	b.rect(Rect2(980.0, top + 12.0, 236.0, free_h - 24.0), SCRUB_OLIVE)
 
