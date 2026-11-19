@@ -10,7 +10,7 @@ extends RefCounted
 # south while clinic assistants with giant cones of shame give chase!
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_edge_layer", "draw_live", "draw_overhead", "on_bark", "surface", "tick"]
+const HOOKS := ["draw_edge_layer", "draw_live", "draw_overhead", "draw_threshold", "on_bark", "surface", "tick"]
 
 
 const Letters := preload("res://world/sign_letters.gd")
@@ -41,6 +41,14 @@ const SCALE_DIGITS := Color(0.25, 0.90, 0.40)
 const COUNTER_WOOD := Color(0.68, 0.52, 0.38)
 const COUNTER_TOP := Color(0.92, 0.90, 0.86)
 const GLASS_PARTITION := Color(0.65, 0.85, 0.92, 0.45)
+
+# the back door out to the recovery yard: an aluminium sill in the back wall,
+# then a concrete apron through the gate, worn on into the grass
+const SILL := Color(0.76, 0.78, 0.78)
+const SILL_GROOVE := Color(0.52, 0.55, 0.56)
+const APRON := Color(0.72, 0.72, 0.68)
+const APRON_EDGE := Color(0.58, 0.58, 0.54)
+const APRON_D := 30.0          # from the back wall to the yard's fence line
 
 const DOOR_WOOD := Color(0.58, 0.42, 0.30)
 const DOOR_FRAME := Color(0.35, 0.28, 0.22)
@@ -234,36 +242,14 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 	if m.lvl != "vet":
 		return
 
-	# Floor: linoleum grid tiles
-	var tile_size := 60.0
-	var y_start := floorf(vt / tile_size) * tile_size
-	var y_end := ceilf(vb / tile_size) * tile_size
-
-	var y := y_start
-	while y <= y_end:
-		var row_alt := int(floorf(y / tile_size)) % 2 == 0
-		var x := WALL_L
-		while x < WALL_R:
-			var col_alt := int(floorf((x - WALL_L) / tile_size)) % 2 == 0
-			var c_tile := LINOLEUM_BASE if (row_alt == col_alt) else LINOLEUM_TILE
-			b.rect(Rect2(x, y, tile_size - 1.0, tile_size - 1.0), c_tile)
-			x += tile_size
-		# subtle horizontal tile line
-		b.line(Vector2(WALL_L, y), Vector2(WALL_R, y), LINOLEUM_LINE, 1.2)
-		y += tile_size
-
-	# Clean sheen reflection streaks running diagonally
-	var sheen_y := y_start
-	while sheen_y <= y_end:
-		if int(floorf(sheen_y / 240.0)) % 2 == 0:
-			b.line(Vector2(WALL_L + 60.0, sheen_y), Vector2(WALL_R - 60.0, sheen_y + 40.0), LINOLEUM_SHEEN, 8.0)
-		sheen_y += 120.0
-
-	# Corridor wall baseboards
-	b.rect(Rect2(WALL_L - 8.0, vt, 8.0, vb - vt), WALL_BASEBOARD)
-	b.rect(Rect2(WALL_R, vt, 8.0, vb - vt), WALL_BASEBOARD)
-	b.line(Vector2(WALL_L, vt), Vector2(WALL_L, vb), WALL_TRIM, 2.0)
-	b.line(Vector2(WALL_R, vt), Vector2(WALL_R, vb), WALL_TRIM, 2.0)
+	# the clinic ends at its back wall on the gate line; the recovery yard's
+	# grass is beyond it, so nothing of the corridor runs on past it
+	var back: float = m.GATE_Y
+	var top := maxf(vt, back)
+	if top < vb:
+		_draw_floor(b, top, vb)
+	if back >= vt - 40.0 and back <= vb + 40.0:
+		_draw_back_wall(b, back)
 
 	# Consultation room door frames and signs
 	for d: Dictionary in DOORS:
@@ -349,6 +335,84 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		# nervous glowing cat eyes behind grill
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y - 2.0), 1.2, Color(0.95, 0.90, 0.20))
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y + 2.0), 1.2, Color(0.95, 0.90, 0.20))
+
+
+# the linoleum, its sheen and the skirting from `top` down; the last tile
+# column stops at the east wall instead of running on under it
+static func _draw_floor(b: ShapeBatch, top: float, vb: float) -> void:
+	var tile_size := 60.0
+	var y_start := floorf(top / tile_size) * tile_size
+	var y_end := ceilf(vb / tile_size) * tile_size
+
+	var y := y_start
+	while y <= y_end:
+		var row_alt := int(floorf(y / tile_size)) % 2 == 0
+		var y0 := maxf(y, top)
+		var h := y + tile_size - 1.0 - y0
+		if h > 0.0:
+			var x := WALL_L
+			while x < WALL_R:
+				var col_alt := int(floorf((x - WALL_L) / tile_size)) % 2 == 0
+				var c_tile := LINOLEUM_BASE if (row_alt == col_alt) else LINOLEUM_TILE
+				b.rect(Rect2(x, y0, minf(tile_size, WALL_R - x) - 1.0, h), c_tile)
+				x += tile_size
+		if y >= top:
+			b.line(Vector2(WALL_L, y), Vector2(WALL_R, y), LINOLEUM_LINE, 1.2)
+		y += tile_size
+
+	var sheen_y := y_start
+	while sheen_y <= y_end:
+		if sheen_y >= top and int(floorf(sheen_y / 240.0)) % 2 == 0:
+			b.line(Vector2(WALL_L + 60.0, sheen_y), Vector2(WALL_R - 60.0, sheen_y + 40.0), LINOLEUM_SHEEN, 8.0)
+		sheen_y += 120.0
+
+	b.rect(Rect2(WALL_L - 8.0, top, 8.0, vb - top), WALL_BASEBOARD)
+	b.rect(Rect2(WALL_R, top, 8.0, vb - top), WALL_BASEBOARD)
+	b.line(Vector2(WALL_L, top), Vector2(WALL_L, vb), WALL_TRIM, 2.0)
+	b.line(Vector2(WALL_R, top), Vector2(WALL_R, vb), WALL_TRIM, 2.0)
+
+
+# the clinic's back wall along the yard, either side of the door: the
+# corridor's skirting turns the corner and runs along it, and the wall's
+# foot settles into the grass instead of a ruled line
+static func _draw_back_wall(b: ShapeBatch, y: float) -> void:
+	for run: Vector2 in [Vector2(-400.0, WALL_L), Vector2(WALL_R, 1700.0)]:
+		b.band(PackedVector2Array([Vector2(run.x, y - 16.0), Vector2(run.y, y - 16.0),
+			Vector2(run.x, y), Vector2(run.y, y)]), 2, SHADOW, PackedFloat32Array([0.0, 1.0]))
+		b.rect(Rect2(run.x, y, run.y - run.x, 8.0), WALL_BASEBOARD)
+		b.line(Vector2(run.x, y), Vector2(run.y, y), WALL_TRIM, 2.0)
+
+
+# main._draw_threshold: the back door. The floor stops at an aluminium sill in
+# the back wall; a short concrete apron runs through the gate to the yard's
+# fence line, and the way everyone walks out wears on into the grass.
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y: float = m.GATE_Y
+	var x0 := WALL_L - 8.0
+	var x1 := WALL_R + 8.0
+	var ay := y - APRON_D
+	b.rect(Rect2(x0, ay, x1 - x0, APRON_D), APRON)
+	var jx := WALL_L + 60.0
+	while jx < WALL_R - 1.0:
+		b.line(Vector2(jx, ay), Vector2(jx, y), APRON_EDGE, 1.2)
+		jx += 60.0
+	b.rect(Rect2(x0, ay, x1 - x0, 2.5), APRON_EDGE)
+	b.glow(Vector2(640.0, ay - 6.0), 96.0, Color(APRON.r, APRON.g, APRON.b, 0.42), 0.35)
+	# grass over the apron's far edge, by a hash along it
+	var tx := x0 + 6.0
+	while tx < x1 - 6.0:
+		var hh := fmod(sin(tx * 12.9898) * 43758.5453, 1.0)
+		hh = hh if hh >= 0.0 else hh + 1.0
+		if hh > 0.35 and absf(tx - 640.0) > 70.0:
+			var g := Color(0.30, 0.46, 0.29).darkened(0.12 * hh)
+			b.line(Vector2(tx, ay - 2.0), Vector2(tx - 3.0, ay + 4.0 + hh * 4.0), g, 2.0)
+			b.line(Vector2(tx, ay - 2.0), Vector2(tx + 3.0, ay + 3.0 + hh * 3.0), g, 2.0)
+		tx += 9.0 + hh * 8.0
+	b.rect(Rect2(WALL_L, y - 3.0, WALL_R - WALL_L, 7.0), SILL)
+	b.rect(Rect2(WALL_L, y - 3.0, WALL_R - WALL_L, 1.5), SILL.lightened(0.2))
+	b.line(Vector2(WALL_L, y + 1.0), Vector2(WALL_R, y + 1.0), SILL_GROOVE, 1.2)
+	b.rect(Rect2(WALL_L, y + 4.0, WALL_R - WALL_L, 2.0), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.12))
+
 
 # --- interactive checks (scale, cat hiss) -----------------------------------
 const EventFeed := preload("res://hud/event_feed.gd")
