@@ -9,7 +9,7 @@ extends RefCounted
 # dumpsters are where it stops to feed (home_chase.BOAR_BANDS).
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "grass_blocked", "tick", "tree_kind"]
+const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_threshold", "grass_blocked", "tick", "tree_kind"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -29,6 +29,14 @@ const WOOD_SAWN := Color(0.65, 0.52, 0.36)
 const BIN_GREEN := Color(0.20, 0.42, 0.26)
 const BIN_DARK := Color(0.12, 0.28, 0.17)
 const BIN_LID := Color(0.16, 0.34, 0.21)
+# El Mirador's grass, which the wood floor feathers into at the gate
+const CLEARING := Color(0.34, 0.50, 0.32)
+# how far the wood floor and the clearing's grass run into each other, and how
+# far the trail's dirt wears on past the gate; main draws the threshold only
+# within GATE_Y + 100 .. GATE_Y - 120 of the view, so none of it may reach past
+const SEAM_SOUTH := 120.0
+const SEAM_NORTH := 60.0
+const TONGUE := 56.0
 const LITTER: Array[Color] = [
 	Color(0.92, 0.90, 0.84), Color(0.86, 0.36, 0.22), Color(0.95, 0.80, 0.30),
 	Color(0.40, 0.62, 0.80), Color(0.78, 0.78, 0.74),
@@ -196,6 +204,72 @@ static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
 
 static func draw_snack(m: Node2D, wc: ShapeBatch, kp: Vector2) -> void:
 	Bosc.draw_bocadillo(m, wc, kp)
+
+
+# Where the wood meets El Mirador: the wood floor and the clearing's grass
+# feather into each other either side of the trail, matched at GATE_Y - 40
+# where the one stops and the other starts, and the trail's dirt wears on
+# into the grass through the gate.
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y: float = m.GATE_Y - 40.0
+	var e: Vector2 = m.walk_edges(y + 2.0)
+	var floor_col: Color = m.grass_col()
+	var north_d := PackedFloat32Array([0.0, SEAM_NORTH * 0.45, SEAM_NORTH])
+	var south_d := PackedFloat32Array([0.0, SEAM_SOUTH * 0.4, SEAM_SOUTH])
+	# only the yard's grass is lighter than the wood floor: outside its fence
+	# the ground beyond is the floor's own dark, so the feather fades out there
+	var yard: Rect2 = m._freedom_rect()
+	for side in range(2):
+		var x0: float = yard.position.x if side == 0 else e.y - 4.0
+		var x1: float = e.x + 4.0 if side == 0 else yard.end.x
+		if x1 - x0 < 8.0:
+			continue
+		var xs := PackedFloat32Array()
+		var x := x0
+		while x < x1 - 20.0:
+			xs.append(x)
+			x += 70.0
+		xs.append(x1)
+		var n := xs.size()
+		var fade := PackedFloat32Array()
+		fade.resize(n)
+		fade.fill(1.0)
+		fade[0 if side == 0 else n - 1] = 0.0
+		var north := PackedVector2Array()
+		var south := PackedVector2Array()
+		for r in range(3):
+			for xi: float in xs:
+				var h: float = m._cell01(xi, 41.0 + float(r))
+				var wob := (h - 0.5) * 30.0 if r != 0 else 0.0
+				north.append(Vector2(xi, y - north_d[r] - absf(wob) * 0.5))
+				south.append(Vector2(xi, y + south_d[r] + wob))
+		b.band(north, n, floor_col, PackedFloat32Array([0.35, 0.14, 0.0]), fade)
+		b.band(south, n, CLEARING, PackedFloat32Array([0.65, 0.32, 0.0]), fade)
+	var ge: Vector2 = m.walk_edges(m.GATE_Y - 16.0)
+	var mx := (maxf(m.gate_l, ge.x) + minf(m.gate_r, ge.y)) * 0.5
+	var hw := 90.0
+	var dirt: Color = m.walkway_col()
+	b.band(PackedVector2Array([
+		Vector2(mx - hw - 30.0, y + 14.0), Vector2(mx, y + 14.0), Vector2(mx + hw + 30.0, y + 14.0),
+		Vector2(mx - hw, y - 4.0), Vector2(mx + 6.0, y - 4.0), Vector2(mx + hw, y - 4.0),
+		Vector2(mx - hw * 0.8, y - TONGUE * 0.5), Vector2(mx - 4.0, y - TONGUE * 0.5), Vector2(mx + hw * 0.75, y - TONGUE * 0.5),
+		Vector2(mx - hw * 0.55, y - TONGUE), Vector2(mx + 8.0, y - TONGUE), Vector2(mx + hw * 0.5, y - TONGUE),
+	]), 3, dirt, PackedFloat32Array([1.0, 0.85, 0.4, 0.0]), PackedFloat32Array([0.0, 1.0, 0.0]))
+	# the end of the dirt scuffed a little way into the grass, unevenly, all
+	# across the trail's width rather than stopping on a ruled line
+	var lip := PackedVector2Array()
+	var lx := PackedFloat32Array()
+	var qx := e.x
+	while qx < e.y - 10.0:
+		lx.append(qx)
+		qx += 36.0
+	lx.append(e.y)
+	var ln := lx.size()
+	for r in range(3):
+		for xi: float in lx:
+			var h: float = m._cell01(xi, 67.0)
+			lip.append(Vector2(xi, y + 2.0 - float(r) * (8.0 + h * 12.0)))
+	b.band(lip, ln, dirt, PackedFloat32Array([1.0, 0.55, 0.0]))
 
 
 # The wild sow and her piglets move across the path, so they draw on the live pass.
