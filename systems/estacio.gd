@@ -48,13 +48,16 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 	# polished terrazzo in big square panels: brass divider strips between
 	# them, the marble chips set in each, and the roof lights' reflections
 	# lying across the polish
+	# the terrazzo stops at the station's yard door: nothing of it past the sill
+	var lim: float = m.GATE_Y - 30.0
 	var ty := floorf((vt - 60.0) / 132.0) * 132.0
 	while ty < vb + 60.0:
 		var e: Vector2 = m.walk_edges(ty)
-		b.line(Vector2(e.x, ty), Vector2(e.y, ty), BRASS, 2.0)
+		if ty >= lim:
+			b.line(Vector2(e.x, ty), Vector2(e.y, ty), BRASS, 2.0)
 		var tx := floorf(e.x / 132.0) * 132.0 + 132.0
-		while tx < e.y:
-			b.line(Vector2(tx, ty), Vector2(tx, ty + 132.0), BRASS, 2.0)
+		while tx < e.y and ty + 132.0 > lim:
+			b.line(Vector2(tx, maxf(ty, lim)), Vector2(tx, ty + 132.0), BRASS, 2.0)
 			tx += 132.0
 		# the chips, hashed from the panel so the floor stays put
 		var cx := floorf(e.x / 132.0) * 132.0
@@ -62,12 +65,17 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 			for k in range(9):
 				var h := int(absf(sin(cx * 0.131 + ty * 0.071 + float(k) * 12.9898) * 43758.5453))
 				var cp := Vector2(cx + float(h % 128) + 2.0, ty + float((h / 128) % 128) + 2.0)
-				if cp.x > e.x + 3.0 and cp.x < e.y - 6.0:
+				if cp.x > e.x + 3.0 and cp.x < e.y - 6.0 and cp.y > lim:
 					b.rect(Rect2(cp, Vector2(3.0 + float(h % 3), 2.0 + float(h % 2))), CHIPS[h % CHIPS.size()])
 			cx += 132.0
 		ty += 132.0
+	if vt < lim + 120.0:
+		_yard_sill(m, b, lim)
 	var ry := floorf((vt - 200.0) / 396.0) * 396.0
 	while ry < vb + 200.0:
+		if ry < lim:
+			ry += 396.0
+			continue
 		var re: Vector2 = m.walk_edges(ry)
 		var rx := re.x + 60.0 + fmod(absf(ry) * 0.37, 120.0)
 		b.polygon(PackedVector2Array([Vector2(rx, ry), Vector2(rx + 70.0, ry), Vector2(rx + 150.0, ry + 140.0),
@@ -141,6 +149,46 @@ static func _draw_concourse(m: Node2D, vt: float, vb: float) -> void:
 	if m.estacio_crowd != null:
 		m.estacio_crowd.draw(m, b, vt, vb)
 	b.flush(m._wc)
+
+
+# Where the concourse meets the goods yard: a granite sill with a brass
+# nosing on the terrazzo side, the yard's grit tracked a few steps onto the
+# polish, the polish's dust worn into the slabs, and the way through the gate
+# walked pale. In the concourse's own batch.
+const SILL := Color(0.42, 0.42, 0.45)
+const YARD_GRIT := Color(0.60, 0.60, 0.58)
+const YARD_WORN := Color(0.70, 0.69, 0.66)
+const SILL_TRACK := 70.0     # how far the yard's grit is walked onto the terrazzo
+const SILL_DUST := 46.0      # how far the terrazzo's dust lies on the slabs
+
+static func _yard_sill(m: Node2D, b: ShapeBatch, lim: float) -> void:
+	var sy := lim - 16.0
+	var e: Vector2 = m.walk_edges(lim - 10.0)
+	var x0 := e.x
+	var x1 := e.y
+	var ge: Vector2 = m.walk_edges(m.GATE_Y - 16.0)
+	var mx := (maxf(float(m.gate_l), ge.x) + minf(float(m.gate_r), ge.y)) * 0.5
+	var fade := PackedFloat32Array([0.5, 0.9, 1.0, 1.0, 0.9, 0.5])
+	var up := _sill_row(x0, x1, sy - SILL_DUST)
+	up.append_array(_sill_row(x0, x1, sy))
+	b.band(up, 6, TERRAZZO, PackedFloat32Array([0.0, 0.45]), fade)
+	b.glow(Vector2(mx, sy - 34.0), 96.0, Color(YARD_WORN.r, YARD_WORN.g, YARD_WORN.b, 0.34), 0.35)
+	var down := _sill_row(x0, x1, lim)
+	down.append_array(_sill_row(x0, x1, lim + SILL_TRACK))
+	b.band(down, 6, YARD_GRIT, PackedFloat32Array([0.34, 0.0]), fade)
+	b.rect(Rect2(x0, sy, x1 - x0, 14.0), SILL)
+	b.rect(Rect2(x0, sy, x1 - x0, 2.5), SILL.lightened(0.28))
+	var jx := x0 + 44.0
+	while jx < x1 - 6.0:
+		b.line(Vector2(jx, sy + 2.5), Vector2(jx, sy + 14.0), SILL.darkened(0.25), 1.2)
+		jx += 44.0
+	b.line(Vector2(x0, lim - 1.0), Vector2(x1, lim - 1.0), BRASS, 2.0)
+
+
+static func _sill_row(x0: float, x1: float, y: float) -> PackedVector2Array:
+	var w := x1 - x0
+	return PackedVector2Array([Vector2(x0, y), Vector2(x0 + w * 0.08, y), Vector2(x0 + w * 0.3, y),
+		Vector2(x0 + w * 0.7, y), Vector2(x0 + w * 0.92, y), Vector2(x1, y)])
 
 
 static func _suitcase(m: Node2D, b: ShapeBatch, p: Vector2, col: Color) -> void:
