@@ -162,26 +162,34 @@ Start a submission on the product. Every section must be complete:
      the other fields from `store/listing.md`, updated for what the build
      actually contains.
    - Screenshots: PNG, at least **1366x768** (up to 3840x2160), at least 1,
-     4 or more recommended, 10 at most. The sweep's shots are 1280x720, too
-     small, so take listing shots at 1920x1080 with the existing flags:
+     4 or more recommended, 10 at most. They are the ordered list in
+     `store/screenshots.txt`: a file name and the game's `--shot` flags per
+     line. The Store submit workflow (step 7) renders each at 1920x1080
+     from the tag being submitted and stages them; nobody uploads them by
+     hand. To see them before a run, render them from a checkout of the tag
+     (`git worktree add ../pol-vX.Y vX.Y`, then `--import` it once):
 
      ```
-     godot/Godot_v4.7-stable_win64_console.exe --rendering-method gl_compatibility --resolution 1920x1080 --path . -- --shot --shot-quit --shot-out=store-park.png --level=park
+     python tools/store_images.py render --godot godot/Godot_v4.7-stable_win64_console.exe --project ../pol-vX.Y --out build/store-listing
      ```
 
-     Use `--shot-at=N` with `--autowalk --fixed-fps 60` for mid-walk
-     moments, and `--shot-title` for the title. Shoot from a checkout of the
-     tag being submitted (`git worktree add ../pol-vX.Y vX.Y`), so the
-     screenshots show the build players get, not `main`.
-   - Store logos: run
-     `godot/Godot_v4.7-stable_win64_console.exe --rendering-method gl_compatibility --path . --script res://tools/make_store_art.gd`.
-     It writes the 9:16 poster (1440x2160), 1:1 box art (2160x2160) and the
-     300/150/71 tiles into `build/store-art/`, drawn from the same code as
-     the app icon.
+     Each shot is `--fixed-fps 60 --rendering-method gl_compatibility
+     --resolution 1920x1080 -- --shot --shot-quit --shot-out=... --seed=1`
+     plus the line's flags (`--level=`, `--shot-y=`, `--shot-at=N`,
+     `--at-freedom`, `--shot-home --shot-sweeper` for a chase; see
+     AGENTS.md's shot flags).
+   - Store logos: the same command renders them with
+     `tools/make_store_art.gd`, which writes the 9:16 poster (1440x2160),
+     1:1 box art (2160x2160) and the 300/150/71 tiles into
+     `build/store-art/`, drawn from the same code as the app icon. The
+     listing uses the poster (StoreLogo9x16), the box art (StoreLogoSquare)
+     and the 300 tile (Icon).
    - A trailer is optional. If you add one, 16:9 hero art at 1920x1080 becomes
      required.
 6. **Submission options:** choose the publishing hold ("Don't publish until I
-   select Publish now" lets you pick the moment). The `runFullTrust`
+   select Publish now" lets you pick the moment). The workflow reports it
+   (TargetPublishMode) in its run summary and warns when it is Manual: a
+   certified release then waits for that click. The `runFullTrust`
    justification and test instructions go on the **Additional Testing
    Information** page; the text is in `store/listing.md`. A Partner Center
    bug reported in April 2026 can leave a section showing "Incomplete" after
@@ -191,14 +199,15 @@ Start a submission on the product. Every section must be complete:
 
 ## 6. Each release after the first
 
-Use the Store submit workflow (step 7). Partner Center by hand is only for
-screenshots and logos, which are images the workflow does not send.
+Use the Store submit workflow (step 7). It sends the package, the text and
+the images; Partner Center by hand is only for the fields it does not send
+(pricing, properties, age ratings, the publishing hold).
 
 ## 7. The Store submit workflow
 
 `.github/workflows/store-submit.yml` (Actions > Store submit (manual) > Run
-workflow) puts a release's MSIX and the whole listing text into a Partner
-Center **draft**, then commits it when asked. Ported from Stemma's workflow,
+workflow) puts a release's MSIX, the whole listing text, the screenshots and the
+Store logos into a Partner Center **draft**, then commits it when asked. Ported from Stemma's workflow,
 which works with the same seller account.
 
 One-time setup, in this repo's Settings > Secrets and variables > Actions,
@@ -221,6 +230,48 @@ CI runs `tools/store_listing.py --check store/listing.md` on every PR, so the
 text is always inside the Store's limits before a release. The workflow
 checks out main, so it always sends main's `store/listing.md`.
 
+The images: `update_draft` checks the tag out beside main (in `rel/`, as
+`pages.yml` does), renders every shot in main's `store/screenshots.txt` and
+the three Store logos from it with Godot under xvfb (`tools/store_images.py
+render`), and keeps them as the run's `store-listing-images` artifact. A
+render that fails stops the run before the draft is touched. Then
+`tools/store_images.py stage` marks the draft's images of those four types
+`PendingDelete` (other art added in Partner Center is left alone), adds the
+rendered ones as `PendingUpload` (Screenshot, StoreLogo9x16,
+StoreLogoSquare, Icon), and builds one zip: the release MSIX under the
+draft's pending package name, plus the images. The workflow PUTs that zip
+to the draft's FileUploadUrl, replacing the upload `msstore publish
+--noCommit` made, and sends the JSON with `msstore submission
+updateMetadata`. A rerun drops the entries an earlier run staged instead of
+adding more. The run fails unless the read-back lists as many entries
+pending upload as were staged (the package plus every image). msstore's
+image model has no description field, so screenshot captions are not sent.
+A shot's walk must exist at the tag: a list naming a newer walk fails the
+render for an older tag.
+
+`update_draft` refuses while a submission is in certification or
+publishing (`check-draftable`): staging would touch the one in progress.
+`submit` commits only when the status is PendingCommit, the draft's pending
+package is this tag's (`PathOfLeashResistance-X.Y.0.0.msix`), and its
+What's new is main's `store/listing.md` What's new in this version. Every
+mode reports the draft's TargetPublishMode in the run summary; Manual means
+a release that passes certification still waits for someone to select
+Publish now.
+
+**Keep the upload link private.** A draft's FileUploadUrl is a
+write-capable Azure blob SAS link: anyone holding it can replace the
+package and images the Store ingests when the draft is committed, and this
+repository's Actions logs and artifacts are public. So the workflow never
+runs `msstore publish`, `submission get` or `submission publish` with
+`--verbose` (msstore then logs the link, wrapped across several lines,
+where no mask or pattern catches all of it); every msstore output goes to a
+file and reaches the log only through `tools/store_images.py redact`, which
+drops FileUploadUrl and any blob link, and any line holding a piece of one;
+and the link and its signature are masked with `::add-mask::` as soon as
+they are known. Keep it that way in any change to the workflow, never paste
+a draft's JSON anywhere public, and if a link does reach a log, delete that
+run (`gh run delete <id>`) and start a fresh draft before committing.
+
 Each release:
 
 1. Before tagging, the release-notes PR updates "## Current listing": the
@@ -228,20 +279,25 @@ Each release:
    line, and any other field the release makes untrue.
 2. Tag it. `release.yml` attaches `PathOfLeashResistance-<version>.msix`.
 3. Run the workflow with the tag and mode `update_draft` (run `configure`
-   once first if the credentials are new). It stages the package and the
-   text; the run's log ends with every field as staged. Partner Center's own
+   once first if the credentials are new). It stages the package, the text
+   and the images; the run's log ends with the draft as staged, and its
+   summary with the images per listing and the publish mode. Look at the
+   `store-listing-images` artifact. Partner Center's own
    page keeps saying "Unchanged" until commit: the Store only ingests an
    API-uploaded package when the submission is committed.
-4. Run it again with mode `submit`. That commits the draft: the package is
-   ingested and certification starts. Do not click Partner Center's Submit
+4. Run it again with mode `submit`. That commits the draft: the package and
+   images are ingested and certification starts. Do not click Partner Center's Submit
    button for an API-staged draft; it does not carry the staged package.
 5. When it is live, copy that What's new into "## Past What's new" in
    `store/listing.md` with the date.
 
-New screenshots, when a release changes how the game looks enough to need
-them: take them as step 5 describes and upload them in Partner Center before
-step 3. `msstore publish` is documented for free products only, which this
-game is.
+New screenshots: every release's are rendered fresh from its tag, so they
+always show the build players get. To change which moments are shown, edit
+`store/screenshots.txt` (on main, before step 3) and render it locally as
+step 5 describes to check the framing. Do not upload images in Partner
+Center into an API-staged draft: its page shows the old listing until
+commit, and saving it there can overwrite what was staged. `msstore
+publish` is documented for free products only, which this game is.
 
 ## Fallback: GDK game
 

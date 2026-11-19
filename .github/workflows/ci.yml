@@ -62,6 +62,11 @@ jobs:
         if: matrix.shard == 1
         run: python3 tools/store_listing.py --check store/listing.md
 
+      # the Store submit workflow's image staging and submit guard
+      - name: Store images tests
+        if: matrix.shard == 1
+        run: python3 tests/test_store_images.py
+
       # A GitHub release download can fail for minutes at a time (504s on
       # 2026-11-08 failed every job): keep the zip in the Actions cache and
       # retry the download when it is not there.

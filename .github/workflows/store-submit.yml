@@ -1,12 +1,16 @@
-# Put a release's MSIX and the listing text into a Partner Center submission,
-# from the GitHub release that release.yml made, in two runs:
-# - update_draft stages them. Partner Center's own page keeps showing the old
-#   package and text ("Unchanged") until the draft is committed: the Store
-#   only ingests an uploaded package at commit. Check the staged draft in this
-#   run's log (get_draft prints it again).
-# - submit commits that draft, which ingests the package and starts
-#   certification. Do not use Partner Center's own Submit button for an
-#   API-staged draft: it does not carry the staged package.
+# Put a release's MSIX, the listing text and the listing images into a
+# Partner Center submission, from the GitHub release that release.yml made,
+# in two runs:
+# - update_draft stages them: the MSIX attached to the release, the text from
+#   main's store/listing.md, and the screenshots in store/screenshots.txt and
+#   the Store logos, rendered from the tagged commit. Partner Center's own
+#   page keeps showing the old package, text and images ("Unchanged") until
+#   the draft is committed: the Store only ingests uploaded files at commit.
+#   Check the staged draft in this run's log and summary, and the rendered
+#   images in its store-listing-images artifact.
+# - submit commits that draft, which ingests the package and images and
+#   starts certification. Do not use Partner Center's own Submit button for
+#   an API-staged draft: it does not carry the staged files.
 # Ported from Stemma's partner-center-submit.yml (same seller account). See
 # docs/MICROSOFT_STORE.md, step 7.
 #
@@ -23,20 +27,66 @@ on:
         required: true
         type: string
       mode:
-        description: "configure = check credentials; update_draft = stage MSIX + the listing text from store/listing.md; get_draft = print the staged draft; submit = commit it (starts certification)"
+        description: "configure = check credentials; update_draft = stage the MSIX, the listing text from store/listing.md and the screenshots and logos rendered from the tag; get_draft = print the staged draft; submit = commit it (starts certification)"
         type: choice
         options: [configure, update_draft, get_draft, submit]
         default: configure
 
 env:
   PRODUCT_ID: 9P5D14V8RBQX     # the Store ID (public; Partner Center > Product identity)
+  TAG: ${{ inputs.tag }}
 
 jobs:
   submit:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      # The images show the build players get: rendered from the tag, beside
+      # main's tools and listing, as pages.yml does for the website.
+      - name: Check out the release
         if: ${{ inputs.mode == 'update_draft' }}
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag }}
+          path: rel
+
+      - name: Cache Godot
+        if: ${{ inputs.mode == 'update_draft' }}
+        uses: actions/cache@v4
+        with:
+          path: godot.zip
+          key: godot-4.7-stable-linux-x86_64
+
+      # Before anything touches the draft, so a failed render changes nothing
+      - name: Render the screenshots and Store logos from the release
+        if: ${{ inputs.mode == 'update_draft' }}
+        run: |
+          set -euo pipefail
+          if [ ! -s godot.zip ]; then
+            curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          fi
+          unzip -q -o godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils fonts-dejavu-core
+          godot="$PWD/Godot_v4.7-stable_linux.x86_64"
+          # the corner's version label, as tools/stamp_version.sh writes it for
+          # a tagged build (without the file it says "dev")
+          printf '%s (%s)\n' "$TAG" "$(git -C rel rev-parse --short=7 HEAD)" > rel/build_label.txt
+          (cd rel && "$godot" --headless --path . --import > /dev/null 2>&1 || true)
+          # the screen is bigger than the 1920x1080 window, so it is never clamped
+          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 2560x1440x24" \
+            python3 tools/store_images.py render --godot "$godot" --project rel --out build/store-listing
+          ls -l build/store-listing
+
+      - name: Keep the rendered images
+        if: ${{ inputs.mode == 'update_draft' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-listing-images
+          path: build/store-listing/*.png
 
       - name: Download the release's MSIX
         if: ${{ inputs.mode == 'update_draft' }}
@@ -44,7 +94,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release download "${{ inputs.tag }}" --repo "${{ github.repository }}" --pattern "*.msix" --dir pkg
+          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "*.msix" --dir pkg
           ls -lh pkg
 
       - name: Linux credential storage for msstore
@@ -70,34 +120,110 @@ jobs:
             --clientSecret "${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}"
           msstore info
 
+      # A draft's FileUploadUrl is a write-capable Azure blob SAS link: anyone
+      # holding it can replace what the Store ingests at commit, and this
+      # repository's logs and artifacts are public. So: never --verbose on
+      # msstore publish, submission get or submission publish (they then log
+      # it, wrapped across lines); every msstore output goes to a file and is
+      # shown only through tools/store_images.py redact; and the link and its
+      # signature are masked as soon as they are known, as a backstop.
       - name: Upload the MSIX into a draft
         if: ${{ inputs.mode == 'update_draft' }}
         run: |
           set -euo pipefail
-          msstore publish pkg/*.msix --appId "$PRODUCT_ID" --noCommit --verbose
+          show() { python3 tools/store_images.py redact "$1"; }
+          # a draft left by an earlier run already has a live link: mask it first
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > pre.json 2> /dev/null || true
+          python3 tools/store_images.py upload-url pre.json --masks 2> /dev/null || true
+          rm -f pre.json
+          # never while a submission is in certification or publishing; a
+          # status that cannot be read stops the run
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 \
+            || { show status.txt; exit 1; }
+          show status.txt
+          python3 tools/store_images.py check-draftable --status status.txt
+          msstore publish pkg/*.msix --appId "$PRODUCT_ID" --noCommit > publish.txt 2>&1 \
+            || { show publish.txt; exit 1; }
+          show publish.txt
 
-      - name: Set the draft's listing text from store/listing.md
+      - name: Stage the listing text and images
         if: ${{ inputs.mode == 'update_draft' }}
         run: |
           set -euo pipefail
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > submission.json 2> get.err \
+            || { show get.err; exit 1; }
+          python3 tools/store_images.py upload-url submission.json --masks
+          show get.err
           # description, short description, features, keywords, What's new and
           # the notes for certification: everything under "## Current listing"
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose > submission.json
-          python3 tools/store_listing.py submission.json store/listing.md metadata.json
-          msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" --verbose
-          echo "Staged. Partner Center's page shows it only after commit: check the JSON above, then run this workflow again with mode submit."
+          # (only in the languages the release's package declares: the Store
+          # refuses a listing in any other)
+          python3 tools/store_listing.py submission.json store/listing.md metadata.json \
+            --manifest rel/store/msix/AppxManifest.xml
+          # the images of the restaged types become PendingDelete and the
+          # rendered ones PendingUpload; upload.zip is the MSIX plus those
+          # images, and replaces the upload msstore publish just made
+          python3 tools/store_images.py stage --draft submission.json --submission metadata.json \
+            --images build/store-listing --msix pkg/*.msix --zip upload.zip
+          upload_url="$(python3 tools/store_images.py upload-url submission.json)"
+          # x-ms-version: a single Put Blob takes up to 5000 MiB from 2019-12-12
+          # on; left to the link's own version it could be capped at 64 MiB
+          curl -fsS --retry 3 --retry-all-errors -X PUT -H "x-ms-blob-type: BlockBlob" \
+            -H "x-ms-version: 2020-04-08" \
+            --upload-file upload.zip "$upload_url" -o /dev/null
+          echo "Uploaded the package and the listing images ($(du -h upload.zip | cut -f1))."
+          msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" > update-result.json 2>&1 \
+            || { show update-result.json; exit 1; }
+          show update-result.json
+
+      - name: Read the staged draft back
+        if: ${{ inputs.mode == 'update_draft' }}
+        run: |
+          set -euo pipefail
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > after.json 2> get.err \
+            || { show get.err; exit 1; }
+          python3 tools/store_images.py upload-url after.json --masks
+          show get.err
+          show after.json
+          # fails unless the draft lists the package and every image as
+          # PendingUpload
+          python3 tools/store_images.py verify --staged metadata.json --after after.json
+          echo "Staged. Partner Center's page shows it only after commit: check the JSON above, then run this workflow again with mode submit." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Commit the draft (starts certification)
         if: ${{ inputs.mode == 'submit' }}
         run: |
           set -euo pipefail
-          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose
-          msstore submission publish "$PRODUCT_ID" --verbose
-          echo "Committed. Partner Center now shows it in certification."
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > submission.json 2> get.err \
+            || { show get.err; exit 1; }
+          python3 tools/store_images.py upload-url submission.json --masks
+          # msstore prints "Submission Status = ..." through its logger, on
+          # stderr: capture both streams or the check never sees it
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 \
+            || { show status.txt; exit 1; }
+          show status.txt
+          # commit only a draft still staged, with this tag's package and the
+          # listing's What's new
+          python3 tools/store_images.py check-submit --status status.txt --draft submission.json \
+            --tag "$TAG" --listing store/listing.md
+          msstore submission publish "$PRODUCT_ID" > commit.txt 2>&1 \
+            || { show commit.txt; exit 1; }
+          show commit.txt
+          echo "Committed $TAG. Partner Center now shows it in certification; run mode get_draft to follow it." | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Print the draft
         if: ${{ inputs.mode == 'get_draft' }}
         run: |
           set -euo pipefail
-          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose
+          show() { python3 tools/store_images.py redact "$1"; }
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > submission.json 2> get.err \
+            || { show get.err; exit 1; }
+          python3 tools/store_images.py upload-url submission.json --masks
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 || true
+          show status.txt
+          show get.err
+          show submission.json
+          python3 tools/store_images.py mode submission.json
