@@ -411,6 +411,7 @@ const WALK_MODULES := {
 	"aeroport": preload("res://systems/aeroport.gd"),
 	"montserrat": preload("res://systems/montserrat.gd"),
 	"molina": preload("res://systems/molina.gd"),
+	"atraccions": preload("res://systems/atraccions.gd"),
 	"beach": preload("res://systems/passeig.gd"),
 	"rain": preload("res://systems/diluvi.gd"),
 	"market": preload("res://world/mercat.gd"),
@@ -829,6 +830,10 @@ var molina_cannon_hits := 0
 var molina_snowball_dodges := 0
 var molina_snowball_hits := 0
 var molina_snowman_barked := false
+var atraccions_flume: Dictionary = {}
+var atraccions_flume_dodges := 0
+var atraccions_churro_barked := false
+var atraccions_carousel_spins := 0
 # Els Senglars (systems/boars.gd) and Festa de Gràcia (systems/gracia.gd)
 var boar_mud_splashes := 0
 var boar_mud_cd := 0.0
@@ -11558,6 +11563,8 @@ const FREEDOM_KINDS := {
 	"montserrat": "clearing",
 	# a snowfield in the firs above the xalet
 	"molina": "clearing",
+	# picnic lawn behind the last land
+	"atraccions": "yard",
 }
 const BEACH_SEA_R := 430.0
 const BEACH_GATE_SHORE_X := 230.0

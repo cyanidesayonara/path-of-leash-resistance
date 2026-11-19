@@ -108,6 +108,8 @@ const LEVEL_GOAL_IDS := {
 	"aeroport": ["mark", "sniff", "phone", "paws", "bag", "walkway", "gate_rush", "luggage_dodge", "security_clean", "carousel_bark", "combo", "prize", "spell", "jamon", "clock"],
 	"montserrat": ["mark", "sniff", "phone", "paws", "bag", "fetch", "funicular_dodge", "boulder_dodge", "goat_clean", "mato_bark", "combo", "prize", "spell", "jamon", "clock"],
 	"molina": ["mark", "sniff", "phone", "paws", "bag", "fetch", "cannon_dodge", "snowball_dodge", "groomer_clean", "snowman_bark", "combo", "prize", "spell", "jamon", "clock"],
+	# Les Atraccions: flume splash, churro beg, carousel bark, stay dry
+	"atraccions": ["mark", "sniff", "phone", "paws", "bag", "fetch", "dry", "flume_dodge", "churro_bark", "ride_bark", "combo", "prize", "spell", "jamon", "clock"],
 	"ciutadella": ["mark", "sniff", "phone", "paws", "bag", "snack", "mamut_dodge", "mamut_lake", "mamut_trip", "parakeets", "combo", "prize", "spell", "jamon", "clock"],
 	# Rambla del Raval: the finale, El Gat. Tying him up is how the
 	# walk ends, so it is not a goal; the ways of wearing him down are.
@@ -253,6 +255,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"mato_bark": {"text": "Bark at the mel i mató cheese stall", "target": 1, "fn": func() -> int: return 1 if m.montserrat_mato_barked else 0},
 		"watering": {"text": "Get a shower from a watering can", "target": 1, "fn": func() -> int: return 1 if m.poble_shakes >= 1 else 0},
 		"wave_dodge": {"text": "Pull your human clear of the breaking wave", "target": 1, "fn": func() -> int: return m.sitges_waves_dodged},
+		"flume_dodge": {"text": "Pull your human clear of the flume splash", "target": 1, "fn": func() -> int: return m.atraccions_flume_dodges},
+		"churro_bark": {"text": "Beg a churro from the cart", "target": 1, "fn": func() -> int: return 1 if m.atraccions_churro_barked else 0},
+		"ride_bark": {"text": "Bark the carousel into a spin", "target": 1, "fn": func() -> int: return 1 if m.atraccions_carousel_spins >= 1 else 0},
 		"napkin": {"text": "Catch %d flying napkins in the wind", "target": 3, "fn": func() -> int: return m.sitges_napkins_caught},
 		"punta_bark": {"text": "Ring the bell at Sant Bartomeu", "target": 1, "fn": func() -> int: return 1 if m.sitges_church_barked else 0},
 		"spell": {"text": "Spell LEASH", "target": 5, "fn": func() -> int: return int(m.get("word_letters_collected"))},

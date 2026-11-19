@@ -67,6 +67,9 @@ func _run() -> void:
 			_check(Outdoors.crowd_share(w, h) <= 1.0, "never more than a clear day's crowd in %s/%s" % [w, h])
 	_check(Outdoors.busking("rain", "day") == false and Outdoors.busking("snow", "night") == false,
 		"no busking in rain or snow")
+	_check(Outdoors.theme_park("clear", "day") and Outdoors.theme_park("wind", "day")
+		and not Outdoors.theme_park("rain", "day") and not Outdoors.theme_park("clear", "night"),
+		"theme park crowd out on a clear or breezy day, not in rain or at night")
 	_check(Outdoors.terrace_parasols("rain", "day") and not Outdoors.terrace_parasols("clear", "night")
 		and not Outdoors.terrace_parasols("snow", "day"), "a terrace parasol is up in the rain, furled at night and in snow")
 	_check(Outdoors.street_sellers("clear", "night") and Outdoors.street_sellers("wind", "night")

@@ -55,6 +55,13 @@ static func kids_riding(weather: String, hour: String) -> bool:
 	return fair(weather, hour)
 
 
+# Theme-park queues, churro carts and balloon sellers: everyone out on a
+# clear day (and a breezy one); rain and snow empty the park.
+static func theme_park(weather: String, hour: String) -> bool:
+	return (weather == "clear" or weather == "wind") and hour != "night" \
+		and Game.fog_amount() < 0.5 and Game.dust_amount() < 0.5
+
+
 # Rollerbladers are out for their exercise in the early light too, but not on
 # a wet or frozen lane, and not in the dark.
 static func skating(weather: String, hour: String) -> bool:
