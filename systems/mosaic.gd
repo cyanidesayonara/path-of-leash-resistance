@@ -527,7 +527,7 @@ static func draw_clearing(m: Node2D, c: Object, r: Rect2) -> void:
 		for into: float in [-10.0, 15.0, 45.0, 85.0]:
 			for i in range(n):
 				var yy := minf(r.position.y + float(i) * 60.0, r.end.y)
-				var jag := _hash(yy * 0.13 + x0) * 30.0 if into > 0.0 else 0.0
+				var jag := (sin(yy * 0.017 + x0 * 0.01) * 0.5 + 0.5) * 30.0 * clampf(into / 85.0, 0.0, 1.0)
 				pts.append(Vector2(x0 - sd * (into + jag), yy))
 		b.band(pts, n, HILL_SCRUB, PackedFloat32Array([1.0, 0.85, 0.4, 0.0]))
 	var k := 0
@@ -587,19 +587,31 @@ static func _gate_ground(m: Node2D, b: ShapeBatch) -> void:
 	var gravel: Color = m._ground_cols()[1]
 	# the path's gravel, feathering out into the earth on a wavy line and
 	# thinning over the terrace tops at its sides
-	var xs := PackedFloat32Array([fl.x - 105.0, fl.x - 50.0])
-	var ca := PackedFloat32Array([0.0, 0.5])
-	for i in range(14):
+	# its sides fade over many columns, eased, so the fade has no steps
+	var xs := PackedFloat32Array()
+	var ca := PackedFloat32Array()
+	for i in range(7):
+		var u := float(i) / 6.0
+		xs.append(fl.x - 105.0 * (1.0 - u))
+		ca.append(smoothstep(0.0, 1.0, u))
+	for i in range(1, 13):
 		xs.append(lerpf(fl.x, fl.y, float(i) / 13.0))
 		ca.append(1.0)
-	xs.append_array([fl.y + 50.0, fl.y + 105.0])
-	ca.append_array([0.5, 0.0])
+	for i in range(7):
+		var u := float(i) / 6.0
+		xs.append(fl.y + 105.0 * u)
+		ca.append(smoothstep(0.0, 1.0, 1.0 - u))
+	var rows := 6
 	var pts := PackedVector2Array()
-	for ri in range(4):
+	var ra := PackedFloat32Array()
+	for ri in range(rows):
+		var v := float(ri) / float(rows - 1)
+		ra.append(smoothstep(0.0, 1.0, 1.0 - v))
 		for i in range(xs.size()):
-			var wob := (_hash(xs[i] * 0.01 + 3.0) - 0.5) * 30.0 * float(ri) / 3.0
-			pts.append(Vector2(xs[i], gy - 26.0 - float(ri) * GATE_RUN / 3.0 + wob))
-	b.band(pts, xs.size(), gravel, PackedFloat32Array([1.0, 0.75, 0.32, 0.0]), ca)
+			# a slow wave along the line, the same at every row, so rows never cross
+			var wob := sin(xs[i] * 0.021 + 1.3) * 12.0 * v
+			pts.append(Vector2(xs[i], gy - 26.0 - v * GATE_RUN + wob))
+	b.band(pts, xs.size(), gravel, ra, ca)
 	# the way most people walk in, worn palest
 	b.glow(Vector2((fl.x + fl.y) * 0.5, gy - 70.0), 130.0, Color(gravel.r, gravel.g, gravel.b, 0.4), 0.2)
 	# the gravel's stones, thinning out as it does
@@ -618,22 +630,29 @@ static func _gate_ground(m: Node2D, b: ShapeBatch) -> void:
 		var lx: float = fl.x if sd < 0.0 else fl.y
 		# the garden's scrub, on up into the hilltop past the terrace
 		var g := PackedVector2Array()
-		var gn := 12
+		var gn := 24
+		var grows := 6
 		var ga := PackedFloat32Array()
-		for ri in range(4):
+		var gr := PackedFloat32Array()
+		for ri in range(grows):
+			var v := float(ri) / float(grows - 1)
+			gr.append(smoothstep(0.0, 1.0, 1.0 - v))
 			for i in range(gn):
 				var t := float(i) / float(gn - 1)
-				var wob := _hash(t * 5.0 + sd) * 40.0 * float(ri) / 3.0
-				g.append(Vector2(lx + sd * lerpf(96.0, 520.0, t), top + 4.0 - float(ri) * GATE_RUN / 3.0 - wob))
+				var wob := (sin(t * 9.0 + sd * 2.0) * 0.5 + 0.5) * 26.0 * v
+				g.append(Vector2(lx + sd * lerpf(96.0, 520.0, t), top + 4.0 - v * GATE_RUN - wob))
 		for i in range(gn):
-			ga.append(smoothstep(0.0, 0.12, float(i) / float(gn - 1)))
-		b.band(g, gn, HILL_SCRUB, PackedFloat32Array([1.0, 0.72, 0.3, 0.0]), ga)
+			ga.append(smoothstep(0.0, 0.3, float(i) / float(gn - 1)))
+		b.band(g, gn, HILL_SCRUB, gr, ga)
 		# the rubble top of the terrace, crumbling out a few steps
-		var s := PackedVector2Array([
-			Vector2(lx + sd * 27.0, top + 4.0), Vector2(lx + sd * 105.0, top + 4.0),
-			Vector2(lx + sd * 27.0, top - 20.0), Vector2(lx + sd * 105.0, top - 26.0),
-			Vector2(lx + sd * 27.0, top - 44.0), Vector2(lx + sd * 105.0, top - 52.0)])
-		b.band(s, 2, TERRACE_STONE, PackedFloat32Array([1.0, 0.6, 0.0]))
+		var s := PackedVector2Array()
+		var sx := [20.0, 34.0, 66.0, 98.0, 112.0]
+		for ri in range(3):
+			for i in range(sx.size()):
+				var x: float = sx[i]
+				s.append(Vector2(lx + sd * x, top + 4.0 - float(ri) * (24.0 + x * 0.04)))
+		b.band(s, sx.size(), TERRACE_STONE, PackedFloat32Array([1.0, 0.6, 0.0]),
+			PackedFloat32Array([0.0, 1.0, 1.0, 1.0, 0.0]))
 
 
 # the stones of that join, over the edge layer where its walls stop
