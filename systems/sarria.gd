@@ -219,6 +219,12 @@ const MANHOLES: Array[Vector2] = [
 	Vector2(560.0, -3580.0), Vector2(704.0, -4400.0), Vector2(730.0, -4800.0),
 ]
 const DRAINS: Array[float] = [-60.0, -640.0, -1120.0, -1880.0, -3420.0, -3900.0, -4420.0]
+# where the street's setts meet a square's flags (on the 40-unit rows that
+# _square switches on): y, and which way the street lies (+1 below)
+const JOINS: Array[Vector2] = [Vector2(-2320.0, 1.0), Vector2(-3120.0, -1.0), Vector2(-4560.0, 1.0)]
+const EDGING_W := 12.0                 # the sandstone edging laid along a join
+const EDGING_LEN := 58.0               # one edging stone
+const JOIN_FEATHER := 30.0             # how far the setts' grey is walked onto the flags
 # where the paving is marked by use: x, y, radius, and what marked it
 # (0 damp or grime, 1 flour at a bakery door)
 const STAINS: Array = [
@@ -886,11 +892,34 @@ static func _ground_extras(_m: Node2D, b: ShapeBatch, lo: float, hi: float) -> v
 	for dy: float in DRAINS:
 		if dy + 20.0 > lo and dy - 20.0 < hi:
 			var e := edges_at(dy)
-			var dx := (e.x + e.y) * 0.5
-			b.rect(Rect2(dx - 9.0, dy - 15.0, 18.0, 30.0), GRATE_LIT)
-			b.rect(Rect2(dx - 7.5, dy - 13.5, 15.0, 27.0), GRATE)
-			for j in range(5):
-				b.line(Vector2(dx - 6.0, dy - 10.0 + float(j) * 5.0), Vector2(dx + 6.0, dy - 10.0 + float(j) * 5.0), Color(0.06, 0.06, 0.07), 2.0)
+			_grate(b, Vector2((e.x + e.y) * 0.5, dy))
+	# a square's mouth: the setts' grey trodden out onto the first flags, a
+	# course of sandstone edging across the join, and a grate where the
+	# channel runs into it
+	for jn: Vector2 in JOINS:
+		var jy := jn.x
+		var s := jn.y
+		if jy + JOIN_FEATHER + 20.0 < lo or jy - JOIN_FEATHER - 20.0 > hi:
+			continue
+		var e := edges_at(jy)
+		_band_buf.resize(6)
+		for r in range(3):
+			var ry := jy - s * JOIN_FEATHER * (0.0 if r == 0 else (0.4 if r == 1 else 1.0))
+			var er := edges_at(ry)
+			_band_buf[r * 2] = Vector2(er.x, ry)
+			_band_buf[r * 2 + 1] = Vector2(er.y, ry)
+		b.band(_band_buf, 2, Color(SETT.r, SETT.g, SETT.b, 0.34), _band_alpha)
+		var top := jy - EDGING_W * 0.5
+		b.rect(Rect2(e.x, top, e.y - e.x, EDGING_W), STONE)
+		b.line(Vector2(e.x, jy - s * EDGING_W * 0.5), Vector2(e.y, jy - s * EDGING_W * 0.5), STONE_LIT, 1.4)
+		b.line(Vector2(e.x, jy + s * EDGING_W * 0.5), Vector2(e.y, jy + s * EDGING_W * 0.5), STONE_DARK, 1.6)
+		var sx := e.x + fmod(absf(jy) * 0.37, EDGING_LEN)
+		while sx < e.y:
+			b.line(Vector2(sx, top + 1.0), Vector2(sx, top + EDGING_W - 1.0), Color(STONE_DARK.r, STONE_DARK.g, STONE_DARK.b, 0.7), 1.0)
+			sx += EDGING_LEN
+		var gy := jy + s * (EDGING_W * 0.5 + 16.0)
+		var eg := edges_at(gy)
+		_grate(b, Vector2((eg.x + eg.y) * 0.5, gy))
 	# the plane trees' iron grates, and what the pigeons leave under them
 	for i in range(TREES.size()):
 		var t := TREES[i]
@@ -948,6 +977,13 @@ static func _ground_extras(_m: Node2D, b: ShapeBatch, lo: float, hi: float) -> v
 		var gx := edges_at(BALCONY_Y).x + 24.0
 		b.glow(Vector2(gx, BALCONY_Y), 30.0, Color(WET.r, WET.g, WET.b, 0.30), 0.3)
 		b.glow(Vector2(gx + 14.0, BALCONY_Y + 22.0), 20.0, Color(WET.r, WET.g, WET.b, 0.24), 0.2)
+
+
+static func _grate(b: ShapeBatch, p: Vector2) -> void:
+	b.rect(Rect2(p.x - 9.0, p.y - 15.0, 18.0, 30.0), GRATE_LIT)
+	b.rect(Rect2(p.x - 7.5, p.y - 13.5, 15.0, 27.0), GRATE)
+	for j in range(5):
+		b.line(Vector2(p.x - 6.0, p.y - 10.0 + float(j) * 5.0), Vector2(p.x + 6.0, p.y - 10.0 + float(j) * 5.0), Color(0.06, 0.06, 0.07), 2.0)
 
 
 # --- the houses, the church and the market (the edge layer: static) ------------------
