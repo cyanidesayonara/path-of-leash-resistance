@@ -12,7 +12,9 @@ features, keywords) are one item per line.
         reads the JSON that `msstore submission get` printed (log lines and
         all), updates matching language entries in Listings (cloning en-US's
         BaseListing structure for ca-ES and es-ES when missing), and saves
-        the payload for `msstore submission updateMetadata`
+        the payload for `msstore submission updateMetadata`. With
+        --manifest APPXMANIFEST (the release's store/msix/AppxManifest.xml),
+        a missing language is added only if the package declares it
 
     python tools/store_listing.py --selftest store/listing.md
         smoke-checks the submission updater against a synthetic submission in
@@ -134,7 +136,8 @@ def submission(raw: str) -> dict:
     return json.loads(raw[start:end + 1])
 
 
-def update_submission(sub: dict, by_lang: dict, verbose: bool = True) -> dict:
+def update_submission(sub: dict, by_lang: dict, verbose: bool = True,
+                      languages=None) -> dict:
     listings = sub.get("Listings")
     if not isinstance(listings, dict) or not listings:
         raise SystemExit("submission JSON has no Listings")
@@ -177,6 +180,12 @@ def update_submission(sub: dict, by_lang: dict, verbose: bool = True) -> dict:
 
     for target in ("ca-ES", "es-ES"):
         if target in matched_langs:
+            continue
+        # the Store refuses a listing in a language the package does not
+        # declare ("Language codes: ... not supported")
+        if languages is not None and target not in languages:
+            if verbose:
+                print(f"note: not adding {target}: the package does not declare it")
             continue
         cloned_entry = {"BaseListing": copy.deepcopy(template_base)}
         if "PlatformOverrides" in template_entry and not template_entry["PlatformOverrides"]:
@@ -253,7 +262,15 @@ def selftest(listing_path: str) -> int:
     return 0
 
 
-def _run_update(sub_path: str, listing_path: str, out_path: str, verbose: bool = True) -> dict:
+def manifest_languages(path: str) -> set:
+    """The listing languages an AppxManifest.xml declares as Resources."""
+    text = open(path, encoding="utf-8").read()
+    langs = {lang_for_listing_key(m) for m in re.findall(r'<Resource\s+Language="([^"]+)"', text)}
+    return {lang for lang in langs if lang}
+
+
+def _run_update(sub_path: str, listing_path: str, out_path: str, verbose: bool = True,
+                languages=None) -> dict:
     md = open(listing_path, encoding="utf-8").read()
     by_lang = {}
     all_problems = []
@@ -265,7 +282,7 @@ def _run_update(sub_path: str, listing_path: str, out_path: str, verbose: bool =
     if all_problems:
         raise SystemExit("\n".join(all_problems))
     sub = submission(open(sub_path, encoding="utf-8").read())
-    update_submission(sub, by_lang, verbose=verbose)
+    update_submission(sub, by_lang, verbose=verbose, languages=languages)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(sub, f, indent=2, ensure_ascii=False)
     return by_lang
@@ -291,10 +308,16 @@ def main() -> int:
         return selftest(sys.argv[2])
     if len(sys.argv) < 4:
         raise SystemExit(
-            "usage: store_listing.py --check LISTING.md | --selftest LISTING.md | SUBMISSION.json LISTING.md OUT.json"
+            "usage: store_listing.py --check LISTING.md | --selftest LISTING.md | SUBMISSION.json LISTING.md OUT.json [--manifest APPXMANIFEST]"
         )
     sub_path, listing_path, out_path = sys.argv[1:4]
-    by_lang = _run_update(sub_path, listing_path, out_path, verbose=True)
+    languages = None
+    if len(sys.argv) == 6 and sys.argv[4] == "--manifest":
+        languages = manifest_languages(sys.argv[5])
+        print(f"package languages: {', '.join(sorted(languages))}")
+    elif len(sys.argv) != 4:
+        raise SystemExit("usage: store_listing.py SUBMISSION.json LISTING.md OUT.json [--manifest APPXMANIFEST]")
+    by_lang = _run_update(sub_path, listing_path, out_path, verbose=True, languages=languages)
     out = json.load(open(out_path, encoding="utf-8"))
     print(f"Listing text set for {', '.join(out['Listings'])}:")
     for lang, vals in by_lang.items():

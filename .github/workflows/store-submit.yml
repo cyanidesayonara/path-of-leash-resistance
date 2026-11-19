@@ -139,7 +139,10 @@ jobs:
           python3 tools/store_images.py upload-url submission.json --masks
           # description, short description, features, keywords, What's new and
           # the notes for certification: everything under "## Current listing"
-          python3 tools/store_listing.py submission.json store/listing.md metadata.json
+          # (only in the languages the release's package declares: the Store
+          # refuses a listing in any other)
+          python3 tools/store_listing.py submission.json store/listing.md metadata.json \
+            --manifest rel/store/msix/AppxManifest.xml
           # every image the Store has becomes PendingDelete and the rendered
           # ones PendingUpload; upload.zip is the MSIX plus those images, and
           # replaces the upload msstore publish just made

@@ -211,6 +211,20 @@ class StoreImages(unittest.TestCase):
         self.assertIn(URL.replace("&", "\\u0026"), masks)
         self.assertIn("SECRET%3D", masks)
 
+    def test_listings_are_added_only_in_the_packages_languages(self):
+        manifest = self.tmp / "AppxManifest.xml"
+        manifest.write_text('<Resources><Resource Language="en-us" /></Resources>',
+                            encoding="utf-8")
+        self.assertEqual(store_listing.manifest_languages(str(manifest)), {"en-US"})
+        md = (ROOT / "store" / "listing.md").read_text(encoding="utf-8")
+        by_lang = {lang: store_listing.fields(md, lang) for lang in store_listing.CHECK_LANGS}
+        sub = draft()
+        store_listing.update_submission(sub, by_lang, verbose=False, languages={"en-US"})
+        self.assertEqual(list(sub["Listings"]), ["en-us"])
+        store_listing.update_submission(sub, by_lang, verbose=False,
+                                        languages={"en-US", "ca-ES", "es-ES"})
+        self.assertEqual(sorted(sub["Listings"]), ["ca-ES", "en-us", "es-ES"])
+
     def test_the_listings_whats_new_is_readable(self):
         md = (ROOT / "store" / "listing.md").read_text(encoding="utf-8")
         self.assertTrue(store_listing.fields(md, "en")["ReleaseNotes"])
