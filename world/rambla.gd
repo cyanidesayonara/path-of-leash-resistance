@@ -531,19 +531,24 @@ static func _draw_drac_forecourt(m: Node2D, b: ShapeBatch) -> void:
 	var e1: Vector2 = m.walk_edges(z1)
 	var f0: Vector2 = m.frontage(z0)
 	var f1: Vector2 = m.frontage(z1)
-	var lane_l: float = maxf(f0.x, f1.x) + m.ROAD_PAVEMENT
-	var lane_r := minf(e0.x, e1.x)
-	if lane_r - lane_l < 30.0:
+	var top_l: float = f0.x + m.ROAD_PAVEMENT
+	var bot_l: float = f1.x + m.ROAD_PAVEMENT
+	var width: float = e0.x - top_l
+	if width < 30.0:
 		return
 	# a zebra over the side road from the building pavement to the gallery
-	# door, the kerb dropped flush at both ends, the traffic's stop lines
+	# door, sheared with the road where it bends round the plaça, the kerb
+	# dropped flush at both ends, the traffic's stop lines
 	var white := Color(0.95, 0.94, 0.90, 0.92)
-	var zx := lane_l + 4.0
-	while zx + m.XING_BAR * 0.5 <= lane_r - 2.0:
-		b.rect(Rect2(zx, z0, m.XING_BAR * 0.5, depth), white)
+	var bar: float = m.XING_BAR * 0.5
+	var zx := 4.0
+	while zx + bar <= width - 2.0:
+		b.quad(Vector2(top_l + zx, z0), Vector2(top_l + zx + bar, z0),
+			Vector2(bot_l + zx + bar, z1), Vector2(bot_l + zx, z1), white)
 		zx += m.XING_BAR
-	for kx: float in [lane_l - 2.0, lane_r - 2.0]:
-		b.rect(Rect2(kx, z0 - 4.0, 4.0, depth + 8.0), m.XING_KERB)
+	for kx: Vector2 in [Vector2(top_l, bot_l), Vector2(e0.x, e1.x)]:
+		b.quad(Vector2(kx.x - 2.0, z0 - 4.0), Vector2(kx.x + 2.0, z0 - 4.0),
+			Vector2(kx.y + 2.0, z1 + 4.0), Vector2(kx.y - 2.0, z1 + 4.0), m.XING_KERB)
 	for sy: float in [z0 - 12.0, z1 + 12.0]:
 		var se: Vector2 = m.walk_edges(sy)
 		var sf: Vector2 = m.frontage(sy)
