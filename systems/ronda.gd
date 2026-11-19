@@ -117,7 +117,7 @@ const OVERLOOK_BARK_R := 230.0
 
 const DARE_POS := Vector2(655.0, -2150.0)
 const PRIZE := Vector2(805.0, -3050.0)
-const PRIZE_TEXT := "snatch the anchovy bocadillo off the wall"
+const PRIZE_TEXT := "nab the anchovy bocadillo off the wall"
 
 # Coves along the east coast: [y_top, y_bot, cove_depth_x_extra, has_boats]
 const COVES := [

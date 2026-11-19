@@ -129,7 +129,7 @@ const TOWER_COLUMN := Vector2(515.0, -4640.0)
 
 # Unique walk prize: artisan hand-blown glass porron on the master table near the brick tower
 const PRIZE := Vector2(515.0, -4480.0)
-const PRIZE_TEXT := "swipe the glass porron off the table"
+const PRIZE_TEXT := "swipe the glass porró off the table"
 
 
 static func edge_nodes(_m: Node2D) -> Array:

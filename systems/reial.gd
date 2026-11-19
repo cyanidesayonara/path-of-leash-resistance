@@ -126,7 +126,7 @@ const BUSKER2_POS := Vector2(895.0, -3550.0)
 
 # Hot churros and chocolate prize by the east terrace
 const PRIZE := Vector2(890.0, -2700.0)
-const PRIZE_TEXT := "snatch the hot churros from the terrace table"
+const PRIZE_TEXT := "nab the hot churros off the terrace table"
 
 # Plaza pigeons pecking breadcrumbs
 const PIGEON_SPOTS: Array[Vector2] = [

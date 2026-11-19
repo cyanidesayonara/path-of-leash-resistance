@@ -179,18 +179,18 @@ static func kind_behavior(kind: String) -> Dictionary:
 				"jammed_banner": "THEY'RE IN THE BINS! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
 				"warning_banner": "BOARS! HEAD FOR HOME", "hold_banner": "THEY'RE STILL IN THE BINS! GO  %d",
 				"caught_human": "THE BOARS GOT YOUR HUMAN\n\nThey stood between mama and the picnic basket.\nBig mistake.",
-				"caught_dog": "ROOTED IN THE DIRT!\n\nYou got bowled over into the acorns.\nMama boar claimed your snacks.",
+				"caught_dog": "BOWLED OVER\n\nMama boar went through you to get to the acorns.\nShe took your snacks, too.",
 			}
 		"correfoc":
 			return {
 				"kind": "correfoc", "speed": 140.0, "flee": false,
-				"warning": "CORREFOC! RUN FROM THE FIRE DEVILS!",
+				"warning": "CORREFOC! RUN FROM THE FIRE DEVILS",
 				"freed": "BOOM", "freed_sfx": "cracker", "caught_shout": "SINGED!",
 			"jammed": "DRUMS", "jammed_sfx": "drum", "jammed_shout": "THEY STOPPED TO DANCE!",
 				"jammed_banner": "THEY'VE STOPPED TO DANCE! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
 				"warning_banner": "FIRE DEVILS! HEAD FOR HOME", "hold_banner": "THEY'RE STILL DANCING! GO  %d",
-				"caught_human": "SPARKED OUT!\n\nYour human caught firecrackers in their hood.\nThey dropped the phone in panic.",
-				"caught_dog": "TAIL SINGED!\n\nA fire devil's sparkler popped right behind you.\nYou bolted into the nearest doorway.",
+				"caught_human": "THE FIRE DEVILS GOT YOUR HUMAN\n\nA firecracker found their hood.\nThe phone found the gutter.",
+				"caught_dog": "TAIL SINGED\n\nA sparkler went off right behind you.\nYou spent the rest of the night in a doorway.",
 			}
 		"dimoni":
 			return {
@@ -205,7 +205,7 @@ static func kind_behavior(kind: String) -> Dictionary:
 
 They stopped to film it. It came closer.
 The phone kept a lovely last video.",
-				"caught_dog": "SCORCHED!
+				"caught_dog": "SCORCHED
 
 The Dimoni rolled right over you.
 You will smell of fireworks for a week.",
@@ -219,20 +219,20 @@ You will smell of fireworks for a week.",
 				"jammed_banner": "SECURITY IS TANGLED UP! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR SKIDDING BAGS",
 				"warning_banner": "SECURITY'S COMING! HEAD FOR THE EXIT", "hold_banner": "THEY'RE STILL TANGLED! GO  %d",
 				"suitcase_banner": "SUITCASE! STEP CLEAR",
-				"caught_human": "GROUNDED!\n\nSecurity took your human's boarding pass.\nThey are on the no-walk list now.",
-				"caught_dog": "IN THE CRATE!\n\nSecurity popped you in a travel crate.\nYou went round the carousel twice.",
+				"caught_human": "GROUNDED\n\nSecurity took your human's boarding pass.\nThey are on the no-walk list now.",
+				"caught_dog": "IN THE CRATE\n\nSecurity put you in a travel crate.\nYou went around the carousel twice.",
 			}
 		"goat":
 			return {
 				"kind": "goat", "speed": 138.0, "flee": false,
-				"warning": "WILD GOATS INCOMING! WATCH FOR BOULDERS!",
+				"warning": "WILD GOATS! WATCH FOR BOULDERS",
 				"freed": "BLEAT", "freed_sfx": "bleat", "caught_shout": "HEADBUTTED!",
 				"jammed": "HORNS WEDGED", "jammed_sfx": "crack", "jammed_shout": "THE GOAT'S HORNS ARE STUCK!",
 				"jammed_banner": "THE GOAT'S HORNS ARE STUCK! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR BOUNCING ROCKS",
 				"warning_banner": "WILD GOATS! HEAD DOWN THE TRAIL", "hold_banner": "STILL WEDGED! GO  %d",
 				"boulder_banner": "BOULDER! STEP CLEAR",
-				"caught_human": "HEADBUTTED!\n\nThe big mountain goat sent your human tumbling into the brambles.\nThe phone went flying down the crag.",
-				"caught_dog": "PINNED BY THE HORNS!\n\nThe alpha goat cornered you against the cliff face.\nYou surrendered your dried sausages.",
+				"caught_human": "HEADBUTTED\n\nThe goat sent your human into the brambles.\nThe phone went the rest of the way down.",
+				"caught_dog": "CORNERED\n\nThe big goat backed you up against the rock.\nYou gave him your sausages. It seemed fair.",
 			}
 		"groomer":
 			return {
@@ -243,8 +243,8 @@ You will smell of fireworks for a week.",
 				"jammed_banner": "THE GROOMER'S STUCK! CATCH YOUR BREATH", "run_banner": "RUN! WATCH FOR ROLLING SNOWBALLS",
 				"warning_banner": "THE GROOMER'S LOOSE! HEAD DOWN THE PISTE", "hold_banner": "STILL STUCK! GO  %d",
 				"snowball_banner": "SNOWBALL! STEP OUT OF ITS TRACK",
-				"caught_human": "GROOMED!\n\nYour human is now part of the piste.\nVery smooth. Corduroy finish.",
-				"caught_dog": "PACKED IN SNOW!\n\nThe blade scooped you up with the berm.\nYou came out at the bottom as a snowdog.",
+				"caught_human": "GROOMED\n\nYour human is now part of the piste.\nVery smooth. Corduroy finish.",
+				"caught_dog": "PACKED IN SNOW\n\nThe blade scooped you up with the berm.\nYou came out at the bottom as a snowdog.",
 			}
 		"vet":
 			return {
@@ -255,7 +255,7 @@ You will smell of fireworks for a week.",
 				"jammed_banner": "A PATIENT NEEDS THEM! CATCH YOUR BREATH", "run_banner": "RUN! DON'T LET THEM CATCH YOU",
 				"warning_banner": "THE VET'S COMING! HEAD FOR HOME", "hold_banner": "THEY'RE STILL BUSY! GO  %d",
 				"caught_human": "THE VET GOT YOUR HUMAN\n\nThey handed you over for your booster shot.\nYou will never trust them again.",
-				"caught_dog": "CONE OF SHAME!\n\nThe cone slipped over your head.\nThree weeks of bumping into doorways.",
+				"caught_dog": "CONE OF SHAME\n\nThe cone slipped over your head.\nThree weeks of bumping into doorways.",
 			}
 		"flood":
 			return {

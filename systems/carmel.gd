@@ -109,7 +109,7 @@ const VIEW_REACH := 260.0
 
 # Summit picnic prize
 const PRIZE := Vector2(710.0, -4520.0)
-const PRIZE_TEXT := "snatch the bravas from the sunset picnic blanket"
+const PRIZE_TEXT := "steal the bravas off the sunset picnic blanket"
 
 const FENCE_STEP := 160.0
 const FENCE_IN := 6.0

@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-FORTY-TWO WALKS IN AND AROUND BARCELONA
+FORTY-SIX WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -87,16 +87,20 @@ La Carretera de les Aigües, the hillside hike
 Festa de Gràcia, the decorated festival street
 El Laberint d'Horta, the cypress maze
 El Port, the fishing wharf
+La Molina, the ski slopes and a runaway snow groomer
 Plaça d'Espanya, the fountain avenue
+Sant Pau, the modernista hospital gardens
 El Poble Espanyol, the walled village of copied towns
+Sitges, the town by the sea
 L'Aeroport, Terminal 1's long pier, with airport security on your tail
 Les Obres, the work site
+Camí de Ronda, the cliff path above the coves
 Dia de Partit, match day
 La Ferralla, the junkyard
 Montserrat, the mountain trail across the funicular and the wild goats
 Rambla del Raval, the finale, with El Gat, a bronze cat
 
-Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Six of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars, the correfoc through Gràcia and the Dimoni float in La Cremada. Four of them feature statue bosses: El Mamut in La Ciutadella, Els Lleons at El Port, El Drac in El Mosaic and El Gat on the Rambla del Raval. There is a gentle first walk that teaches one trick at a time, and every walk can be played in clear weather, rain, wind or snow, by day or at night.
+Every walk ends off the leash: a dog park, a dog beach, a clearing in the woods, a yard, or a plaça with a fountain to jump in. Nine of them are chases: the street sweeper at dawn, the river flood on El Besòs, the clinic escape in El Veterinari, the wild boars of Els Senglars, the correfoc through Gràcia, the Dimoni float in La Cremada, airport security, the runaway snow groomer on La Molina and the wild goats of Montserrat. Four of them feature statue bosses: El Mamut in La Ciutadella, Els Lleons at El Port, El Drac in El Mosaic and El Gat on the Rambla del Raval. There is a gentle first walk that teaches one trick at a time, and every walk can be played under any of nine skies, Sahara dust included, from dawn to night.
 
 ALSO
 
@@ -104,10 +108,11 @@ ALSO
 - A dare-giver on every walk, each with their own tune: bark to take a dare, then land the tricks before the music runs out.
 - Combo tricks: vaulting around a pole, grinding along a curb, near misses.
 - Stars unlock the next walk; bones buy collars, bandanas and coats.
-- Five dogs to walk, each with a knack of their own, and bones to train them.
+- Seven dogs to walk, each with a skill and a skill goal of her own. Buried finds and skill goals earn training, spent on her stats.
 - Moods: a fright, a bark-off or a run off the leash leaves her jumpy, barky, full of zoomies or flat, and each changes how she moves.
 - Ground you can feel: grass and mud slow her but hold scent, sand drags at her paws, wet ground and snow make her skid.
-- Rain, wind, snow and night on any walk, with everyone dressed for the weather.
+- Nine skies and six times of day on any walk, with everyone dressed for the weather.
+- In English, Catalan and Spanish, with screen shake, flashes, text size and controls adjustable.
 - Other dogs with lives of their own: they sniff and mark the posts you pass and come over to say hello, unless they are the grumpy sort, who lunge and bark at the end of the leash. Their owners are people too: on a call, carrying a coffee, stopping to type, watching your dog go by.
 
 CONTROLS
@@ -139,7 +144,7 @@ El teu humà va enganxat al mòbil i camina amb el pilot automàtic. Tu ets a l'
 
 El teu humà pesa quatre cops més que tu i guanya totes les estrebades directes. Així que guanyes com un gos: planta't en el moment just, enrotlla la corretja a un fanal per frenar-lo en sec i borda per aturar-lo a la vorera. Enrotlla'l a un pal i continua estirant, i sortirà voltant com una pilota lligada. Una estirada constant el guia; si l'estires sense parar, se li acaba la paciència («Ei!» i corretja curta).
 
-Quaranta-dos passejos per Barcelona i els voltants (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, L'Estació, Els Búnquers, Plaça Reial, La Cremada, El Fòrum, La Diagonal, Carrer de Blai, La Carretera de les Aigües, Festa de Gràcia, El Laberint d'Horta, El Port, Plaça d'Espanya, El Poble Espanyol, L'Aeroport, Les Obres, Dia de Partit, La Ferralla, Montserrat i Rambla del Raval), amb cinc gossos, reptes musicals, persecucions i quatre caps estàtua. Cada passeig acaba sense corretja i es pot jugar amb pluja, vent, neu o de nit.
+Quaranta-sis passejos per Barcelona i els voltants (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, L'Estació, Els Búnquers, Plaça Reial, La Cremada, El Fòrum, La Diagonal, Carrer de Blai, La Carretera de les Aigües, Festa de Gràcia, El Laberint d'Horta, El Port, La Molina, Plaça d'Espanya, Sant Pau, El Poble Espanyol, Sitges, L'Aeroport, Les Obres, Camí de Ronda, Dia de Partit, La Ferralla, Montserrat i Rambla del Raval), amb set gossos, reptes musicals, persecucions i quatre caps estàtua. Cada passeig acaba sense corretja i es pot jugar amb pluja, vent, neu o de nit.
 
 Teclat, comandament o tàctil. Un jugador. Sense anuncis, sense compres, sense compte. Fet amb Godot per Santtu Nykänen.
 ```
@@ -151,7 +156,7 @@ Tu humano va pegado al móvil y camina con el piloto automático. Tú estás al 
 
 Tu humano pesa cuatro veces más que tú y gana todos los tirones directos. Así que ganas como un perro: plántate en el momento justo, enrolla la correa en una farola para frenarlo en seco y ladra para pararlo en el bordillo. Enróllalo en un poste y sigue tirando, y saldrá dando vueltas como una pelota atada. Un tirón constante lo guía; si tiras sin parar, se le acaba la paciencia («¡Oye!» y correa corta).
 
-Cuarenta y dos paseos por Barcelona y sus alrededores (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, L'Estació, Els Búnquers, Plaça Reial, La Cremada, El Fòrum, La Diagonal, Carrer de Blai, La Carretera de les Aigües, Festa de Gràcia, El Laberint d'Horta, El Port, Plaça d'Espanya, El Poble Espanyol, L'Aeroport, Les Obres, Dia de Partit, La Ferralla, Montserrat y Rambla del Raval), con cinco perros, retos musicales, persecuciones y cuatro jefes estatua. Cada paseo acaba sin correa y puede jugarse con lluvia, viento, nieve o de noche.
+Cuarenta y seis paseos por Barcelona y sus alrededores (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, L'Estació, Els Búnquers, Plaça Reial, La Cremada, El Fòrum, La Diagonal, Carrer de Blai, La Carretera de les Aigües, Festa de Gràcia, El Laberint d'Horta, El Port, La Molina, Plaça d'Espanya, Sant Pau, El Poble Espanyol, Sitges, L'Aeroport, Les Obres, Camí de Ronda, Dia de Partit, La Ferralla, Montserrat y Rambla del Raval), con siete perros, retos musicales, persecuciones y cuatro jefes estatua. Cada paseo acaba sin correa y puede jugarse con lluvia, viento, nieve o de noche.
 
 Teclado, mando o táctil. Un jugador. Sin anuncios, sin compras, sin cuenta. Hecho con Godot por Santtu Nykänen.
 ```

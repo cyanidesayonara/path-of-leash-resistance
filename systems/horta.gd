@@ -97,7 +97,7 @@ const POOL := Rect2(140.0, -4690.0, 170.0, 120.0)
 const PALACE := Rect2(990.0, -320.0, 230.0, 300.0)
 
 const PRIZE := Vector2(866.0, -2552.0)
-const PRIZE_TEXT := "snatch the gardener's bocadillo off his barrow"
+const PRIZE_TEXT := "pinch the gardener's bocadillo off his wheelbarrow"
 
 
 # Walk order, down the level: the avenue past the palace, the romantic
@@ -260,7 +260,7 @@ static func tick(m: Node2D, _delta: float) -> void:
 	if absf(lap) >= TAU:
 		m.set_meta("horta_eros", true)
 		m.bones += 5
-		m.combo.add("ROUND EROS", 4)
+		m.combo.add("AROUND EROS", 4)
 		m.float_text(hp + Vector2(0, -34), I18n.t("w_is_that_cupid_or_eros"), Color(1, 1, 1, 0.9), m.POP_SAY)
 		m.float_text(dp + Vector2(0, -30), I18n.t("w_round_eros_5"), Color(0.96, 0.86, 0.32))
 		m.feed.say(I18n.t("w_round_eros"), EventFeed.Tone.GOOD)

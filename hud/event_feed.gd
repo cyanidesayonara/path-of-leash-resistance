@@ -388,7 +388,7 @@ func _dare_card(vs: Vector2, y: float) -> void:
 		"offer":
 			var which := I18n.t("dare_n_of") % [g.dare_number(), g.dare_count()] if g != null else I18n.t("dare_word")
 			title = I18n.t("dare_offer_title") % [which, int(ch.target), secs]
-			lines = [Prompts.fill(I18n.t("dare_how")), I18n.t("dare_win_bones") % [I18n.t("dare_retry") if bool(ch.retry) else "",
+			lines = [Prompts.fill(I18n.t("dare_how")), I18n.t("dare_win_bones") % [(I18n.t("dare_retry") + " ") if bool(ch.retry) else "",
 				int(ch.reward)]]
 			if bool(ch.waiting):
 				lines.append(I18n.t("dare_leave"))

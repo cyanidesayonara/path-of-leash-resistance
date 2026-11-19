@@ -40,7 +40,7 @@ const WALL_L := 380.0
 const WALL_R := 900.0
 
 const PRIZE := Vector2(780.0, -4450.0)
-const PRIZE_TEXT := "snatch the giant duty-free chocolate box"
+const PRIZE_TEXT := "make off with the giant duty-free chocolate box"
 
 # THE PLACES, by depth
 const ENTRANCE_Y := -350.0            # security archway into terminal

@@ -666,7 +666,7 @@
         },
         {
           "id": "floodgap",
-          "text": "Keep the deep flood front a leash length away"
+          "text": "Stay a leash length ahead of the flood"
         },
         {
           "id": "dry",
@@ -750,7 +750,7 @@
         },
         {
           "id": "beg",
-          "text": "Wait by a terrace or a group until someone shares"
+          "text": "Beg at a terrace or a group until someone shares"
         },
         {
           "id": "combo",
@@ -830,7 +830,7 @@
         },
         {
           "id": "boar",
-          "text": "Keep the wild boars a leash length away"
+          "text": "Stay a leash length ahead of the boars"
         },
         {
           "id": "mud",
@@ -1446,7 +1446,7 @@
         },
         {
           "id": "skater",
-          "text": "Dodge or cheer the esplanade skater"
+          "text": "Dodge the esplanade skater, or cheer him on"
         },
         {
           "id": "pergola",
@@ -1495,7 +1495,7 @@
       "chapter": 4,
       "chase_gate": "cremada",
       "chase_gate_name": "La Cremada",
-      "chase_warning": "CORREFOC! RUN FROM THE FIRE DEVILS!",
+      "chase_warning": "CORREFOC! RUN FROM THE FIRE DEVILS",
       "clock_target": 175,
       "clock_text": "2:55",
       "freedom_kind": "yard",
@@ -1534,7 +1534,7 @@
         },
         {
           "id": "correfoc",
-          "text": "Keep the fire devils a leash length away"
+          "text": "Stay a leash length ahead of the fire devils"
         },
         {
           "id": "churros",
@@ -1622,7 +1622,7 @@
         },
         {
           "id": "drac_column",
-          "text": "Wind the dragon round a column"
+          "text": "Wind the dragon around a column"
         },
         {
           "id": "drac_trip",
@@ -1718,7 +1718,7 @@
         },
         {
           "id": "eros",
-          "text": "Steer your human round Eros in the maze"
+          "text": "Steer your human around Eros in the maze"
         },
         {
           "id": "combo",
@@ -2066,7 +2066,7 @@
         },
         {
           "id": "groomer_clean",
-          "text": "Get home without a snowball hitting"
+          "text": "Get home without a snowball hitting you"
         },
         {
           "id": "snowman_bark",
@@ -2150,7 +2150,7 @@
         },
         {
           "id": "estel",
-          "text": "Visit L'Estel gallery and claim the star bone"
+          "text": "Claim the star bone in L'Estel"
         },
         {
           "id": "drink",
@@ -2199,7 +2199,7 @@
       "chapter": 5,
       "chase_gate": "aeroport",
       "chase_gate_name": "L'Aeroport",
-      "chase_warning": "WILD GOATS INCOMING! WATCH FOR BOULDERS!",
+      "chase_warning": "WILD GOATS! WATCH FOR BOULDERS",
       "clock_target": 185,
       "clock_text": "3:05",
       "freedom_kind": "clearing",
@@ -2234,7 +2234,7 @@
         },
         {
           "id": "funicular_dodge",
-          "text": "Wait out or dodge the Sant Joan funicular crossing"
+          "text": "Cross the Sant Joan funicular track safely"
         },
         {
           "id": "boulder_dodge",
@@ -2342,7 +2342,7 @@
         },
         {
           "id": "outrun",
-          "text": "Keep the sweeper a leash length away"
+          "text": "Stay a leash length ahead of the sweeper"
         },
         {
           "id": "spell",
@@ -2422,7 +2422,7 @@
         },
         {
           "id": "somni",
-          "text": "Visit El Somni gallery and claim the dream bone"
+          "text": "Claim the dream bone in El Somni"
         },
         {
           "id": "combo",
@@ -2686,7 +2686,7 @@
         },
         {
           "id": "watering",
-          "text": "Shake off under a watering can"
+          "text": "Get a shower from a watering can"
         },
         {
           "id": "combo",
@@ -3014,7 +3014,7 @@
         },
         {
           "id": "colom",
-          "text": "Visit El Colom gallery and claim the cubist bone"
+          "text": "Claim the cubist bone in El Colom"
         },
         {
           "id": "bag",
@@ -3118,7 +3118,7 @@
         },
         {
           "id": "ronda_gust",
-          "text": "Hold the line on the landward side through a gust"
+          "text": "Keep to the landward side through a gust"
         },
         {
           "id": "ronda_coves",
@@ -3206,7 +3206,7 @@
         },
         {
           "id": "santpau_tour",
-          "text": "Cheer the school tour group with a bark"
+          "text": "Bark hello to the school tour group"
         },
         {
           "id": "santpau_chime",
@@ -3646,7 +3646,7 @@
         },
         {
           "id": "tummy",
-          "text": "Walk past every chocolate"
+          "text": "Walk past every chocolate without a bite"
         },
         {
           "id": "drink",
@@ -3830,7 +3830,7 @@
         },
         {
           "id": "drac",
-          "text": "Visit El Drac gallery and claim the dragon bone"
+          "text": "Claim the dragon bone in El Drac"
         },
         {
           "id": "combo",
@@ -4006,7 +4006,7 @@
         },
         {
           "id": "viewfinder",
-          "text": "Gaze through the panoramic cliffside viewfinder"
+          "text": "Look through the cliffside viewfinder"
         },
         {
           "id": "combo",

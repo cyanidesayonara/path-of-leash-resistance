@@ -289,7 +289,7 @@ func _run() -> void:
 	var col: Vector2 = Vector2(LevelBuild.MOSAIC_HALL_COLS[3], LevelBuild.MOSAIC_HALL_ROWS[3])
 	_ticks(m, DT * 2.0)
 	_check(dr.state == BD.State.SLITHER, "he slithers through the hall")
-	_check(dr.status() == "WIND HIM ROUND A COLUMN", "slither banner")
+	_check(dr.status() == "WIND HIM AROUND A COLUMN", "slither banner")
 	# taut mid-segment across him, rope already on a hall Doric column
 	_lay_rope(m, Vector2(500.0, -1960.0), Vector2(780.0, -1960.0))
 	_mark_touch(m, col)

@@ -136,7 +136,7 @@ const CHURRO_SPOTS: Array[Vector2] = [
 
 # Walk prize: a warm bag of churros left on the stone bench outside the convent
 const PRIZE := Vector2(820.0, -3420.0)
-const PRIZE_TEXT := "snatch the churro bag off the plaza ledge"
+const PRIZE_TEXT := "make off with the churro bag on the plaza ledge"
 
 
 static func edge_nodes(m: Node2D) -> Array:

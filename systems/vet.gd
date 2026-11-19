@@ -103,7 +103,7 @@ const DOORS: Array[Dictionary] = [
 
 # Hazardous prize: Liver treat jar on the reception desk
 const PRIZE := Vector2(440.0, -2510.0)
-const PRIZE_TEXT := "snatch the liver treat jar from the reception desk"
+const PRIZE_TEXT := "raid the liver treat jar on the reception desk"
 
 # Where the chase home holds them (home_chase.VET_BANDS): a cat hissing in its
 # carrier on the west wall, then a patient on the scale. They had none before:
