@@ -172,6 +172,7 @@ const T := {
 	"weather_clear": {"en": "CLEAR", "ca": "SERÈ", "es": "DESPEJADO"},
 	"weather_breeze": {"en": "BREEZE", "ca": "BRISA", "es": "BRISA"},
 	"weather_fog": {"en": "FOG", "ca": "BOIRA", "es": "NIEBLA"},
+	"weather_calima": {"en": "SAHARA DUST", "ca": "CALIMA", "es": "CALIMA"},
 	"weather_drizzle": {"en": "DRIZZLE", "ca": "PLOVISQUEIG", "es": "LLOVIZNA"},
 	"weather_rain": {"en": "DOWNPOUR", "ca": "XÀFEC", "es": "CHAPARRÓN"},
 	"weather_storm": {"en": "STORM", "ca": "TEMPESTA", "es": "TORMENTA"},

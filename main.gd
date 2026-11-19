@@ -6370,7 +6370,7 @@ func apply_sky() -> void:
 		var g: Dictionary = mood.grade() if mood != null else {}
 		SkyLook.apply(grade_rect.material, SkyLook.compose(Mood.GRADE[Mood.M.HAPPY] if g.is_empty() else g, sky_mod))
 	if weather_fx != null:
-		weather_fx.set_sky(Game.weather, Game.rain_amount(), Game.wind_amount())
+		weather_fx.set_sky(Game.weather, Game.rain_amount(), Game.wind_amount(), Game.dust_amount())
 		weather_fx.night = Game.night
 
 

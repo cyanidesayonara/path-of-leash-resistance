@@ -26,11 +26,13 @@ const SNOW := Color(0.93, 0.97, 1.04)
 # the shipped look and every mood's look are exactly what they were.
 # The low sun: `sun` brightens the screen's sun side by that much per channel,
 # `shade` darkens the far side, `sun_dir` points from the middle of the screen
-# toward the sun. `mist` is how thick the morning haze lies.
+# toward the sun. `mist` is how thick the morning haze lies. `haze` lifts the
+# shadows per channel toward a coloured veil (the calima's dust); a grade that
+# does not name it leaves it at none.
 const NONE := {
 	"k_sat": 1.0, "k_con": 1.0, "k_exp": 1.0, "add_vig": 0.0, "add_lift": 0.0,
 	"k_tint": Vector3.ONE, "k_cool": Vector3.ONE, "k_warm": Vector3.ONE, "wet": 0.0,
-	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 0.0,
+	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 0.0, "haze": Vector3.ZERO,
 }
 # overcast: colour drains, the ground darkens and shines, the light goes grey-blue
 const GRADE_RAIN := {
@@ -111,6 +113,25 @@ const GRADE_EVENING := {
 	"k_tint": Vector3.ONE, "k_cool": Vector3(0.94, 0.98, 1.10), "k_warm": Vector3(1.10, 1.0, 0.88), "wet": 0.0,
 	"sun": Vector3(0.16, 0.04, 0.12), "shade": Vector3(0.05, 0.06, 0.0), "sun_dir": Vector2(1.0, -0.2), "mist": 0.0,
 }
+# the calima: Sahara dust in the air. By day an ochre haze, the shadows lifted
+# into it, contrast and colour lost; after dark the lamps' sodium light caught
+# in the dust, a dim orange murk instead of the night's blue. Both lie over
+# the hour's look at the sky's dust (Game.dust_amount).
+const CALIMA := Color(1.0, 0.88, 0.72)
+const CALIMA_NIGHT := Color(0.50, 0.38, 0.26)
+const GRADE_CALIMA := {
+	"k_sat": 0.80, "k_con": 0.84, "k_exp": 0.98, "add_vig": 0.06, "add_lift": 0.0,
+	"k_tint": Vector3(1.03, 0.98, 0.90), "k_cool": Vector3(1.05, 0.99, 0.88), "k_warm": Vector3(1.06, 0.98, 0.82), "wet": 0.0,
+	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 0.0,
+	"haze": Vector3(0.13, 0.09, 0.04),
+}
+# after dark the night's blue shadows are turned back to orange
+const GRADE_CALIMA_NIGHT := {
+	"k_sat": 0.84, "k_con": 0.90, "k_exp": 1.0, "add_vig": 0.04, "add_lift": 0.0,
+	"k_tint": Vector3(1.05, 0.96, 0.82), "k_cool": Vector3(1.10, 0.99, 0.84), "k_warm": Vector3(1.04, 0.98, 0.86), "wet": 0.0,
+	"sun": Vector3.ZERO, "shade": Vector3.ZERO, "sun_dir": Vector2.ZERO, "mist": 0.0,
+	"haze": Vector3(0.05, 0.03, 0.01),
+}
 const GameScript := preload("res://autoload/game.gd")
 
 
@@ -129,8 +150,8 @@ static func _sky(weather: String) -> Dictionary:
 # a grade at a fraction of its strength: every change eased back toward none
 static func _scaled(g: Dictionary, k: float) -> Dictionary:
 	var o := {}
-	for key: String in g:
-		var v: Variant = g[key]
+	for key: String in NONE:
+		var v: Variant = g.get(key, NONE[key])
 		var none: Variant = NONE[key]
 		if v is float:
 			o[key] = lerpf(float(none), float(v), k)
@@ -168,12 +189,24 @@ static func tint(lvl: String, weather: String, hour: Variant) -> Color:
 		c = c * STORM
 	if float(sk.fog) > 0.0:
 		c = c * Color.WHITE.lerp(FOG, float(sk.fog))
+	var dust := float(sk.get("dust", 0.0))
+	if dust > 0.0:
+		if _dark(lvl, hour):
+			c = c.lerp(CALIMA_NIGHT, dust * 0.8)
+		else:
+			c = c * Color.WHITE.lerp(CALIMA, dust)
 	return c
+
+
+# a dark street: night and the blue hour, except the lit station concourse
+static func _dark(lvl: String, hour: Variant) -> bool:
+	var h := _hour(hour)
+	return (h == "night" or h == "evening") and lvl != "station"
 
 
 # the weather's and the hour's changes to the grade, combined. Under rain,
 # snow, fog or a storm the low sun is behind the cloud: most of its side light
-# goes.
+# goes; in a calima much of it.
 static func grade_mod(lvl: String, weather: String, hour: Variant) -> Dictionary:
 	var out: Dictionary = NONE.duplicate()
 	var sk := _sky(weather)
@@ -193,7 +226,11 @@ static func grade_mod(lvl: String, weather: String, hour: Variant) -> Dictionary
 		"dawn": out = _stack(out, GRADE_DAWN)
 		"morning": out = _stack(out, GRADE_MORNING)
 		"dusk": out = _stack(out, GRADE_DUSK)
-	var cloud := 1.0 if String(sk.kind) == "rain" or String(sk.kind) == "snow" else fog
+	var dust := float(sk.get("dust", 0.0))
+	if dust > 0.0:
+		out = _stack(out, _scaled(GRADE_CALIMA_NIGHT if _dark(lvl, hour) else GRADE_CALIMA, dust))
+	# the dust veils a low sun to a pale disc: its side light goes soft
+	var cloud := 1.0 if String(sk.kind) == "rain" or String(sk.kind) == "snow" else maxf(fog, dust * 0.6)
 	if cloud > 0.0:
 		var keep := lerpf(1.0, 0.3, cloud)
 		out["sun"] = (out["sun"] as Vector3) * keep
@@ -203,17 +240,19 @@ static func grade_mod(lvl: String, weather: String, hour: Variant) -> Dictionary
 
 static func _stack(a: Dictionary, b: Dictionary) -> Dictionary:
 	var o := {}
-	for k: String in a:
+	for k: String in NONE:
+		var av: Variant = a.get(k, NONE[k])
+		var bv: Variant = b.get(k, NONE[k])
 		if k.begins_with("add_"):
-			o[k] = float(a[k]) + float(b[k])
-		elif k == "sun" or k == "shade":
-			o[k] = (a[k] as Vector3) + (b[k] as Vector3)
+			o[k] = float(av) + float(bv)
+		elif k == "sun" or k == "shade" or k == "haze":
+			o[k] = (av as Vector3) + (bv as Vector3)
 		elif k == "sun_dir":
-			o[k] = b[k] if (b[k] as Vector2) != Vector2.ZERO else a[k]
+			o[k] = bv if (bv as Vector2) != Vector2.ZERO else av
 		elif k == "wet" or k == "mist":
-			o[k] = maxf(float(a[k]), float(b[k]))
+			o[k] = maxf(float(av), float(bv))
 		else:
-			o[k] = a[k] * b[k]
+			o[k] = av * bv
 	return o
 
 
@@ -231,6 +270,7 @@ static func compose(g: Dictionary, s: Dictionary) -> Dictionary:
 		"warm": (g["warm"] as Vector3) * (s["k_warm"] as Vector3),
 		"wet": s["wet"],
 		"sun": s["sun"], "shade": s["shade"], "sun_dir": s["sun_dir"], "mist": s["mist"],
+		"haze": s.get("haze", Vector3.ZERO),
 	}
 
 
@@ -250,6 +290,7 @@ static func apply(gm: ShaderMaterial, g: Dictionary) -> void:
 	gm.set_shader_parameter("sun_col", g.get("sun", Vector3.ZERO))
 	gm.set_shader_parameter("sun_shade", g.get("shade", Vector3.ZERO))
 	gm.set_shader_parameter("mist", g.get("mist", 0.0))
+	gm.set_shader_parameter("haze", g.get("haze", Vector3.ZERO))
 
 
 # The colour to draw a light in so it shows as `col` once the world's tint

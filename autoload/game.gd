@@ -202,26 +202,30 @@ const OLD_CHASE_GATE := {"site": "besos", "spook": "besos", "scrap": "besos", "g
 
 # The four kinds of weather the rules read (Game.weather): who is out, slick
 # paving, ice, puddles. Each sky the player can pick (SKIES) is one of these
-# kinds at its own strength of rain, wind and fog (SKY), which only the look
-# and the wind's push read.
+# kinds at its own strength of rain, wind, fog and dust (SKY), which only the
+# look and the wind's push read.
 const WEATHERS: Array[String] = ["clear", "rain", "wind", "snow"]
 # the skies, in the order WEATHER cycles them
-const SKIES: Array[String] = ["clear", "breeze", "fog", "drizzle", "rain", "storm", "wind", "snow"]
+const SKIES: Array[String] = ["clear", "breeze", "fog", "calima", "drizzle", "rain", "storm", "wind", "snow"]
 const SKY := {
-	"clear": {"kind": "clear", "rain": 0.0, "wind": 0.0, "fog": 0.0},
+	"clear": {"kind": "clear", "rain": 0.0, "wind": 0.0, "fog": 0.0, "dust": 0.0},
 	# sun and a fresh breeze off the sea: kites up, gusts now and then
-	"breeze": {"kind": "clear", "rain": 0.0, "wind": 0.55, "fog": 0.0},
-	"fog": {"kind": "clear", "rain": 0.0, "wind": 0.0, "fog": 1.0},
-	"drizzle": {"kind": "rain", "rain": 0.4, "wind": 0.1, "fog": 0.3},
-	"rain": {"kind": "rain", "rain": 1.0, "wind": 0.2, "fog": 0.0},
+	"breeze": {"kind": "clear", "rain": 0.0, "wind": 0.55, "fog": 0.0, "dust": 0.0},
+	"fog": {"kind": "clear", "rain": 0.0, "wind": 0.0, "fog": 1.0, "dust": 0.0},
+	# the calima: a light wind bringing the Sahara's dust over the city, an
+	# orange-brown haze and a pale sun; a clear day to the rules, a bad-air one
+	# to whoever was going to lie out in it
+	"calima": {"kind": "clear", "rain": 0.0, "wind": 0.35, "fog": 0.0, "dust": 1.0},
+	"drizzle": {"kind": "rain", "rain": 0.4, "wind": 0.1, "fog": 0.3, "dust": 0.0},
+	"rain": {"kind": "rain", "rain": 1.0, "wind": 0.2, "fog": 0.0, "dust": 0.0},
 	# a downpour driven sideways by a gale
-	"storm": {"kind": "rain", "rain": 1.0, "wind": 1.0, "fog": 0.15},
+	"storm": {"kind": "rain", "rain": 1.0, "wind": 1.0, "fog": 0.15, "dust": 0.0},
 	# a dry gale: the tramuntana
-	"wind": {"kind": "wind", "rain": 0.0, "wind": 1.0, "fog": 0.0},
-	"snow": {"kind": "snow", "rain": 0.0, "wind": 0.25, "fog": 0.15},
+	"wind": {"kind": "wind", "rain": 0.0, "wind": 1.0, "fog": 0.0, "dust": 0.0},
+	"snow": {"kind": "snow", "rain": 0.0, "wind": 0.25, "fog": 0.15, "dust": 0.0},
 }
-const WEATHER_NAMES := {"clear": "CLEAR", "breeze": "BREEZE", "fog": "FOG", "drizzle": "DRIZZLE", "rain": "DOWNPOUR",
-	"storm": "STORM", "wind": "GALE", "snow": "SNOW"}
+const WEATHER_NAMES := {"clear": "CLEAR", "breeze": "BREEZE", "fog": "FOG", "calima": "SAHARA DUST", "drizzle": "DRIZZLE",
+	"rain": "DOWNPOUR", "storm": "STORM", "wind": "GALE", "snow": "SNOW"}
 # The hours the rules read (Game.hour), and the times a walk is walked at
 # (TIMES), in the order TIME cycles them: morning is day to the rules, with
 # a low sun of its own; evening, the blue hour, is night to them, lamps lit
@@ -1054,7 +1058,8 @@ func cycle_weather(dir: int) -> void:
 		_held_sky[0] = sky
 
 
-# how hard it rains, how hard the wind blows, how thick the fog, 0 to 1
+# how hard it rains, how hard the wind blows, how thick the fog and the
+# dust, 0 to 1
 func rain_amount() -> float:
 	return float(SKY.get(sky, SKY.clear).rain)
 
@@ -1065,6 +1070,10 @@ func wind_amount() -> float:
 
 func fog_amount() -> float:
 	return float(SKY.get(sky, SKY.clear).fog)
+
+
+func dust_amount() -> float:
+	return float(SKY.get(sky, SKY.clear).dust)
 
 
 func apply_settings() -> void:

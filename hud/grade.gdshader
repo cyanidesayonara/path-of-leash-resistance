@@ -61,6 +61,9 @@ uniform vec2 sun_dir = vec2(1.0, 0.0);
 // above 1 it is a fog, an even veil over everything as well
 // and drifting slowly, thinnest in the middle of the screen
 uniform float mist = 0.0;
+// a coloured veil in the air (the calima's dust): the shadows lifted toward
+// it per channel, the highlights barely touched. Zero is clear air.
+uniform vec3 haze = vec3(0.0);
 
 // edge smoothing (FXAA, the short form): 1 on, 0 off. The renderer has no
 // MSAA for 2D, so every slanted edge (a bending kerb, a roof turned along the
@@ -220,6 +223,7 @@ void fragment() {
 
 	// lift the blacks so shadowed ground keeps its shape at night
 	col += lift * (1.0 - col);
+	col += haze * (1.0 - col);
 
 	// the low sun: light from one side of the screen, shade on the other,
 	// eased so the middle, where the dog is, sits between the two
