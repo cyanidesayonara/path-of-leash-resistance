@@ -477,7 +477,8 @@ static func draw_dog(
 	forward: Vector2,
 	bob: float,
 	wag_phase: float,
-	mouth := 0.0
+	mouth := 0.0,
+	held := Callable()
 ) -> void:
 	if (
 		not _is_finite_vector(origin)
@@ -687,6 +688,10 @@ static func draw_dog(
 		var open_at := _pt(o, fwd, side, mc + Vector2(mz.x * 0.45, 0.0))
 		canvas.draw_colored_polygon(Clay.ellipse_pts(open_at, Vector2(mz.x * 0.35 + jaw * 2.2 * s, mz.y * 0.85), fwd, 12), Color(0.42, 0.10, 0.10))
 		canvas.draw_circle(open_at + fwd * jaw * 1.2 * s, mz.y * 0.45, Color(0.92, 0.48, 0.52))
+	# what the dog holds, between the jaws, under the muzzle that closes over it:
+	# held(canvas, bite, fwd, side, jaw half width)
+	if held.is_valid():
+		held.call(canvas, _pt(o, fwd, side, mc), fwd, side, mz.y)
 	Clay.blob(canvas, _pt(o, fwd, side, mc), Vector2(mz.x * 0.60, mz.y), fwd, muzzle_col)
 	var eye_r := maxf(0.75, 0.85 * s)
 	var mask_col: Variant = look.get("mask", null)
@@ -706,6 +711,19 @@ static func draw_dog(
 	var nose := _pt(o, fwd, side, mc + Vector2(mz.x * 0.55, 0.0))
 	canvas.draw_circle(nose, maxf(1.0, minf(mz.y * 0.5, 1.6 * s)), dark)
 	canvas.draw_circle(nose - Clay.LIGHT * 0.5, maxf(0.4, 0.4 * s), Color(0.45, 0.42, 0.40))
+
+
+# where the middle of the jaws is, from the dog's origin, facing `forward`
+static func mouth_offset(profile: Dictionary, forward: Vector2) -> Vector2:
+	var p := profile
+	if not validation_errors(p).is_empty():
+		p = get_profile(String(PROFILE_IDS[0]))
+	var s: float = p["size_scale"]
+	var bs: Vector2 = p["body_size"] * s
+	var hr: float = p["head_radius"] * s
+	var mz: Vector2 = p["muzzle_size"] * s
+	var fwd := forward.normalized() if not forward.is_zero_approx() else Vector2.RIGHT
+	return fwd * (bs.x * 0.80 + hr * 0.45 + hr * 0.82 + mz.x * 0.40)
 
 
 static func _pt(o: Vector2, fwd: Vector2, side: Vector2, lp: Vector2) -> Vector2:

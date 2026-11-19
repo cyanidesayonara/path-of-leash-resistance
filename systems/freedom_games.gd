@@ -89,6 +89,36 @@ static func begin(m: Node2D) -> void:
 				break
 
 
+# --at-freedom with --shot-tug starts a tug on the spot, and --shot-carry=rope
+# or ball puts that in her mouth, so how a held toy is drawn can be
+# photographed without playing up to it.
+static func shot_setup(m: Node2D) -> void:
+	var args := OS.get_cmdline_user_args()
+	var fd: Node2D = m.tug_dog
+	for a: String in args:
+		if a.begins_with("--shot-dog-at="):
+			var xy := a.substr(14).split(",")
+			m.dog.global_position = Vector2(float(xy[0]), float(xy[1]))
+	if "--shot-tug" in args and is_instance_valid(fd):
+		fd.global_position = m.dog.global_position + Vector2(-70.0, 22.0)
+		m.tug = RopeTug.new(m.dog.global_position, fd.global_position)
+		m.tug_prev = m.dog.global_position
+		m.tug_phase_was = m.tug.phase
+		_face_the_toy(m, fd)
+		fd.state = fd.S.TUG
+		fd.face = (m.dog.global_position - fd.global_position).normalized()
+		m.dog_carrying = true
+	for a: String in args:
+		if a == "--shot-carry=rope":
+			if is_instance_valid(fd):
+				fd.rope = false
+			m.dog_carrying = true
+			m.rope_carry_t = 999.0
+		elif a == "--shot-carry=ball" and is_instance_valid(m.ball):
+			m.ball.state = m.ball.State.CARRIED
+			m.dog_carrying = true
+
+
 # On leaving it.
 static func end(m: Node2D) -> void:
 	if m.tug != null:
@@ -432,41 +462,52 @@ static func hints(m: Node2D) -> Array[String]:
 # --- drawing ------------------------------------------------------------------
 
 # a cotton rope toy, as sold in any pet shop: natural cotton twisted with
-# one dyed strand, a little grubby from use
+# one dyed strand, a little grubby from use, a knot at each end
+const Clay := preload("res://entities/clay.gd")
 const ROPE_A := Color(0.33, 0.47, 0.60)   # the dyed strand, washed-out denim
 const ROPE_B := Color(0.89, 0.85, 0.75)   # natural cotton
-const ROPE_GROOVE := Color(0.55, 0.50, 0.42, 0.55)
-
-
-# the rope toy, from `a` to `b`: a stiff braided cord, two strands twisted
-# round each other, a fat knot at each end. `bend` bows it sideways at the
-# middle (RopeTug.bend), as a stiff rope bows: one smooth arc, never a kink.
+const ROPE_GROOVE := Color(0.50, 0.45, 0.37, 0.75)
+const ROPE_INK := Color(0.16, 0.13, 0.11, 0.85)
 const ROPE_SEGS := 8
-const ROPE_R := 3.4           # half its thickness
-const TWIST := 5.5            # px along the rope per strand crossing
+const ROPE_R := 2.1           # half its thickness
+const TWIST := 3.0            # px along the rope per strand crossing
+const KNOT_R := 4.0           # the knot's half width
+const ROPE_TAIL := 7.0        # how far a gripped end shows past the jaw
 
 
-static func draw_rope(c: ShapeBatch, a: Vector2, b: Vector2, bend := 0.0) -> void:
+# a rope from a to b, sagging `bend` px sideways at its middle; a knot at
+# either end that is a real end (a dog's mouth hides the rest)
+static func draw_rope(c: ShapeBatch, a: Vector2, b: Vector2, bend := 0.0,
+		knot_a := true, knot_b := true, mid_band := false) -> void:
 	var d := b - a
-	var length := d.length()
-	if length < 1.0:
+	if d.length() < 1.0:
 		return
-	var along := d / length
-	var nrm := along.orthogonal()
-	var ink := Color(0.16, 0.13, 0.11)
-	var pts: Array[Vector2] = [a]
-	for i in range(1, ROPE_SEGS + 1):
+	var nrm := (d / d.length()).orthogonal()
+	var pts := PackedVector2Array()
+	for i in range(ROPE_SEGS + 1):
 		var u := float(i) / float(ROPE_SEGS)
 		pts.append(a.lerp(b, u) + nrm * bend * 4.0 * u * (1.0 - u))
-	for i in range(ROPE_SEGS):
-		c.capsule(pts[i], pts[i + 1], ROPE_R + 1.1, ink)
-	for i in range(ROPE_SEGS):
+	draw_rope_path(c, pts, knot_a, knot_b, mid_band)
+
+
+static func draw_rope_path(c: ShapeBatch, pts: PackedVector2Array, knot_a := true,
+		knot_b := true, mid_band := false) -> void:
+	var n := pts.size()
+	if n < 2:
+		return
+	for i in range(n - 1):
+		c.capsule(pts[i], pts[i + 1], ROPE_R + 0.8, ROPE_INK)
+	for i in range(n - 1):
 		c.capsule(pts[i], pts[i + 1], ROPE_R, ROPE_B)
-	# the twist: every other lay is the dyed strand, a fine groove between
+	var total := 0.0
+	for i in range(n - 1):
+		total += pts[i].distance_to(pts[i + 1])
+	# the lay: every strand crossing slants the same way down the rope, every
+	# third one the dyed strand, with the shade on the side away from the light
 	var walked := 0.0
 	var next := TWIST * 0.5
 	var lay := 0
-	for i in range(ROPE_SEGS):
+	for i in range(n - 1):
 		var p0: Vector2 = pts[i]
 		var p1: Vector2 = pts[i + 1]
 		var seg := p0.distance_to(p1)
@@ -474,29 +515,68 @@ static func draw_rope(c: ShapeBatch, a: Vector2, b: Vector2, bend := 0.0) -> voi
 			continue
 		var tdir := (p1 - p0) / seg
 		var sn := tdir.orthogonal()
+		var lit := 1.0 if sn.dot(Clay.LIGHT) < 0.0 else -1.0
+		c.line(p0 - sn * lit * ROPE_R * 0.55, p1 - sn * lit * ROPE_R * 0.55, Color(0.62, 0.56, 0.46, 0.55), ROPE_R * 0.8)
 		while next < walked + seg:
 			var at := p0 + tdir * (next - walked)
-			var from := at - sn * ROPE_R * 0.9 - tdir * 1.8
-			var to := at + sn * ROPE_R * 0.9 + tdir * 1.8
-			if lay % 2 == 0:
-				c.line(from, to, ROPE_A, 2.6)
-			c.line(from + tdir * 1.6, to + tdir * 1.6, ROPE_GROOVE, 0.8)
-			next += TWIST * 0.5
+			var from := at - sn * ROPE_R * 0.95 - tdir * 1.3
+			var to := at + sn * ROPE_R * 0.95 + tdir * 1.3
+			var mid := mid_band and absf(next - total * 0.5) < TWIST * 1.6
+			if mid or lay % 3 == 0:
+				c.line(from, to, ROPE_A, 1.5)
+			else:
+				c.line(from, to, ROPE_GROOVE, 0.6)
+			next += TWIST
 			lay += 1
+		c.line(p0 + sn * lit * ROPE_R * 0.5, p1 + sn * lit * ROPE_R * 0.5, Color(1.0, 0.98, 0.92, 0.35), 0.6)
 		walked += seg
-	# the knots: a chunky wrap, the dyed strand round it, and the frayed
-	# cotton tail sticking out past it
-	for e in range(2):
-		var end: Vector2 = a if e == 0 else b
-		var out := -along if e == 0 else along
-		for f in range(4):
-			var spread := (float(f) - 1.5) * 0.42
-			var tip := end + out.rotated(spread * 0.7) * (ROPE_R + 4.0 + float(f % 2) * 1.2)
-			c.line(end, tip, Color(ink.r, ink.g, ink.b, 0.6), 2.0)
-			c.line(end, tip - out * 0.5, ROPE_B.darkened(0.05), 1.3)
-		c.circle(end, ROPE_R + 2.4, ink)
-		c.circle(end, ROPE_R + 1.3, ROPE_B)
-		for k2: float in [-1.0, 1.0]:
-			var mid := end + along * k2 * 1.7
-			c.line(mid - nrm * (ROPE_R + 0.9), mid + nrm * (ROPE_R + 0.9), ROPE_A, 1.5)
-		c.circle(end - nrm * 1.3 - along * 1.0, 1.2, Color(1.0, 0.98, 0.92, 0.7))
+	if knot_a:
+		draw_knot(c, pts[0], (pts[0] - pts[1]).normalized())
+	if knot_b:
+		draw_knot(c, pts[n - 1], (pts[n - 1] - pts[n - 2]).normalized())
+
+
+# an overhand knot at a rope's end, `out` pointing off the end: a fat wrap
+# with the dyed strand round it and the frayed cotton tassel past it
+static func draw_knot(c: ShapeBatch, at: Vector2, out: Vector2) -> void:
+	var side := out.orthogonal()
+	var k := at + out * 1.5
+	for f in range(5):
+		var spread := (float(f) - 2.0) * 0.32
+		var tip := k + out.rotated(spread) * (KNOT_R + 3.2 + float(f % 2) * 1.3)
+		c.line(k, tip, ROPE_INK, 1.5)
+		c.line(k, tip - out * 0.4, ROPE_B.darkened(0.04), 0.9)
+	c.capsule(k - out * 1.6, k + out * 1.0, KNOT_R + 0.8, ROPE_INK)
+	c.capsule(k - out * 1.6, k + out * 1.0, KNOT_R, ROPE_B)
+	for s2: float in [-1.0, 0.0, 1.0]:
+		var w := k + out * s2 * 1.6
+		c.line(w - side * KNOT_R * 0.9 - out * 0.9, w + side * KNOT_R * 0.9 + out * 0.9,
+			ROPE_A if s2 == 0.0 else ROPE_GROOVE, 1.4 if s2 == 0.0 else 0.6)
+	c.circle(k - side * 1.4 - Clay.LIGHT * 0.8, 1.1, Color(1.0, 0.98, 0.92, 0.55))
+
+
+# What a dog's mouth holds, drawn in her own space between her head and her
+# muzzle, so the muzzle closes over it: `bite` is the middle of her jaws,
+# `jaw` their half width. In a tug the rope runs in from the front (drawn by
+# the games layer under her) and its knotted end pokes out of the corner of
+# her mouth on side `sd`.
+static func draw_rope_bite(c: ShapeBatch, bite: Vector2, fwd: Vector2, side: Vector2,
+		jaw: float, sd: float) -> void:
+	var out := (side * sd * 1.0 - fwd * 0.35).normalized()
+	var pts := PackedVector2Array([bite + fwd * 2.0, bite, bite + out * (jaw + 1.0),
+		bite + out * (jaw + ROPE_TAIL)])
+	draw_rope_path(c, pts, false, true)
+
+
+# a rope carried on its own: across her jaws, both knotted ends out either side
+static func draw_rope_carried(c: ShapeBatch, bite: Vector2, fwd: Vector2, side: Vector2,
+		jaw: float) -> void:
+	var reach := jaw + ROPE_TAIL + 3.0
+	var pts := PackedVector2Array([
+		bite + side * reach - fwd * 5.0,
+		bite + side * (jaw + 1.0) - fwd * 0.6,
+		bite,
+		bite - side * (jaw + 1.0) - fwd * 0.6,
+		bite - side * reach - fwd * 6.5,
+	])
+	draw_rope_path(c, pts, true, true)

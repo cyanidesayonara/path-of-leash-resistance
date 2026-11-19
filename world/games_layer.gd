@@ -1,9 +1,9 @@
 extends Node2D
 
 # Draws the off-leash games (systems/freedom_games.gd) in two layers: the
-# ground layer under the dogs (the course's lane, flags, jumps, poles) and the
-# cover layer over them (the tunnel's tube, which she disappears into, and the
-# rope between two dogs in a tug).
+# ground layer under the dogs (the course's lane, flags, jumps, poles, and the
+# rope between two dogs in a tug, its ends under their muzzles) and the cover
+# layer over them (the tunnel's tube, which she disappears into, the tug's meter).
 
 var main: Node2D
 var cover := false
@@ -24,12 +24,27 @@ func _process(_delta: float) -> void:
 	if not visible or main == null:
 		return
 	if cover:
-		var rope: bool = main.tug != null or main.rope_carry_t > 0.0
+		var rope: bool = main.tug != null
 		if rope or rope != _was_rope:
 			queue_redraw()
 		_was_rope = rope
-	elif Engine.get_process_frames() % 2 == 0:
-		queue_redraw()
+	else:
+		# her end of a rope is drawn in her mouth, by her (draw_held)
+		var holding: bool = main.tug != null or main.rope_carry_t > 0.0
+		if holding:
+			main.dog.held = self
+		elif main.dog.held == self:
+			main.dog.held = null
+		if main.tug != null or Engine.get_process_frames() % 2 == 0:
+			queue_redraw()
+
+
+# her end of the rope, between her jaws (entities/dog.gd calls this)
+func draw_held(c: ShapeBatch, bite: Vector2, fwd: Vector2, side: Vector2, jaw: float) -> void:
+	if main.tug != null:
+		FreedomGames.draw_rope_bite(c, bite, fwd, side, jaw, 1.0)
+	elif main.rope_carry_t > 0.0:
+		FreedomGames.draw_rope_carried(c, bite, fwd, side, jaw)
 
 
 # a dropped rope appears or is picked up: one redraw
@@ -40,7 +55,8 @@ func refresh() -> void:
 const HER := Color(0.42, 0.86, 0.46)      # her side of a tug: the meter, her win line
 const THEIRS := Color(0.98, 0.52, 0.30)   # the other dog's
 const CHALK := Color(0.96, 0.95, 0.88)
-const RIBBON := Color(0.93, 0.36, 0.30)    # a red rag knotted round the middle
+const ROPE_GIVE := 0.3      # how much of the tug's sideways jiggle shows in the taut rope
+const MARK := Color(0.93, 0.36, 0.30)      # the rope middle on the meter
 const LINE_HALF := 22.0
 const METER_W := 70.0
 const METER_H := 8.0
@@ -64,6 +80,7 @@ func _draw() -> void:
 			_draw_waves(main.wave_game)
 		if main.tug != null:
 			_draw_tug_ground(main.tug)
+		_draw_rope_ground()
 	_b.flush()
 
 
@@ -148,22 +165,25 @@ func _draw_rope_cover() -> void:
 	var fd: Node2D = main.tug_dog
 	if main.tug != null and is_instance_valid(fd):
 		var tug: RopeTug = main.tug
-		var a: Vector2 = main.dog.global_position + main.dog.facing * 18.0
-		var b: Vector2 = fd.global_position + fd.face * 15.0
-		FreedomGames.draw_rope(_b, a, b, tug.bend)
-		_draw_ribbon((a + b) * 0.5 + (b - a).normalized().orthogonal() * tug.bend, (b - a).normalized())
-		_draw_meter(tug, a, b)
+		_draw_meter(tug, main.dog.global_position, fd.global_position)
 		if tug.phase == RopeTug.P.WIND:
 			_draw_growl(fd, tug.wind_amount())
-	elif main.rope_carry_t > 0.0:
-		var m0: Vector2 = main.dog.global_position + main.dog.facing * 16.0
-		FreedomGames.draw_rope(_b, m0, m0 + main.dog.facing.rotated(0.6) * 34.0)
+
+
+# Under the dogs: the rope between two mouths in a tug, its ends hidden in
+# their jaws and their muzzles over it, taut but for a little give; or the
+# rope lying on the grass where she dropped it.
+func _draw_rope_ground() -> void:
+	var fd: Node2D = main.tug_dog
+	if main.tug != null and is_instance_valid(fd):
+		FreedomGames.draw_rope(_b, main.dog.mouth_point(), fd.mouth_point(), main.tug.bend * ROPE_GIVE,
+			false, false, true)
 	elif main.rope_loose.x < INF:
 		var p: Vector2 = main.rope_loose
 		FreedomGames.draw_rope(_b, p + Vector2(-17, 4), p + Vector2(17, -4), 3.0)
 
 
-# chalked on the grass: where the ribbon started, and the line each side
+# chalked on the grass: where the rope's middle started, and the line each side
 # has to drag it past
 func _draw_tug_ground(tug: RopeTug) -> void:
 	var side := tug.axis.orthogonal()
@@ -178,19 +198,7 @@ func _draw_tug_ground(tug: RopeTug) -> void:
 			_b.line(c + side * LINE_HALF * u0, c + side * LINE_HALF * (u0 + 0.36), col, 3.0)
 
 
-func _draw_ribbon(at: Vector2, along: Vector2) -> void:
-	var n := along.orthogonal()
-	var ink := Color(0.12, 0.1, 0.09)
-	for s: float in [-1.0, 1.0]:
-		var tip := at + n * 7.0 * s + along * 2.4 * s
-		var t2 := at + n * 7.0 * s - along * 2.4 * s
-		_b.polygon(PackedVector2Array([at, tip + (tip - at).normalized() * 1.2, t2 + (t2 - at).normalized() * 1.2]), ink)
-		_b.polygon(PackedVector2Array([at, tip, t2]), RIBBON)
-	_b.circle(at, 2.6, ink)
-	_b.circle(at, 1.8, RIBBON)
-
-
-# a small bar over the two of them: the ribbon's way, her side green, theirs
+# a small bar over the two of them: the rope middle's way, her side green, theirs
 # orange, her end on whichever side of the screen she is
 func _draw_meter(tug: RopeTug, a: Vector2, b: Vector2) -> void:
 	var her_right := a.x >= b.x
@@ -210,9 +218,9 @@ func _draw_meter(tug: RopeTug, a: Vector2, b: Vector2) -> void:
 	var col := HER if bal >= 0.0 else THEIRS
 	_b.rect(Rect2(minf(mid.x, to), r.position.y + 1.5, absf(to - mid.x), METER_H - 3.0), col)
 	_b.rect(Rect2(mid.x - 1.0, r.position.y - 2.0, 2.0, METER_H + 4.0), CHALK)
-	# the ribbon's mark on the bar
+	# the rope middle's mark on the bar
 	_b.circle(Vector2(to, mid.y), 4.2, ink)
-	_b.circle(Vector2(to, mid.y), 3.0, RIBBON)
+	_b.circle(Vector2(to, mid.y), 3.0, MARK)
 
 
 # the wind-up: the other dog gets low and growls, marks shaking off its head

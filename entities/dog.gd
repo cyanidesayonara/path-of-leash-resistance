@@ -568,6 +568,21 @@ func _tick_quirk() -> void:
 var _b: ShapeBatch
 
 
+# What is in her mouth: anything with draw_held(batch, bite, fwd, side, jaw),
+# which her draw calls between her head and her muzzle. The thing's own
+# drawing stands down while she holds it.
+var held: Object = null
+var _bite_local := Vector2.ZERO
+
+
+# the middle of her jaws, in the world, as she was last drawn
+func mouth_point() -> Vector2:
+	if _bite_local == Vector2.ZERO:
+		return global_position + facing * 18.0
+	var sc := _q_scale * float(DRAW_SCALE.get(_dog_breed(), 1.0))
+	return global_position + presentation_offset + _q_shift + (_bite_local * sc).rotated(presentation_rotation)
+
+
 func _draw() -> void:
 	# every draw call goes through a ShapeBatch standing in for the canvas: runs
 	# of shapes become one draw call, same pixels (systems/shape_batch.gd)
@@ -1211,6 +1226,12 @@ func _draw_shapes() -> void:
 			var drop_dir := hs * (1.0 if di == 0 else -1.0)
 			_b.draw_circle(head + hf * ((6.8 if is_tito else (8.5 if is_frenchie else 11.5))) + drop_dir * (2.0 + dp * 4.0 if is_tito else (3.0 + dp * 6.0)), (1.0 if is_tito else 1.4) * (1.0 - dp) * drink_u,
 				Color(0.76, 0.90, 1.0, 0.65 * (1.0 - dp) * drink_u))
+	# what she holds sits between her jaws, under the muzzle that closes over it
+	var muz_reach := 5.2 if is_frenchie else (11.2 if is_gos else (4.8 if is_tito else (13.5 if is_galgo else 10.5)))
+	var jaw_w := 4.6 if is_frenchie else (3.8 if is_gos else (2.3 if is_tito else (2.4 if is_galgo else 3.4)))
+	_bite_local = head + hf * (muz_reach * 0.6)
+	if held != null and is_instance_valid(held):
+		held.draw_held(_b, _bite_local, hf, hs, jaw_w)
 	# the muzzle: tapering out to the nose, not a stick
 	if is_frenchie:
 		var muz_len := 5.2
