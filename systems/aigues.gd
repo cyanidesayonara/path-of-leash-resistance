@@ -21,7 +21,12 @@ extends RefCounted
 # cached edge layer (draw_edge_layer).
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "rider_lane", "tick", "tree_kind"]
+const HOOKS := ["draw_bollard", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_live", "draw_snack", "draw_threshold", "rider_lane", "tick", "tree_kind"]
+# how far the track's grit and the clearing's grass run into each other at the
+# gate; main only draws the threshold near the gate, so none of this may reach
+# past GATE_Y + 100 .. GATE_Y - 120 of the view
+const TONGUE := 56.0
+const CLEARING := Color(0.34, 0.50, 0.32)
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -499,6 +504,43 @@ static func _draw_hut(b: ShapeBatch) -> void:
 	# the iron door, on the track side, and the company's plaque beside it
 	b.rect(Rect2(r.position.x - 4.0, c.y - 16.0, 6.0, 32.0), IRON)
 	b.rect(Rect2(r.position.x - 3.0, c.y - 30.0, 4.0, 10.0), Color(0.62, 0.52, 0.30))
+
+
+# the track into the Font: grit across the mouth, fading into the clearing's
+# grass, instead of main's granite kerb across a dirt trail
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y: float = m.GATE_Y - 40.0
+	var e: Vector2 = m.walk_edges(y + 2.0)
+	var ge: Vector2 = m.walk_edges(m.GATE_Y - 16.0)
+	var gl := maxf(float(m.gate_l), ge.x)
+	var gr := minf(float(m.gate_r), ge.y)
+	var mx := (gl + gr) * 0.5
+	# the clearing's grass feathering down onto the track either side of the mouth
+	for side: float in [-1.0, 1.0]:
+		var x0: float = e.x - 80.0 if side < 0.0 else gr - 10.0
+		var x1: float = gl + 10.0 if side < 0.0 else e.y + 80.0
+		b.band(PackedVector2Array([
+			Vector2(x0, y), Vector2(x1, y),
+			Vector2(x0, y + 50.0), Vector2(x1, y + 50.0),
+			Vector2(x0, y + 110.0), Vector2(x1, y + 110.0),
+		]), 2, CLEARING, PackedFloat32Array([0.55, 0.28, 0.0]))
+	# the track's grit across its whole width, a step into the grass
+	b.band(PackedVector2Array([
+		Vector2(e.x - 20.0, y + 8.0), Vector2(e.y + 20.0, y + 8.0),
+		Vector2(e.x + 10.0, y - 18.0), Vector2(e.y - 10.0, y - 18.0),
+		Vector2(e.x + 40.0, y - 42.0), Vector2(e.y - 40.0, y - 42.0),
+	]), 2, SAULO, PackedFloat32Array([1.0, 0.55, 0.0]))
+	# the worn way people walk in by, the gate's width
+	var mouth := (gr - gl) * 0.5
+	var tpts := PackedVector2Array()
+	for tr: Vector3 in [
+		Vector3(y + 10.0, mx - mouth - 20.0, mx + mouth + 20.0),
+		Vector3(y - TONGUE * 0.35, mx - mouth * 0.95, mx + mouth * 0.95),
+		Vector3(y - TONGUE, mx - mouth * 0.55, mx + mouth * 0.55),
+	]:
+		for k in range(5):
+			tpts.append(Vector2(lerpf(tr.y, tr.z, float(k) / 4.0), tr.x))
+	b.band(tpts, 5, SAULO_RUT, PackedFloat32Array([0.85, 0.5, 0.0]), PackedFloat32Array([0.0, 1.0, 1.0, 1.0, 0.0]))
 
 
 # a stone marker on the water main for a hydrant: a squat granite post with
