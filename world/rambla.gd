@@ -378,6 +378,10 @@ static func draw_tree_leaf_drifts(m: Node2D, b: ShapeBatch, vt: float, vb: float
 			b.polygon(PackedVector2Array([lp, lp + Vector2(3, -2), lp + Vector2(5, 1), lp + Vector2(2, 3)]), Color(0.72, 0.50, 0.24))
 
 
+# main's edge layer draws its blocks in slices this tall, on a grid from y = 0
+const EDGE_SLICE := 55.0
+
+
 static func _draw_stone_apron(m: Node2D, b: ShapeBatch, r: Rect2) -> void:
 	b.rect(r, m.STRIP_SIDEWALK)
 	var jx := ceilf(r.position.x / 48.0) * 48.0
@@ -438,6 +442,15 @@ static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
 	b.rect(Rect2(1180.0, y, 520.0, fence_y - y), surround)
 	b.rect(Rect2(70.0, y, e.x - 70.0, fence_y - y), YARD_GRASS)
 	b.rect(Rect2(e.y, y, 1180.0 - e.y, fence_y - y), YARD_GRASS)
+	# the edge layer's last slice of roofs and their cast shadows run on past
+	# the path's end; grass over them so both blocks end at the fence
+	var roof_top := floorf((float(m.GATE_Y) - 30.0) / EDGE_SLICE) * EDGE_SLICE - 2.0
+	b.rect(Rect2(-400.0, roof_top, 470.0, y - roof_top), surround)
+	b.rect(Rect2(1180.0, roof_top, 520.0, y - roof_top), surround)
+	b.rect(Rect2(70.0, roof_top, f.x + 40.0 - 70.0, y - roof_top), YARD_GRASS)
+	b.rect(Rect2(f.y - 40.0, roof_top, 1180.0 - f.y + 40.0, y - roof_top), YARD_GRASS)
+	for side_x: float in [70.0, 1180.0]:
+		b.line(Vector2(side_x, roof_top), Vector2(side_x, fence_y), Color(0.62, 0.63, 0.60), 3.0)
 
 	# finish both flanking city blocks cleanly at fence_y with coping and corner piers
 	var roof_base := Color(0.38, 0.35, 0.37)
