@@ -259,9 +259,23 @@ static func _tick_traca(m: Node2D, delta: float) -> void:
 static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
 	var b := ShapeBatch.new()
 	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.28)
-	# the underpass: dark under the deck, the piers on either side
+	# the underpass: dark under the deck, feathering out past each lip,
+	# and the piers on either side
 	if UNDERPASS.end.y > vt - 80.0 and UNDERPASS.position.y < vb + 80.0:
-		b.rect(UNDERPASS.grow_individual(0.0, 30.0, 0.0, 30.0), UNDER_DARK)
+		b.rect(UNDERPASS, UNDER_DARK)
+		var fade := 64.0
+		var lx := UNDERPASS.position.x
+		var rx := UNDERPASS.end.x
+		var ny := UNDERPASS.position.y
+		var sy := UNDERPASS.end.y
+		b.band(PackedVector2Array([
+			Vector2(lx, ny), Vector2(rx, ny),
+			Vector2(lx, ny - fade), Vector2(rx, ny - fade),
+		]), 2, UNDER_DARK, PackedFloat32Array([1.0, 0.0]))
+		b.band(PackedVector2Array([
+			Vector2(lx, sy), Vector2(rx, sy),
+			Vector2(lx, sy + fade), Vector2(rx, sy + fade),
+		]), 2, UNDER_DARK, PackedFloat32Array([1.0, 0.0]))
 		for r: Rect2 in UNDERPASS_PIERS:
 			b.rect(Rect2(r.position + Vector2(5, 7), r.size), sh)
 			b.rect(r, RAIL_DECK.darkened(0.25))
