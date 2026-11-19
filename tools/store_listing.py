@@ -18,7 +18,7 @@ features, keywords) are one item per line.
         smoke-checks the submission updater against a synthetic submission in
         a temporary directory
 
-Screenshots and logos are images and stay a Partner Center upload by hand.
+The screenshots and logos are staged by tools/store_images.py.
 """
 
 import copy

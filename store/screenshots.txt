@@ -1,0 +1,20 @@
+# The Microsoft Store listing's screenshots, in the order the Store shows
+# them. tools/store_images.py renders each one at 1920x1080 from the
+# release being submitted, and the Store submit workflow's update_draft
+# stages them in place of the listing's current images (docs/MICROSOFT_STORE.md,
+# step 7). The Store takes 1 to 10; every shot needs a walk that exists at
+# the tag being submitted.
+#
+# One line per shot: the file name, a colon, then the game's --shot flags
+# (the ones after "--"; --shot, --shot-quit, --shot-out and --seed=1 are
+# added). The framing is the website's (tools/site_media.sh).
+01-street.png: --level=street --shot-y=-2500 --shot-at=260
+02-barri-agility.png: --level=barri --at-freedom --shot-at=260
+03-oldtown.png: --level=oldtown --shot-y=-2000 --shot-at=260
+04-neteja-chase.png: --level=neteja --shot-y=-4300 --shot-home --shot-sweeper --shot-at=200
+05-beach.png: --level=beach --shot-y=-2500 --shot-at=260
+06-ciutadella.png: --level=ciutadella --shot-y=-2650 --shot-at=260
+07-reial.png: --level=reial --shot-y=-2500 --shot-at=260
+08-gracia-chase.png: --level=gracia --shot-y=-3200 --shot-home --shot-sweeper --shot-at=200
+09-montserrat.png: --level=montserrat --shot-y=-2600 --shot-at=260
+10-raval.png: --level=raval --shot-y=-600 --shot-at=260
