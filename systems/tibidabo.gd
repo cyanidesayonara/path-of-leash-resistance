@@ -77,6 +77,11 @@ const CAR_TOP_Y := -4700.0
 const CAR_PERIOD := 40.0
 const CAR_W := 38.0
 const CAR_L := 110.0
+# the carriage's nose at the head of its climb, where the top buffer stops it
+const TOP_STATION_Y := CAR_TOP_Y - CAR_L * 0.5
+# the mirador's terrace coping and the depth its shadow feathers down over
+const COPING_H := 12.0
+const COPING_FALL := 28.0
 # the funicular goal: the dog at the road's east side with the carriage
 # passing level with her
 const WATCH_X := 680.0
@@ -231,6 +236,8 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 			b.circle(Vector2(TRACK_X, py), 3.5, Color(0.20, 0.20, 0.22))
 			b.circle(Vector2(TRACK_X, py), 1.5, Color(0.70, 0.72, 0.75))
 			py -= 120.0
+	if TOP_STATION_Y >= top and TOP_STATION_Y < bot:
+		_top_station(m, b)
 
 	# Aleppo pines on the hillside
 	for pp: Vector2 in PINES:
@@ -253,6 +260,9 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.circle(Vector2(bx, by + 30.0), 10.0, BALUSTRADE_STONE)
 		b.circle(Vector2(bx + Shade.light.x * 3.0, by + 30.0 + Shade.light.y * 3.0), 10.0, BALUSTRADE_SHADOW)
 		by -= 70.0
+	var edge_y: float = m.GATE_Y - 40.0
+	if edge_y >= top and edge_y < bot:
+		_terrace_edge(m, b, edge_y)
 
 	# Panoramic viewfinders (coin binoculars)
 	for vf: Vector2 in VIEWFINDERS:
@@ -273,6 +283,42 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		b.rect(Rect2(PRIZE.x - 22.0, PRIZE.y - 14.0, 44.0, 6.0), Color(0.88, 0.22, 0.20))
 		b.circle(PRIZE + Vector2(-6.0, -2.0), 8.0, COTTON_CANDY_PINK)
 		b.circle(PRIZE + Vector2(6.0, -2.0), 8.0, COTTON_CANDY_PINK.lightened(0.12))
+
+# The mirador's terrace edge, where the drop to the city and the hillside
+# meet its paving: a coping course out from the balustrade and the kerb, the
+# balustrade's posts turning the corner along it on the west, and the
+# terrace's shadow feathering down off it.
+static func _terrace_edge(m: Node2D, b: ShapeBatch, y: float) -> void:
+	var e: Vector2 = m.walk_edges(y)
+	var runs: Array[Vector2] = [Vector2(-400.0, e.x - 22.0), Vector2(e.y + 3.0, 1600.0)]
+	for run: Vector2 in runs:
+		var fall := PackedVector2Array([
+			Vector2(run.x, y + COPING_H), Vector2(run.y, y + COPING_H),
+			Vector2(run.x, y + COPING_H + COPING_FALL), Vector2(run.y, y + COPING_H + COPING_FALL),
+		])
+		b.band(fall, 2, SHADOW, PackedFloat32Array([1.0, 0.0]))
+		b.rect(Rect2(run.x, y, run.y - run.x, COPING_H), BALUSTRADE_STONE)
+		b.rect(Rect2(run.x, y + COPING_H - 3.0, run.y - run.x, 3.0), BALUSTRADE_STONE.darkened(0.2))
+	var px := e.x - 22.0 - 28.0
+	while px > -400.0:
+		b.circle(Vector2(px, y + COPING_H * 0.5), 7.0, BALUSTRADE_STONE.lightened(0.06))
+		px -= 56.0
+
+
+# The top station, level with the carriage at the head of its climb: a
+# platform from the road's kerb out to the rails, and a buffer stop past the
+# carriage's nose, as at the bottom.
+static func _top_station(m: Node2D, b: ShapeBatch) -> void:
+	var kerb: float = (m.walk_edges(CAR_TOP_Y) as Vector2).y + 3.0
+	var plat := Rect2(kerb, CAR_TOP_Y - 40.0, TRACK_X - TRACK_W * 0.5 - kerb, 80.0)
+	b.rect(Rect2(plat.position + Shade.light * 5.0, plat.size), SHADOW)
+	b.rect(plat, BALUSTRADE_STONE)
+	b.rect(Rect2(plat.position.x, plat.end.y - 5.0, plat.size.x, 5.0), BALUSTRADE_STONE.darkened(0.25))
+	b.rect(Rect2(plat.end.x - 6.0, plat.position.y, 4.0, plat.size.y), Color(0.92, 0.78, 0.25))
+	var stop_y := TOP_STATION_Y - 14.0
+	b.rect(Rect2(TRACK_X - 24.0, stop_y - 4.0, 48.0, 4.0), SHADOW)
+	b.rect(Rect2(TRACK_X - 24.0, stop_y, 48.0, 8.0), FUNICULAR_RED)
+
 
 # Where the carriage is drawn: on the walk clock, except that once the pair
 # are walking in to the bottom station (systems/arrival.gd) it comes down to
