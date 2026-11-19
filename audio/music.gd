@@ -85,6 +85,10 @@ const RAVAL_BOSS_MELODY := [
 # melody through the B section (instrument, octave). swing: how late the
 # off-beat quavers fall, as a fraction of a beat.
 const STYLES := {
+	# the menus' own tune (main menu, wardrobe, YOUR WALKS, settings): a breezy
+	# bossa in G of its own, vibes over a whistle, so the walks' tune is the
+	# walks' and the menus sound like home
+	"menu": {"bpm": 104, "key": 0, "lead": "vibes", "lead2": ["whistle", 0], "comp": "bossa", "bass": "bossa", "drums": "rim", "verb": 0.26, "chords": [[67,"maj"],[64,"min"],[69,"min"],[62,"maj"],[67,"maj"],[64,"min"],[60,"maj"],[62,"maj"],[64,"min"],[60,"maj"],[67,"maj"],[62,"maj"],[60,"maj"],[62,"maj"],[67,"maj"],[67,"maj"]], "mel": [[0,0.5,74],[0.5,0.5,71],[1,1,74],[2,0.5,76],[2.5,0.5,74],[3,1,71],[4,0.5,71],[4.5,0.5,67],[5,1,71],[6,2,76],[8,0.5,72],[8.5,0.5,69],[9,1,72],[10,0.5,74],[10.5,0.5,72],[11,1,69],[12,1,66],[13,1,69],[14,2,74],[16,0.5,74],[16.5,0.5,71],[17,1,74],[18,0.5,76],[18.5,0.5,74],[19,1,71],[20,0.5,71],[20.5,0.5,67],[21,1,71],[22,2,79],[24,1,76],[25,0.5,74],[25.5,0.5,72],[26,1,76],[27,1,72],[28,1,74],[29,1,78],[30,2,81],[32,1.5,79],[33.5,0.5,78],[34,1,76],[35,1,71],[36,1.5,76],[37.5,0.5,74],[38,1,72],[39,1,67],[40,0.5,71],[40.5,0.5,74],[41,1,79],[42,1,78],[43,1,74],[44,1,76],[45,1,74],[46,2,69],[48,0.5,72],[48.5,0.5,76],[49,1,79],[50,0.5,81],[50.5,0.5,79],[51,1,76],[52,0.5,74],[52.5,0.5,78],[53,1,81],[54,2,78],[56,1,79],[57,1,74],[58,1,71],[59,1,74],[60,3,67]]},
 	# the main menu's theme: up-tempo and bright, a whistle lead with a glock
 	# over it all the way, pushed chord stabs, a bouncing octave bass and a
 	# groove with a fill at every fourth bar

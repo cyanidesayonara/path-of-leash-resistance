@@ -1,0 +1,1 @@
+--headless --path . --script res://tests/test_menu_music.gd

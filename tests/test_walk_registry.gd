@@ -2,7 +2,7 @@ extends SceneTree
 
 # Tests that every walk in Game.LEVELS is registered across all per-walk
 # tables, and that no table contains unknown walk keys without being on a
-# documented allow list (e.g. "tutorial", "title", "freedom").
+# documented allow list (e.g. "tutorial", "title", "freedom", "menu").
 #
 # When a walk is added to the game, it must be registered in all of these
 # tables. If a walk is deliberately absent from WALK_MODULES because its
@@ -75,7 +75,7 @@ const TABLES := [
 	{
 		"script": "res://audio/music.gd",
 		"table": "STYLES",
-		"allow_extra": ["title", "freedom"],
+		"allow_extra": ["title", "freedom", "menu"],
 	},
 	{
 		"script": "res://world/world_sign.gd",
