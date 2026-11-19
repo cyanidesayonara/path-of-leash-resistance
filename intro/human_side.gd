@@ -13,7 +13,8 @@ extends RefCounted
 # reach (0..1, the other arm out forward holding the leash), reach_down (0..1,
 # that arm down to the knee), lift (0..1, feet off the ground and trailing, for
 # being yanked), head (head tilt), mouth (0..1, open), glow (0..1, the phone
-# lighting the face), phone_jolt (0..1), scroll (thumb phase), blink,
+# lighting the face), phone_jolt (0..1), flail (0..1, the phone arm flung up
+# overhead on a yank, phone still in hand), scroll (thumb phase), blink,
 # hair_style (short, curly, bald, bun, ponytail, bob, long) and lashes; the
 # colours skin, shirt, trousers, hair and shoe. Your human's come from
 # Game.human_look (intro/kit.gd fills them in).
@@ -416,6 +417,12 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 	var head_t: float = pose.get("head", 0.0)
 	var glow: float = pose.get("glow", 0.0)
 	var jolt: float = pose.get("phone_jolt", 0.0)
+	var flail: float = pose.get("flail", 0.0)
+	# a stroll is not a march: the body dips forward as the feet part and the
+	# head counters it, so the eyes stay on the screen
+	var walk_k := amp * (1.0 - lift) * (1.0 - sit)
+	lean += 0.035 * walk_k * cos(phase * 2.0)
+	head_t -= 0.04 * walk_k * cos(phase * 2.0)
 	# the jaw opens in eighths, so each opening is one cached face
 	var mouth_q := clampi(roundi(float(pose.get("mouth", 0.0)) * 8.0), 0, 8)
 	var mouth := float(mouth_q) / 8.0
@@ -471,19 +478,28 @@ static func draw(c: CanvasItem, pose: Dictionary) -> Vector2:
 		thigh_dir = thigh_dir.lerp(Vector2.RIGHT, sit).normalized()
 		bend = bend * (1.0 - sit) + sit * 1.45
 		if lift > 0.0:
-			# trailing out behind, the far leg further, whipping as they go
-			thigh_dir = thigh_dir.lerp(Vector2(-0.85, 0.5).normalized(), lift).normalized()
-			bend = lerpf(bend, 0.35 + 0.35 * float(side) + sin(phase * 2.0) * 0.25, lift)
+			# trailing out behind and running in the air: the legs scramble in
+			# turn, each kicking back and tucking, never side by side
+			var kick := sin(phase + PI * float(side))
+			thigh_dir = thigh_dir.lerp(Vector2(-0.85, 0.5).normalized().rotated(0.6 * kick), lift).normalized()
+			bend = lerpf(bend, 0.5 + 0.55 * (0.5 + 0.5 * sin(phase + PI * float(side) + 1.2)), lift)
 		legs.append(_two(root, thigh_dir, 48.0, 50.0, bend))
 	# the phone held up near the chin, elbow down, the screen tipped to the face
 	# (up under the chin, below the eyes, the forearm raised from an elbow
 	# held out in front of the ribs)
 	var phone_at := (Vector2(43, 2) * phone + Vector2(14, 58) * (1.0 - phone)) + Vector2(8, -10) * jolt
 	var phone_hand := shoulder + phone_at.rotated(lean)
-	var elbow := shoulder + Vector2(24, 26).rotated(lean)
-	# the free arm: hanging, out ahead on the leash, or down to the floor
+	var elbow := shoulder + (Vector2(24, 26) + Vector2(2.0 * sin(phase), 0.0) * walk_k).rotated(lean)
+	# flung up overhead on a yank, the phone still gripped: saving it comes
+	# first. Straight up and a little back in the world, however far he leans
+	# (bowed out ahead on the way, so the hand never passes through the face)
+	phone_hand = phone_hand.lerp(shoulder + Vector2(-6, -66), flail) + Vector2(34, 0) * sin(flail * PI)
+	elbow = elbow.lerp(shoulder + Vector2(10, -32), flail) + Vector2(14, 0) * sin(flail * PI)
+	# the free arm: hanging, out ahead on the leash, or down to the floor,
+	# swinging with the stride as far as the leash lets it
 	var free_dir := Vector2.DOWN.rotated(-0.2).lerp(Vector2.RIGHT.rotated(0.12), reach).normalized()
 	free_dir = free_dir.lerp(Vector2(0.55, 0.85).normalized(), reach_down).normalized()
+	free_dir = free_dir.rotated(-0.22 * walk_k * sin(phase) * (1.0 - 0.7 * reach) * (1.0 - reach_down))
 	var arm2 := _two(shoulder + Vector2(-2, 4), free_dir, 34.0, 32.0, -0.3 * (1.0 - reach) * (1.0 - reach_down))
 	# both arms hang from one shoulder joint, just under the top of the shirt
 	var sj := hip + up * 57.0 - fwd * 1.0
