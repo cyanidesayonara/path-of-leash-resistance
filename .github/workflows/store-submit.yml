@@ -132,8 +132,14 @@ jobs:
         run: |
           set -euo pipefail
           show() { python3 tools/store_images.py redact "$1"; }
-          # never while a submission is in certification or publishing
-          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 || true
+          # a draft left by an earlier run already has a live link: mask it first
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" > pre.json 2> /dev/null || true
+          python3 tools/store_images.py upload-url pre.json --masks 2> /dev/null || true
+          rm -f pre.json
+          # never while a submission is in certification or publishing; a
+          # status that cannot be read stops the run
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 \
+            || { show status.txt; exit 1; }
           show status.txt
           python3 tools/store_images.py check-draftable --status status.txt
           msstore publish pkg/*.msix --appId "$PRODUCT_ID" --noCommit > publish.txt 2>&1 \
@@ -196,7 +202,8 @@ jobs:
           python3 tools/store_images.py upload-url submission.json --masks
           # msstore prints "Submission Status = ..." through its logger, on
           # stderr: capture both streams or the check never sees it
-          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1
+          NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 \
+            || { show status.txt; exit 1; }
           show status.txt
           # commit only a draft still staged, with this tag's package and the
           # listing's What's new

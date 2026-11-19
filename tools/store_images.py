@@ -271,7 +271,7 @@ REDACTED = "<redacted: write-capable upload link>"
 SAS_LINK = re.compile(r"https://[^\"\s]*\.blob\.core\.windows\.net/[^\"\s]*", re.I)
 # a log line holding any piece of a SAS link: msstore wraps long lines, so the
 # query can sit on a line of its own, away from the host
-SAS_PIECE = re.compile(r"blob\.core|(?:^|[?&\s])(?:sig|sv|skoid|sktid|skt|ske|sks|skv|se|sr|sp)=",
+SAS_PIECE = re.compile(r"blob\.core|(?:^|[?&\s]|\\u0026)(?:sig|sv|skoid|sktid|skt|ske|sks|skv|se|sr|sp)=",
                        re.I)
 
 
@@ -319,7 +319,9 @@ def check_draftable(status: str) -> list[str]:
     certification: staging would touch the one in progress."""
     m = re.search(r"Submission Status\s*=\s*(\w+)", status)
     if not m:
-        return []  # no submission yet
+        # fail closed: a status that could not be read may hide one in
+        # certification
+        return ["Could not read the submission status; not staging."]
     if m[1] not in DRAFTABLE:
         return [f"A submission is {m[1]}: wait until it is published (or has "
                 "failed) before staging the next one."]

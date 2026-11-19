@@ -251,6 +251,12 @@ class StoreImages(unittest.TestCase):
         self.assertTrue(store_images.check_draftable("Submission Status = CommitStarted"))
         self.assertEqual(store_images.check_draftable("Submission Status = PendingCommit"), [])
         self.assertEqual(store_images.check_draftable("Submission Status = Published"), [])
+        self.assertTrue(store_images.check_draftable("error: unauthorized"))
+
+    def test_redact_drops_a_wrapped_json_escaped_query_line(self):
+        out = store_images.redact_text('"FileUploadUrl": "https://x.blob.core.windows.net/a?sv=1\n'
+                                       '\\u0026sig=SECRET\\u0026se=2026"\n')
+        self.assertNotIn("SECRET", out)
 
     def test_the_listings_whats_new_is_readable(self):
         md = (ROOT / "store" / "listing.md").read_text(encoding="utf-8")
