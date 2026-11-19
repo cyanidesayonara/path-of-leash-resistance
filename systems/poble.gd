@@ -47,6 +47,8 @@ const PLAZA_TOP := -3020.0
 const ANDALUS_BOT := -3060.0
 const ANDALUS_TOP := -4300.0
 const ARAGON_BOT := -4320.0
+# how far each zone's paving fades across a join so it does not cut as a line
+const ZONE_SEAM := 56.0
 
 # 1. Medieval City Gate (Portal d'Avila homage): two big round crenellated towers
 const GATE_TOWER_L := Vector2(422.0, -550.0)
@@ -437,6 +439,13 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 
 		sy += step
 
+	# zone joins: the pale Andalusian mosaic and the red Aragonese brick used to
+	# meet as a ruled cut at ANDALUS_TOP; soft bands of each fade across it
+	if y0 < ANDALUS_TOP + ZONE_SEAM and y1 > ANDALUS_TOP - ZONE_SEAM:
+		_zone_seam(b, m, ANDALUS_TOP, Color(0.84, 0.81, 0.75), Color(0.70, 0.56, 0.44))
+	if y0 < PLAZA_TOP + ZONE_SEAM and y1 > PLAZA_TOP - ZONE_SEAM:
+		_zone_seam(b, m, PLAZA_TOP, Color(0.76, 0.66, 0.53), Color(0.84, 0.81, 0.75))
+
 	# The arcades: the ground between the house fronts and the column line is
 	# covered, so it lies in a shade that deepens toward the wall, and each bay
 	# is marked by its transverse arch, a stone rib from the column to the
@@ -506,6 +515,31 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 		b.line(Vector2(t_left, -4968.0), Vector2(t_right, -4968.0), Color(0.16, 0.15, 0.17), 2.5)
 
 	b.flush(wc)
+
+
+# south_col fades north across y; north_col fades south — a shared mid strip
+# sits on the join so the two pavings do not meet as a knife edge
+static func _zone_seam(b: ShapeBatch, m: Node2D, y: float, south_col: Color, north_col: Color) -> void:
+	var lip := ZONE_SEAM
+	var e: Vector2 = m.walk_edges(y)
+	var mid := south_col.lerp(north_col, 0.5)
+	b.band(PackedVector2Array([
+		Vector2(e.x - 6.0, y + lip), Vector2(e.y + 6.0, y + lip),
+		Vector2(e.x - 6.0, y + lip * 0.35), Vector2(e.y + 6.0, y + lip * 0.35),
+		Vector2(e.x - 6.0, y), Vector2(e.y + 6.0, y),
+		Vector2(e.x - 6.0, y - lip * 0.25), Vector2(e.y + 6.0, y - lip * 0.25),
+	]), 2, south_col, PackedFloat32Array([0.0, 0.45, 0.7, 0.0]))
+	b.band(PackedVector2Array([
+		Vector2(e.x - 6.0, y - lip), Vector2(e.y + 6.0, y - lip),
+		Vector2(e.x - 6.0, y - lip * 0.35), Vector2(e.y + 6.0, y - lip * 0.35),
+		Vector2(e.x - 6.0, y), Vector2(e.y + 6.0, y),
+		Vector2(e.x - 6.0, y + lip * 0.25), Vector2(e.y + 6.0, y + lip * 0.25),
+	]), 2, north_col, PackedFloat32Array([0.0, 0.45, 0.7, 0.0]))
+	b.band(PackedVector2Array([
+		Vector2(e.x - 6.0, y + 18.0), Vector2(e.y + 6.0, y + 18.0),
+		Vector2(e.x - 6.0, y), Vector2(e.y + 6.0, y),
+		Vector2(e.x - 6.0, y - 18.0), Vector2(e.y + 6.0, y - 18.0),
+	]), 2, mid, PackedFloat32Array([0.0, 0.85, 0.0]))
 
 
 static func _draw_plaza_stage(b: ShapeBatch) -> void:
