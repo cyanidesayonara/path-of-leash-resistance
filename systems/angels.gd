@@ -704,13 +704,14 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 					b.rect(Rect2(xa + 1.0, sy + 1.0, xb - xa - 2.0, step - 2.0), Color(1.0, 1.0, 1.0, 0.07))
 				elif t < 0.28:
 					b.rect(Rect2(xa + 1.0, sy + 1.0, xb - xa - 2.0, step - 2.0), Color(0.10, 0.10, 0.12, 0.06))
-			if row % 6 == 0:
+			if row % 6 == 0 and _clear_of_joins(sy, step):
 				b.rect(Rect2(e0.x + 16.0, sy + 4.0, (e0.y - e0.x) - 32.0, 8.0), GRANITE_DARK)
 			# Polyurethane wheel skid marks and board wax streaks near the grind ledges
 			if row % 3 == 1:
 				b.line(Vector2(356.0, sy + 6.0), Vector2(368.0, sy + 32.0), Color(0.18, 0.18, 0.20, 0.28), 2.0)
 				b.line(Vector2(464.0, sy + 10.0), Vector2(458.0, sy + 34.0), Color(0.18, 0.18, 0.20, 0.24), 1.8)
 		sy += step
+	_draw_plaza_joins(m, b, y0, y1)
 
 	# 2. West Museum Podium Terrace, Grindable Granite Ledges (x = 340), and Stair Set with Handrail (x = 450)
 	if y0 < -1360.0 and y1 > -3380.0:
@@ -739,6 +740,69 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	_draw_plaza_skaters(b, y0, y1)
 
 	b.flush(wc)
+
+
+# Where the Raval setts meet the plaza granite: the row bounds the in_plaza
+# test above lands on (rows are 40 px), and which way the plaza lies from each.
+const PLAZA_JOINS: Array[Vector2] = [Vector2(-1160.0, -1.0), Vector2(-3600.0, 1.0)]
+const JOIN_COURSE := 14.0
+const JOIN_SETT := 22.0
+# granite dust over the setts, row by row (40 px apart) from the course out
+static var JOIN_DUST_ROWS := PackedFloat32Array([0.62, 0.32, 0.12, 0.0])
+const JOIN_TONE := 0.24
+const JOIN_INLAY_CLEAR := 60.0
+
+
+static func _clear_of_joins(sy: float, step: float) -> bool:
+	for j: Vector2 in PLAZA_JOINS:
+		if sy < j.x + JOIN_INLAY_CLEAR and sy + step > j.x - JOIN_INLAY_CLEAR:
+			return false
+	return true
+
+
+# A soldier course of granite setts closes the street's paving, granite dust
+# carries out over the setts and the street's tone a little way in, so the
+# alley opens into the plaza rather than stopping at a line.
+static func _draw_plaza_joins(m: Node2D, b: ShapeBatch, y0: float, y1: float) -> void:
+	if not m.has_method("walk_edges"):
+		return
+	for j: Vector2 in PLAZA_JOINS:
+		var jy := j.x
+		var into := j.y
+		if jy + 140.0 < y0 or jy - 140.0 > y1:
+			continue
+		var e0: Vector2 = m.walk_edges(jy)
+		var dust := PackedVector2Array()
+		for r in range(JOIN_DUST_ROWS.size()):
+			var ry := jy - into * 40.0 * float(r)
+			var er: Vector2 = m.walk_edges(ry)
+			dust.append(Vector2(er.x, ry))
+			dust.append(Vector2(er.y, ry))
+		b.band(dust, 2, GRANITE_MID, JOIN_DUST_ROWS)
+		var ei: Vector2 = m.walk_edges(jy + into * 40.0)
+		b.band(PackedVector2Array([
+			Vector2(e0.x, jy), Vector2(e0.y, jy),
+			Vector2(ei.x, jy + into * 40.0), Vector2(ei.y, jy + into * 40.0),
+		]), 2, RAVAL_SETT, PackedFloat32Array([JOIN_TONE, 0.0]))
+		var cy := jy - into * JOIN_COURSE
+		var ec: Vector2 = m.walk_edges(cy)
+		b.polygon(PackedVector2Array([
+			Vector2(e0.x, jy), Vector2(e0.y, jy), Vector2(ec.y, cy), Vector2(ec.x, cy),
+		]), LEDGE_GRANITE)
+		var ya := minf(jy, cy)
+		var yb := maxf(jy, cy)
+		var xl := maxf(e0.x, ec.x) + 2.0
+		var xr := minf(e0.y, ec.y) - 2.0
+		var k := 0
+		var sx := ceilf(xl / JOIN_SETT) * JOIN_SETT
+		while sx < xr:
+			b.line(Vector2(sx, ya + 1.0), Vector2(sx, yb - 1.0), GRANITE_JOINT, 1.2)
+			if _h(k + int(jy)) > 0.6:
+				b.rect(Rect2(sx + 1.0, ya + 1.0, JOIN_SETT - 2.0, yb - ya - 2.0), Color(1.0, 1.0, 1.0, 0.08))
+			sx += JOIN_SETT
+			k += 1
+		b.line(Vector2(e0.x, jy), Vector2(e0.y, jy), GRANITE_JOINT, 1.2)
+		b.line(Vector2(ec.x, cy), Vector2(ec.y, cy), RAVAL_CURB, 1.6)
 
 
 static func _draw_museum_podium_and_ledges(b: ShapeBatch, y0: float, y1: float) -> void:
