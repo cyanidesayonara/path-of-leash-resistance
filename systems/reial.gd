@@ -369,30 +369,38 @@ static func _draw_busker_scene(b: ShapeBatch, pos: Vector2, is_guitar: bool, t: 
 		b.circle(lp + Vector2(0.0, -2.0), 5.0, PATRON_HAIR[(k + 1) % PATRON_HAIR.size()])
 
 
+# Where the square's paving, arcades and roofs stop at the north end: the
+# corridor's own line at the gate, so no strip of plain street shows between
+# the archway and the off-leash plaça.
+static func _north_end(m: Node2D) -> float:
+	return float(m.GATE_Y) - 40.0
+
+
 static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: float = 0.0) -> void:
 	if m.lvl != "reial":
 		return
+	var top := _north_end(m)
 	# Arcade portico flooring on the flanks (terracotta tiles)
-	b.rect(Rect2(ARCADE_BACK_W, -4800.0, WEST_ARCADE_X - ARCADE_BACK_W, 5200.0), ARCADE_TILE)
-	b.rect(Rect2(EAST_ARCADE_X, -4800.0, ARCADE_BACK_E - EAST_ARCADE_X, 5200.0), ARCADE_TILE)
+	b.rect(Rect2(ARCADE_BACK_W, top, WEST_ARCADE_X - ARCADE_BACK_W, 400.0 - top), ARCADE_TILE)
+	b.rect(Rect2(EAST_ARCADE_X, top, ARCADE_BACK_E - EAST_ARCADE_X, 400.0 - top), ARCADE_TILE)
 	# Subtle arcade bay floor joints
-	var ty := -4700.0
+	var ty := -4900.0
 	while ty < 380.0:
 		b.line(Vector2(ARCADE_BACK_W, ty), Vector2(WEST_ARCADE_X, ty), ARCADE_TILE_JOINT, 1.5)
 		b.line(Vector2(EAST_ARCADE_X, ty), Vector2(ARCADE_BACK_E, ty), ARCADE_TILE_JOINT, 1.5)
 		ty += PILLAR_STEP
 
 	# Main plaza flagstones (polished granite)
-	b.rect(Rect2(CORRIDOR_L, -4800.0, CORRIDOR_R - CORRIDOR_L, 5200.0), STONE_PLAZA)
+	b.rect(Rect2(CORRIDOR_L, top, CORRIDOR_R - CORRIDOR_L, 400.0 - top), STONE_PLAZA)
 
 	# Panot threshold strips along west and east arcade colonnades
-	b.rect(Rect2(CORRIDOR_L - 4.0, -4700.0, 16.0, 5080.0), PANOT_BORDER)
-	b.rect(Rect2(CORRIDOR_R - 12.0, -4700.0, 16.0, 5080.0), PANOT_BORDER)
+	b.rect(Rect2(CORRIDOR_L - 4.0, top, 16.0, 380.0 - top), PANOT_BORDER)
+	b.rect(Rect2(CORRIDOR_R - 12.0, top, 16.0, 380.0 - top), PANOT_BORDER)
 
 	# Square flagstone ashlar grid across the royal plaza
 	for gx: float in [430.0, 510.0, 590.0, 690.0, 770.0, 850.0]:
-		b.line(Vector2(gx, -4680.0), Vector2(gx, 340.0), STONE_JOINT, 1.2)
-	var gy := -4600.0
+		b.line(Vector2(gx, top), Vector2(gx, 340.0), STONE_JOINT, 1.2)
+	var gy := -4960.0
 	while gy < 340.0:
 		b.line(Vector2(CORRIDOR_L + 12.0, gy), Vector2(CORRIDOR_R - 12.0, gy), STONE_JOINT, 1.2)
 		gy += 120.0
@@ -461,7 +469,7 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 	b.line(PRIZE + Vector2(2, 4), PRIZE + Vector2(7, 0), CHURRO_GOLD, 3.0)
 
 	# Continuous neoclassical arcade colonnade pillars (every 200 px) & end wings
-	var py := -4600.0
+	var py := -4800.0
 	while py <= 300.0:
 		# Cast shadow from pillar into the arcade
 		b.rect(Rect2(WEST_ARCADE_X - 18.0, py - 10.0, 12.0, 20.0), Color(0.10, 0.08, 0.08, 0.35))
@@ -487,12 +495,13 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	var b := ShapeBatch.new(ci)
 	var t: float = AnimClock.msec() / 1000.0
 	# Arcade roof cornice & ochre parapet framing west and east sides of the square
-	b.rect(Rect2(60.0, -4800.0, 180.0, 5200.0), ARCADE_ROOF)
-	b.rect(Rect2(232.0, -4800.0, 8.0, 5200.0), ARCADE_PARAPET)
-	b.rect(Rect2(1040.0, -4800.0, 180.0, 5200.0), ARCADE_ROOF)
-	b.rect(Rect2(1040.0, -4800.0, 8.0, 5200.0), ARCADE_PARAPET)
+	var top := _north_end(m)
+	b.rect(Rect2(60.0, top, 180.0, 400.0 - top), ARCADE_ROOF)
+	b.rect(Rect2(232.0, top, 8.0, 400.0 - top), ARCADE_PARAPET)
+	b.rect(Rect2(1040.0, top, 180.0, 400.0 - top), ARCADE_ROOF)
+	b.rect(Rect2(1040.0, top, 8.0, 400.0 - top), ARCADE_PARAPET)
 	# Facade window bays along the arcade roof
-	var wy := -4600.0
+	var wy := -4800.0
 	while wy < 300.0:
 		b.rect(Rect2(150.0, wy - 14.0, 32.0, 28.0), ARCADE_FACADE)
 		b.rect(Rect2(1098.0, wy - 14.0, 32.0, 28.0), ARCADE_FACADE)
