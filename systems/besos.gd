@@ -11,7 +11,15 @@ extends RefCounted
 # its off-leash area's worn patch is soft at the edge (main.soft_wear)
 const SOFT_WEAR := true
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_over_walkway", "night_lights"]
+const HOOKS := [
+	"build_layer",
+	"draw_bollard",
+	"draw_clearing",
+	"draw_edge_layer",
+	"draw_over_walkway",
+	"draw_threshold",
+	"night_lights",
+]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -134,13 +142,17 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 	var lane_w := 86.0
 	var lane_x1 := lane_x0 + lane_w
 	var lane_cx := lane_x0 + lane_w * 0.5
-	var path_y0 := maxf(float(m.GATE_Y) - 20.0, vt - 20.0)
+	var path_y0 := maxf(float(m.GATE_Y) - 28.0, vt - 20.0)
 	var path_y1 := minf(river_bot, vb + 20.0)
+	var south_wall_y := float(m.HOME_Y) + 34.0
+	var lane_bot := minf(path_y1, south_wall_y)
+	var apron_n := apron.position.y - 12.0
+	var apron_s := apron.end.y + 12.0
 	var segs: Array = []
-	if path_y0 < apron.position.y - 6.0:
-		segs.append([path_y0, minf(path_y1, apron.position.y - 6.0)])
-	if path_y1 > apron.end.y + 6.0:
-		segs.append([maxf(path_y0, apron.end.y + 6.0), path_y1])
+	if path_y0 < apron_n:
+		segs.append([path_y0, minf(lane_bot, apron_n), path_y0 <= float(m.GATE_Y) - 27.5, lane_bot >= apron_n - 0.5])
+	if lane_bot > apron_s:
+		segs.append([maxf(path_y0, apron_s), lane_bot, path_y0 <= apron_s + 0.5, lane_bot >= south_wall_y - 0.5])
 	for sg: Array in segs:
 		var sy0 := float(sg[0])
 		var sy1 := float(sg[1])
@@ -149,6 +161,12 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 		b.rect(Rect2(lane_x0, sy0, lane_w, sy1 - sy0), Color(0.64, 0.44, 0.36, 0.20))
 		b.line(Vector2(lane_x0, sy0), Vector2(lane_x0, sy1), Color(0.94, 0.92, 0.86, 0.46), 2.0)
 		b.line(Vector2(lane_x1, sy0), Vector2(lane_x1, sy1), Color(0.94, 0.92, 0.86, 0.46), 2.0)
+		if bool(sg[2]):
+			b.line(Vector2(lane_x0, sy0), Vector2(lane_x1, sy0), Color(0.94, 0.92, 0.86, 0.62), 2.4)
+			b.line(Vector2(lane_x0 + 6.0, sy0 + 8.0), Vector2(lane_x1 - 6.0, sy0 + 8.0), Color(0.94, 0.92, 0.86, 0.35), 1.6)
+		if bool(sg[3]):
+			var cap_y := sy1 - 2.0 if sy1 >= south_wall_y - 0.5 else sy1
+			b.line(Vector2(lane_x0, cap_y), Vector2(lane_x1, cap_y), Color(0.94, 0.92, 0.86, 0.62), 2.4)
 		var dash_y := floorf(sy0 / 48.0) * 48.0
 		while dash_y < sy1:
 			var d0 := maxf(dash_y, sy0)
@@ -171,16 +189,49 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 				b.line(bc + Vector2(-4.0, -2.0), bc + Vector2(4.0, 0.0), sc_col, 1.6)
 			sym_y += 640.0
 
-	# 2. Riverbed base, shingle shoreline, shallow wading margin, and deep channel
+	# 2. Riverbed base, feathered shingle shoreline, shallow wading margin, and deep channel
 	var deep_w := channel.size.x + 180.0
 	if vt < float(m.GATE_Y) + 20.0:
-		# Match the meadow grass strip up to GATE_Y - 40 so no dark surround gap shows east of the gate
-		b.rect(Rect2(water.position.x - 8.0, float(m.GATE_Y) - 40.0, water.size.x + deep_w + 8.0, 42.0), Color(0.30, 0.45, 0.28))
+		# Tuck grass under the stone headwall coping at GATE_Y - 9 so no gap shows at the bank
+		b.rect(Rect2(water.position.x - 8.0, float(m.GATE_Y) - 9.0, water.size.x + deep_w + 8.0, 11.0), Color(0.30, 0.45, 0.28))
 	b.rect(Rect2(m.sw_r, y0, water.position.x - m.sw_r, y1 - y0), Color(0.30, 0.45, 0.28))
-	b.rect(Rect2(water.position.x - 6.0, y0, 14.0, y1 - y0), Color(0.64, 0.60, 0.50, 0.82))
 	b.rect(Rect2(water.position.x, y0, water.size.x, y1 - y0), Color(0.44, 0.50, 0.40))
 	b.rect(Rect2(water.position.x, y0, water.size.x, y1 - y0), Color(0.45, 0.68, 0.66, 0.85))
-	b.rect(Rect2(water.position.x + 4.0, y0, 54.0, y1 - y0), Color(0.58, 0.78, 0.74, 0.36))
+	# Feathered shallow-water sun shelf along the shingle bank (no hard vertical stripe)
+	var wade_pts := PackedVector2Array()
+	for yy: float in [y0, y1]:
+		for wx_off: float in [0.0, 22.0, 54.0, 92.0]:
+			wade_pts.append(Vector2(water.position.x + wx_off, yy))
+	b.band(wade_pts, 4, Color(0.58, 0.78, 0.74), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.42, 0.24, 0.08, 0.0]))
+	# Feathered sandy-gravel shingle margin between the lawn and shallow water
+	var shin_pts := PackedVector2Array()
+	for yy: float in [y0, y1]:
+		for sx_off: float in [-14.0, -4.0, 5.0, 16.0]:
+			shin_pts.append(Vector2(water.position.x + sx_off, yy))
+	b.band(shin_pts, 4, Color(0.62, 0.58, 0.48), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 0.80, 0.72, 0.0]))
+	# Concrete edging kerb along the east side of the promenade (sw_r) + grass tufts over its edge
+	var kerb_y0 := maxf(float(m.GATE_Y) - 40.0, vt - 20.0)
+	var kerb_y1 := minf(float(m.START_Y) + 420.0, vb + 20.0)
+	if kerb_y1 > kerb_y0:
+		b.rect(Rect2(m.sw_r + 5.0, kerb_y0, 5.0, kerb_y1 - kerb_y0), Color(0.05, 0.04, 0.07, 0.16))
+		b.rect(Rect2(m.sw_r - 4.0, kerb_y0, 9.0, kerb_y1 - kerb_y0), Color(0.58, 0.56, 0.51))
+		b.rect(Rect2(m.sw_r - 4.0, kerb_y0, 2.5, kerb_y1 - kerb_y0), Color(0.76, 0.74, 0.69))
+		var kj := floorf(kerb_y0 / 112.0) * 112.0
+		while kj < kerb_y1:
+			if kj > kerb_y0 + 2.0:
+				b.line(Vector2(m.sw_r - 4.0, kj), Vector2(m.sw_r + 5.0, kj), Color(0.36, 0.35, 0.32, 0.65), 1.4)
+			kj += 112.0
+		var ky := floorf(kerb_y0 / 26.0) * 26.0
+		while ky < kerb_y1:
+			if ky > kerb_y0 + 4.0:
+				var kh: float = m._cell01(ky, 31.0)
+				if kh > 0.25:
+					var gx: float = m.sw_r + 5.0
+					var gy := ky + kh * 14.0
+					var gc := Color(0.28, 0.43, 0.25) if kh > 0.6 else Color(0.34, 0.50, 0.29)
+					b.line(Vector2(gx + 2.0, gy), Vector2(gx - 3.0 - kh * 2.5, gy - 2.0), gc, 1.8)
+					b.line(Vector2(gx + 2.0, gy), Vector2(gx - 2.0, gy + 3.0), gc, 1.6)
+			ky += 26.0
 	# the channel shelving away from the bank: one fill, lighter along the
 	# riprap and feathering into the deep water (a second flat rect showed
 	# its edge as a seam down the river)
@@ -191,22 +242,27 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 			shelf.append(Vector2(channel.position.x + SHELF_W * float(k) / float(SHELF_COLS.size() - 1), yy))
 	b.band(shelf, SHELF_COLS.size(), SHALLOWER, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array(SHELF_COLS))
 	if vt < float(m.GATE_Y) + 20.0:
-		# Stone headwall coping where the river passes under the meadow bridge at GATE_Y
-		b.rect(Rect2(water.position.x - 8.0, float(m.GATE_Y) - 5.0, water.size.x + deep_w + 8.0, 9.0), Color(0.56, 0.54, 0.49))
-		b.rect(Rect2(water.position.x - 8.0, float(m.GATE_Y) - 5.0, water.size.x + deep_w + 8.0, 3.0), Color(0.68, 0.66, 0.60))
+		# Stone headwall coping tucked directly against the Pont de Can Peixauet bridge deck at GATE_Y
+		b.rect(Rect2(water.position.x - 8.0, float(m.GATE_Y) - 9.0, water.size.x + deep_w + 8.0, 10.0), Color(0.56, 0.54, 0.49))
+		b.rect(Rect2(water.position.x - 8.0, float(m.GATE_Y) - 9.0, water.size.x + deep_w + 8.0, 3.0), Color(0.68, 0.66, 0.60))
 
-	# Rounded river cobbles along the grass-to-shallow shingle margin
-	var sh_y := floorf(y0 / 28.0) * 28.0
+	# Rounded river cobbles and overhanging grass blades along the shingle shoreline
+	var sh_y := floorf(y0 / 16.0) * 16.0
 	while sh_y < y1:
-		if sh_y + 10.0 < y0 + 6.0:
-			sh_y += 28.0
+		if sh_y + 8.0 < y0 + 4.0:
+			sh_y += 16.0
 			continue
 		var h0: float = m._cell01(sh_y, 19.0)
-		var cx_s := water.position.x - 2.0 + (h0 - 0.5) * 8.0
-		var cr := 2.6 + fmod(h0 * 13.0, 2.2)
+		var cx_s := water.position.x - 2.0 + (h0 - 0.5) * 11.0
+		var cr := 2.2 + fmod(h0 * 13.0, 2.4)
 		var c_col := Color(0.58, 0.55, 0.47) if h0 > 0.45 else Color(0.48, 0.46, 0.40)
-		b.circle(Vector2(cx_s, sh_y + 10.0), cr, c_col)
-		sh_y += 28.0
+		b.circle(Vector2(cx_s, sh_y + 8.0), cr, c_col)
+		if h0 > 0.52:
+			var gx_b := water.position.x - 8.0 + (h0 - 0.52) * 8.0
+			var gc_b := Color(0.28, 0.43, 0.25)
+			b.line(Vector2(gx_b, sh_y + 4.0), Vector2(gx_b + 5.0, sh_y + 1.0), gc_b, 1.7)
+			b.line(Vector2(gx_b, sh_y + 5.0), Vector2(gx_b + 4.0, sh_y + 7.5), gc_b, 1.5)
+		sh_y += 16.0
 
 	# 3. Quarry-stone riprap embankment (escullera) between shallow margin and deep channel
 	var rip_x := channel.position.x
@@ -375,30 +431,31 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 	# 9. Mid-walk road bridge shadow (-2560) and cable-stayed Pont de Can Peixauet shadow at GATE_Y
 	if absf(-2560.0 - (vt + vb) * 0.5) < 480.0:
 		var mby := -2560.0
-		var mb_w: float = channel.end.x + 180.0 - m.sw_l
+		var mb_w: float = channel.end.x + 260.0 - m.sw_l
 		b.rect(Rect2(m.sw_l, mby, mb_w, 26.0), Color(0.16, 0.17, 0.20, 0.26))
 		b.rect(Rect2(m.sw_l, mby, mb_w, 4.0), Color(0.12, 0.13, 0.16, 0.34))
 		b.rect(Rect2(m.sw_l, mby + 22.0, mb_w, 4.0), Color(0.12, 0.13, 0.16, 0.34))
 		b.rect(Rect2(channel.position.x - 10.0, mby - 4.0, 20.0, 34.0), Color(0.52, 0.50, 0.46))
 
 	if vb > m.GATE_Y - 30.0 and vt < m.GATE_Y + 110.0:
-		var br_w: float = channel.end.x + 180.0 - m.sw_l
-		b.rect(Rect2(m.sw_l, m.GATE_Y + 16.0, channel.end.x - m.sw_l, 22.0), Color(0.2, 0.2, 0.22, 0.35))
-		b.rect(Rect2(m.sw_l, m.GATE_Y + 12.0, br_w, 30.0), Color(0.16, 0.17, 0.20, 0.28))
-		b.rect(Rect2(m.sw_l, m.GATE_Y + 12.0, br_w, 4.0), Color(0.10, 0.11, 0.14, 0.38))
-		b.rect(Rect2(m.sw_l, m.GATE_Y + 38.0, br_w, 4.0), Color(0.10, 0.11, 0.14, 0.38))
+		var br_y := float(m.GATE_Y) - 2.0
+		var br_w: float = channel.end.x + 260.0 - m.sw_l
+		b.rect(Rect2(m.sw_l, br_y + 4.0, channel.end.x - m.sw_l, 22.0), Color(0.2, 0.2, 0.22, 0.35))
+		b.rect(Rect2(m.sw_l, br_y, br_w, 30.0), Color(0.16, 0.17, 0.20, 0.28))
+		b.rect(Rect2(m.sw_l, br_y, br_w, 4.0), Color(0.10, 0.11, 0.14, 0.38))
+		b.rect(Rect2(m.sw_l, br_y + 26.0, br_w, 4.0), Color(0.10, 0.11, 0.14, 0.38))
 		# Cable-stayed pylon base on the river bank and radiating stay-cable shadows
-		var pylon := Vector2(water.position.x - 16.0, m.GATE_Y + 27.0)
+		var pylon := Vector2(water.position.x - 16.0, br_y + 15.0)
 		b.rect(Rect2(pylon.x - 11.0, pylon.y - 16.0, 22.0, 32.0), Color(0.58, 0.56, 0.52))
 		b.rect(Rect2(pylon.x - 8.0, pylon.y - 13.0, 16.0, 26.0), Color(0.72, 0.70, 0.66))
 		for ci in range(7):
 			var target_x: float = m.sw_l + 40.0 + float(ci) * 135.0
-			b.line(pylon + Vector2(0.0, -12.0), Vector2(target_x, m.GATE_Y + 38.0),
+			b.line(pylon + Vector2(0.0, -12.0), Vector2(target_x, br_y + 26.0),
 				Color(0.12, 0.13, 0.16, 0.24), 1.8)
 
 	# 10. SAHBE electronic entrance information sign (OBERT / ALERTA RIU),
-	# below the gloss: the walk's name lies on the path above it
-	var board := Rect2(m.sw_l + 48.0, 118.0, 46.0, 28.0)
+	# tucked east of the cycle lane, below the walk's name and gloss
+	var board := Rect2(m.sw_l + 114.0, 118.0, 46.0, 28.0)
 	if board.end.y > vt - 20.0 and board.position.y < vb + 20.0:
 		var open := String(m.chase_phase) == ""
 		# Support posts, solar panel, and dark steel display cabinet
@@ -431,6 +488,220 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 
 
 # --- main's walk hooks (main.WALK_MODULES) ---------------------------------------
+
+# Center the gate mouth and its south freedom-fence collider on the riverside path
+static func build_layer(m: Node2D) -> void:
+	m.gate_l = m.sw_l
+	m.gate_r = m.sw_r
+	var fy := float(m.GATE_Y) - 30.0
+	for ch: Node in m.get_children():
+		if not (ch is StaticBody2D):
+			continue
+		for cs: Node in ch.get_children():
+			if cs is CollisionShape2D and (cs as CollisionShape2D).shape is SegmentShape2D:
+				var seg := (cs as CollisionShape2D).shape as SegmentShape2D
+				if is_equal_approx(seg.a.y, fy) and is_equal_approx(seg.b.y, fy):
+					if seg.a.x < m.walk_cx:
+						seg.b.x = m.gate_l - 20.0
+					else:
+						seg.a.x = m.gate_r + 20.0
+
+
+# West flood wall & upper embankment, terminated cleanly at the Pont de Can Peixauet abutment
+static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
+	var base := Color(0.58, 0.56, 0.52)
+	var far := 520.0
+	var face := 22.0
+	var cast := 38.0
+	var slice := 55.0
+	var gate_top := float(m.GATE_Y) - 30.0
+	var sy := floorf((vt - 320.0) / slice) * slice
+	while sy < vb + 320.0:
+		var sy1 := sy + slice
+		if sy1 > gate_top:
+			var y0 := maxf(sy, gate_top)
+			var h := sy1 - y0
+			c.draw_rect(Rect2(m.sw_l - far, y0, far, h), base)
+			for i in range(7):
+				var t := float(i) / 6.0
+				var lo := -face + face * t
+				c.draw_rect(Rect2(m.sw_l + lo, y0, face / 6.0 + 1.0, h), base.darkened(0.52 - t * 0.34))
+			c.draw_rect(Rect2(m.sw_l - face - 5.0, y0, 5.0, h), base.lightened(0.30))
+			for i in range(6):
+				var t := float(i) / 5.0
+				c.draw_rect(Rect2(m.sw_l, y0, cast * (1.0 - t * 0.82), h), Color(0.05, 0.04, 0.07, 0.055))
+		sy = sy1
+
+	var mod := 220.0
+	var depth := 78.0
+	var inset := 27.0
+	var inner: float = m.sw_l - inset
+	var x0: float = inner - depth
+	var y := floorf((vt - mod) / mod) * mod
+	while y < vb + mod:
+		var y1 := y + mod
+		if y1 > gate_top:
+			var k := int(absf(y) / mod)
+			if y >= gate_top:
+				draw_wall_module(m, c, Rect2(x0, y, depth, mod), k, inner)
+			else:
+				var h := y1 - gate_top
+				c.draw_rect(Rect2(m.sw_l - far, gate_top, inner - (m.sw_l - far), h), Color(0.30, 0.44, 0.27))
+				# the gate's lawn feathers south into the paving behind the berm
+				if c is ShapeBatch:
+					var fade := PackedVector2Array()
+					for yy: float in [y1, y1 + 140.0]:
+						fade.append(Vector2(m.sw_l - far, yy))
+						fade.append(Vector2(x0 - 160.0, yy))
+					(c as ShapeBatch).band(fade, 2, Color(0.30, 0.44, 0.27), PackedFloat32Array([1.0, 0.0]))
+				c.draw_rect(Rect2(x0 + 10.0, gate_top, 44.0, h), Color(0.46, 0.45, 0.42))
+				c.draw_line(Vector2(x0 + 10.0, gate_top), Vector2(x0 + 10.0, y1), Color(0.62, 0.60, 0.56), 2.0)
+				c.draw_line(Vector2(x0 + 54.0, gate_top), Vector2(x0 + 54.0, y1), Color(0.62, 0.60, 0.56), 2.0)
+				var dy := gate_top + 12.0
+				while dy < y1 - 8.0:
+					c.draw_line(Vector2(x0 + 32.0, dy), Vector2(x0 + 32.0, minf(dy + 18.0, y1 - 4.0)),
+						Color(0.90, 0.88, 0.80, 0.55), 1.8)
+					dy += 36.0
+				var cap_x := inner - 14.0
+				c.draw_rect(Rect2(cap_x, gate_top, 19.0, h), Color(0.66, 0.64, 0.59))
+				c.draw_rect(Rect2(cap_x, gate_top, 4.0, h), Color(0.76, 0.74, 0.69))
+				c.draw_line(Vector2(cap_x + 3.0, gate_top), Vector2(cap_x + 3.0, y1), Color(0.42, 0.46, 0.48), 2.2)
+		y = y1
+
+	# Bridge deck shadows carried across the west embankment and flood wall
+	if vt <= -2520.0 and vb >= -2570.0:
+		var mby := -2560.0
+		var b_l: float = m.sw_l - far
+		var b_w: float = m.sw_l - b_l
+		c.draw_rect(Rect2(b_l, mby, b_w, 26.0), Color(0.16, 0.17, 0.20, 0.26))
+		c.draw_rect(Rect2(b_l, mby, b_w, 4.0), Color(0.12, 0.13, 0.16, 0.34))
+		c.draw_rect(Rect2(b_l, mby + 22.0, b_w, 4.0), Color(0.12, 0.13, 0.16, 0.34))
+	if vt <= float(m.GATE_Y) + 40.0 and vb >= float(m.GATE_Y) - 20.0:
+		var br_y := float(m.GATE_Y) - 2.0
+		var b_l: float = m.sw_l - far
+		var b_w: float = m.sw_l - b_l
+		c.draw_rect(Rect2(b_l, br_y, b_w, 30.0), Color(0.16, 0.17, 0.20, 0.28))
+		c.draw_rect(Rect2(b_l, br_y, b_w, 4.0), Color(0.10, 0.11, 0.14, 0.38))
+		c.draw_rect(Rect2(b_l, br_y + 26.0, b_w, 4.0), Color(0.10, 0.11, 0.14, 0.38))
+
+	# Clean north termination of the embankment berm, upper promenade, and flood wall at gate_top
+	if vt - 90.0 <= gate_top and vb + 90.0 >= gate_top:
+		if c is ShapeBatch:
+			var sb := c as ShapeBatch
+			var berm_pts := PackedVector2Array()
+			for yy: float in [gate_top - 74.0, gate_top - 26.0, gate_top + 4.0]:
+				berm_pts.append(Vector2(m.sw_l - far, yy))
+				berm_pts.append(Vector2(m.sw_l - 22.0, yy))
+			sb.band(berm_pts, 2, Color(0.30, 0.44, 0.27), PackedFloat32Array([0.0, 0.65, 1.0]))
+		# Upper promenade kerb return and bollards
+		c.draw_rect(Rect2(x0 + 8.0, gate_top - 10.0, 48.0, 12.0), Color(0.56, 0.54, 0.49))
+		c.draw_rect(Rect2(x0 + 10.0, gate_top - 10.0, 44.0, 4.0), Color(0.70, 0.68, 0.62))
+		for bx: float in [x0 + 21.0, x0 + 43.0]:
+			c.draw_circle(Vector2(bx, gate_top - 4.0), 3.6, Color(0.28, 0.31, 0.34))
+			c.draw_circle(Vector2(bx - 0.8, gate_top - 4.8), 1.6, Color(0.56, 0.60, 0.64))
+		# Flood-wall terminal concrete abutment pier and railing end post
+		var pier := Rect2(inner - 16.0, gate_top - 4.0, 45.0, 20.0)
+		c.draw_rect(Rect2(pier.position + Vector2(3.0, 4.0), pier.size), Color(0.05, 0.04, 0.07, 0.22))
+		c.draw_rect(pier, Color(0.62, 0.60, 0.55))
+		c.draw_rect(Rect2(pier.position.x, pier.position.y, pier.size.x, 4.0), Color(0.76, 0.74, 0.69))
+		c.draw_circle(Vector2(inner - 11.0, gate_top + 4.0), 3.4, Color(0.30, 0.33, 0.36))
+
+
+# Seamless off-leash meadow: feather clearing edges into woodland and match the riverbank lawn
+static func draw_clearing(m: Node2D, c: Object, r: Rect2) -> void:
+	var b := ShapeBatch.new()
+	var meadow := Color(0.30, 0.42, 0.26)
+	var bank_grass := Color(0.30, 0.45, 0.28)
+	b.rect(r, meadow)
+	# Feather west, east, and north edges into the darker woodland surround
+	var west_pts := PackedVector2Array()
+	for yy: float in [r.position.y - 80.0, r.end.y]:
+		for wx: float in [r.position.x - 160.0, r.position.x - 50.0, r.position.x]:
+			west_pts.append(Vector2(wx, yy))
+	b.band(west_pts, 3, meadow, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 0.50, 1.0]))
+	var east_pts := PackedVector2Array()
+	for yy: float in [r.position.y - 80.0, r.end.y]:
+		for ex: float in [r.end.x, r.end.x + 50.0, r.end.x + 160.0]:
+			east_pts.append(Vector2(ex, yy))
+	b.band(east_pts, 3, meadow, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([1.0, 0.50, 0.0]))
+	var north_pts := PackedVector2Array()
+	for ny: float in [r.position.y - 120.0, r.position.y - 35.0, r.position.y]:
+		north_pts.append(Vector2(r.position.x - 20.0, ny))
+		north_pts.append(Vector2(r.end.x + 20.0, ny))
+	b.band(north_pts, 2, meadow, PackedFloat32Array([0.0, 0.55, 1.0]))
+	# South meadow collar matching the riverbank lawn across the river headwall and east edge
+	var south_pts := PackedVector2Array()
+	for sy: float in [r.end.y - 76.0, r.end.y - 24.0, r.end.y + 28.0]:
+		for sx: float in [m.sw_l, 1240.0, 1380.0, 1540.0]:
+			south_pts.append(Vector2(sx, sy))
+	b.band(south_pts, 4, bank_grass, PackedFloat32Array([0.0, 0.72, 1.0]), PackedFloat32Array([1.0, 1.0, 0.55, 0.0]))
+	b.flush(c)
+	m._worn_patch(c, r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))
+	m._draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
+	m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_clearing_off_leash"))
+
+
+# Threshold where the concrete river path wears into the meadow clearing
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var y := float(m.GATE_Y) - 40.0
+	var ge: Vector2 = m.walk_edges(float(m.GATE_Y) - 16.0)
+	var gl := maxf(float(m.gate_l), ge.x)
+	var gr := minf(float(m.gate_r), ge.y)
+	var mx := (gl + gr) * 0.5
+	var gap := 156.0
+	var hw := gap * 0.5
+
+	# Tapered worn concrete-to-earth desire path through the gate opening
+	var earth := Color(0.54, 0.50, 0.42)
+	var path_pts := PackedVector2Array([
+		Vector2(mx - hw - 18.0, y + 14.0), Vector2(mx + hw + 18.0, y + 14.0),
+		Vector2(mx - hw, y - 4.0), Vector2(mx + hw, y - 4.0),
+		Vector2(mx - hw * 0.78, y - 76.0), Vector2(mx + hw * 0.78, y - 76.0),
+		Vector2(mx - hw * 0.48, y - 168.0), Vector2(mx + hw * 0.48, y - 168.0),
+	])
+	b.band(path_pts, 2, earth, PackedFloat32Array([0.0, 0.76, 0.48, 0.0]))
+	b.glow(Vector2(mx, y - 22.0), hw * 0.92, Color(0.62, 0.58, 0.48, 0.52), 0.35)
+	b.glow(Vector2(mx, y - 82.0), hw * 0.85, Color(0.48, 0.43, 0.33, 0.36), 0.25)
+	for pi in range(9):
+		var ph: float = m._cell01(float(pi) * 19.0, 53.0)
+		var side := -1.0 if pi % 2 == 0 else 1.0
+		var py := y - 12.0 - float(pi) * 14.0
+		var px := mx + side * (hw * (0.48 - float(pi) * 0.03) + (ph - 0.5) * 22.0)
+		Stones.stone(b, Vector2(px, py), 2.2 + ph * 2.0, Color(0.56, 0.53, 0.47, 0.85), ph)
+
+	# Dressed granite threshold kerbs flanking the worn opening, with meadow grass over the rim
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.24)
+	var kerb_col := Color(0.52, 0.50, 0.45)
+	for seg: Vector2 in [Vector2(ge.x, mx - hw), Vector2(mx + hw, ge.y)]:
+		if seg.y - seg.x < 4.0:
+			continue
+		b.rect(Rect2(seg.x, y - 2.0, seg.y - seg.x, 10.0), sh)
+		b.rect(Rect2(seg.x, y - 5.0, seg.y - seg.x, 10.0), kerb_col)
+		b.rect(Rect2(seg.x, y - 5.0, seg.y - seg.x, 2.5), kerb_col.lightened(0.24))
+		var jx := seg.x + 28.0
+		while jx < seg.y - 4.0:
+			b.line(Vector2(jx, y - 5.0), Vector2(jx, y + 5.0), kerb_col.darkened(0.24), 1.3)
+			jx += 28.0
+		var tx := seg.x + 6.0
+		while tx < seg.y - 6.0:
+			var h: float = m._cell01(tx, 67.0)
+			if h > 0.28:
+				var gc := Color(0.28, 0.43, 0.25) if h > 0.6 else Color(0.34, 0.50, 0.29)
+				b.line(Vector2(tx, y - 3.0), Vector2(tx - 3.0, y + 4.5 + h * 5.0), gc, 2.0)
+				b.line(Vector2(tx, y - 3.0), Vector2(tx + 3.0, y + 3.5 + h * 4.5), gc, 1.8)
+			tx += 10.0 + h * 7.0
+
+	# Grass tufts knitting the riverbank verge into the north meadow
+	var rx := ge.y + 12.0
+	while rx < 1260.0:
+		var rh: float = m._cell01(rx, 91.0)
+		if rh > 0.35:
+			var gy := y - 4.0 + (rh - 0.5) * 14.0
+			var gc := Color(0.27, 0.42, 0.25)
+			b.line(Vector2(rx, gy), Vector2(rx - 3.0, gy - 5.0), gc, 1.8)
+			b.line(Vector2(rx, gy), Vector2(rx + 3.0, gy - 4.0), gc, 1.6)
+		rx += 22.0 + rh * 12.0
+
 
 # the street's lamps, less the wall lamps it would hang on the east building
 # line: here that is the river's shingle, with no wall to hang one on
