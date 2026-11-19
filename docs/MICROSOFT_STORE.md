@@ -235,8 +235,8 @@ The images: `update_draft` checks the tag out beside main (in `rel/`, as
 the three Store logos from it with Godot under xvfb (`tools/store_images.py
 render`), and keeps them as the run's `store-listing-images` artifact. A
 render that fails stops the run before the draft is touched. Then
-`tools/store_images.py stage` marks every image in the draft
-`PendingDelete`, adds the rendered ones as `PendingUpload` (Screenshot,
+`tools/store_images.py stage` marks the draft's images of those four types
+`PendingDelete` (other art added in Partner Center is left alone), adds the rendered ones as `PendingUpload` (Screenshot,
 StoreLogo9x16, StoreLogoSquare, Icon), and builds one zip: the release MSIX
 under the draft's pending package name, plus the images. The workflow PUTs
 that zip to the draft's FileUploadUrl (masked in the log, and every msstore

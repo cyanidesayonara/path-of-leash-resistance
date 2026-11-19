@@ -112,8 +112,12 @@ def _godot(godot: str, args: list[str], project: Path, log: Path,
            app: Path, timeout: int = 240) -> None:
     env = dict(os.environ, APPDATA=str(app), XDG_DATA_HOME=str(app))
     with open(log, "w", encoding="utf-8", errors="replace") as fh:
-        subprocess.run([godot, *args], cwd=project, env=env, stdout=fh,
-                       stderr=subprocess.STDOUT, timeout=timeout, check=False)
+        try:
+            subprocess.run([godot, *args], cwd=project, env=env, stdout=fh,
+                           stderr=subprocess.STDOUT, timeout=timeout, check=False)
+        except subprocess.TimeoutExpired:
+            # reported as a missing image, with the rest still rendered
+            fh.write(f"\ntimed out after {timeout} s\n")
 
 
 def render(godot: str, project: Path, out: Path, jobs: int = 4) -> list[str]:
@@ -199,15 +203,22 @@ def listing_images(images: Path, shots: Path = SHOT_LIST) -> list[tuple[str, Pat
 
 def replace_images(current: list[dict], new: list[tuple[str, Path, str]],
                    in_store: bool) -> list[dict]:
-    """A listing's images with the Store's own retired and the new ones
-    pending upload. An entry without an Id was staged by an earlier run and
-    never ingested: dropped, so a rerun replaces rather than adds. A listing
-    that is not in the Store yet (cloned from en-US by tools/store_listing.py)
-    holds copies of another listing's images: dropped too."""
+    """A listing's images with the Store's own of the staged types retired
+    and the new ones pending upload. Images of other types (hero art added
+    in Partner Center, say) are left as they are. An entry pending upload,
+    or without an Id, was staged by an earlier run and never ingested:
+    dropped, so a rerun replaces rather than adds. A listing that is not in
+    the Store yet (cloned from en-US by tools/store_listing.py) holds copies
+    of another listing's images: dropped too."""
+    kinds = {kind for _name, _path, kind in new}
     kept = []
     if in_store:
-        kept = [{**image, "FileStatus": "PendingDelete"}
-                for image in current if image.get("Id")]
+        for image in current:
+            if not image.get("Id") or image.get("FileStatus") == "PendingUpload":
+                continue
+            if image.get("ImageType") in kinds:
+                image = {**image, "FileStatus": "PendingDelete"}
+            kept.append(image)
     staged = [{"FileName": name, "FileStatus": "PendingUpload", "ImageType": kind}
               for name, _path, kind in new]
     return kept + staged
@@ -307,7 +318,8 @@ def verify(staged: dict, after: dict) -> list[str]:
         got = [(i.get("FileName"), i.get("ImageType"))
                for i in got_listing.get("BaseListing", {}).get("Images") or []
                if i.get("FileStatus") == "PendingUpload"]
-        if got != want:
+        # the Store may list them in another order
+        if sorted(got, key=str) != sorted(want, key=str):
             problems.append(f"{key}: {len(got)} images pending upload, expected "
                             f"{len(want)}: {got}")
     return problems
@@ -349,6 +361,11 @@ def package_version(tag: str) -> str:
     return f"{m[1]}.{m[2]}.{m[3] or 0}.0"
 
 
+def _lines(text: str) -> list[str]:
+    """Text as the Store may hand it back: any line endings, lines trimmed."""
+    return [ln.strip() for ln in text.strip().splitlines()]
+
+
 def check_submit(status: str, draft: dict, tag: str, whats_new: str) -> list[str]:
     problems = []
     if not re.search(r"Submission Status\s*=\s*PendingCommit\b", status):
@@ -365,7 +382,7 @@ def check_submit(status: str, draft: dict, tag: str, whats_new: str) -> list[str
     en = next((v for k, v in listings.items()
                if store_listing.lang_for_listing_key(k) == "en-US"), None)
     notes = ((en or {}).get("BaseListing") or {}).get("ReleaseNotes")
-    if (notes or "").strip() != whats_new.strip():
+    if _lines(notes or "") != _lines(whats_new):
         problems.append("The draft's What's new is not store/listing.md's "
                         "What's new in this version. Run update_draft with "
                         f"{tag} first.")

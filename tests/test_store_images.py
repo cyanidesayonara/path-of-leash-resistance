@@ -100,6 +100,37 @@ class StoreImages(unittest.TestCase):
         self.assertEqual(len(listing), 4 + len(images))
         self.assertEqual(sum(i["FileStatus"] == "PendingDelete" for i in listing), 4)
 
+    def test_images_of_other_types_are_left_alone(self):
+        images = store_images.listing_images(self.images)
+        d = draft()
+        hero = {"FileName": "hero.png", "FileStatus": "Uploaded", "Id": "9",
+                "ImageType": "PromotionalArt16x9"}
+        d["Listings"]["en-us"]["BaseListing"]["Images"].append(hero)
+        store_images.stage(d, draft(), images)
+        self.assertIn(hero, d["Listings"]["en-us"]["BaseListing"]["Images"])
+
+    def test_a_rerun_drops_staged_images_even_when_the_store_gave_them_ids(self):
+        images = store_images.listing_images(self.images)
+        once = store_images.stage(draft(), draft(), images)
+        for n, image in enumerate(once["Listings"]["en-us"]["BaseListing"]["Images"]):
+            image.setdefault("Id", f"new{n}")
+        twice = store_images.stage(copy.deepcopy(once), copy.deepcopy(once), images)
+        names = [i["FileName"] for i in twice["Listings"]["en-us"]["BaseListing"]["Images"]]
+        self.assertEqual(len(names), len(set(names)))
+
+    def test_verify_ignores_the_order_the_store_lists_them_in(self):
+        images = store_images.listing_images(self.images)
+        staged = store_images.stage(draft(), draft(), images)
+        after = copy.deepcopy(staged)
+        after["Listings"]["en-us"]["BaseListing"]["Images"].reverse()
+        self.assertEqual(store_images.verify(staged, after), [])
+
+    def test_check_submit_ignores_line_endings_and_trailing_spaces(self):
+        d = draft()
+        d["Listings"]["en-us"]["BaseListing"]["ReleaseNotes"] = "- one \r\n- two"
+        self.assertEqual(store_images.check_submit(
+            "Submission Status = PendingCommit", d, "v1.75", "- one\n- two"), [])
+
     def test_a_cloned_listing_drops_the_images_it_copied(self):
         images = store_images.listing_images(self.images)
         sub = draft()

@@ -135,7 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose > submission.json
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > submission.json
           python3 tools/store_images.py upload-url submission.json --masks
           # description, short description, features, keywords, What's new and
           # the notes for certification: everything under "## Current listing"
@@ -146,7 +146,10 @@ jobs:
           python3 tools/store_images.py stage --draft submission.json --submission metadata.json \
             --images build/store-listing --msix pkg/*.msix --zip upload.zip
           upload_url="$(python3 tools/store_images.py upload-url submission.json)"
+          # x-ms-version: a single Put Blob takes up to 5000 MiB from 2019-12-12
+          # on; left to the link's own version it could be capped at 64 MiB
           curl -fsS --retry 3 --retry-all-errors -X PUT -H "x-ms-blob-type: BlockBlob" \
+            -H "x-ms-version: 2020-04-08" \
             --upload-file upload.zip "$upload_url" -o /dev/null
           echo "Uploaded the package and the listing images ($(du -h upload.zip | cut -f1))."
           msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" --verbose 2>&1 | redact
@@ -156,7 +159,7 @@ jobs:
         run: |
           set -euo pipefail
           redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose > after.json
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > after.json
           python3 tools/store_images.py upload-url after.json --masks
           redact < after.json
           python3 tools/store_images.py verify --staged metadata.json --after after.json
@@ -170,7 +173,7 @@ jobs:
           # msstore prints "Submission Status = ..." through its logger, on
           # stderr: capture both streams or the check never sees it
           NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose 2>&1 | redact | tee status.txt
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose > submission.json
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > submission.json
           python3 tools/store_images.py upload-url submission.json --masks
           # commit only a draft still staged, with this tag's package and the
           # listing's What's new
@@ -185,7 +188,7 @@ jobs:
           set -euo pipefail
           redact() { sed -E 's#https://[A-Za-z0-9.-]+\.blob\.core\.windows\.net/[^" ]*#<upload url>#g'; }
           NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose 2>&1 | redact
-          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose > submission.json
+          NO_COLOR=1 msstore submission get "$PRODUCT_ID" --verbose 2> >(redact >&2) > submission.json
           python3 tools/store_images.py upload-url submission.json --masks || true
           redact < submission.json
           python3 tools/store_images.py mode submission.json || true
