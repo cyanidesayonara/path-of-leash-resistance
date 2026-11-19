@@ -11,6 +11,9 @@ extends RefCounted
 #   Mochi, the plant: dig in as the leash yanks, so your human stumbles
 #   Bruna, the herd: lead your human across the path on a steady pull
 #   Tito, the squeeze: slip through gaps a bigger dog's body would not fit
+#   Perla, the dig: dig things up (buried finds, a yard's dig patches), in
+#     half the time anyone else takes
+#   Duna, the leap: run into a bench and clear it in a standing jump
 #
 # What each one measures lives on main (skill_*), counted here or where the
 # thing happens (a stumble in human.gd, a dig in buried_finds.gd).
@@ -23,6 +26,8 @@ const GOALS := {
 	"mochi": {"id": "skill_dig_in", "text": "Dig in and trip your human %d times", "target": 2},
 	"bruna": {"id": "skill_herd", "text": "Herd your human for %d seconds", "target": 5},
 	"tito": {"id": "skill_squeeze", "text": "Slip through %d gaps only you fit", "target": 3},
+	"perla": {"id": "skill_dig", "text": "Dig up %d holes", "target": 2},
+	"duna": {"id": "skill_leap", "text": "Leap %d benches", "target": 2},
 }
 
 # Pipa: flat out is this much past her own top speed (turbo is TURBO_MULT)
@@ -61,6 +66,8 @@ static func progress(m: Node2D) -> int:
 		"mochi": return int(m.skill_stumbles)
 		"bruna": return int(floor(float(m.skill_herd_t) + 0.001))
 		"tito": return int(m.skill_squeezes)
+		"perla": return int(m.finds_dug) + int(m.digs_done)
+		"duna": return int(m.skill_leaps)
 	return 0
 
 
@@ -83,6 +90,8 @@ static func tick(m: Node2D, delta: float) -> void:
 		"pipa": _tick_sprint(m, delta)
 		"bruna": _tick_herd(m, delta)
 		"tito": _tick_squeeze(m, delta)
+	if Game.dog_leaps():
+		tick_leap(m, delta)
 	if not bool(m.skill_done_run) and progress(m) >= int(m.skill_quest.target):
 		credit(m)
 
@@ -224,3 +233,62 @@ static func card_row(m: Node2D, UiIcons: GDScript) -> Dictionary:
 	var got := target if (had or hit) else mini(progress(m), target)
 	var state: int = UiIcons.Check.DONE_NOW if hit else (UiIcons.Check.DONE_BEFORE if had else (UiIcons.Check.PARTIAL if got > 0 else UiIcons.Check.OPEN))
 	return {"text": quest_text(q), "target": target, "got": got, "state": state, "skill": true}
+
+
+# Duna's standing jump. Running into a bench, she goes over it: the bench
+# lets her through for LEAP_S while she arcs up and over (her hop, drawn by
+# entities/dog.gd), carried across at least LEAP_SPEED. Only a bench, only on
+# the walk (the off-leash games have their own hops).
+const LEAP_S := 0.42
+const LEAP_SPEED := 260.0
+const LEAP_H := 14.0
+const LEAP_MIN_SPEED := 90.0       # how hard she must be going into it
+const LEAP_REST := 0.35            # after landing, before another leap
+
+
+static func tick_leap(m: Node2D, delta: float) -> void:
+	var dog: CharacterBody2D = m.dog
+	if float(m.leap_t) > 0.0:
+		m.leap_t = maxf(0.0, float(m.leap_t) - delta)
+		var u := 1.0 - float(m.leap_t) / LEAP_S
+		dog.hop = sin(PI * u) * LEAP_H
+		if (dog.velocity as Vector2).dot(m.leap_dir) < LEAP_SPEED:
+			dog.velocity = (m.leap_dir as Vector2) * LEAP_SPEED
+		if float(m.leap_t) <= 0.0:
+			dog.hop = 0.0
+			if is_instance_valid(m.leap_body):
+				dog.remove_collision_exception_with(m.leap_body)
+			m.leap_body = null
+			m.leap_cd = LEAP_REST
+		return
+	if float(m.leap_cd) > 0.0:
+		m.leap_cd = maxf(0.0, float(m.leap_cd) - delta)
+		return
+	if String(m.phase) == "freedom" or dog.velocity.length() < LEAP_MIN_SPEED and not bool(dog.input_active):
+		return
+	var body := bench_hit(m)
+	if body == null:
+		return
+	m.leap_body = body
+	m.leap_t = LEAP_S
+	var across: Vector2 = body.global_position - dog.global_position
+	m.leap_dir = across.normalized() if across.length() > 0.5 else Vector2.UP
+	dog.add_collision_exception_with(body)
+	m.skill_leaps = int(m.skill_leaps) + 1
+	m.float_text(dog.global_position + Vector2(0, -26), I18n.t("skill_leap_pop"), Color(1.0, 0.86, 0.5), m.POP_SAY)
+	Sfx.play("whoop", 1.15)
+
+
+# The bench she ran into this frame, or null: what she collided with as she
+# moved, if it is one of the walk's benches.
+static func bench_hit(m: Node2D) -> StaticBody2D:
+	var dog: CharacterBody2D = m.dog
+	for i in range(dog.get_slide_collision_count()):
+		var c := dog.get_slide_collision(i)
+		var b := c.get_collider() as StaticBody2D
+		if b == null:
+			continue
+		for bn: Vector2 in m.benches:
+			if b.global_position.distance_to(bn) < 2.0:
+				return b
+	return null

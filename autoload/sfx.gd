@@ -385,6 +385,9 @@ func _build_library() -> void:
 	lib["bark_pipa"] = _loud_as(_bark_samples(0.11, 600.0, 340.0, 0.10, 0.50, 0.30, 0.10), ref)
 	lib["bark_bruna"] = _loud_as(_bark_samples(0.22, 300.0, 140.0, 0.55, 0.60, 0.16, 0.14), ref)
 	lib["bark_mochi"] = _loud_as(_bark_mochi(), ref)
+	# Perla a sharp terrier's double, Duna a hound's longer, higher yelp
+	lib["bark_perla"] = _loud_as(_double_bark(0.075, 820.0, 540.0, 0.06, 0.035), ref)
+	lib["bark_duna"] = _loud_as(_bark_samples(0.20, 640.0, 420.0, 0.18, 0.55, 0.18, 0.10), ref)
 
 
 # the walking dog's own bark
@@ -581,6 +584,20 @@ func _bark_tito() -> PackedFloat32Array:
 	for i in range(a.size()):
 		out[i] = a[i]
 	var at := a.size() + int(0.045 * RATE)
+	for i in range(b.size()):
+		out[at + i] = b[i]
+	return out
+
+
+# two quick barks, the second a touch higher, `gap` seconds apart
+func _double_bark(dur: float, f0: float, f1: float, bite: float, gap: float) -> PackedFloat32Array:
+	var a := _bark_samples(dur, f0, f1, 0.05, 0.55, 0.30, bite)
+	var b := _bark_samples(dur * 1.08, f0 * 1.08, f1 * 1.08, 0.05, 0.55, 0.30, bite)
+	var out := PackedFloat32Array()
+	out.resize(a.size() + int(gap * RATE) + b.size())
+	for i in range(a.size()):
+		out[i] = a[i]
+	var at := a.size() + int(gap * RATE)
 	for i in range(b.size()):
 		out[at + i] = b[i]
 	return out

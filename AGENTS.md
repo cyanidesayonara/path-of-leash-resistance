@@ -333,7 +333,7 @@ photographs the chase), and `--shot-y=N`, which starts the pair at that
 point down the walk (`--shot-y=-2450 --shot-at=40` photographs El Bosc's stream;
 give it 40 frames or so, a shot taken sooner can show the start line's ground).
 Each walk has its campaign sky (`Game.CAMPAIGN_SKY`: a sky from `Game.SKIES` and a time from `Game.TIMES`); `--weather=W` (any sky, `storm` or `fog` included), `--hour=H` (any time) and `--night` override it on every walk for the run. The hour's look is `systems/sky.gd`: a tint, a grade, and for dawn and dusk a low sun from one side of the screen and (dawn) a ground mist, both in `hud/grade.gdshader`; `Game.lamp_glow()` says how lit the lamps are. `--lang=ca|es|en` writes the walks' glosses in that language for the run
-(the LANGUAGE setting, unsaved). `--dog=millie|pipa|mochi|bruna|tito` walks that dog for the run (unsaved). `--look=him|her|N` draws your human as the
+(the LANGUAGE setting, unsaved). `--dog=millie|pipa|mochi|bruna|tito|perla|duna` walks that dog for the run (unsaved). `--look=him|her|N` draws your human as the
 default him or her, or the NEW LOOK that number seeds, for the run (unsaved). `--shot-goals` opens the goal list. `--shot-say` has your human and a passer-by speak at once. `--shot-x=N` puts the pair at that x instead of mid-walk, `--shot-zoom=Z`
 magnifies the shot, and `--shot-cam=X,Y` points the camera at a spot rather
 than the pair, to judge how a prop or a person is drawn
@@ -457,7 +457,7 @@ card) and draws its own place and threat around `FilmKit.pair`. Render one
 like an intro scene (`sweeper` is La Neteja's, `flood` El Besòs's, `vet`
 El Veterinari's, `boars` Els Senglars', `gracia` Festa de Gràcia's, `cremada` La Cremada's, `gat` the Raval finale's,
 played as she first passes El Gat's plinth): `--script res://tools/intro_render.gd -- flood OUTDIR 24 640`.
-Two more arguments pick the dog (`millie`, `pipa`, `mochi`, `bruna`, `tito`)
+Two more arguments pick the dog (`millie`, `pipa`, `mochi`, `bruna`, `tito`, `perla`, `duna`)
 and your human (`him`, `her`, or a number for a NEW LOOK), so a film can be
 checked with every pair: `-- vet OUTDIR 10 480 tito 7`.
 
