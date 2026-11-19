@@ -7,7 +7,7 @@ extends RefCounted
 # off-leash space, the gate queue and the posers at the salamander.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["cam_lean", "draw_bollard", "draw_clearing", "draw_column", "draw_live", "hush_banner", "idle_status", "on_bark", "surface", "tick", "tick_crowd", "urgent_status"]
+const HOOKS := ["cam_lean", "draw_bollard", "draw_clearing", "draw_column", "draw_live", "draw_threshold", "hush_banner", "idle_status", "on_bark", "surface", "tick", "tick_crowd", "urgent_status"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -518,6 +518,18 @@ static func draw_clearing(m: Node2D, c: Object, r: Rect2) -> void:
 	b.rect(r, HILL_EARTH)
 	b.circle(r.get_center(), 190.0, Color(0.80, 0.70, 0.52, 0.5))       # worn pale
 	b.circle(r.get_center() + Vector2(-60, 40), 120.0, Color(0.82, 0.73, 0.55, 0.4))
+	_gate_ground(m, b)
+	# its sides thin into the garden's scrub on a ragged line, not a ruled one
+	for sd: float in [-1.0, 1.0]:
+		var x0: float = r.position.x if sd < 0.0 else r.end.x
+		var pts := PackedVector2Array()
+		var n := int(r.size.y / 60.0) + 2
+		for into: float in [-10.0, 15.0, 45.0, 85.0]:
+			for i in range(n):
+				var yy := minf(r.position.y + float(i) * 60.0, r.end.y)
+				var jag := _hash(yy * 0.13 + x0) * 30.0 if into > 0.0 else 0.0
+				pts.append(Vector2(x0 - sd * (into + jag), yy))
+		b.band(pts, n, HILL_SCRUB, PackedFloat32Array([1.0, 0.85, 0.4, 0.0]))
 	var k := 0
 	var y := r.position.y + 14.0
 	while y < r.end.y:
@@ -544,6 +556,109 @@ static func draw_clearing(m: Node2D, c: Object, r: Rect2) -> void:
 	b.flush(c)
 	m._draw_freedom_benches(c, r, Color(0.42, 0.33, 0.22))
 	m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_hilltop_off_leash"))
+
+
+static func _hash(x: float) -> float:
+	return fmod(absf(sin(x * 12.9898) * 43758.5453), 1.0)
+
+
+# El Mosaic's way onto the hilltop (main._draw_threshold). The terrace walls,
+# their rubble tops and the garden beyond stopped dead in one straight line at
+# the gate, under a soldier course of setts no gravel path has. Now each wall
+# ends in a rubble pier with stones tumbled off it, the garden's scrub runs on
+# up into the hilltop's earth, and the path's gravel spreads into it the way
+# the hilltop is worn.
+const GATE_RUN := 110.0          # how far the gravel and the scrub run on past the walls
+const TERRACE_STONE := Color(0.56, 0.48, 0.38)
+
+
+# where main._draw_edges stops: its 55-unit slices and 220-unit terrace
+# modules both end on this line at the gate
+static func _edge_top(m: Node2D) -> float:
+	return floorf((float(m.GATE_Y) - 30.0) / 55.0) * 55.0
+
+
+# the ground of that join, on the off-leash layer under the hilltop's scrub
+# and trees; the edge layer covers everything below _edge_top
+static func _gate_ground(m: Node2D, b: ShapeBatch) -> void:
+	var gy: float = m.GATE_Y
+	var top := _edge_top(m)
+	var fl: Vector2 = m.frontage(top + 2.0)
+	var gravel: Color = m._ground_cols()[1]
+	# the path's gravel, feathering out into the earth on a wavy line and
+	# thinning over the terrace tops at its sides
+	var xs := PackedFloat32Array([fl.x - 105.0, fl.x - 50.0])
+	var ca := PackedFloat32Array([0.0, 0.5])
+	for i in range(14):
+		xs.append(lerpf(fl.x, fl.y, float(i) / 13.0))
+		ca.append(1.0)
+	xs.append_array([fl.y + 50.0, fl.y + 105.0])
+	ca.append_array([0.5, 0.0])
+	var pts := PackedVector2Array()
+	for ri in range(4):
+		for i in range(xs.size()):
+			var wob := (_hash(xs[i] * 0.01 + 3.0) - 0.5) * 30.0 * float(ri) / 3.0
+			pts.append(Vector2(xs[i], gy - 26.0 - float(ri) * GATE_RUN / 3.0 + wob))
+	b.band(pts, xs.size(), gravel, PackedFloat32Array([1.0, 0.75, 0.32, 0.0]), ca)
+	# the way most people walk in, worn palest
+	b.glow(Vector2((fl.x + fl.y) * 0.5, gy - 70.0), 130.0, Color(gravel.r, gravel.g, gravel.b, 0.4), 0.2)
+	# the gravel's stones, thinning out as it does
+	var gy0 := gy - 30.0
+	while gy0 > gy - 30.0 - GATE_RUN:
+		var fade := (gy - 30.0 - gy0) / GATE_RUN
+		var gx := fl.x + 30.0 + _hash(gy0) * 23.0
+		while gx < fl.y - 30.0:
+			var h := _hash(gx * 0.71 + gy0)
+			if h > fade:
+				b.circle(Vector2(gx, gy0 + h * 8.0), 1.3 + h * 1.2,
+					Color(0.64, 0.56, 0.42, 0.55) if int(h * 10.0) % 2 == 0 else Color(0.90, 0.84, 0.70, 0.5))
+			gx += 23.0 + h * 12.0
+		gy0 -= 19.0
+	for sd: float in [-1.0, 1.0]:
+		var lx: float = fl.x if sd < 0.0 else fl.y
+		# the garden's scrub, on up into the hilltop past the terrace
+		var g := PackedVector2Array()
+		var gn := 12
+		var ga := PackedFloat32Array()
+		for ri in range(4):
+			for i in range(gn):
+				var t := float(i) / float(gn - 1)
+				var wob := _hash(t * 5.0 + sd) * 40.0 * float(ri) / 3.0
+				g.append(Vector2(lx + sd * lerpf(96.0, 520.0, t), top + 4.0 - float(ri) * GATE_RUN / 3.0 - wob))
+		for i in range(gn):
+			ga.append(smoothstep(0.0, 0.12, float(i) / float(gn - 1)))
+		b.band(g, gn, HILL_SCRUB, PackedFloat32Array([1.0, 0.72, 0.3, 0.0]), ga)
+		# the rubble top of the terrace, crumbling out a few steps
+		var s := PackedVector2Array([
+			Vector2(lx + sd * 27.0, top + 4.0), Vector2(lx + sd * 105.0, top + 4.0),
+			Vector2(lx + sd * 27.0, top - 20.0), Vector2(lx + sd * 105.0, top - 26.0),
+			Vector2(lx + sd * 27.0, top - 44.0), Vector2(lx + sd * 105.0, top - 52.0)])
+		b.band(s, 2, TERRACE_STONE, PackedFloat32Array([1.0, 0.6, 0.0]))
+
+
+# the stones of that join, over the edge layer where its walls stop
+static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
+	var top := _edge_top(m)
+	var fl: Vector2 = m.frontage(top + 2.0)
+	var sh := Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.22)
+	for sd: float in [-1.0, 1.0]:
+		var lx: float = fl.x if sd < 0.0 else fl.y
+		# stones tumbled off the terrace's rubble top
+		for k in range(11):
+			var h := _hash(float(k) * 3.7 + sd * 11.0)
+			var up := float(k % 4) * 12.0 + h * 10.0
+			var at := Vector2(lx + sd * (30.0 + fmod(float(k) * 29.0 + h * 17.0, 76.0)), top + 4.0 - up)
+			var rad := (10.0 - up * 0.14) * (0.7 + h * 0.4)
+			b.circle(at + Shade.light * 2.5, rad, Color(sh.r, sh.g, sh.b, 0.16))
+			b.circle(at, rad, TERRACE_STONE.darkened(0.12) if k % 2 == 0 else TERRACE_STONE.lightened(0.08))
+		# the wall's end: a round pier of rubble, capped
+		var pier := Vector2(lx + sd * 13.0, top + 3.0)
+		b.circle(pier + Shade.light * 5.0, 18.0, sh)
+		b.circle(pier, 17.0, TERRACE_STONE.darkened(0.06))
+		for k in range(6):
+			var a := float(k) * TAU / 6.0 + sd
+			b.circle(pier + Vector2.from_angle(a) * 11.0, 5.5, TERRACE_STONE.darkened(0.16) if k % 2 == 0 else TERRACE_STONE)
+		b.circle(pier - Shade.light * 3.0, 9.0, TERRACE_STONE.lightened(0.14))
 
 
 # a rubble-stone planter with an agave in it (main.WALK_MODULES draw_bollard)
