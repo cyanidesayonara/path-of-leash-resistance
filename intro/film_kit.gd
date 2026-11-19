@@ -42,16 +42,20 @@ static func pair(c: CanvasItem, t_real: float, feet: float, stand := false) -> V
 	# oblivious: scrolling, and while it bears down on them he chuckles at
 	# something on the screen, shoulders shaking
 	var laugh := Anim.span(t_real, 2.7, 2.8) * (1.0 - Anim.span(t_real, 3.55, 3.7)) * (1.0 - go)
+	# the snap whips his head back and flings the phone arm up overhead, then
+	# he is hauled along with it waving there, head craning after her
+	var whip := snap * (1.0 - Anim.span(t_real, BOLT_AT + 0.2, BOLT_AT + 0.4))
 	var hpose := {
 		"scroll": t_real * 1.3,
 		"stride": t_real * 8.0 + go * (t_real - BOLT_AT) * 14.0, "stride_amp": 0.6 * (1.0 - go) + 1.3 * go,
 		"phone": 1.0, "glow": 0.5 * (1.0 - snap), "reach": 0.4 + 0.6 * go,
 		"lean": 0.55 * go + 0.18 * snap * (1.0 - hop), "lift": 0.15 * go + 0.45 * hop,
-		"head": 0.3 * go - 0.12 * laugh * absf(sin(t_real * 16.0)),
+		"head": 0.3 * go - 0.12 * laugh * absf(sin(t_real * 16.0)) - 0.6 * whip,
 		"mouth": maxf(go * (0.7 + 0.3 * absf(sin(t_real * 9.0))), laugh * (0.25 + 0.3 * absf(sin(t_real * 16.0)))),
 		"phone_jolt": go * (1.0 - 0.5 * snap),
+		"flail": snap * (0.92 + 0.08 * sin((t_real - BOLT_AT) * 9.0)),
 	}
-	var hsq := Vector2.ONE.lerp(Vector2(1.08, 0.94), go)
+	var hsq := Vector2.ONE.lerp(Vector2(1.08, 0.94), go).lerp(Vector2(0.92, 1.08), whip * (1.0 - hop))
 	var hop_y := hop * 26.0
 	if stand:
 		hx = Anim.k(t, [[0.0, 380.0], [BOLT_AT, 560.0], [BOLT_AT + 0.16, 600.0, "snap"], [TITLE_AT, 600.0]])
