@@ -29,6 +29,8 @@ const PAIR_GAP_WEATHER := {"clear": 1.0, "wind": 1.0, "rain": 1.3, "snow": 1.2}
 # Dry, and the sun high enough to lie in. A fog (Game.fog_amount, the sky's
 # strength beyond its kind) is no day for the beach either, and nor is a
 # calima (Game.dust_amount): a bad-air day keeps them in as rain does.
+# Vic's fog morning keeps sunbathers and picnics in; market people stay out
+# (shops_open / stall keepers have no fog gate).
 static func fair(weather: String, hour: String) -> bool:
 	return (weather == "clear" or weather == "wind") and (hour == "day" or hour == "dusk") \
 		and Game.fog_amount() < 0.5 and Game.dust_amount() < 0.5

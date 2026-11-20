@@ -36,6 +36,7 @@ const MATERIALS := {
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
 	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "sitges": "seaglass", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", 	"aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "raval": "pegs", "tutorial": "balls",
 	"encants": "buttons",
+	"vic": "cheeses",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.

@@ -1,0 +1,3 @@
+# Vic (inland market town in fog)
+# cost 12
+--headless --path . --script res://tests/test_vic.gd

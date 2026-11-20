@@ -202,6 +202,9 @@ const STYLES := {
 	# Tarragona: warm dusk Roman stones, guitar and high whistle over a slow walk
 	"tarragona": {"bpm": 112, "key": 2, "lead": "guitar", "lead2": ["whistle", 12], "comp": "arp",
 		"bass": "walk", "drums": "brushsoft", "swing": 0.05, "verb": 0.32},
+	# Vic: soft inland market morning, accordion and muted marimba in the fog
+	"vic": {"bpm": 108, "key": 2, "minor": true, "lead": "accordion", "lead2": ["marimba", 12], "comp": "oompah",
+		"bass": "walk", "drums": "brushsoft", "swing": 0.05, "verb": 0.36},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",

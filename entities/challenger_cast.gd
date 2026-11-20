@@ -83,6 +83,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_haggler(c, fd, t, s)
 		"gladiator":
 			_gladiator(c, fd, t, s)
+		"farmer":
+			_farmer(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -938,6 +940,33 @@ static func _kitesurfer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 
 
 # Els Encants: a flea-market haggler crouched over an open crate, haggling
+# Vic: a pagès from the plain selling his own cheese, flat cap and winter coat,
+# a wheel of mató held out in both hands
+static func _farmer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.82, 0.62, 0.48)
+	var coat := Color(0.32, 0.28, 0.22)
+	var cap := Color(0.22, 0.22, 0.24)
+	_shadow(c, Vector2.ZERO, 14.0, 14.0)
+	_shoes(c, fd, side, Color(0.28, 0.22, 0.16))
+	_person(c, Vector2.ZERO, fd, coat, skin, Color(0.40, 0.36, 0.32), "short", "none", Color.BLACK)
+	# flat cap
+	var head := fd * 5.0
+	c.draw_colored_polygon(_bar(head + fd * 1.0, side, 14.0, 5.0), cap)
+	c.draw_colored_polygon(_bar(head + fd * 2.5, side, 10.0, 3.0), Color(0.16, 0.16, 0.18))
+	# cheese wheel offered out, a little bob
+	var cheese := fd * (15.0 + maxf(0.0, sin(t * 1.6 + s)) * 2.5)
+	c.draw_circle(cheese, 8.5, Color(0.78, 0.62, 0.28))
+	c.draw_circle(cheese - Vector2(2.0, 2.0), 6.0, Color(0.94, 0.82, 0.42))
+	c.draw_circle(cheese - Vector2(3.5, 3.5), 2.2, Color(1.0, 0.94, 0.70))
+	_arm(c, side * 9.0, cheese + side * 7.0, coat, skin)
+	_arm(c, -side * 9.0, cheese - side * 7.0, coat, skin)
+
+
+# Camí de Ronda: a snorkeler seated on a coastal boulder overlooking the cove,
+# wetsuit on, mask pushed up on his forehead, bright yellow fins wiggling
+
+
 static func _haggler(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	var side := fd.orthogonal()
 	var skin := Color(0.82, 0.64, 0.50)
