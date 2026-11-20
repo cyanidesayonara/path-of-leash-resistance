@@ -66,7 +66,7 @@ func _test_catalog_and_traits(game: Node) -> void:
 	# Pipa fast, weak plant
 	_check(game.dog_name("pipa") == "Pipa", "pipa name")
 	_check(game.dog_breed("pipa") == "galgo", "pipa breed is galgo")
-	_check(is_equal_approx(game.dog_speed_mult("pipa"), 1.20), "pipa speed mult is 1.20")
+	_check(is_equal_approx(game.dog_speed_mult("pipa"), 1.30), "pipa speed mult is 1.20 and her head start 0.10")
 	_check(is_equal_approx(game.dog_accel_mult("pipa"), 1.20), "pipa accel mult is 1.20")
 	_check(is_equal_approx(game.dog_plant_mult("pipa"), 0.55), "pipa plant mult is 0.55")
 
@@ -75,7 +75,7 @@ func _test_catalog_and_traits(game: Node) -> void:
 	_check(game.dog_breed("mochi") == "french bulldog", "mochi breed is french bulldog")
 	_check(is_equal_approx(game.dog_speed_mult("mochi"), 0.84), "mochi speed mult is 0.84")
 	_check(is_equal_approx(game.dog_accel_mult("mochi"), 0.84), "mochi accel mult is 0.84")
-	_check(is_equal_approx(game.dog_plant_mult("mochi"), 1.70), "mochi plant mult is 1.70")
+	_check(is_equal_approx(game.dog_plant_mult("mochi"), 1.90), "mochi plant mult is 1.70 and his head start 0.20")
 
 	# Bruna herds human, collects muck
 	_check(game.dog_name("bruna") == "Bruna", "bruna name")
@@ -83,14 +83,14 @@ func _test_catalog_and_traits(game: Node) -> void:
 	_check(is_equal_approx(game.dog_speed_mult("bruna"), 1.00), "bruna speed mult is 1.00")
 	_check(is_equal_approx(game.dog_accel_mult("bruna"), 1.05), "bruna accel mult is 1.05")
 	_check(is_equal_approx(game.dog_plant_mult("bruna"), 1.00), "bruna plant mult is 1.00")
-	_check(is_equal_approx(game.dog_herd_mult("bruna"), 1.45), "bruna herd mult is 1.45")
+	_check(is_equal_approx(game.dog_herd_mult("bruna"), 1.61), "bruna herd mult is 1.45 and her head start 0.16")
 	_check(is_equal_approx(game.dog_muck_mult("bruna"), 1.60), "bruna muck mult is 1.60")
 
 	# Tito slips through gaps, easily reeled in
 	_check(game.dog_name("tito") == "Tito", "tito name")
 	_check(game.dog_breed("tito") == "chihuahua", "tito breed is chihuahua")
 	_check(is_equal_approx(game.dog_speed_mult("tito"), 1.10), "tito speed mult is 1.10")
-	_check(is_equal_approx(game.dog_accel_mult("tito"), 1.25), "tito accel mult is 1.25")
+	_check(is_equal_approx(game.dog_accel_mult("tito"), 1.37), "tito accel mult is 1.25 and his head start 0.12")
 	_check(is_equal_approx(game.dog_plant_mult("tito"), 0.35), "tito plant mult is 0.35")
 	_check(is_equal_approx(game.dog_mass_mult("tito"), 0.45), "tito mass mult is 0.45")
 	_check(is_equal_approx(game.dog_reel_mult("tito"), 1.65), "tito reel mult is 1.65")
@@ -232,7 +232,7 @@ func _test_live_entity_and_physics(game: Node) -> void:
 
 	# Pipa active
 	game.dog = "pipa"
-	_check(is_equal_approx(dog.base_speed(), dog.SPEED * 1.20), "dog base_speed with pipa")
+	_check(is_equal_approx(dog.base_speed(), dog.SPEED * 1.30), "dog base_speed with pipa")
 	_check(is_equal_approx(dog.base_accel(), dog.ACCEL * 1.20), "dog base_accel with pipa")
 	_check(is_equal_approx(dog.plant_grip_mult(), 0.55), "dog plant_grip_mult with pipa")
 	_check(dog._dog_breed() == "galgo", "dog breed galgo")
@@ -241,7 +241,7 @@ func _test_live_entity_and_physics(game: Node) -> void:
 	game.dog = "mochi"
 	_check(is_equal_approx(dog.base_speed(), dog.SPEED * 0.84), "dog base_speed with mochi")
 	_check(is_equal_approx(dog.base_accel(), dog.ACCEL * 0.84), "dog base_accel with mochi")
-	_check(is_equal_approx(dog.plant_grip_mult(), 1.70), "dog plant_grip_mult with mochi")
+	_check(is_equal_approx(dog.plant_grip_mult(), 1.90), "dog plant_grip_mult with mochi")
 	_check(dog._dog_breed() == "french bulldog", "dog breed french bulldog")
 
 	# Bruna active
@@ -249,14 +249,14 @@ func _test_live_entity_and_physics(game: Node) -> void:
 	_check(is_equal_approx(dog.base_speed(), dog.SPEED * 1.00), "dog base_speed with bruna")
 	_check(is_equal_approx(dog.base_accel(), dog.ACCEL * 1.05), "dog base_accel with bruna")
 	_check(is_equal_approx(dog.plant_grip_mult(), 1.00), "dog plant_grip_mult with bruna")
-	_check(is_equal_approx(dog.herd_mult(), 1.45), "dog herd_mult with bruna")
+	_check(is_equal_approx(dog.herd_mult(), 1.61), "dog herd_mult with bruna")
 	_check(is_equal_approx(dog.muck_mult(), 1.60), "dog muck_mult with bruna")
 	_check(dog._dog_breed() == "gos d'atura", "dog breed gos d'atura")
 
 	# Tito active
 	game.dog = "tito"
 	_check(is_equal_approx(dog.base_speed(), dog.SPEED * 1.10), "dog base_speed with tito")
-	_check(is_equal_approx(dog.base_accel(), dog.ACCEL * 1.25), "dog base_accel with tito")
+	_check(is_equal_approx(dog.base_accel(), dog.ACCEL * 1.37), "dog base_accel with tito")
 	_check(is_equal_approx(dog.plant_grip_mult(), 0.35), "dog plant_grip_mult with tito")
 	_check(is_equal_approx(dog.mass_mult(), 0.45), "dog mass_mult with tito")
 	_check(is_equal_approx(dog.reel_mult(), 1.65), "dog reel_mult with tito")
