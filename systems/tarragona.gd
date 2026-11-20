@@ -11,7 +11,7 @@ extends RefCounted
 #
 # No chase, no boss. Campaign sky clear dusk.
 
-const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
 # draw_bollard receives the hydrant Dictionary (main._draw_world), not a Vector2
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -57,9 +57,9 @@ const BALCO_Y0 := 200.0
 const BALCO_Y1 := -900.0
 const AMPHI_Y0 := -900.0
 const AMPHI_Y1 := -1800.0
-const AMPHI_CENTER := Vector2(820.0, -1350.0)
-const AMPHI_RX := 210.0
-const AMPHI_RY := 160.0
+const AMPHI_CENTER := Vector2(780.0, -1350.0)
+const AMPHI_RX := 280.0
+const AMPHI_RY := 210.0
 const RAMBLA_Y0 := -1800.0
 const RAMBLA_Y1 := -3000.0
 const CASTELL_Y0 := -3000.0
@@ -145,7 +145,7 @@ static func solids(_m: Node2D = null) -> Array[Rect2]:
 	# Balcó rail (west of sea)
 	out.append(Rect2(768.0, -880.0, 14.0, 980.0))
 	# Amphitheatre arena (unwalkable oval approximated as centre block)
-	out.append(Rect2(AMPHI_CENTER.x - 90.0, AMPHI_CENTER.y - 110.0, 180.0, 220.0))
+	out.append(Rect2(AMPHI_CENTER.x - 120.0, AMPHI_CENTER.y - 130.0, 240.0, 260.0))
 	# Roman wall stretches either side of the old-town pinch
 	out.append(Rect2(360.0, -4580.0, 70.0, 1100.0))
 	out.append(Rect2(850.0, -4580.0, 70.0, 1100.0))
@@ -469,25 +469,35 @@ static func _path_poly(lo: float, hi: float) -> PackedVector2Array:
 
 
 static func _draw_amphi(wc: ShapeBatch, lo: float, hi: float) -> void:
-	for ring in range(4):
-		var t0 := 0.55 + float(ring) * 0.12
-		var t1 := t0 + 0.11
+	# Oval of stone tiers stepping down to the arena by the shore — big enough
+	# to recognise from above; path runs along the west rim.
+	var c := AMPHI_CENTER
+	wc.circle(c + Vector2(10.0, 14.0), AMPHI_RX * 0.95, SHADOW)
+	for ring in range(6):
+		var t0 := 0.42 + float(ring) * 0.09
+		var t1 := t0 + 0.085
 		var pts := PackedVector2Array()
-		for i in range(24):
-			var a := TAU * float(i) / 24.0
-			pts.append(AMPHI_CENTER + Vector2(cos(a) * AMPHI_RX * t1, sin(a) * AMPHI_RY * t1))
-		for i in range(23, -1, -1):
-			var a := TAU * float(i) / 24.0
-			pts.append(AMPHI_CENTER + Vector2(cos(a) * AMPHI_RX * t0, sin(a) * AMPHI_RY * t0))
-		var col := STONE.lerp(STONE_LIT, float(ring) * 0.18)
+		for i in range(28):
+			var a := TAU * float(i) / 28.0
+			pts.append(c + Vector2(cos(a) * AMPHI_RX * t1, sin(a) * AMPHI_RY * t1))
+		for i in range(27, -1, -1):
+			var a := TAU * float(i) / 28.0
+			pts.append(c + Vector2(cos(a) * AMPHI_RX * t0, sin(a) * AMPHI_RY * t0))
+		var col := STONE.lerp(STONE_LIT, float(ring) * 0.14).darkened(0.04 * float(5 - ring))
 		wc.polygon(pts, col)
-	# Arena floor (darker)
+		# course joint every other ring
+		if ring % 2 == 0:
+			for i in range(0, 28, 2):
+				var a := TAU * float(i) / 28.0
+				var p0 := c + Vector2(cos(a) * AMPHI_RX * t0, sin(a) * AMPHI_RY * t0)
+				var p1 := c + Vector2(cos(a) * AMPHI_RX * t1, sin(a) * AMPHI_RY * t1)
+				wc.line(p0, p1, STONE_DARK, 1.5)
 	var arena := PackedVector2Array()
-	for i in range(20):
-		var a := TAU * float(i) / 20.0
-		arena.append(AMPHI_CENTER + Vector2(cos(a) * AMPHI_RX * 0.5, sin(a) * AMPHI_RY * 0.5))
-	wc.polygon(arena, STONE_DARK)
-	# Cull rings outside view roughly via a soft mask — rings already drawn; ok
+	for i in range(24):
+		var a := TAU * float(i) / 24.0
+		arena.append(c + Vector2(cos(a) * AMPHI_RX * 0.38, sin(a) * AMPHI_RY * 0.38))
+	wc.polygon(arena, STONE_DARK.darkened(0.08))
+	wc.glow(c, 40.0, Color(STONE_LIT.r, STONE_LIT.g, STONE_LIT.b, 0.18))
 
 
 static func draw_edge_layer(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
@@ -498,69 +508,128 @@ static func draw_edge_layer(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> 
 	if hi <= lo:
 		b.lod = keep
 		return
-	# East building facades inland of the Rambla / old town
-	b.rect(Rect2(920.0, lo, 500.0, hi - lo), FASCIA)
-	var plot := floorf(lo / 140.0) * 140.0
+	# Sea cliff east of the Balcó: deep water, gold dusk band, railway below
+	if hi > BALCO_Y1 and lo < BALCO_Y0:
+		var slo := maxf(lo, BALCO_Y1)
+		var shi := minf(hi, BALCO_Y0)
+		b.rect(Rect2(790.0, slo, 900.0, shi - slo), SEA_DEEP)
+		b.band(PackedVector2Array([
+			Vector2(800.0, slo), Vector2(1050.0, slo), Vector2(1300.0, slo),
+			Vector2(800.0, shi), Vector2(1050.0, shi), Vector2(1300.0, shi),
+		]), 3, SEA_MID, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([1.0, 0.5, 0.0]))
+		b.band(PackedVector2Array([
+			Vector2(860.0, slo), Vector2(1200.0, slo),
+			Vector2(860.0, shi), Vector2(1200.0, shi),
+		]), 2, SEA_GOLD, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.6, 0.0]))
+		# railway cutting under the rail
+		b.rect(Rect2(792.0, slo, 36.0, shi - slo), Color(0.16, 0.16, 0.18))
+		var ry := ceilf(slo / 40.0) * 40.0
+		while ry < shi:
+			b.line(Vector2(794.0, ry), Vector2(826.0, ry), Color(0.55, 0.52, 0.42), 2.2)
+			ry += 40.0
+	# Town fronts with roofs, depth and warm dusk windows
+	b.rect(Rect2(-200.0, lo, 560.0, hi - lo), Color(0.32, 0.28, 0.24))
+	b.rect(Rect2(920.0, lo, 500.0, hi - lo), Color(0.34, 0.30, 0.26))
+	var plot := floorf(lo / 120.0) * 120.0
 	var idx := 0
 	while plot < hi:
-		var depth := 180.0 + _h(float(idx), 4.0) * 90.0
-		b.rect(Rect2(922.0, plot + 4.0, depth, 132.0), FASCIA.darkened(0.06 * float(idx % 3)))
-		b.rect(Rect2(918.0, plot + 20.0, 10.0, 40.0), Color(0.20, 0.22, 0.28))
-		b.rect(Rect2(918.0, plot + 80.0, 10.0, 40.0), Color(0.20, 0.22, 0.28))
+		_town_front(b, Vector2(280.0, plot + 50.0), -1.0, idx)
+		_town_front(b, Vector2(1000.0, plot + 40.0), 1.0, idx + 3)
 		idx += 1
-		plot += 140.0
+		plot += 120.0
 	# Roman wall blocks in the old-town stretch
 	if lo < WALLS_Y0 and hi > WALLS_Y1:
 		_draw_roman_walls(b, maxf(lo, WALLS_Y1), minf(hi, WALLS_Y0))
-	# Railway under the Balcó (thin dark strip)
-	if hi > BALCO_Y1:
-		var rlo := maxf(lo, BALCO_Y1)
-		b.rect(Rect2(790.0, rlo, 40.0, hi - rlo), Color(0.18, 0.18, 0.20))
-		var ry := ceilf(rlo / 50.0) * 50.0
-		while ry < hi:
-			b.line(Vector2(792.0, ry), Vector2(828.0, ry), Color(0.55, 0.55, 0.50), 2.0)
-			ry += 50.0
 	b.lod = keep
 
 
+static func _town_front(b: ShapeBatch, p: Vector2, side: float, seed_i: int) -> void:
+	var w := 100.0 + _h(float(seed_i), 2.0) * 40.0
+	var h := 80.0 + _h(float(seed_i), 5.0) * 30.0
+	var r := Rect2(p.x - w * 0.5, p.y - h * 0.5, w, h)
+	b.rect(Rect2(r.position + Vector2(8.0, 10.0), r.size), SHADOW)
+	b.rect(r, FASCIA.darkened(0.05 * float(seed_i % 3)))
+	b.rect(Rect2(r.position.x - 6.0, r.position.y - 14.0, r.size.x + 12.0, 16.0), STONE_DARK)
+	# lit windows at dusk
+	var glow_a := Game.lamp_glow()
+	for k in range(3):
+		for col in range(2):
+			var wx := r.position.x + 14.0 + float(col) * (r.size.x * 0.4)
+			var wy := r.position.y + 16.0 + float(k) * 20.0
+			b.rect(Rect2(wx, wy, 14.0, 12.0), Color(0.22, 0.18, 0.14))
+			if glow_a > 0.1 and (seed_i + k + col) % 3 != 0:
+				b.rect(Rect2(wx + 1.0, wy + 1.0, 12.0, 10.0), Color(1.0, 0.82, 0.45, 0.35 + 0.4 * glow_a))
+	# balcony
+	b.rect(Rect2(r.position.x + 10.0, r.position.y + h * 0.35, r.size.x - 20.0, 6.0), Color(0.40, 0.38, 0.36))
+
+
 static func _draw_roman_walls(b: ShapeBatch, lo: float, hi: float) -> void:
-	var y := floorf(lo / 48.0) * 48.0
+	# Huge rough courses with joints; a gate through them; narrow street beyond
+	var y := floorf(lo / 56.0) * 56.0
 	while y < hi:
 		for side: float in [-1.0, 1.0]:
-			var x := 360.0 if side < 0.0 else 850.0
-			var w := 68.0 + _h(y * 0.1 + side, 2.0) * 16.0
-			var h := 44.0 + _h(y * 0.07, 3.0) * 10.0
-			b.rect(Rect2(x, y, w, h), ROMAN)
-			b.rect(Rect2(x + 4.0, y + 4.0, w * 0.45, h * 0.4), ROMAN_LIT)
-			b.line(Vector2(x, y + h), Vector2(x + w, y + h), STONE_DARK, 2.0)
-		# Arch spanning the street every so often
-		if int(absf(y) / 48.0) % 5 == 0:
-			b.rect(Rect2(430.0, y + 8.0, 420.0, 18.0), ARCH)
-			b.circle(Vector2(640.0, y + 8.0), 48.0, ARCH)
-			b.circle(Vector2(640.0, y + 8.0), 34.0, PAVE)
-		y += 48.0
+			var x := 340.0 if side < 0.0 else 840.0
+			var course := 0
+			var cy := y
+			while cy < y + 52.0:
+				var bw := 72.0 + _h(cy * 0.13 + side, 2.0) * 22.0
+				var bh := 18.0 + _h(cy * 0.09, 3.0) * 8.0
+				var ox := _h(cy * 0.2 + side, 7.0) * 8.0
+				b.rect(Rect2(x + ox + 4.0, cy + 4.0, bw, bh), SHADOW)
+				b.rect(Rect2(x + ox, cy, bw, bh), ROMAN.darkened(0.04 * float(course % 3)))
+				b.rect(Rect2(x + ox + 3.0, cy + 2.0, bw * 0.4, bh * 0.45), ROMAN_LIT)
+				b.line(Vector2(x + ox, cy + bh), Vector2(x + ox + bw, cy + bh), STONE_DARK, 2.0)
+				cy += bh + 2.0
+				course += 1
+		# Gate / arch every stretch
+		if int(absf(y) / 56.0) % 4 == 0:
+			b.rect(Rect2(420.0, y + 4.0, 440.0, 14.0), ARCH.darkened(0.1))
+			b.circle(Vector2(640.0, y + 10.0), 56.0, ARCH)
+			b.circle(Vector2(640.0, y + 10.0), 40.0, PAVE)
+			# balcony over the arch
+			b.rect(Rect2(600.0, y - 18.0, 80.0, 10.0), Color(0.55, 0.48, 0.40))
+			b.rect(Rect2(610.0, y - 28.0, 12.0, 12.0), Color(0.70, 0.22, 0.22, 0.5))
+			b.rect(Rect2(658.0, y - 28.0, 12.0, 12.0), Color(0.70, 0.22, 0.22, 0.5))
+		y += 56.0
 
 
 static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var keep := b.lod
 	b.lod = true
 	var t_sec := float(AnimClock.msec()) * 0.001
-	# Balcó rail posts
+	# Balcó del Mediterrani: continuous rail on the cliff, people at the view
 	if vb > BALCO_Y1 and vt < BALCO_Y0:
 		var ry := maxf(vt, BALCO_Y1)
-		while ry < minf(vb, 200.0):
-			b.rect(Rect2(768.0, ry, 14.0, 18.0), RAIL)
-			b.circle(Vector2(775.0, ry + 2.0), 3.5, RAIL.lightened(0.2))
+		var rhi := minf(vb, BALCO_Y0)
+		b.rect(Rect2(760.0, ry, 22.0, rhi - ry), RAIL.darkened(0.1))
+		b.rect(Rect2(764.0, ry, 6.0, rhi - ry), RAIL.lightened(0.15))
+		while ry < rhi:
+			b.rect(Rect2(758.0, ry, 18.0, 10.0), RAIL)
+			b.circle(Vector2(767.0, ry + 2.0), 4.0, RAIL.lightened(0.25))
+			# viewpoint lingerers every stretch
+			if int(absf(ry) / 36.0) % 3 == 0:
+				var vp := Vector2(740.0, ry + 8.0)
+				b.circle(vp + Vector2(2, 2), 8.0, SHADOW)
+				b.circle(vp, 7.5, Color(0.40, 0.36, 0.48))
+				b.circle(vp + Vector2(0, -8), 4.5, Color(0.86, 0.70, 0.56))
 			ry += 36.0
+		# Balcó view spot glow
+		if BALCO_SPOT.y >= vt - 40.0 and BALCO_SPOT.y <= vb + 40.0:
+			b.glow(BALCO_SPOT, BALCO_R * 0.7, Color(1.0, 0.78, 0.40, 0.12))
+	# Rambla Nova: benches, kiosks between the plane trees
+	if vb > RAMBLA_Y1 and vt < RAMBLA_Y0:
+		_draw_rambla_props(b, maxf(vt, RAMBLA_Y1), minf(vb, RAMBLA_Y0))
 	# Long dusk shadows from plane trees
 	for p: Vector2 in PLANE_SPOTS:
 		if p.y < vt - 40.0 or p.y > vb + 40.0:
 			continue
-		b.capsule(p, p + Vector2(48.0, 22.0), 10.0, SHADOW)
-		b.circle(p, 12.0, PLANE_TRUNK)
-		b.circle(p + Vector2(0, -8), 28.0, PLANE_CROWN)
-		b.circle(p + Vector2(-10, -14), 16.0, PLANE_LIT)
-	# Casteller monument (original stacked figures)
+		b.capsule(p, p + Vector2(56.0, 28.0), 12.0, SHADOW)
+		b.circle(p, 13.0, PLANE_TRUNK)
+		b.circle(p + Vector2(2, -2), 9.0, PLANE_TRUNK.lightened(0.12))
+		b.circle(p + Vector2(0, -10), 32.0, PLANE_CROWN)
+		b.circle(p + Vector2(-12, -16), 18.0, PLANE_LIT)
+		b.circle(p + Vector2(10, -14), 14.0, PLANE_CROWN.lightened(0.08))
+	# Casteller monument (group of figures in depth, not dots)
 	if MONUMENT.y >= vt - 80.0 and MONUMENT.y <= vb + 80.0:
 		_draw_castellers(b, MONUMENT, 5, t_sec, false)
 	# Live casteller practice
@@ -569,6 +638,9 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	if CASTELL_CENTER.y >= vt - 120.0 and CASTELL_CENTER.y <= vb + 120.0:
 		if cstate == "telegraph" or cstate == "build" or cstate == "crowned":
 			_draw_crowd(b, cst, t_sec)
+			# gralla telegraph: visible as well as heard
+			if cstate == "telegraph":
+				_draw_gralla(b, CASTELL_CENTER + Vector2(-70.0, 20.0), t_sec)
 			var tier := int(cst.get("tier", 0))
 			if tier > 0:
 				_draw_castellers(b, CASTELL_CENTER, tier, t_sec, true)
@@ -586,6 +658,40 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	b.lod = keep
 
 
+static func _draw_rambla_props(b: ShapeBatch, lo: float, hi: float) -> void:
+	var y := floorf(lo / 200.0) * 200.0
+	var i := 0
+	while y < hi:
+		# bench on the centre strip
+		var bx := CX + (20.0 if i % 2 == 0 else -30.0)
+		var bp := Vector2(bx, y + 40.0)
+		if bp.y >= lo and bp.y <= hi:
+			b.rect(Rect2(bp.x - 22.0 + 4.0, bp.y - 6.0 + 4.0, 44.0, 14.0), SHADOW)
+			b.rect(Rect2(bp.x - 22.0, bp.y - 6.0, 44.0, 14.0), Color(0.42, 0.32, 0.22))
+			b.rect(Rect2(bp.x - 20.0, bp.y - 10.0, 40.0, 5.0), Color(0.50, 0.38, 0.26))
+		# kiosk every other bay
+		if i % 2 == 0:
+			var kx := CX + (90.0 if i % 4 == 0 else -100.0)
+			var kp := Vector2(kx, y + 100.0)
+			if kp.y >= lo and kp.y <= hi:
+				b.rect(Rect2(kp.x - 18.0 + 5.0, kp.y - 16.0 + 5.0, 36.0, 32.0), SHADOW)
+				b.rect(Rect2(kp.x - 18.0, kp.y - 16.0, 36.0, 32.0), Color(0.62, 0.28, 0.22))
+				b.rect(Rect2(kp.x - 20.0, kp.y - 22.0, 40.0, 10.0), Color(0.78, 0.72, 0.55))
+				b.rect(Rect2(kp.x - 12.0, kp.y - 8.0, 24.0, 10.0), Color(0.90, 0.88, 0.78, 0.55))
+		y += 200.0
+		i += 1
+
+
+static func _draw_gralla(b: ShapeBatch, p: Vector2, t_sec: float) -> void:
+	# Musician with a high gralla: visible telegraph before the tower rises
+	b.circle(p + Vector2(3, 3), 11.0, SHADOW)
+	b.circle(p, 10.0, Color(0.18, 0.32, 0.55))
+	b.circle(p + Vector2(0, -10), 5.5, Color(0.86, 0.70, 0.56))
+	var tip := p + Vector2(18.0 + sin(t_sec * 14.0) * 2.0, -16.0)
+	b.line(p + Vector2(4, -6), tip, Color(0.72, 0.62, 0.40), 3.0)
+	b.glow(tip, 16.0 + sin(t_sec * 10.0) * 4.0, Color(1.0, 0.92, 0.55, 0.35))
+
+
 static func _draw_sitter(b: ShapeBatch, p: Vector2, face: Vector2) -> void:
 	b.circle(p + Vector2(2, 2), 10.0, SHADOW)
 	b.circle(p, 9.0, Color(0.35, 0.42, 0.55))
@@ -593,6 +699,7 @@ static func _draw_sitter(b: ShapeBatch, p: Vector2, face: Vector2) -> void:
 
 
 static func _draw_crowd(b: ShapeBatch, cst: Dictionary, t_sec: float) -> void:
+	# Crowd packs in a readable ring around the tower
 	var pack := 0.35
 	var st := String(cst.get("state", "idle"))
 	if st == "build":
@@ -600,45 +707,50 @@ static func _draw_crowd(b: ShapeBatch, cst: Dictionary, t_sec: float) -> void:
 	elif st == "crowned":
 		pack = 0.95
 	elif st == "telegraph":
-		pack = 0.25
-	var n := int(10.0 + pack * 18.0)
+		pack = 0.35
+	# ground disc so the ring reads as a gathering
+	b.circle(CASTELL_CENTER + Vector2(4, 6), 70.0 + pack * 40.0, Color(0.08, 0.08, 0.12, 0.18 + pack * 0.12))
+	var n := int(14.0 + pack * 22.0)
 	for i in range(n):
-		var a := TAU * float(i) / float(n) + t_sec * 0.15
-		var r := 36.0 + _h(float(i), 8.0) * 70.0 * pack
-		var p := CASTELL_CENTER + Vector2(cos(a) * r * 0.7, sin(a) * r)
-		if not CROWD_RECT.grow(20.0).has_point(p):
+		var a := TAU * float(i) / float(n) + t_sec * 0.12
+		var r := 42.0 + _h(float(i), 8.0) * 55.0 * pack
+		var p := CASTELL_CENTER + Vector2(cos(a) * r * 0.85, sin(a) * r)
+		if not CROWD_RECT.grow(30.0).has_point(p):
 			continue
 		var shirt := SASH if i % 2 == 0 else SASH_B
-		b.circle(p + Vector2(1.5, 1.5), 8.0, SHADOW)
-		b.circle(p, 7.5, shirt)
-		b.circle(p + Vector2(0, -9), 4.5, Color(0.86, 0.68, 0.54))
+		b.circle(p + Vector2(2.0, 2.0), 8.5, SHADOW)
+		b.circle(p, 8.0, shirt)
+		b.circle(p + Vector2(0, -9), 4.8, Color(0.86, 0.68, 0.54))
 
 
 static func _draw_castellers(b: ShapeBatch, at: Vector2, tiers: int, t_sec: float, live: bool) -> void:
-	# Original stacked group: base pinya, then rising pairs, enxaneta on top
-	var wob := sin(t_sec * (3.0 if live else 1.2)) * (2.0 if live else 0.6)
-	b.circle(at + Vector2(4, 6), 22.0, SHADOW)
-	# Pinya (base ring)
-	for i in range(6):
-		var a := TAU * float(i) / 6.0 + 0.2
-		var p := at + Vector2(cos(a) * 22.0, sin(a) * 12.0 + 6.0)
-		b.circle(p, 8.0, SASH if i % 2 == 0 else SASH_B)
-		b.circle(p + Vector2(0, -8), 4.5, Color(0.84, 0.66, 0.52))
-	var y := -8.0
+	# Tower in tiers of figures with depth and shadow; pinya base, then rising
+	var wob := sin(t_sec * (3.0 if live else 1.2)) * (2.4 if live else 0.7)
+	b.circle(at + Vector2(8, 10), 34.0, SHADOW)
+	# Pinya (base ring) — packed bodies reading as a platform
+	for i in range(8):
+		var a := TAU * float(i) / 8.0 + 0.15
+		var p := at + Vector2(cos(a) * 28.0, sin(a) * 16.0 + 8.0)
+		b.circle(p + Vector2(2, 2), 9.0, SHADOW)
+		b.circle(p, 8.5, SASH if i % 2 == 0 else SASH_B)
+		b.circle(p + Vector2(0, -8), 5.0, Color(0.84, 0.66, 0.52))
+	var y := -10.0
 	for t in range(mini(tiers, 4)):
-		var n := 3 if t == 0 else (2 if t < 3 else 1)
+		var n := 4 if t == 0 else (3 if t == 1 else (2 if t < 3 else 1))
 		for i in range(n):
-			var x := (float(i) - float(n - 1) * 0.5) * 16.0 + wob * (1.0 if t > 0 else 0.0)
+			var x := (float(i) - float(n - 1) * 0.5) * 15.0 + wob * (1.0 if t > 0 else 0.0)
 			var p := at + Vector2(x, y)
 			var col := SASH_B if (t + i) % 2 == 0 else SASH
-			b.circle(p, 7.0 - float(t) * 0.4, col)
-			b.circle(p + Vector2(0, -8), 4.2 - float(t) * 0.2, Color(0.86, 0.68, 0.54))
-		y -= 18.0
+			b.circle(p + Vector2(2, 3), 8.0 - float(t) * 0.4, SHADOW)
+			b.circle(p, 7.5 - float(t) * 0.4, col)
+			b.circle(p + Vector2(0, -8), 4.4 - float(t) * 0.2, Color(0.86, 0.68, 0.54))
+		y -= 20.0
 	if tiers >= 4:
 		var tip := at + Vector2(wob, y - 4.0)
-		b.circle(tip, 5.0, Color(0.94, 0.94, 0.96))
-		b.circle(tip + Vector2(0, -7), 3.5, Color(0.88, 0.70, 0.56))
-		b.line(tip + Vector2(0, -10), tip + Vector2(0, -18), Color(0.94, 0.94, 0.96), 2.0)
+		b.circle(tip + Vector2(2, 2), 6.0, SHADOW)
+		b.circle(tip, 5.5, Color(0.94, 0.94, 0.96))
+		b.circle(tip + Vector2(0, -8), 3.8, Color(0.88, 0.70, 0.56))
+		b.line(tip + Vector2(0, -11), tip + Vector2(0, -22), Color(0.94, 0.94, 0.96), 2.2)
 
 
 static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
@@ -649,6 +761,43 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	for lp: Vector2 in LAMP_SPOTS:
 		b.glow(lp + Vector2(0, -18), 34.0 + glow * 20.0, Color(1.0, 0.78, 0.42, 0.18 * glow))
 		b.circle(lp + Vector2(0, -18), 4.0, Color(1.0, 0.88, 0.55, 0.7 * glow))
+	b.flush()
+
+
+static func draw_freedom(m: Node2D, c: Object) -> void:
+	# Plaça de la Seu: cathedral steps and facade, square's own paving
+	var r: Rect2 = m._freedom_rect()
+	var b := ShapeBatch.new()
+	b.lod = true
+	b.rect(Rect2(r.position.x - 80.0, r.position.y - 120.0, r.size.x + 160.0, r.size.y + 200.0), Color(0.40, 0.36, 0.30))
+	b.rect(r, STONE.lightened(0.06))
+	Panot.flor(b, r.position.x + 10.0, r.end.x - 10.0, r.position.y + 10.0, r.end.y - 10.0, PANOT_INK, PANOT_SHINE)
+	# cathedral facade at the north end
+	var facade := Rect2(r.position.x + 80.0, r.position.y - 40.0, r.size.x - 160.0, 90.0)
+	b.rect(Rect2(facade.position + Vector2(10, 12), facade.size), SHADOW)
+	b.rect(facade, STONE_LIT)
+	b.rect(Rect2(facade.position.x + 20.0, facade.position.y + 20.0, facade.size.x - 40.0, 50.0), STONE_DARK)
+	# rose window
+	b.circle(facade.get_center() + Vector2(0, -8), 22.0, Color(0.55, 0.70, 0.82, 0.55))
+	b.circle(facade.get_center() + Vector2(0, -8), 10.0, Color(0.70, 0.82, 0.90, 0.4))
+	# twin towers
+	b.rect(Rect2(facade.position.x - 10.0, facade.position.y - 70.0, 36.0, 80.0), STONE)
+	b.rect(Rect2(facade.end.x - 26.0, facade.position.y - 70.0, 36.0, 80.0), STONE)
+	b.rect(Rect2(facade.position.x - 6.0, facade.position.y - 78.0, 28.0, 12.0), STONE_LIT)
+	b.rect(Rect2(facade.end.x - 22.0, facade.position.y - 78.0, 28.0, 12.0), STONE_LIT)
+	# steps down into the square
+	for s in range(5):
+		var sy := facade.end.y + float(s) * 10.0
+		b.rect(Rect2(facade.position.x + 30.0 - float(s) * 8.0, sy, facade.size.x - 60.0 + float(s) * 16.0, 9.0),
+			STONE.lerp(STONE_LIT, float(s) * 0.08))
+	var glow_a := Game.lamp_glow()
+	if glow_a > 0.05:
+		b.glow(facade.get_center(), 70.0, Color(1.0, 0.82, 0.45, 0.15 * glow_a))
+	b.flush(c)
+	if m.has_method("_draw_freedom_benches"):
+		m._draw_freedom_benches(c, r, Color(0.42, 0.32, 0.22))
+	if m.has_method("_freedom_sign"):
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_cathedral_square_off_leash"))
 
 
 static func draw_column(_m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
