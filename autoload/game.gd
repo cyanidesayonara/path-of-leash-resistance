@@ -127,7 +127,7 @@ const LEVEL_SUBTITLES := {
 	"santpau": "The modernista hospital gardens",
 	"sitges": "Whitewashed streets by the sea",
 	"ronda": "The cliff path above the coves",
-	"encants": "The flea market under the mirror at Glòries",
+	"encants": "The flea market at Glòries",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
@@ -614,7 +614,7 @@ const LEVEL_SUBTITLES_CA := {
 	"santpau": "Els jardins de l'hospital modernista",
 	"sitges": "Carrers emblanquinats vora el mar",
 	"ronda": "El camí de ronda sobre les cales",
-	"encants": "El mercat de segona mà sota el mirall de Glòries",
+	"encants": "El mercat sota el mirall",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -664,7 +664,7 @@ const LEVEL_SUBTITLES_ES := {
 	"santpau": "Los jardines del hospital modernista",
 	"sitges": "Calles encaladas junto al mar",
 	"ronda": "El camino de ronda sobre las calas",
-	"encants": "El mercado de segunda mano bajo el espejo de Glòries",
+	"encants": "El rastro bajo el espejo",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
