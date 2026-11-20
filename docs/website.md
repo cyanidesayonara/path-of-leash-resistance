@@ -51,6 +51,12 @@ descriptions in `site/walks.json`. On a release deploy (`workflow_run`),
 Godot refreshes that dump in `rel/` and `site_walks.py --from=rel` builds the
 chapter cards, bosses, dogs, wardrobe and individual walk pages; on a normal
 push (without Godot installed), it reads the committed `tools/site_walks_data.json`.
+The landing page's generated sections are written in all three languages
+(`site/index.html`, `site/ca/index.html`, `site/es/index.html`): what the game
+already says in Catalan and Spanish (walk glosses, dog traits, skill goals,
+wardrobe names) comes from the dump, and what only the website says is in
+`tools/site_i18n.py`. A new section, boss or chase film goes into all three.
+The walk pages under `site/walks/` are in English.
 Run `python tools/site_walks.py --check` to verify nothing is stale or missing.
 
 ## Images

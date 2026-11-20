@@ -23,10 +23,19 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import site_i18n as I  # noqa: E402
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA_REL = pathlib.Path("tools/site_walks_data.json")
 PLACE_FILE = ROOT / "site" / "walks.json"
 INDEX_FILE = ROOT / "site" / "index.html"
+# every landing page: its language and the prefix from it to the site root
+INDEX_PAGES = [
+    (ROOT / "site" / "index.html", "en", ""),
+    (ROOT / "site" / "ca" / "index.html", "ca", "../"),
+    (ROOT / "site" / "es" / "index.html", "es", "../"),
+]
 WALKS_DIR = ROOT / "site" / "walks"
 IMG_DIR = ROOT / "site" / "img"
 
@@ -52,24 +61,7 @@ HOUR_LABEL = {
     "night": "Night",
 }
 
-BOSS_INFO = {
-    "ciutadella": (
-        "El Mamut",
-        "The life-size stone mammoth by Parc de la Ciutadella's cascada steps off its plinth. Wrap it up or bait its charge into the boating lake.",
-    ),
-    "guell": (
-        "El Drac",
-        "The trencadís mosaic dragon holds the grand stairway. Wind the leash round the stone columns, dodge the tail sweep, and trip the beast on the tiles.",
-    ),
-    "port": (
-        "Els Lleons",
-        "Twin bronze harbor lions guard Columbus's column along the wharf. Lead their pincer charge round the iron mooring bollards and into one another.",
-    ),
-    "raval": (
-        "El Gat",
-        "Rambla del Raval's plump bronze cat prowls beneath the palms, scattering pigeons and leaping across awnings until you fling your human straight into him.",
-    ),
-}
+BOSS_INFO = I.BOSS["en"]
 
 WALK_BLOCK = re.compile(
     r"<!--\s*walks:([a-z0-9_]+)\s*-->.*?<!--\s*/walks:\1\s*-->",
@@ -82,20 +74,24 @@ def esc(text: object) -> str:
     return html.escape(str(text), quote=True)
 
 
-def sky_text(w: dict) -> str:
-    weather = SKY_LABEL.get(w["weather"], w["weather"].title())
-    hour = HOUR_LABEL.get(w["hour"], w["hour"].title())
-    return f"{weather}, {hour.lower()}"
+def sky_text(w: dict, lang: str = "en") -> str:
+    weather = I.SKY[lang].get(w["weather"], w["weather"].title())
+    hour = I.HOUR[lang].get(w["hour"], w["hour"])
+    return f"{weather}, {hour}"
 
 
-def kind_badge(w: dict) -> tuple[str, str]:
+def kind_badge(w: dict, lang: str = "en") -> tuple[str, str]:
     if w.get("is_boss"):
-        return ("Boss", "badge badge-boss")
+        return (I.ui(lang, "boss"), "badge badge-boss")
     if w.get("is_chase"):
-        return ("Chase", "badge badge-chase")
+        return (I.ui(lang, "chase"), "badge badge-chase")
     if w.get("is_tutorial"):
-        return ("Tutorial", "badge badge-tut")
+        return (I.ui(lang, "tutorial"), "badge badge-tut")
     return ("", "")
+
+
+def gloss_of(w: dict, lang: str) -> str:
+    return w.get(f"gloss_{lang}") or w["gloss"] if lang != "en" else w["gloss"]
 
 
 def format_clock(seconds: int) -> str:
@@ -149,27 +145,29 @@ def validate_inputs(data: dict, places: dict, check_images: bool) -> list[str]:
     return ordered_ids
 
 
-def render_chapter_nav(data: dict) -> str:
+def render_chapter_nav(data: dict, lang: str = "en") -> str:
     items = []
     for idx, ch in enumerate(data["chapters"], 1):
         items.append(
             f'<a class="chapter-pill" href="#chapter-{idx}">'
-            f'Chapter {idx} <span class="pill-count">({len(ch)})</span></a>'
+            f'{esc(I.ui(lang, "chapter", n=idx))} <span class="pill-count">({len(ch)})</span></a>'
         )
     return "\n  ".join(items)
 
 
-def render_chapters(data: dict, places: dict) -> str:
+def render_chapters(data: dict, places: dict, lang: str = "en", base: str = "") -> str:
     chapters = data["chapters"]
     walks = data["walks"]
     sections = []
     for idx, ch in enumerate(chapters, 1):
         end_w = walks[ch[-1]]
+        n_walks = I.ui(lang, "walks_n", n=len(ch))
         if end_w["is_boss"]:
-            boss_name = BOSS_INFO.get(end_w["id"], (end_w["name"], ""))[0]
-            sub = f"{len(ch)} walks &middot; Ends on boss: {esc(end_w['name'])} ({esc(boss_name)})"
+            boss_name = I.BOSS[lang].get(end_w["id"], (end_w["name"], ""))[0]
+            tail = I.ui(lang, "ends_on_boss", walk=esc(end_w["name"]), boss=esc(boss_name))
         else:
-            sub = f"{len(ch)} walks &middot; Culminates at {esc(end_w['name'])}"
+            tail = I.ui(lang, "culminates", walk=esc(end_w["name"]))
+        sub = f"{n_walks} &middot; {tail}"
         cards = []
         for wid in ch:
             w = walks[wid]
@@ -183,31 +181,33 @@ def render_chapters(data: dict, places: dict) -> str:
             elif w["is_tutorial"]:
                 cls.append("is-tutorial")
             badges = []
-            b_label, b_cls = kind_badge(w)
+            b_label, b_cls = kind_badge(w, lang)
             if b_label:
                 badges.append(f'<span class="{b_cls}">{esc(b_label)}</span>')
             if w["weather"] != "clear" or w["hour"] != "day":
-                badges.append(f'<span class="badge badge-sky">{esc(sky_text(w))}</span>')
+                badges.append(f'<span class="badge badge-sky">{esc(sky_text(w, lang))}</span>')
             badge_html = (
                 f'<span class="walk-badges">{"".join(badges)}</span>'
                 if badges
                 else ""
             )
+            gloss = gloss_of(w, lang)
+            alt = shot["alt"] if lang == "en" else I.ui(lang, "card_alt", name=w["name"], gloss=gloss)
             cards.append(
-                f'<a class="{" ".join(cls)}" href="walks/{esc(wid)}.html">'
-                f'<img src="img/{esc(shot["file"])}" alt="{esc(shot["alt"])}" '
+                f'<a class="{" ".join(cls)}" href="{base}walks/{esc(wid)}.html">'
+                f'<img src="{base}img/{esc(shot["file"])}" alt="{esc(alt)}" '
                 f'width="960" height="540" loading="lazy">'
                 f'<span class="walk-card-body">'
                 f'{badge_html}'
                 f'<span class="walk-name">{esc(w["name"])}</span>'
-                f'<span class="walk-gloss">{esc(w["gloss"])}</span>'
+                f'<span class="walk-gloss">{esc(gloss)}</span>'
                 f'</span>'
                 f'</a>'
             )
         sections.append(
             f'<section class="chapter" id="chapter-{idx}">\n'
             f'  <div class="chapter-head">\n'
-            f'    <h3>Chapter {idx}</h3>\n'
+            f'    <h3>{esc(I.ui(lang, "chapter", n=idx))}</h3>\n'
             f'    <p class="chapter-sub">{sub}</p>\n'
             f'  </div>\n'
             f'  <div class="walk-grid">\n'
@@ -218,21 +218,22 @@ def render_chapters(data: dict, places: dict) -> str:
     return "\n\n".join(sections)
 
 
-def render_bosses(data: dict, places: dict) -> str:
+def render_bosses(data: dict, places: dict, lang: str = "en", base: str = "") -> str:
     walks = data["walks"]
     cards = []
     for wid in data["boss_walks"]:
         w = walks[wid]
         p = places[wid]
-        boss_name, blurb = BOSS_INFO[wid]
+        boss_name, blurb = I.BOSS[lang][wid]
         shot = p["shots"][1] if len(p["shots"]) > 1 else p["shots"][0]
+        alt = shot["alt"] if lang == "en" else f'{boss_name} ({w["name"]})'
         cards.append(
-            f'<a class="walk-card is-boss boss-card" href="walks/{esc(wid)}.html">'
-            f'<img src="img/{esc(shot["file"])}" alt="{esc(shot["alt"])}" '
+            f'<a class="walk-card is-boss boss-card" href="{base}walks/{esc(wid)}.html">'
+            f'<img src="{base}img/{esc(shot["file"])}" alt="{esc(alt)}" '
             f'width="960" height="540" loading="lazy">'
             f'<span class="walk-card-body">'
             f'<span class="walk-badges">'
-            f'<span class="badge badge-boss">Chapter {w["chapter"]} boss</span>'
+            f'<span class="badge badge-boss">{esc(I.ui(lang, "chapter_boss", n=w["chapter"]))}</span>'
             f'</span>'
             f'<span class="walk-name">{esc(boss_name)} <span class="walk-place">({esc(w["name"])})</span></span>'
             f'<span class="walk-gloss">{esc(blurb)}</span>'
@@ -242,50 +243,72 @@ def render_bosses(data: dict, places: dict) -> str:
     return "\n  ".join(cards)
 
 
-def render_chases(data: dict) -> str:
+def render_chases(data: dict, lang: str = "en", base: str = "") -> str:
     walks = data["walks"]
     links = []
     for wid in data["chase_walks"]:
         w = walks[wid]
-        links.append(f'<li><a href="walks/{esc(wid)}.html">{esc(w["name"])}</a></li>')
+        links.append(f'<li><a href="{base}walks/{esc(wid)}.html">{esc(w["name"])}</a></li>')
     return "\n  ".join(links)
 
 
-# a stat as a bar: where this dog's multiplier sits between the softest and the
-# strongest of the pack, never quite empty
-def _stat_bar(label: str, value: float, lo: float, hi: float) -> str:
-    frac = 0.12 + 0.88 * max(0.0, min(1.0, (value - lo) / max(hi - lo, 0.001)))
+# every chase walk's film, in campaign order; a chase without a film yet is left out
+def render_chase_films(data: dict, lang: str = "en", base: str = "") -> str:
+    figs = []
+    for wid in data["chase_walks"]:
+        if wid not in I.CHASE_FILMS:
+            continue
+        clip, words = I.CHASE_FILMS[wid]
+        alt, cap = words[lang]
+        figs.append(
+            f'<figure><a href="{base}walks/{esc(wid)}.html"><img src="{base}img/{esc(clip)}.gif" alt="{esc(alt)}" '
+            f'width="320" height="180" loading="lazy"></a><figcaption>{esc(cap)}</figcaption></figure>'
+        )
+    return "\n  ".join(figs)
+
+
+# a stat as a bar: her value against the best in the pack, so an ordinary
+# dog shows as middling rather than as nothing
+def _stat_bar(label: str, value: float, best: float) -> str:
+    frac = max(0.08, min(1.0, value / max(best, 0.001)))
     return (
         f'    <div class="dog-stat"><span class="dog-stat-name">{esc(label)}</span>'
         f'<span class="dog-stat-bar"><span style="width:{round(frac * 100)}%"></span></span></div>\n'
     )
 
 
-def render_dogs(data: dict) -> str:
+DOG_STATS = ["speed", "agility", "plant", "nose", "herd"]
+
+
+def render_dogs(data: dict, lang: str = "en", base: str = "") -> str:
     dogs = data["dogs"]
-    stats = [("Speed", "speed_mult"), ("Grip", "plant_mult"), ("Heft", "mass_mult")]
-    span = {k: (min(d.get(k, 1.0) for d in dogs), max(d.get(k, 1.0) for d in dogs)) for _, k in stats}
+    best = {k: max(d["stats"][k] for d in dogs) for k in DOG_STATS}
     cards = []
     for dog in dogs:
-        unlock = "Starter" if dog["stars"] == 0 else f'{dog["stars"]} stars'
-        bars = "".join(_stat_bar(label, dog.get(k, 1.0), *span[k]) for label, k in stats)
+        did = dog["id"]
+        unlock = I.ui(lang, "starter") if dog["stars"] == 0 else I.ui(lang, "stars", n=dog["stars"])
+        bars = "".join(_stat_bar(I.STATS[lang][k], dog["stats"][k], best[k]) for k in DOG_STATS)
+        breed = dog["breed"] if lang == "en" else I.BREED[lang].get(dog["breed"], dog["breed"])
+        trait = dog["trait"] if lang == "en" else (dog.get(f"trait_{lang}") or dog["trait"])
+        desc = dog["desc"] if lang == "en" else I.DOG_DESC[lang].get(did, dog["desc"])
+        goal = dog["skill_goal"] if lang == "en" else (dog.get(f"skill_goal_{lang}") or dog["skill_goal"])
         skill = ""
-        if dog.get("skill"):
+        if goal:
             skill = (
-                f'  <p class="dog-skill"><span class="dog-skill-name">{esc(dog["skill"])}</span> '
-                f'{esc(dog.get("skill_goal", ""))}</p>\n'
+                f'  <p class="dog-skill"><span class="dog-skill-name">{esc(I.SKILL[lang][did])}</span> '
+                f'{esc(goal)}</p>\n'
             )
-        alt = f'{dog["name"]}, the {dog["breed"]}, side on'
+        alt = I.ui(lang, "dog_alt", name=dog["name"], breed=breed if lang != "en" else dog["breed"])
         cards.append(
             '<div class="card dog-card">\n'
-            f'  <img class="dog-portrait" src="img/dog-{esc(dog["id"])}.png" alt="{esc(alt)}" '
+            f'  <img class="dog-portrait" src="{base}img/dog-{esc(did)}.png" alt="{esc(alt)}" '
             'width="360" height="240" loading="lazy">\n'
             '  <div class="dog-head">\n'
             f'    <h3>{esc(dog["name"])}</h3>\n'
             f'    <span class="badge badge-star">{esc(unlock)}</span>\n'
             '  </div>\n'
-            f'  <p class="dog-breed">{esc(dog["breed"])} &middot; {esc(dog["trait"])}</p>\n'
-            f'  <p class="dog-desc">{esc(dog["desc"])}</p>\n'
+            f'  <p class="dog-breed">{esc(breed)} &middot; {esc(trait)}</p>\n'
+            f'  <p class="dog-desc">{esc(desc)}</p>\n'
             f'{skill}'
             f'  <div class="dog-stats">\n{bars}  </div>\n'
             '</div>'
@@ -293,18 +316,24 @@ def render_dogs(data: dict) -> str:
     return "\n".join(cards)
 
 
-def render_wardrobe(data: dict) -> str:
+def _item_name(item: dict, lang: str) -> str:
+    return item["name"] if lang == "en" else (item.get(f"name_{lang}") or item["name"])
+
+
+def render_wardrobe(data: dict, lang: str = "en") -> str:
     wd = data["wardrobe"]
     tr = data["training"]
     nl = wd["new_look"]
 
+    def cost_text(c: int) -> str:
+        return I.ui(lang, "starter") if c == 0 else I.ui(lang, "bones", n=c)
+
     collar_pills = []
     for c in wd["collars"]:
-        cost = "Starter" if c["cost"] == 0 else f'{c["cost"]} bones'
         collar_pills.append(
             f'<span class="swatch-item">'
             f'<span class="swatch" style="background:{esc(c["color"])}"></span>'
-            f'{esc(c["name"])} <span class="item-cost">({esc(cost)})</span>'
+            f'{esc(_item_name(c, lang))} <span class="item-cost">({esc(cost_text(c["cost"]))})</span>'
             f'</span>'
         )
 
@@ -312,44 +341,51 @@ def render_wardrobe(data: dict) -> str:
     for b in wd["bandanas"]:
         if not b["color"]:
             continue
+        name = _item_name(b, lang)
+        if lang == "en":
+            name = name.replace(" bandana", "")
         bandana_pills.append(
             f'<span class="swatch-item">'
             f'<span class="swatch" style="background:{esc(b["color"])}"></span>'
-            f'{esc(b["name"].replace(" bandana", ""))} <span class="item-cost">({b["cost"]} bones)</span>'
+            f'{esc(name)} <span class="item-cost">({esc(cost_text(b["cost"]))})</span>'
             f'</span>'
         )
 
     coat_pills = []
     for coat in wd["coats"]:
-        cost = "Starter" if coat["cost"] == 0 else f'{coat["cost"]} bones'
         coat_pills.append(
             f'<span class="swatch-item">'
             f'<span class="swatch swatch-duo" style="background:linear-gradient(135deg, {esc(coat["fur"])} 55%, {esc(coat["mark"])} 55%)"></span>'
-            f'{esc(coat["name"])} <span class="item-cost">({esc(cost)})</span>'
+            f'{esc(_item_name(coat, lang))} <span class="item-cost">({esc(cost_text(coat["cost"]))})</span>'
             f'</span>'
         )
 
-    stats_list = ", ".join(s.capitalize() for s in tr["stats"])
+    stats_list = ", ".join(I.STATS[lang][s] for s in tr["stats"])
+    training_p = I.ui(
+        lang, "training_p", n=len(tr["stats"]), stats=esc(stats_list), max=tr["max_points"],
+        skins=nl["skins"], hair=nl["hair_colors"], styles=len(nl["her_styles"]) + len(nl["his_styles"]),
+        shirts=nl["shirts"], trousers=nl["trousers"], shoes=nl["shoes"],
+    )
     return (
         f'<div class="wardrobe-grid">\n'
         f'  <div class="card wardrobe-card">\n'
-        f'    <h3>Collars</h3>\n'
-        f'    <p>Sets the color of the leash itself.</p>\n'
+        f'    <h3>{I.ui(lang, "collars")}</h3>\n'
+        f'    <p>{I.ui(lang, "collars_p")}</p>\n'
         f'    <div class="swatch-list">{"".join(collar_pills)}</div>\n'
         f'  </div>\n'
         f'  <div class="card wardrobe-card">\n'
-        f'    <h3>Bandanas</h3>\n'
-        f'    <p>Optional cloth around the neck ({len(wd["bandanas"]) - 1} colors).</p>\n'
+        f'    <h3>{I.ui(lang, "bandanas")}</h3>\n'
+        f'    <p>{I.ui(lang, "bandanas_p", n=len(wd["bandanas"]) - 1)}</p>\n'
         f'    <div class="swatch-list">{"".join(bandana_pills)}</div>\n'
         f'  </div>\n'
         f'  <div class="card wardrobe-card">\n'
-        f'    <h3>Coats</h3>\n'
-        f'    <p>Six coat markings ({len(wd["coats"])} styles).</p>\n'
+        f'    <h3>{I.ui(lang, "coats")}</h3>\n'
+        f'    <p>{I.ui(lang, "coats_p", n=len(wd["coats"]))}</p>\n'
         f'    <div class="swatch-list">{"".join(coat_pills)}</div>\n'
         f'  </div>\n'
         f'  <div class="card wardrobe-card">\n'
-        f'    <h3>Training &amp; New Look</h3>\n'
-        f'    <p>Every buried find she digs up and every skill goal she meets is a training point for her. Spend them on {len(tr["stats"])} stats ({esc(stats_list)}), up to {tr["max_points"]} levels each; a level costs as many points as the level it reaches. Roll a <strong>New Look</strong> for your human before heading out: {nl["skins"]} skin tones, {nl["hair_colors"]} hair colors, {len(nl["her_styles"])} + {len(nl["his_styles"])} hairstyles, {nl["shirts"]} shirts, {nl["trousers"]} trousers and {nl["shoes"]} shoe styles.</p>\n'
+        f'    <h3>{I.ui(lang, "training")}</h3>\n'
+        f'    <p>{training_p}</p>\n'
         f'  </div>\n'
         f'</div>'
     )
@@ -554,23 +590,24 @@ def main() -> int:
     places = json.loads(PLACE_FILE.read_text(encoding="utf-8"))
     ordered_ids = validate_inputs(data, places, check_images=check)
 
-    blocks = {
-        "chapter_nav": render_chapter_nav(data),
-        "chapters": render_chapters(data, places),
-        "bosses": render_bosses(data, places),
-        "chases": render_chases(data),
-        "dogs": render_dogs(data),
-        "wardrobe": render_wardrobe(data),
-    }
-
     stale: list[str] = []
-    index_out = fill_blocks(INDEX_FILE, blocks)
-    index_cur = INDEX_FILE.read_text(encoding="utf-8")
-    if index_out != index_cur:
-        if check:
-            stale.append(str(INDEX_FILE.relative_to(ROOT)))
-        else:
-            INDEX_FILE.write_text(index_out, encoding="utf-8", newline="\n")
+    for page, lang, base in INDEX_PAGES:
+        blocks = {
+            "chapter_nav": render_chapter_nav(data, lang),
+            "chapters": render_chapters(data, places, lang, base),
+            "bosses": render_bosses(data, places, lang, base),
+            "chases": render_chases(data, lang, base),
+            "chase_films": render_chase_films(data, lang, base),
+            "dogs": render_dogs(data, lang, base),
+            "wardrobe": render_wardrobe(data, lang),
+        }
+        out = fill_blocks(page, blocks)
+        cur = page.read_text(encoding="utf-8")
+        if out != cur:
+            if check:
+                stale.append(str(page.relative_to(ROOT)))
+            else:
+                page.write_text(out, encoding="utf-8", newline="\n")
 
     if not check:
         WALKS_DIR.mkdir(parents=True, exist_ok=True)

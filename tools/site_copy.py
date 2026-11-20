@@ -35,9 +35,9 @@ import store_listing  # noqa: E402
 PAGES = {
     "site/index.html": ("en", ["features", "whatsnew", "count"]),
     "site/press/index.html": ("en", ["description"]),
-    "site/ca/index.html": ("ca", ["features", "whatsnew", "count", "walks"]),
+    "site/ca/index.html": ("ca", ["features", "whatsnew", "count"]),
     "site/ca/press/index.html": ("ca", ["description"]),
-    "site/es/index.html": ("es", ["features", "whatsnew", "count", "walks"]),
+    "site/es/index.html": ("es", ["features", "whatsnew", "count"]),
     "site/es/press/index.html": ("es", ["description"]),
 }
 

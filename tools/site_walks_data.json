@@ -87,6 +87,9 @@
       "gap_mult": 1.0,
       "herd_mult": 1.0,
       "id": "millie",
+      "innate": {
+        "nose": 2
+      },
       "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.0,
@@ -96,9 +99,20 @@
       "reel_mult": 1.0,
       "skill": "The nose",
       "skill_goal": "Sniff out and dig up a buried find",
+      "skill_goal_ca": "Desenterra un tresor amagat",
+      "skill_goal_es": "Desentierra un tesoro escondido",
       "speed_mult": 1.0,
       "stars": 0,
-      "trait": "Balanced"
+      "stats": {
+        "agility": 1.0,
+        "herd": 1.0,
+        "nose": 1.5,
+        "plant": 1.0,
+        "speed": 1.0
+      },
+      "trait": "Balanced",
+      "trait_ca": "Tot terreny",
+      "trait_es": "Todoterreno"
     },
     {
       "accel_mult": 1.2,
@@ -108,6 +122,9 @@
       "gap_mult": 1.0,
       "herd_mult": 1.0,
       "id": "pipa",
+      "innate": {
+        "speed": 2
+      },
       "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.0,
@@ -117,9 +134,20 @@
       "reel_mult": 1.0,
       "skill": "The sprint",
       "skill_goal": "Sprint flat out for 2 seconds",
+      "skill_goal_ca": "Esprinta a tope 2 segons",
+      "skill_goal_es": "Esprinta a tope 2 segundos",
       "speed_mult": 1.2,
       "stars": 15,
-      "trait": "Fast, weak plant"
+      "stats": {
+        "agility": 1.2,
+        "herd": 1.0,
+        "nose": 1.0,
+        "plant": 0.55,
+        "speed": 1.3
+      },
+      "trait": "Fast, weak plant",
+      "trait_ca": "Ràpida, es planta poc",
+      "trait_es": "Rápida, se planta poco"
     },
     {
       "accel_mult": 0.84,
@@ -129,6 +157,9 @@
       "gap_mult": 1.0,
       "herd_mult": 1.0,
       "id": "mochi",
+      "innate": {
+        "plant": 2
+      },
       "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.0,
@@ -138,9 +169,20 @@
       "reel_mult": 1.0,
       "skill": "The plant",
       "skill_goal": "Dig in and trip your human 2 times",
+      "skill_goal_ca": "Fes ensopegar l'humà 2 cops",
+      "skill_goal_es": "Haz tropezar a tu humano 2 veces",
       "speed_mult": 0.84,
       "stars": 25,
-      "trait": "Plants hard, slow"
+      "stats": {
+        "agility": 0.84,
+        "herd": 1.0,
+        "nose": 1.0,
+        "plant": 1.9,
+        "speed": 0.84
+      },
+      "trait": "Plants hard, slow",
+      "trait_ca": "Es planta fort, lent",
+      "trait_es": "Se planta fuerte, lento"
     },
     {
       "accel_mult": 1.05,
@@ -150,6 +192,9 @@
       "gap_mult": 1.0,
       "herd_mult": 1.45,
       "id": "bruna",
+      "innate": {
+        "herd": 2
+      },
       "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.6,
@@ -159,9 +204,20 @@
       "reel_mult": 1.0,
       "skill": "The herd",
       "skill_goal": "Herd your human for 5 seconds",
+      "skill_goal_ca": "Guia el teu humà 5 segons",
+      "skill_goal_es": "Guía a tu humano 5 segundos",
       "speed_mult": 1.0,
       "stars": 35,
-      "trait": "Herds your human, collects muck"
+      "stats": {
+        "agility": 1.05,
+        "herd": 1.61,
+        "nose": 1.0,
+        "plant": 1.0,
+        "speed": 1.0
+      },
+      "trait": "Herds your human, collects muck",
+      "trait_ca": "Guia el teu humà, s'embruta",
+      "trait_es": "Guía a tu humano, se ensucia"
     },
     {
       "accel_mult": 1.25,
@@ -171,6 +227,9 @@
       "gap_mult": 0.57,
       "herd_mult": 1.0,
       "id": "tito",
+      "innate": {
+        "agility": 2
+      },
       "leaps": false,
       "mass_mult": 0.45,
       "muck_mult": 1.0,
@@ -180,9 +239,20 @@
       "reel_mult": 1.65,
       "skill": "The squeeze",
       "skill_goal": "Slip through 3 gaps only you fit",
+      "skill_goal_ca": "Passa per 3 forats estrets",
+      "skill_goal_es": "Cuélate por 3 huecos estrechos",
       "speed_mult": 1.1,
       "stars": 45,
-      "trait": "Slips through gaps, easily reeled in"
+      "stats": {
+        "agility": 1.37,
+        "herd": 1.0,
+        "nose": 1.0,
+        "plant": 0.35,
+        "speed": 1.1
+      },
+      "trait": "Slips through gaps, easily reeled in",
+      "trait_ca": "Passa per tot, fàcil d'arrossegar",
+      "trait_es": "Se cuela por todo, fácil de arrastrar"
     },
     {
       "accel_mult": 1.18,
@@ -192,6 +262,10 @@
       "gap_mult": 0.82,
       "herd_mult": 1.0,
       "id": "perla",
+      "innate": {
+        "agility": 1,
+        "nose": 1
+      },
       "leaps": false,
       "mass_mult": 0.7,
       "muck_mult": 1.0,
@@ -201,9 +275,20 @@
       "reel_mult": 1.0,
       "skill": "The dig",
       "skill_goal": "Dig up 2 holes",
+      "skill_goal_ca": "Desenterra 2 forats",
+      "skill_goal_es": "Desentierra 2 hoyos",
       "speed_mult": 1.04,
       "stars": 55,
-      "trait": "Digs anything up, quick on her feet"
+      "stats": {
+        "agility": 1.24,
+        "herd": 1.0,
+        "nose": 1.25,
+        "plant": 0.8,
+        "speed": 1.04
+      },
+      "trait": "Digs anything up, quick on her feet",
+      "trait_ca": "Ho desenterra tot, àgil",
+      "trait_es": "Lo desentierra todo, ágil"
     },
     {
       "accel_mult": 1.06,
@@ -213,6 +298,10 @@
       "gap_mult": 1.0,
       "herd_mult": 1.0,
       "id": "duna",
+      "innate": {
+        "agility": 1,
+        "speed": 1
+      },
       "leaps": true,
       "mass_mult": 1.0,
       "muck_mult": 1.0,
@@ -222,9 +311,20 @@
       "reel_mult": 1.0,
       "skill": "The leap",
       "skill_goal": "Leap 2 benches",
+      "skill_goal_ca": "Salta 2 bancs",
+      "skill_goal_es": "Salta 2 bancos",
       "speed_mult": 1.12,
       "stars": 65,
-      "trait": "Leaps benches, long stride"
+      "stats": {
+        "agility": 1.12,
+        "herd": 1.0,
+        "nose": 1.0,
+        "plant": 0.72,
+        "speed": 1.17
+      },
+      "trait": "Leaps benches, long stride",
+      "trait_ca": "Salta bancs, gambada llarga",
+      "trait_es": "Salta bancos, zancada larga"
     }
   ],
   "training": {
@@ -4504,37 +4604,49 @@
         "color": "",
         "cost": 0,
         "id": "none",
-        "name": "No bandana"
+        "name": "No bandana",
+        "name_ca": "Sense mocador",
+        "name_es": "Sin bandana"
       },
       {
         "color": "#334773",
         "cost": 60,
         "id": "navy",
-        "name": "Navy bandana"
+        "name": "Navy bandana",
+        "name_ca": "Mocador blau marí",
+        "name_es": "Bandana azul marino"
       },
       {
         "color": "#406b4d",
         "cost": 60,
         "id": "forest",
-        "name": "Forest bandana"
+        "name": "Forest bandana",
+        "name_ca": "Mocador verd bosc",
+        "name_es": "Bandana verde bosque"
       },
       {
         "color": "#e6b840",
         "cost": 100,
         "id": "sunny",
-        "name": "Sunny bandana"
+        "name": "Sunny bandana",
+        "name_ca": "Mocador groc sol",
+        "name_es": "Bandana amarillo sol"
       },
       {
         "color": "#b32633",
         "cost": 100,
         "id": "crimson",
-        "name": "Crimson bandana"
+        "name": "Crimson bandana",
+        "name_ca": "Mocador carmí",
+        "name_es": "Bandana carmesí"
       },
       {
         "color": "#733866",
         "cost": 140,
         "id": "plum",
-        "name": "Plum bandana"
+        "name": "Plum bandana",
+        "name_ca": "Mocador pruna",
+        "name_es": "Bandana ciruela"
       }
     ],
     "coats": [
@@ -4544,7 +4656,9 @@
         "fur": "#242124",
         "id": "millie",
         "mark": "#9e9994",
-        "name": "Millie (black)"
+        "name": "Millie (black)",
+        "name_ca": "Millie (negre)",
+        "name_es": "Millie (negro)"
       },
       {
         "cost": 90,
@@ -4552,7 +4666,9 @@
         "fur": "#523324",
         "id": "choc",
         "mark": "#ad855c",
-        "name": "Chocolate"
+        "name": "Chocolate",
+        "name_ca": "Xocolata",
+        "name_es": "Chocolate"
       },
       {
         "cost": 90,
@@ -4560,7 +4676,9 @@
         "fur": "#b88c4d",
         "id": "gold",
         "mark": "#e0c794",
-        "name": "Golden"
+        "name": "Golden",
+        "name_ca": "Daurat",
+        "name_es": "Dorado"
       },
       {
         "cost": 130,
@@ -4568,7 +4686,9 @@
         "fur": "#706b70",
         "id": "grey",
         "mark": "#a8a3a3",
-        "name": "Gray (Weimaraner)"
+        "name": "Gray (Weimaraner)",
+        "name_ca": "Gris (Weimaraner)",
+        "name_es": "Gris (Weimaraner)"
       },
       {
         "cost": 130,
@@ -4576,7 +4696,9 @@
         "fur": "#d1bd99",
         "id": "cream",
         "mark": "#f0e6cc",
-        "name": "Cream"
+        "name": "Cream",
+        "name_ca": "Crema",
+        "name_es": "Crema"
       },
       {
         "cost": 220,
@@ -4584,7 +4706,9 @@
         "fur": "#667080",
         "id": "merle",
         "mark": "#c7ccd6",
-        "name": "Blue merle"
+        "name": "Blue merle",
+        "name_ca": "Merle blau",
+        "name_es": "Merle azul"
       }
     ],
     "collars": [
@@ -4592,43 +4716,57 @@
         "color": "#b82924",
         "cost": 0,
         "id": "red",
-        "name": "Red (classic)"
+        "name": "Red (classic)",
+        "name_ca": "Vermell (clàssic)",
+        "name_es": "Rojo (clásico)"
       },
       {
         "color": "#3366b3",
         "cost": 40,
         "id": "blue",
-        "name": "Blue"
+        "name": "Blue",
+        "name_ca": "Blau",
+        "name_es": "Azul"
       },
       {
         "color": "#e6739e",
         "cost": 40,
         "id": "pink",
-        "name": "Pink"
+        "name": "Pink",
+        "name_ca": "Rosa",
+        "name_es": "Rosa"
       },
       {
         "color": "#269994",
         "cost": 60,
         "id": "teal",
-        "name": "Teal"
+        "name": "Teal",
+        "name_ca": "Verd blavós",
+        "name_es": "Verde azulado"
       },
       {
         "color": "#d9ad33",
         "cost": 120,
         "id": "gold",
-        "name": "Gold"
+        "name": "Gold",
+        "name_ca": "Daurat",
+        "name_es": "Dorado"
       },
       {
         "color": "#8c4db8",
         "cost": 150,
         "id": "violet",
-        "name": "Violet"
+        "name": "Violet",
+        "name_ca": "Violeta",
+        "name_es": "Violeta"
       },
       {
         "color": "#cc4d80",
         "cost": 250,
         "id": "rainbow",
-        "name": "Rainbow"
+        "name": "Rainbow",
+        "name_ca": "Arc de Sant Martí",
+        "name_es": "Arcoíris"
       }
     ],
     "new_look": {

@@ -15,12 +15,18 @@ func _initialize() -> void:
 
 
 # a dog's skill goal as the walk card says it, its count filled in
-func _skill_goal(dk: String) -> String:
+func _skill_goal(dk: String, lang := "en") -> String:
 	var g: Dictionary = load("res://systems/dog_skills.gd").GOALS.get(dk, {})
 	if g.is_empty():
 		return ""
-	var text := String(g.text)
+	var text := String(g.text) if lang == "en" else _tr(String(g.id), lang)
 	return text % int(g.target) if text.contains("%d") else text
+
+
+# a game string in one language, "" where the game has none
+func _tr(key: String, lang: String) -> String:
+	var row: Dictionary = I18n.T.get(key, {})
+	return String(row.get(lang, ""))
 
 
 func _cap_first(s: String) -> String:
@@ -57,6 +63,10 @@ func _run() -> void:
 			row.append(String(lv))
 		chapters.append(row)
 
+	# her stats as a new player has them: the breed and her head start, never
+	# this machine's training
+	var saved_upgrades: Dictionary = game.dog_upgrades
+	game.dog_upgrades = {}
 	var dogs := []
 	for dk: String in game.DOG_KEYS:
 		var d: Dictionary = game.DOGS[dk]
@@ -80,7 +90,20 @@ func _run() -> void:
 			"leaps": bool(d.get("leaps", false)),
 			"skill": String(load("res://systems/dog_skills.gd").NAMES.get(dk, "")),
 			"skill_goal": _skill_goal(dk),
+			"skill_goal_ca": _skill_goal(dk, "ca"),
+			"skill_goal_es": _skill_goal(dk, "es"),
+			"trait_ca": _tr("dog_trait_" + dk, "ca"),
+			"trait_es": _tr("dog_trait_" + dk, "es"),
+			"innate": (d.get("innate", {}) as Dictionary).duplicate(),
+			"stats": {
+				"speed": game.dog_speed_mult(dk),
+				"agility": game.dog_accel_mult(dk),
+				"plant": game.dog_plant_mult(dk),
+				"nose": game.dog_nose_mult(dk),
+				"herd": game.dog_herd_mult(dk),
+			},
 		})
+	game.dog_upgrades = saved_upgrades
 
 	var collars := []
 	for ck in game.COLLARS.keys():
@@ -89,6 +112,8 @@ func _run() -> void:
 		collars.append({
 			"id": String(ck),
 			"name": String(c["name"]),
+			"name_ca": _tr("collar_" + String(ck), "ca"),
+			"name_es": _tr("collar_" + String(ck), "es"),
 			"cost": int(c["cost"]),
 			"color": "#" + col.to_html(false),
 		})
@@ -100,6 +125,8 @@ func _run() -> void:
 		bandanas.append({
 			"id": String(bk),
 			"name": String(b["name"]),
+			"name_ca": _tr("bandana_" + String(bk), "ca"),
+			"name_es": _tr("bandana_" + String(bk), "es"),
 			"cost": int(b["cost"]),
 			"color": ("#" + col.to_html(false)) if col.a > 0.0 else "",
 		})
@@ -110,6 +137,8 @@ func _run() -> void:
 		coats.append({
 			"id": String(ck),
 			"name": String(c["name"]),
+			"name_ca": _tr("coat_" + String(ck), "ca"),
+			"name_es": _tr("coat_" + String(ck), "es"),
 			"cost": int(c["cost"]),
 			"fur": "#" + (c["fur"] as Color).to_html(false),
 			"dark": "#" + (c["dark"] as Color).to_html(false),
