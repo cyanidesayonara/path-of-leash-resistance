@@ -71,7 +71,7 @@ const FEEL := {
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
 	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
 	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
-	"stubs": {"spacing": 0.13, "r": 0.055, "gap": 1.65, "drag": 4.2, "take": 1.25, "spin": 5.5, "align": true},
+	"stubs": {"spacing": 0.11, "r": 0.042, "gap": 1.22, "drag": 4.2, "take": 1.25, "spin": 5.5, "align": true},
 	"brollies": {"spacing": 0.17, "r": 0.075, "drag": 4.6, "take": 1.2, "spin": 3.0, "align": true},
 	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
 	"pintxos": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},

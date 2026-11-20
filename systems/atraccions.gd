@@ -19,7 +19,7 @@ extends RefCounted
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
 const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer",
 	"draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp",
-	"name_place", "on_bark", "surface", "tick", "tree_kind"]
+	"name_place", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
 
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -84,7 +84,7 @@ const ARCH := Vector2(CX, -120.0)
 const FOUNTAIN := Vector2(CX, -280.0)
 const BOOTH := Rect2(PATH_L + 16.0, -90.0, 86.0, 64.0)
 const TURNSTILES: Array[Vector2] = [
-	Vector2(560.0, 40.0), Vector2(640.0, 40.0), Vector2(720.0, 40.0),
+	Vector2(560.0, -340.0), Vector2(640.0, -340.0), Vector2(720.0, -340.0),
 ]
 
 # Cala del Corsari — harbour pool off the west edge of the path
@@ -125,29 +125,55 @@ const COASTER_SPEED := 110.0
 
 # picnic finish
 const PICNIC_TABLES: Array[Rect2] = [
-	Rect2(420.0, -4620.0, 88.0, 40.0),
-	Rect2(760.0, -4620.0, 88.0, 40.0),
+	Rect2(400.0, -4560.0, 96.0, 44.0),
+	Rect2(760.0, -4560.0, 96.0, 44.0),
+	Rect2(520.0, -4720.0, 96.0, 44.0),
+	Rect2(700.0, -4840.0, 96.0, 44.0),
 ]
 const PRIZE := Vector2(640.0, -4680.0)
 const PRIZE_TEXT := "snatch the churro off the picnic grill"
 
 # queue rope posts the leash wraps (and she marks) — zig-zag mazes
+# Canyon saloon queue (west of path), Selva flume queue (east), Loop station queue (east).
+# Indices 0-5 / 6-12 / 13-20; path centre stays walkable.
 const QUEUE_POSTS: Array[Vector2] = [
-	Vector2(500.0, -450.0), Vector2(620.0, -450.0), Vector2(740.0, -450.0),
-	Vector2(520.0, -520.0), Vector2(760.0, -520.0),
-	Vector2(500.0, -1550.0), Vector2(620.0, -1550.0), Vector2(780.0, -1550.0),
-	Vector2(520.0, -1620.0), Vector2(760.0, -1620.0),
-	Vector2(500.0, -2550.0), Vector2(640.0, -2550.0), Vector2(780.0, -2550.0),
-	Vector2(520.0, -2620.0), Vector2(760.0, -2620.0),
-	Vector2(520.0, -3550.0), Vector2(640.0, -3550.0), Vector2(760.0, -3550.0),
+	# Canyon — zig-zag by the saloon
+	Vector2(PATH_L + 36.0, -1680.0), Vector2(PATH_L + 36.0, -1740.0), Vector2(PATH_L + 36.0, -1800.0),
+	Vector2(PATH_L + 90.0, -1710.0), Vector2(PATH_L + 90.0, -1770.0), Vector2(PATH_L + 90.0, -1830.0),
+	# Selva — longer switchback by the flume entrance
+	Vector2(PATH_R - 36.0, -2780.0), Vector2(PATH_R - 36.0, -2860.0), Vector2(PATH_R - 36.0, -2940.0),
+	Vector2(PATH_R - 36.0, -3020.0), Vector2(PATH_R - 92.0, -2820.0), Vector2(PATH_R - 92.0, -2900.0),
+	Vector2(PATH_R - 92.0, -2980.0),
+	# Loop — compact maze by the lift hill
+	Vector2(PATH_R - 40.0, -3720.0), Vector2(PATH_R - 40.0, -3800.0), Vector2(PATH_R - 40.0, -3880.0),
+	Vector2(PATH_R - 96.0, -3760.0), Vector2(PATH_R - 96.0, -3840.0), Vector2(PATH_R - 96.0, -3920.0),
+	Vector2(PATH_R - 152.0, -3800.0), Vector2(PATH_R - 152.0, -3880.0),
 ]
 const POST_R := 10.0
+# which QUEUE_POSTS indices form each ride's maze (ropes + visitors)
+const QUEUE_BANDS: Array = [
+	[0, 3, 1, 4, 2, 5],
+	[6, 10, 7, 11, 8, 12, 9],
+	[13, 16, 14, 17, 19, 15, 18, 20],
+]
+# how many visitors each maze shows (seeded colours/heights, never the RNG)
+const QUEUE_CROWD: Array[int] = [4, 7, 5]
 
 # palms and jungle trees (poles + crowns)
 const PALMS: Array[Vector2] = [
 	Vector2(470.0, -600.0), Vector2(820.0, -900.0),
 	Vector2(480.0, -2100.0), Vector2(810.0, -2700.0),
 	Vector2(500.0, -3200.0), Vector2(790.0, -4100.0),
+]
+# park lamps (poles + soft pools after dark via Game.lamp_glow)
+const PARK_LAMPS: Array[Vector2] = [
+	Vector2(480.0, -80.0), Vector2(800.0, -80.0),
+	Vector2(470.0, -320.0), Vector2(810.0, -520.0),
+	Vector2(480.0, -1100.0), Vector2(800.0, -1500.0),
+	Vector2(470.0, -1900.0), Vector2(810.0, -2300.0),
+	Vector2(480.0, -2900.0), Vector2(800.0, -3300.0),
+	Vector2(470.0, -3700.0), Vector2(810.0, -4100.0),
+	Vector2(520.0, -4550.0), Vector2(760.0, -4550.0),
 ]
 const JUNGLE_TREES: Array[Vector2] = [
 	Vector2(460.0, -2500.0), Vector2(830.0, -2650.0),
@@ -209,10 +235,12 @@ static func build(m: Node2D) -> Array:
 		m.poles.append(p)
 	for p: Vector2 in JUNGLE_TREES:
 		m.poles.append(p)
+	for p: Vector2 in PARK_LAMPS:
+		m.poles.append(p)
 	m.deco_pole_count = m.poles.size()
 	var marks: Array[Vector2] = [
-		QUEUE_POSTS[0], QUEUE_POSTS[2], QUEUE_POSTS[5], QUEUE_POSTS[7],
-		QUEUE_POSTS[10], QUEUE_POSTS[15], Vector2(PATH_L + 30.0, -1900.0),
+		QUEUE_POSTS[0], QUEUE_POSTS[5], QUEUE_POSTS[6], QUEUE_POSTS[12],
+		QUEUE_POSTS[13], QUEUE_POSTS[20], Vector2(PATH_L + 30.0, -1900.0),
 		PRIZE + Vector2(-100.0, 40.0),
 	]
 	var snacks: Array[Vector2] = [
@@ -371,49 +399,67 @@ static func _edge_gates(b: ShapeBatch, top: float, bot: float) -> void:
 	var hi := minf(bot, 200.0)
 	if hi <= lo:
 		return
-	# entry plaza paving either side, then kiosk fronts — never a hedge strip
 	b.rect(Rect2(-460.0, lo, PATH_L + 460.0, hi - lo), PAVEMENT_LIT)
 	b.rect(Rect2(PATH_R, lo, 1740.0 - PATH_R, hi - lo), PAVEMENT_LIT)
-	var y := floorf(lo / 110.0) * 110.0
+	var y := floorf(lo / 120.0) * 120.0
 	var i := 0
 	while y < hi:
 		var seed_n := _h(float(i) * 5.0)
-		# left kiosk / gift-shop front with awning
-		var left := Rect2(PATH_L - 170.0 - seed_n * 30.0, y + 6.0, 150.0, 96.0)
-		b.rect(Rect2(left.position + Vector2(8.0, 10.0), left.size), SHADOW)
-		b.rect(left, MAGENTA.darkened(0.18) if i % 2 == 0 else TURQ.darkened(0.15))
-		b.rect(left.grow(-8.0), MAGENTA if i % 2 == 0 else TURQ)
-		b.rect(Rect2(left.position.x - 8.0, left.position.y - 16.0, left.size.x + 16.0, 20.0), SAFFRON)
-		b.rect(Rect2(left.position.x + 18.0, left.position.y + 28.0, 36.0, 28.0), Color(0.70, 0.88, 0.95))
-		b.rect(Rect2(left.position.x + 70.0, left.position.y + 40.0, 22.0, 36.0), Color(0.30, 0.18, 0.14))
-		# flower planter strip between kiosk and path
-		b.rect(Rect2(PATH_L - 22.0, y + 16.0, 16.0, 76.0), GRASS)
+		_plaza_kiosk(b, Vector2(PATH_L - 95.0 - seed_n * 20.0, y + 55.0), -1.0, seed_n, i % 2 == 0)
+		_plaza_kiosk(b, Vector2(PATH_R + 95.0 + seed_n * 20.0, y + 60.0), 1.0, seed_n + 0.3, i % 2 == 1)
+		# flower planters along the kerb
+		b.rect(Rect2(PATH_L - 22.0, y + 16.0, 16.0, 88.0), GRASS)
+		b.rect(Rect2(PATH_R + 6.0, y + 16.0, 16.0, 88.0), GRASS)
 		for j in range(3):
-			b.coarse(Vector2(PATH_L - 14.0, y + 28.0 + float(j) * 22.0), 6.0,
+			b.coarse(Vector2(PATH_L - 14.0, y + 28.0 + float(j) * 24.0), 6.0,
 				MAGENTA if j % 2 == 0 else SAFFRON)
-		# right souvenir arcade
-		var right := Rect2(PATH_R + 18.0, y + 10.0, 140.0 + seed_n * 40.0, 90.0)
-		b.rect(Rect2(right.position + Vector2(8.0, 10.0), right.size), SHADOW)
-		b.rect(right, STEEL_DARK)
-		b.rect(right.grow(-8.0), STEEL)
-		b.rect(Rect2(right.position.x - 6.0, right.position.y - 14.0, right.size.x + 12.0, 18.0), MAGENTA)
-		b.rect(Rect2(PATH_R + 4.0, y + 16.0, 12.0, 76.0), GRASS)
-		for j in range(3):
-			b.coarse(Vector2(PATH_R + 10.0, y + 28.0 + float(j) * 22.0), 6.0,
+			b.coarse(Vector2(PATH_R + 14.0, y + 28.0 + float(j) * 24.0), 6.0,
 				TURQ if j % 2 == 0 else SAFFRON)
-		# rail posts along the kerb
-		b.rect(Rect2(PATH_L - 8.0, y + 8.0, 5.0, 88.0), STEEL_DARK)
-		b.rect(Rect2(PATH_R + 3.0, y + 8.0, 5.0, 88.0), STEEL_DARK)
-		y += 110.0
+		y += 120.0
 		i += 1
-	# ticket-office block behind the booth (a little building, not a flat box)
 	if BOOTH.end.y > top and BOOTH.position.y < bot:
-		var roof := Rect2(PATH_L - 50.0, BOOTH.position.y - 28.0, 150.0, 100.0)
-		b.rect(Rect2(roof.position + Vector2(10.0, 12.0), roof.size), SHADOW)
-		b.rect(roof, MAGENTA.darkened(0.28))
-		b.rect(roof.grow(-10.0), SAFFRON)
-		b.rect(Rect2(roof.position.x + 20.0, roof.position.y + 24.0, 40.0, 28.0), Color(0.70, 0.88, 0.95))
-		b.rect(Rect2(roof.position.x + 80.0, roof.position.y + 40.0, 28.0, 40.0), Color(0.30, 0.18, 0.14))
+		_plaza_kiosk(b, BOOTH.get_center() + Vector2(-20.0, 0.0), -1.0, 0.2, true)
+
+
+static func _plaza_kiosk(b: ShapeBatch, p: Vector2, side: float, seed_n: float, magenta: bool) -> void:
+	# gift-shop / ticket kiosk from above: wall face on the path, tin roof
+	# covering the footprint with eaves, ridge, awning and a stall sign
+	var w := 118.0 + seed_n * 24.0
+	var d := 78.0 + seed_n * 14.0
+	var r := Rect2(p.x - w * 0.5, p.y - d * 0.5, w, d)
+	b.rect(Rect2(r.position + Vector2(12.0, 14.0), r.size), SHADOW)
+	var body := MAGENTA if magenta else TURQ
+	# path-facing wall strip (depth under the eaves)
+	var face_x := r.end.x - 16.0 if side < 0.0 else r.position.x
+	b.rect(Rect2(face_x, r.position.y, 16.0, d), body.darkened(0.28))
+	b.rect(Rect2(face_x + (2.0 if side > 0.0 else 0.0), r.position.y + 4.0, 12.0, d - 8.0), body)
+	# window + door on the wall face
+	b.rect(Rect2(face_x + 3.0, r.position.y + 12.0, 10.0, 18.0), Color(0.70, 0.88, 0.95))
+	b.rect(Rect2(face_x + 4.0, r.position.y + d * 0.55, 8.0, 22.0), Color(0.30, 0.18, 0.14))
+	# tin / striped roof covering the whole footprint + eaves
+	var roof := r.grow(10.0)
+	var roof_col := SAFFRON if magenta else STEEL
+	b.rect(roof, roof_col.darkened(0.12))
+	b.rect(roof.grow(-4.0), roof_col)
+	b.rect(Rect2(roof.position.x, roof.position.y, roof.size.x * 0.5, roof.size.y),
+		roof_col.lightened(0.14))
+	b.line(Vector2(roof.get_center().x, roof.position.y + 4.0),
+		Vector2(roof.get_center().x, roof.end.y - 4.0), STEEL_DARK, 3.0)
+	# ridge caps
+	for i in range(4):
+		var ry := roof.position.y + 10.0 + float(i) * (roof.size.y / 4.5)
+		b.line(Vector2(roof.position.x + 6.0, ry), Vector2(roof.end.x - 6.0, ry),
+			roof_col.darkened(0.18), 1.4)
+	# striped awning out over the path
+	var aw0 := Vector2(PATH_L - 4.0, r.position.y + 8.0) if side < 0.0 else Vector2(PATH_R + 4.0, r.position.y + 8.0)
+	for s in range(6):
+		var stripe := SAFFRON if s % 2 == 0 else body
+		var yy := aw0.y + float(s) * ((d - 16.0) / 6.0)
+		b.rect(Rect2(aw0.x - (18.0 if side < 0.0 else 0.0), yy, 18.0, (d - 16.0) / 6.0 + 1.0), stripe)
+	# hanging sign toward the path
+	var sx := PATH_L - 28.0 if side < 0.0 else PATH_R + 10.0
+	b.rect(Rect2(sx, r.get_center().y - 8.0, 22.0, 16.0), STEEL_DARK)
+	b.rect(Rect2(sx + 2.0, r.get_center().y - 6.0, 18.0, 12.0), SAFFRON)
 
 
 static func _edge_corsari(b: ShapeBatch, top: float, bot: float) -> void:
@@ -427,8 +473,8 @@ static func _edge_corsari(b: ShapeBatch, top: float, bot: float) -> void:
 	for fy: float in VILLAGE_FRONTS:
 		if fy < top - 100.0 or fy > bot + 100.0:
 			continue
-		_village_house(b, Vector2(PATH_L - 120.0, fy), -1.0, _h(fy))
-		_village_house(b, Vector2(PATH_R + 120.0, fy - 70.0), 1.0, _h(fy + 3.0))
+		_village_house(b, Vector2(PATH_L - 85.0, fy), -1.0, _h(fy))
+		_village_house(b, Vector2(PATH_R + 85.0, fy - 70.0), 1.0, _h(fy + 3.0))
 	# harbour stone apron around the pool
 	if HARBOUR.end.y > top and HARBOUR.position.y < bot:
 		var apron := HARBOUR.grow(28.0)
@@ -437,35 +483,36 @@ static func _edge_corsari(b: ShapeBatch, top: float, bot: float) -> void:
 
 
 static func _village_house(b: ShapeBatch, p: Vector2, side: float, seed_n: float) -> void:
-	# depth like Sitges: terrace parapet, barrel-tile roof, shutters, chimney
-	var w := 96.0 + seed_n * 28.0
-	var h := 78.0 + seed_n * 22.0
-	var r := Rect2(p.x - w * 0.5, p.y - h * 0.5, w, h)
-	b.rect(Rect2(r.position + Vector2(9.0, 11.0), r.size), SHADOW)
-	b.rect(r, WHITEWASH)
-	b.rect(r.grow(-4.0), WHITE_SHADE.lightened(0.04))
-	# pitched terracotta roof with light/shade flutes
-	var roof := Rect2(r.position.x - 8.0, r.position.y - 22.0, r.size.x + 16.0, 26.0)
-	b.rect(roof, TERRACOTTA)
+	# from above like Sitges: wall face on the path, terracotta roof covering
+	# the footprint with eaves and tile flutes, chimney, shutters
+	var along := 88.0 + seed_n * 24.0
+	var deep := 70.0 + seed_n * 18.0
+	var r := Rect2(p.x - deep * 0.5, p.y - along * 0.5, deep, along)
+	b.rect(Rect2(r.position + Vector2(10.0, 12.0), r.size), SHADOW)
+	# path-facing whitewash wall
+	var face_x := r.end.x - 14.0 if side < 0.0 else r.position.x
+	b.rect(Rect2(face_x, r.position.y, 14.0, along), WHITE_SHADE)
+	b.rect(Rect2(face_x + (2.0 if side > 0.0 else 0.0), r.position.y + 3.0, 10.0, along - 6.0), WHITEWASH)
+	# door + cobalt shutters on the wall face
+	b.rect(Rect2(face_x + 3.0, r.position.y + along * 0.42, 8.0, 22.0), Color(0.42, 0.28, 0.18))
+	b.rect(Rect2(face_x + 2.0, r.position.y + 10.0, 10.0, 16.0), SHUTTER)
+	b.rect(Rect2(face_x + 3.0, r.position.y + 11.0, 4.0, 6.0), SHUTTER.lightened(0.12))
+	b.rect(Rect2(face_x + 3.0, r.position.y + 19.0, 4.0, 6.0), SHUTTER.lightened(0.12))
+	# terracotta roof over the whole house + eaves
+	var roof := r.grow(8.0)
+	b.rect(roof, TERRACOTTA.darkened(0.1))
+	b.rect(roof.grow(-3.0), TERRACOTTA)
 	b.rect(Rect2(roof.position.x, roof.position.y, roof.size.x * 0.5, roof.size.y), TERRACOTTA_LIT)
-	b.line(Vector2(roof.get_center().x, roof.position.y + 2.0), Vector2(roof.get_center().x, roof.end.y - 2.0), TERRACOTTA.darkened(0.22), 3.0)
-	for rx in range(4):
-		var lx := roof.position.x + 10.0 + float(rx) * (roof.size.x / 4.5)
-		b.rect(Rect2(lx, roof.position.y + 2.0, 5.0, roof.size.y - 4.0), TERRACOTTA_LIT.lightened(0.06))
-	# whitewash parapet on the path face
-	b.rect(Rect2(r.position.x - 4.0 * side, r.position.y + 4.0, 8.0, h - 8.0), WHITEWASH)
-	b.rect(Rect2(r.position.x - 8.0 * side, r.position.y + 8.0, 5.0, h - 16.0), SHADOW)
-	# door + cobalt shutters
-	b.rect(Rect2(r.position.x + w * 0.38, r.position.y + h * 0.38, 16.0, 30.0), Color(0.42, 0.28, 0.18))
-	b.rect(Rect2(r.position.x + 12.0, r.position.y + 16.0, 16.0, 20.0), SHUTTER)
-	b.rect(Rect2(r.position.x + 12.0, r.position.y + 16.0, 7.0, 9.0), SHUTTER.lightened(0.12))
-	b.rect(Rect2(r.position.x + 12.0, r.position.y + 27.0, 7.0, 9.0), SHUTTER.lightened(0.12))
-	# chimney + laundry line
-	b.rect(Rect2(r.position.x + w * 0.68, r.position.y - 34.0, 14.0, 18.0), WHITE_SHADE)
-	b.circle(p + Vector2(side * 12.0, -10.0), 4.0, Color(0.70, 0.78, 0.86))
+	b.line(Vector2(roof.get_center().x, roof.position.y + 3.0),
+		Vector2(roof.get_center().x, roof.end.y - 3.0), TERRACOTTA.darkened(0.22), 3.0)
+	for rx in range(5):
+		var lx := roof.position.x + 8.0 + float(rx) * (roof.size.x / 5.5)
+		b.rect(Rect2(lx, roof.position.y + 4.0, 4.0, roof.size.y - 8.0), TERRACOTTA_LIT.lightened(0.06))
+	# chimney on the roof
+	b.rect(Rect2(r.position.x + deep * 0.55, r.position.y + along * 0.15, 12.0, 14.0), WHITE_SHADE)
+	b.rect(Rect2(r.position.x + deep * 0.55 - 2.0, r.position.y + along * 0.15 - 3.0, 16.0, 5.0), WHITEWASH)
 	if seed_n > 0.45:
-		b.line(r.position + Vector2(8.0, 8.0), r.position + Vector2(w - 8.0, 6.0), Color(0.85, 0.85, 0.88), 1.2)
-		b.rect(Rect2(r.position.x + w * 0.2, r.position.y + 2.0, 14.0, 10.0), Color(0.92, 0.55, 0.55, 0.85))
+		b.rect(Rect2(r.position.x + 8.0, r.position.y + 6.0, 12.0, 8.0), Color(0.92, 0.55, 0.55, 0.85))
 
 
 static func _edge_canyon(b: ShapeBatch, top: float, bot: float) -> void:
@@ -498,27 +545,51 @@ static func _edge_canyon(b: ShapeBatch, top: float, bot: float) -> void:
 
 
 static func _saloon_front(b: ShapeBatch, p: Vector2, seed_n: float) -> void:
-	var w := 96.0 + seed_n * 20.0
-	var h := 78.0
-	var r := Rect2(p.x - w * 0.5, p.y - h * 0.5, w, h)
-	b.rect(Rect2(r.position + Vector2(8.0, 10.0), r.size), SHADOW)
+	# Wild West false-front from above: timber walls, tin roof over the
+	# footprint, porch toward the boardwalk, swinging doors and a sign
+	var along := 86.0 + seed_n * 18.0
+	var deep := 72.0
+	var r := Rect2(p.x - deep * 0.5, p.y - along * 0.5, deep, along)
+	b.rect(Rect2(r.position + Vector2(10.0, 12.0), r.size), SHADOW)
+	# timber body under a tin roof
 	b.rect(r, WOOD_DARK)
 	b.rect(r.grow(-5.0), WOOD)
-	# false-front peak
+	# tin roof covering + eaves
+	var roof := r.grow(9.0)
+	b.rect(roof, STEEL.darkened(0.1))
+	b.rect(roof.grow(-3.0), STEEL)
+	b.rect(Rect2(roof.position.x, roof.position.y, roof.size.x, 6.0), STEEL.lightened(0.2))
+	b.line(Vector2(roof.position.x + 4.0, roof.get_center().y),
+		Vector2(roof.end.x - 4.0, roof.get_center().y), STEEL_DARK, 2.0)
+	# false-front peak on the path-ward half
+	var peak_x := r.position.x - 6.0
 	var peak := PackedVector2Array([
-		Vector2(r.position.x - 4.0, r.position.y),
-		Vector2(r.get_center().x, r.position.y - 28.0 - seed_n * 10.0),
-		Vector2(r.end.x + 4.0, r.position.y),
+		Vector2(peak_x, r.position.y - 4.0),
+		Vector2(peak_x - 18.0 - seed_n * 8.0, r.get_center().y),
+		Vector2(peak_x, r.end.y + 4.0),
 	])
+	if p.x > CX:
+		peak = PackedVector2Array([
+			Vector2(r.end.x + 6.0, r.position.y - 4.0),
+			Vector2(r.end.x + 24.0 + seed_n * 8.0, r.get_center().y),
+			Vector2(r.end.x + 6.0, r.end.y + 4.0),
+		])
 	b.polygon(peak, WOOD_DARK)
+	var inset := (peak[1] - peak[0]).normalized() * 5.0
 	b.polygon(PackedVector2Array([
-		peak[0] + Vector2(6.0, 0.0), peak[1] + Vector2(0.0, 6.0), peak[2] + Vector2(-6.0, 0.0),
+		peak[0] + Vector2(0.0, 5.0) + inset,
+		peak[1] - inset,
+		peak[2] + Vector2(0.0, -5.0) + inset,
 	]), WOOD)
-	# swinging doors + porch posts
-	b.rect(Rect2(r.position.x + w * 0.35, r.position.y + h * 0.4, 12.0, 30.0), WOOD_DARK)
-	b.rect(Rect2(r.position.x + w * 0.52, r.position.y + h * 0.4, 12.0, 30.0), WOOD_DARK)
-	b.rect(Rect2(r.position.x + 8.0, r.position.y + 10.0, 8.0, h - 16.0), WOOD_LIT)
-	b.rect(Rect2(r.end.x - 16.0, r.position.y + 10.0, 8.0, h - 16.0), WOOD_LIT)
+	# porch posts + swinging doors on the path face
+	var face_x := r.position.x if p.x > CX else r.end.x - 14.0
+	b.rect(Rect2(face_x, r.position.y + along * 0.28, 12.0, 22.0), WOOD_DARK)
+	b.rect(Rect2(face_x, r.position.y + along * 0.52, 12.0, 22.0), WOOD_DARK)
+	b.rect(Rect2(face_x - 2.0, r.position.y + 6.0, 6.0, along - 12.0), WOOD_LIT)
+	# saloon sign on the false front
+	var sx := peak[1].x - 10.0
+	b.rect(Rect2(sx, r.get_center().y - 20.0, 20.0, 40.0), Color(0.18, 0.14, 0.10))
+	b.rect(Rect2(sx + 2.0, r.get_center().y - 16.0, 16.0, 32.0), SAFFRON)
 
 
 static func _edge_selva(b: ShapeBatch, top: float, bot: float) -> void:
@@ -552,23 +623,47 @@ static func _edge_loop(b: ShapeBatch, top: float, bot: float) -> void:
 		return
 	b.rect(Rect2(-460.0, lo, PATH_L + 460.0, hi - lo), PAVEMENT_LIT)
 	b.rect(Rect2(PATH_R, lo, 1740.0 - PATH_R, hi - lo), PAVEMENT_LIT)
-	# coaster station sheds and queue canopies along both sides
-	var y := floorf(lo / 140.0) * 140.0
+	var y := floorf(lo / 150.0) * 150.0
 	var i := 0
 	while y < hi:
 		var seed_n := _h(float(i) * 7.0)
-		var left := Rect2(PATH_L - 160.0 - seed_n * 40.0, y + 8.0, 140.0, 110.0)
-		var right := Rect2(PATH_R + 20.0, y + 12.0, 130.0 + seed_n * 30.0, 100.0)
-		b.rect(Rect2(left.position + Vector2(8.0, 10.0), left.size), SHADOW)
-		b.rect(left, STEEL_DARK)
-		b.rect(left.grow(-8.0), MAGENTA.darkened(0.1) if i % 2 == 0 else TURQ.darkened(0.1))
-		b.rect(Rect2(left.position.x - 6.0, left.position.y - 14.0, left.size.x + 12.0, 18.0), SAFFRON)
-		b.rect(Rect2(right.position + Vector2(8.0, 10.0), right.size), SHADOW)
-		b.rect(right, STEEL_DARK)
-		b.rect(right.grow(-8.0), STEEL)
-		b.rect(Rect2(right.position.x - 6.0, right.position.y - 14.0, right.size.x + 12.0, 18.0), MAGENTA)
-		y += 140.0
+		_station_shed(b, Vector2(PATH_L - 100.0 - seed_n * 20.0, y + 70.0), seed_n, i % 2 == 0)
+		_station_shed(b, Vector2(PATH_R + 100.0 + seed_n * 20.0, y + 75.0), seed_n + 0.4, i % 2 == 1)
+		y += 150.0
 		i += 1
+
+
+static func _station_shed(b: ShapeBatch, p: Vector2, seed_n: float, magenta: bool) -> void:
+	# coaster-station shed from above: steel walls, tin roof over the
+	# footprint with eaves, saffron canopy toward the path
+	var along := 100.0 + seed_n * 20.0
+	var deep := 86.0
+	var r := Rect2(p.x - deep * 0.5, p.y - along * 0.5, deep, along)
+	b.rect(Rect2(r.position + Vector2(12.0, 14.0), r.size), SHADOW)
+	var body := MAGENTA.darkened(0.08) if magenta else TURQ.darkened(0.08)
+	b.rect(r, STEEL_DARK)
+	b.rect(r.grow(-6.0), body)
+	# tin roof covering + eaves
+	var roof := r.grow(12.0)
+	b.rect(roof, STEEL.darkened(0.08))
+	b.rect(roof.grow(-4.0), STEEL)
+	b.rect(Rect2(roof.position.x, roof.position.y, roof.size.x, 8.0), STEEL.lightened(0.2))
+	b.line(Vector2(roof.position.x + 6.0, roof.get_center().y),
+		Vector2(roof.end.x - 6.0, roof.get_center().y), STEEL_DARK, 2.5)
+	# saffron canopy lip toward the path
+	var canopy := Rect2(minf(r.position.x, PATH_L + 4.0) if p.x < CX else PATH_R - 4.0,
+		r.position.y + 6.0, 22.0, along - 12.0)
+	if p.x > CX:
+		canopy.position.x = PATH_R - 4.0
+		canopy.size.x = 22.0
+	else:
+		canopy.position.x = PATH_L - 18.0
+		canopy.size.x = 22.0
+	b.rect(canopy, SAFFRON)
+	b.rect(canopy.grow(-3.0), SAFFRON.lightened(0.1))
+	# window + door on roof edge toward path
+	b.rect(Rect2(r.position.x + 10.0, r.position.y + 18.0, 22.0, 18.0), Color(0.55, 0.70, 0.82))
+	b.rect(Rect2(r.position.x + deep * 0.55, r.position.y + along * 0.45, 16.0, 24.0), Color(0.22, 0.22, 0.26))
 
 
 static func _edge_picnic(b: ShapeBatch, top: float, bot: float) -> void:
@@ -579,9 +674,19 @@ static func _edge_picnic(b: ShapeBatch, top: float, bot: float) -> void:
 	b.rect(Rect2(-460.0, lo, 2200.0, hi - lo), GRASS)
 	var y := floorf(lo / 50.0) * 50.0
 	while y < hi:
-		b.coarse(Vector2(200.0 + _h(y) * 200.0, y + 12.0), 14.0, GRASS_LIT)
-		b.coarse(Vector2(1100.0 + _h(y + 1.0) * 200.0, y + 16.0), 16.0, GRASS.darkened(0.08))
+		b.coarse(Vector2(300.0 + _h(y) * 700.0, y + 10.0), 8.0 + _h(y + 1.0) * 10.0, GRASS_LIT)
+		b.coarse(Vector2(900.0 + _h(y + 2.0) * 200.0, y + 16.0), 7.0 + _h(y + 3.0) * 8.0, GRASS.darkened(0.08))
 		y += 50.0
+	# park back fence along the sides, and the last land's fronts fading out
+	b.rect(Rect2(PATH_L - 80.0, lo, 18.0, hi - lo), WOOD_DARK)
+	b.rect(Rect2(PATH_R + 62.0, lo, 18.0, hi - lo), WOOD_DARK)
+	var fy := floorf(lo / 70.0) * 70.0
+	while fy < hi:
+		b.rect(Rect2(PATH_L - 86.0, fy + 8.0, 30.0, 8.0), WOOD)
+		b.rect(Rect2(PATH_R + 56.0, fy + 8.0, 30.0, 8.0), WOOD)
+		b.rect(Rect2(PATH_L - 78.0, fy + 20.0, 6.0, 40.0), WOOD_LIT)
+		b.rect(Rect2(PATH_R + 70.0, fy + 20.0, 6.0, 40.0), WOOD_LIT)
+		fy += 70.0
 
 
 static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: float, ctop: float, vt: float, vb: float) -> void:
@@ -745,20 +850,26 @@ static func _welcome_arch(wc: ShapeBatch) -> void:
 
 static func _draw_corsari(wc: ShapeBatch, lo: float, hi: float) -> void:
 	if HARBOUR.end.y >= lo and HARBOUR.position.y <= hi:
-		# soft harbour water (gradient, not a flat disc stack)
+		# one body of water with a soft gradient edge and a stone quay
 		var hc := HARBOUR.get_center()
-		wc.circle(hc + Shade.light * 18.0, 88.0, SHADOW)
-		wc.glow(hc, 100.0, Color(WATER_DEEP, 0.55), 0.35)
-		wc.glow(hc + Vector2(-10.0, -8.0), 70.0, Color(WATER, 0.55), 0.4)
+		var quay := HARBOUR.grow(34.0)
+		wc.rect(Rect2(quay.position + Vector2(8.0, 10.0), quay.size), SHADOW)
+		wc.rect(quay, STONE)
+		wc.rect(quay.grow(-10.0), SETT_DARK)
+		# water fills the quay basin
+		wc.glow(hc, 110.0, Color(WATER_DEEP, 0.55), 0.3)
+		wc.glow(hc + Vector2(-12.0, -10.0), 78.0, Color(WATER, 0.6), 0.4)
 		wc.band(PackedVector2Array([
-			HARBOUR.position, Vector2(HARBOUR.end.x, HARBOUR.position.y),
-			HARBOUR.position + Vector2(12.0, 40.0), Vector2(HARBOUR.end.x - 12.0, HARBOUR.position.y + 40.0),
-			HARBOUR.position + Vector2(24.0, 90.0), Vector2(HARBOUR.end.x - 24.0, HARBOUR.position.y + 90.0),
-			Vector2(HARBOUR.position.x + 36.0, HARBOUR.end.y), Vector2(HARBOUR.end.x - 36.0, HARBOUR.end.y),
-		]), 2, WATER_SOFT, PackedFloat32Array([0.85, 0.65, 0.4, 0.15]))
-		# stone coping
-		wc.rect(Rect2(HARBOUR.position.x - 6.0, HARBOUR.position.y - 6.0, HARBOUR.size.x + 12.0, 10.0), STONE)
-		wc.rect(Rect2(HARBOUR.position.x - 6.0, HARBOUR.end.y - 4.0, HARBOUR.size.x + 12.0, 10.0), STONE)
+			HARBOUR.position + Vector2(8.0, 8.0), Vector2(HARBOUR.end.x - 8.0, HARBOUR.position.y + 8.0),
+			HARBOUR.position + Vector2(18.0, 50.0), Vector2(HARBOUR.end.x - 18.0, HARBOUR.position.y + 50.0),
+			HARBOUR.position + Vector2(28.0, 100.0), Vector2(HARBOUR.end.x - 28.0, HARBOUR.position.y + 100.0),
+			Vector2(HARBOUR.position.x + 40.0, HARBOUR.end.y - 8.0), Vector2(HARBOUR.end.x - 40.0, HARBOUR.end.y - 8.0),
+		]), 2, WATER_SOFT, PackedFloat32Array([0.9, 0.7, 0.4, 0.12]))
+		# quay kerb stones
+		wc.rect(Rect2(HARBOUR.position.x - 4.0, HARBOUR.position.y - 4.0, HARBOUR.size.x + 8.0, 10.0), STONE.lightened(0.1))
+		wc.rect(Rect2(HARBOUR.position.x - 4.0, HARBOUR.end.y - 6.0, HARBOUR.size.x + 8.0, 12.0), STONE.lightened(0.1))
+		wc.rect(Rect2(HARBOUR.position.x - 8.0, HARBOUR.position.y, 10.0, HARBOUR.size.y), STONE)
+		wc.rect(Rect2(HARBOUR.end.x - 2.0, HARBOUR.position.y, 10.0, HARBOUR.size.y), STONE)
 	# pirate ship on a swinging frame
 	if SHIP.y > lo - 80.0 and SHIP.y < hi + 80.0:
 		_pirate_ship(wc)
@@ -889,31 +1000,72 @@ static func _carousel(wc: ShapeBatch) -> void:
 
 
 static func _draw_picnic(wc: ShapeBatch, lo: float, hi: float) -> void:
-	for t: Rect2 in PICNIC_TABLES:
+	# park picnic lawn: tables with benches and cloths, grill with smoke, families
+	for ti in range(PICNIC_TABLES.size()):
+		var t: Rect2 = PICNIC_TABLES[ti]
 		if t.end.y < lo or t.position.y > hi:
 			continue
 		wc.rect(Rect2(t.position + Vector2(8.0, 10.0), t.size), SHADOW)
+		# benches either side
+		wc.rect(Rect2(t.position.x - 6.0, t.position.y - 14.0, t.size.x + 12.0, 12.0), WOOD_DARK)
+		wc.rect(Rect2(t.position.x - 6.0, t.end.y + 2.0, t.size.x + 12.0, 12.0), WOOD_DARK)
 		wc.rect(t, WOOD_DARK)
 		wc.rect(t.grow(-3.0), WOOD)
-	if PRIZE.y > lo - 40.0 and PRIZE.y < hi + 40.0:
+		# cloth
+		var cloth := Color(0.92, 0.90, 0.84) if ti % 2 == 0 else Color(0.86, 0.28, 0.32)
+		wc.rect(Rect2(t.position.x + 6.0, t.position.y + 4.0, t.size.x - 12.0, t.size.y - 8.0), cloth)
+		# plates
+		wc.circle(t.get_center() + Vector2(-16.0, 0.0), 5.0, Color(0.95, 0.95, 0.92))
+		wc.circle(t.get_center() + Vector2(16.0, 0.0), 5.0, Color(0.95, 0.95, 0.92))
+	# grill with smoke and the prize churro
+	if PRIZE.y > lo - 60.0 and PRIZE.y < hi + 60.0:
 		var g := PRIZE + Vector2(0.0, -40.0)
-		wc.rect(Rect2(g.x - 36.0, g.y - 12.0, 72.0, 24.0), Color(0.16, 0.16, 0.18))
-		wc.glow(g, 28.0, Color(1.0, 0.46, 0.12, 0.35), 0.35)
+		wc.rect(Rect2(g.x - 40.0 + 6.0, g.y - 16.0 + 6.0, 80.0, 32.0), SHADOW)
+		wc.rect(Rect2(g.x - 40.0, g.y - 16.0, 80.0, 32.0), Color(0.16, 0.16, 0.18))
+		wc.rect(Rect2(g.x - 34.0, g.y - 10.0, 68.0, 10.0), STEEL_DARK)
+		wc.glow(g, 34.0, Color(1.0, 0.46, 0.12, 0.40), 0.35)
+		# smoke plumes
+		var tsec := float(AnimClock.msec()) * 0.001
+		for i in range(4):
+			var sy := g.y - 22.0 - float(i) * 14.0 - sin(tsec * 1.4 + float(i)) * 3.0
+			wc.glow(Vector2(g.x + sin(tsec + float(i)) * 6.0, sy), 10.0 + float(i) * 2.0,
+				Color(0.75, 0.75, 0.78, 0.28 - float(i) * 0.05), 0.35)
 		for i in range(3):
 			wc.capsule(g + Vector2(-16.0 + float(i) * 16.0, 0.0) + Vector2(-6.0, 0.0),
 				g + Vector2(-16.0 + float(i) * 16.0, 0.0) + Vector2(6.0, 0.0), 3.0, Color(0.78, 0.50, 0.22))
+	# families on blankets
+	if Outdoors.theme_park(Game.weather, Game.hour) or Outdoors.picnics(Game.weather, Game.hour):
+		var blankets: Array[Vector2] = [
+			Vector2(460.0, -4660.0), Vector2(820.0, -4780.0), Vector2(580.0, -4920.0),
+		]
+		for i in range(blankets.size()):
+			var bp: Vector2 = blankets[i]
+			if bp.y < lo - 30.0 or bp.y > hi + 30.0:
+				continue
+			var col := Color(0.86, 0.28, 0.32) if i % 2 == 0 else Color(0.20, 0.45, 0.70)
+			wc.rect(Rect2(bp.x - 28.0 + 4.0, bp.y - 18.0 + 4.0, 56.0, 36.0), SHADOW)
+			wc.rect(Rect2(bp.x - 28.0, bp.y - 18.0, 56.0, 36.0), col)
+			wc.rect(Rect2(bp.x - 22.0, bp.y - 12.0, 44.0, 24.0), col.lightened(0.15))
+			wc.circle(bp + Vector2(-10.0, 0.0), 7.0, Color(0.35 + _h(float(i)) * 0.4, 0.42, 0.65))
+			wc.circle(bp + Vector2(-10.0, -9.0), 4.5, Color(0.86, 0.68, 0.52))
+			wc.circle(bp + Vector2(12.0, 4.0), 5.5, Color(0.90, 0.45, 0.35))
+			wc.circle(bp + Vector2(12.0, -4.0), 3.5, Color(0.86, 0.68, 0.52))
+	# shade trees already as poles; bins at the lawn edge
+	for bi in range(3):
+		var bx := 380.0 + float(bi) * 220.0
+		var by := -4480.0 - float(bi) * 40.0
+		if by < lo - 20.0 or by > hi + 20.0:
+			continue
+		wc.circle(Vector2(bx, by) + Shade.light * 6.0, 10.0, SHADOW)
+		wc.circle(Vector2(bx, by), 9.0, Color(0.18, 0.42, 0.28))
+		wc.circle(Vector2(bx, by) - Shade.light * 2.0, 3.0, Color(0.28, 0.55, 0.36))
 
 
 static func _draw_queues(wc: ShapeBatch, lo: float, hi: float) -> void:
-	# maze ropes: connect posts that share a y-band
-	var bands: Array = [
-		[0, 1, 2], [3, 4],
-		[5, 6, 7], [8, 9],
-		[10, 11, 12], [13, 14],
-		[15, 16, 17],
-	]
-	for band in bands:
-		var idxs: Array = band
+	# each ride's own maze beside its entrance; path centre stays clear
+	for bi in range(QUEUE_BANDS.size()):
+		var idxs: Array = QUEUE_BANDS[bi]
+		var rope := Color(0.86, 0.22, 0.28) if bi == 0 else (Color(0.18, 0.55, 0.42) if bi == 1 else Color(0.22, 0.38, 0.78))
 		for k in range(idxs.size() - 1):
 			var a: Vector2 = QUEUE_POSTS[int(idxs[k])]
 			var z: Vector2 = QUEUE_POSTS[int(idxs[k + 1])]
@@ -922,8 +1074,8 @@ static func _draw_queues(wc: ShapeBatch, lo: float, hi: float) -> void:
 			var prev := a
 			for s in range(1, 7):
 				var f := float(s) / 6.0
-				var pt := a.lerp(z, f) + Vector2(0.0, sin(f * PI) * 5.0)
-				wc.line(prev, pt, Color(0.86, 0.22, 0.28), 2.2)
+				var pt := a.lerp(z, f) + Vector2(sin(f * PI + float(bi)) * 4.0, sin(f * PI) * 5.0)
+				wc.line(prev, pt, rope, 2.2)
 				prev = pt
 		for ii in idxs:
 			var p: Vector2 = QUEUE_POSTS[int(ii)]
@@ -932,19 +1084,26 @@ static func _draw_queues(wc: ShapeBatch, lo: float, hi: float) -> void:
 			wc.circle(p + Shade.light * 8.0, POST_R + 2.0, SHADOW)
 			wc.circle(p, POST_R, STEEL_DARK)
 			wc.circle(p, POST_R - 3.0, STEEL)
-		# visitors in the maze
-		if Outdoors.theme_park(Game.weather, Game.hour) and idxs.size() >= 2:
+		# visitors: count, colour, height and spacing from a seeded hash
+		if not Outdoors.theme_park(Game.weather, Game.hour) or idxs.size() < 2:
+			continue
+		var n_vis: int = QUEUE_CROWD[bi]
+		for j in range(n_vis):
+			var seed := float(bi) * 17.0 + float(j) * 3.7
+			var along := 0.08 + _h(seed) * 0.84
+			var side := (_h(seed + 1.0) - 0.5) * 22.0
 			var a0: Vector2 = QUEUE_POSTS[int(idxs[0])]
 			var a1: Vector2 = QUEUE_POSTS[int(idxs[idxs.size() - 1])]
-			for j in range(5):
-				var qp := a0.lerp(a1, 0.12 + float(j) * 0.16) + Vector2(0.0, 26.0)
-				if qp.y < lo - 20.0 or qp.y > hi + 20.0:
-					continue
-				wc.circle(qp + Shade.light * 6.0, 8.0, SHADOW)
-				wc.circle(qp, 7.0, Color(0.30 + _h(float(j) + float(idxs[0])) * 0.5, 0.40, 0.70))
-				wc.circle(qp + Vector2(0.0, -9.0), 4.5, Color(0.86, 0.68, 0.52))
-				if j % 3 == 0:
-					wc.circle(qp + Vector2(0.0, -16.0), 3.5, Color(0.95, 0.55, 0.70))
+			var qp := a0.lerp(a1, along) + Vector2(side, 10.0 + _h(seed + 2.0) * 18.0)
+			if qp.y < lo - 20.0 or qp.y > hi + 20.0:
+				continue
+			var body_r := 5.5 + _h(seed + 3.0) * 3.0
+			var shirt := Color(0.25 + _h(seed + 4.0) * 0.55, 0.30 + _h(seed + 5.0) * 0.40, 0.45 + _h(seed + 6.0) * 0.40)
+			wc.circle(qp + Shade.light * 6.0, body_r + 1.0, SHADOW)
+			wc.circle(qp, body_r, shirt)
+			wc.circle(qp + Vector2(0.0, -body_r - 2.0), 3.5 + _h(seed + 7.0) * 2.0, Color(0.86, 0.68, 0.52))
+			if _h(seed + 8.0) > 0.55:
+				wc.circle(qp + Vector2(0.0, -body_r - 8.0), 3.0, Color(0.95, 0.55, 0.70) if bi != 1 else PONCHO)
 
 
 static func _draw_carts(wc: ShapeBatch, lo: float, hi: float) -> void:
@@ -1045,6 +1204,17 @@ static func draw_overhead(m: Node2D, ci: Object) -> void:
 		_jungle_crown(b, JUNGLE_TREES[i] + Vector2(0.0, -12.0), 44.0, float(i))
 	_draw_mine_train(b)
 	_draw_coaster(b)
+	# lit bulbs on rides and soft lamp pools after dark
+	var glow := Game.lamp_glow()
+	if glow > 0.05:
+		for lp: Vector2 in PARK_LAMPS:
+			b.glow(lp, 48.0, Color(1.0, 0.88, 0.50, 0.22 * glow), 0.3)
+		b.glow(ARCH + Vector2(-160.0, -30.0), 28.0, Color(1.0, 0.90, 0.55, 0.4 * glow), 0.35)
+		b.glow(ARCH + Vector2(160.0, -30.0), 28.0, Color(1.0, 0.90, 0.55, 0.4 * glow), 0.35)
+		b.glow(CAROUSEL, 70.0, Color(1.0, 0.70, 0.85, 0.3 * glow), 0.35)
+		b.glow(LIFT_HILL, 40.0, Color(0.70, 0.85, 1.0, 0.35 * glow), 0.35)
+		b.glow(SHIP_PIVOT + Vector2(0.0, -40.0), 50.0, Color(1.0, 0.55, 0.30, 0.3 * glow), 0.35)
+		b.glow(FLUME_DROP, 36.0, Color(0.55, 0.90, 1.0, 0.3 * glow), 0.35)
 	b.flush(ci)
 
 
@@ -1162,16 +1332,39 @@ static func _draw_coaster(b: ShapeBatch) -> void:
 		b.glow(tip, 44.0, Color(1.0, 0.85, 0.45, 0.4), 0.4)
 
 
-static func is_lamp(_m: Node2D, _p: Vector2) -> bool:
+static func night_fronts(_m: Node2D) -> Array[Dictionary]:
+	var NightFronts = preload("res://world/night_fronts.gd")
+	var out: Array[Dictionary] = []
+	# lit kiosk / village / station windows spill onto the path after dark
+	var specs: Array = [
+		[-100.0, true, "shop"], [-100.0, false, "shop"],
+		[-600.0, true, "home"], [-900.0, false, "bar"],
+		[-1600.0, true, "bar"], [-2000.0, false, "shop"],
+		[-2700.0, true, "home"], [-3100.0, false, "shop"],
+		[-3600.0, true, "shop"], [-4000.0, false, "bar"],
+	]
+	for i in range(specs.size()):
+		var s: Array = specs[i]
+		var west: bool = s[1]
+		out.append(NightFronts.front(
+			Vector2(PATH_L if west else PATH_R, float(s[0])),
+			1.0 if west else -1.0,
+			String(s[2]), 6100 + i))
+	return out
+
+
+static func is_lamp(_m: Node2D, p: Vector2) -> bool:
+	for lp: Vector2 in PARK_LAMPS:
+		if lp.distance_squared_to(p) < 4.0:
+			return true
 	return false
 
 
 static func name_place(_m: Node2D) -> Dictionary:
-	# stubs are fat (gap 1.65): one line of LES ATRACCIONS is ~509 px at
-	# NAME_H, so a room under NAME_MIN_H forces LES / ATRACCIONS on two
-	# lines. Keep the room wide enough that ATRACCIONS itself stays at
-	# full height (~364 px) with margin inside the 540-wide path
-	return {"x": CX, "room": 400.0}
+	# stubs are fat: force LES / ATRACCIONS on two lines with room for the
+	# stub pieces inside the 540-wide path (Camí de Ronda / Carrer de Blai
+	# style). Turnstiles sit at y=-340, clear of the letters.
+	return {"x": CX, "room": 220.0, "down": 40.0}
 
 
 static func tree_kind(m: Node2D, p: Vector2) -> int:
@@ -1185,6 +1378,16 @@ static func tree_kind(m: Node2D, p: Vector2) -> int:
 
 
 static func draw_column(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	for lp: Vector2 in PARK_LAMPS:
+		if lp.distance_squared_to(p) < 4.0:
+			wc.circle(p + Shade.light * 8.0, 8.0, SHADOW)
+			wc.circle(p, 6.0, STEEL_DARK)
+			wc.circle(p, 4.0, STEEL)
+			var glow := Game.lamp_glow()
+			if glow > 0.05:
+				wc.glow(p, 22.0, Color(1.0, 0.90, 0.55, 0.35 * glow), 0.35)
+				wc.circle(p - Shade.light * 1.5, 2.5, Color(1.0, 0.95, 0.7))
+			return
 	for t: Vector2 in QUEUE_POSTS:
 		if t.distance_squared_to(p) < 4.0:
 			wc.circle(p + Shade.light * 8.0, POST_R + 2.0, SHADOW)
