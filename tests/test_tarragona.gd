@@ -53,9 +53,12 @@ func _run() -> void:
 	var keep_h: String = game.hour
 
 	_check(game.LEVELS.has("tarragona"), "tarragona present in Game.LEVELS")
+	# after Montserrat and Els Encants (whose own test holds the slot right
+	# after Montserrat), before the Raval finale that ends the campaign
 	var mont_idx: int = game.CAROUSEL.find("montserrat")
-	_check(mont_idx >= 0 and mont_idx + 1 < game.CAROUSEL.size() and game.CAROUSEL[mont_idx + 1] == "tarragona",
-		"CAROUSEL places tarragona right after montserrat")
+	var tgn_idx: int = game.CAROUSEL.find("tarragona")
+	_check(mont_idx >= 0 and tgn_idx > mont_idx and tgn_idx > game.CAROUSEL.find("encants") and tgn_idx < game.CAROUSEL.find("raval"),
+		"CAROUSEL places tarragona after montserrat and encants, before raval")
 	_check(int(game.STAR_GATE.get("tarragona", -1)) == 50, "STAR_GATE tarragona == 50")
 	_check(String(game.CHASE_GATE.get("tarragona", "")) == String(game.CHASE_GATE.get("scrap", "")),
 		"CHASE_GATE tarragona matches scrap")

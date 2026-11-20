@@ -28,6 +28,7 @@ const PAVED_FREEDOM: Array[String] = [
 	"site",
 	"spook",
 	"station",
+	"tarragona",
 	"tibidabo",
 ]
 
