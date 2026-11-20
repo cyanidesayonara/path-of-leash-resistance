@@ -1,0 +1,2 @@
+# cost 25
+--headless --path . --script res://tests/test_tarragona.gd

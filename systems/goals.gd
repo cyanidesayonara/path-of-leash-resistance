@@ -17,6 +17,7 @@ const Aigues := preload("res://systems/aigues.gd")
 const Carmel := preload("res://systems/carmel.gd")
 const Eixample := preload("res://systems/eixample.gd")
 const Sarria := preload("res://systems/sarria.gd")
+const Tarragona := preload("res://systems/tarragona.gd")
 const Ach := preload("res://systems/achievements.gd")
 const DogSkills := preload("res://systems/dog_skills.gd")
 const LEVEL_GOAL_IDS := {
@@ -91,6 +92,7 @@ const LEVEL_GOAL_IDS := {
 	"ronda": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "ronda_gust", "ronda_coves", "ronda_boats", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Encants: hold clear of the stall spill, bark at the auction, steal a sock
 	"encants": ["mark", "sniff", "phone", "paws", "bag", "fetch", "carry", "encants_spill", "encants_auction", "snack", "combo", "prize", "spell", "jamon", "clock"],
+	"tarragona": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "tarragona_mark", "tarragona_castell", "tarragona_balco", "combo", "prize", "spell", "jamon", "clock"],
 	# Sarrià: the bells of Sant Vicenç, the two bakeries, the balcony gardener
 	"sarria": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bells", "bread", "gardener", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
@@ -203,6 +205,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"ronda_boats": {"text": "Bark at %d fishing boats below", "target": 2, "fn": func() -> int: return m.ronda_boats_barked.size()},
 		"encants_spill": {"text": "Plant and hold your human clear of a spill", "target": 1, "fn": func() -> int: return m.encants_spill_held},
 		"encants_auction": {"text": "Bark at the auction", "target": 1, "fn": func() -> int: return 1 if m.encants_auction_barked else 0},
+		"tarragona_mark": {"text": "Mark %d Roman stones", "target": 3, "fn": func() -> int: return Tarragona.stones_marked(m)},
+		"tarragona_castell": {"text": "Steer clear for a casteller crowning", "target": 1, "fn": func() -> int: return Tarragona.castell_rewarded(m)},
+		"tarragona_balco": {"text": "Share the Balcó view with your human", "target": 1, "fn": func() -> int: return 1 if Tarragona.view_taken(m) else 0},
 		"bells": {"text": "Howl along with the church bells", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.howled else 0},
 		"bread": {"text": "Sniff the bread at %d bakeries", "target": 2, "fn": func() -> int: return Sarria.bread_sniffed(m)},
 		"gardener": {"text": "Bark good morning to the balcony gardener", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.greeted else 0},

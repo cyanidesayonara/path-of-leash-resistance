@@ -29,7 +29,7 @@ const Letters := preload("res://world/sign_letters.gd")
 
 # the material per walk; a walk not listed keeps main.gd's drawn styles
 const MATERIALS := {
-	"barri": "leaves", "diagonal": "papers", "metro": "brollies", "blai": "pintxos", "santpau": "oranges", "ronda": "floats", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
+	"barri": "leaves", "diagonal": "papers", "metro": "brollies", "blai": "pintxos", "santpau": "oranges", "ronda": "floats", "tarragona": "tesserae", "sarria": "pastries", "street": "carnations", "park": "flowerbed", "beach": "sand",
 	"rain": "puddle", "market": "fruit", "trail": "sticks", "site": "cones",
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
@@ -76,6 +76,7 @@ const FEEL := {
 	"oranges": {"spacing": 0.14, "r": 0.075, "drag": 1.1, "take": 1.1, "roll": true},
 	"floats": {"spacing": 0.14, "r": 0.08, "drag": 1.3, "take": 1.15, "roll": true},
 	"buttons": {"spacing": 0.13, "r": 0.07, "drag": 1.5, "take": 1.1, "roll": true},
+	"tesserae": {"spacing": 0.09, "r": 0.055, "drag": 4.0, "take": 0.9, "spin": 2.0, "align": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
@@ -562,6 +563,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_floats(c, sign, h)
 		"buttons":
 			_buttons(c, sign, h)
+		"tesserae":
+			_tesserae(c, sign, h, light)
 		"brollies":
 			_brollies(c, sign, h)
 		"pastries":
@@ -796,7 +799,7 @@ static func _flower_planter(c: Object, sign: Dictionary, h: float) -> void:
 const BACKINGS := {"bulbs": "board", "chestnuts": "newspaper", "pastries": "tiles",
 	"bagtags": "tiles", "pebbles": "tiles", "pintxos": "tiles", "casings": "tiles", "cascade": "tiles",
 	"tickets": "tiles", "brollies": "tiles", "scarf": "tiles", "puddle": "tiles", "pegs": "tiles",
-	"fronds": "tiles", "seaglass": "tiles"}
+	"fronds": "tiles", "seaglass": "tiles", "tesserae": "tiles"}
 # a tile panel in the walk's own paving: [field, border course, joints], each
 # the street's tone a shade off so the panel lies in it, not on it
 const WARM_TILE := [Color(0.80, 0.73, 0.67), Color(0.70, 0.62, 0.57), Color(0.66, 0.59, 0.55)]
@@ -1887,3 +1890,20 @@ static func _seaglass(c: Object, sign: Dictionary, _h: float, light: Vector2) ->
 		c.draw_colored_polygon(_box(p, float(pc.rot), r * 1.05, r * 0.72), col.darkened(0.24))
 		c.draw_colored_polygon(_box(p, float(pc.rot), r * 0.90, r * 0.58), col)
 		c.draw_circle(p - light * r * 0.25, r * 0.24, Color(1.0, 1.0, 1.0, 0.55))
+
+
+static func _tesserae(c: Object, sign: Dictionary, _h: float, light: Vector2) -> void:
+	# Roman mosaic tesserae: small coloured stone squares spelling the name
+	var cols: Array[Color] = [
+		Color(0.78, 0.62, 0.38), Color(0.22, 0.36, 0.48), Color(0.72, 0.28, 0.24),
+		Color(0.86, 0.82, 0.72), Color(0.34, 0.48, 0.36), Color(0.18, 0.18, 0.20),
+	]
+	for pc: Dictionary in sign.pieces:
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.2, 1.6), float(pc.rot), float(pc.r) * 1.1, float(pc.r) * 1.1), Color(0, 0, 0, 0.22))
+	for pc: Dictionary in sign.pieces:
+		var r: float = float(pc.r)
+		var p: Vector2 = pc.p
+		var rot: float = float(pc.rot)
+		var col: Color = cols[int(float(pc["var"]) * cols.size()) % cols.size()]
+		c.draw_colored_polygon(_box(p, rot, r * 1.05, r * 1.05), col.darkened(0.12))
+		c.draw_colored_polygon(_box(p - light * r * 0.15, rot, r * 0.85, r * 0.85), col)

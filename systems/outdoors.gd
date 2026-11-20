@@ -327,3 +327,11 @@ static func flea_browsers(weather: String, hour: String) -> float:
 
 static func flea_sellers(_weather: String, hour: String) -> bool:
 	return hour != "night"
+# Town promenade benches at dusk (Tarragona Rambla): walkers sit out when dry.
+const PROMENADE_SIT_FILL := {"dawn": 0.2, "day": 0.55, "dusk": 0.9, "night": 0.35}
+
+
+static func promenade_sitters(weather: String, hour: String) -> float:
+	if weather == "rain" or weather == "snow":
+		return 0.0
+	return float(PROMENADE_SIT_FILL.get(hour, 0.5))
