@@ -557,7 +557,11 @@ html, body {
 }
 
 .film-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.film-grid figcaption {
+  font-size: 0.86rem;
 }
 
 .film-grid figure,
@@ -650,6 +654,67 @@ html, body {
 
 .wardrobe-card p:last-child {
   margin-bottom: 0;
+}
+
+/* each dog side on, as the films draw her, on a warm patch of light */
+.dog-portrait {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: contain;
+  margin: 0 0 10px;
+  border-radius: 8px;
+  background: radial-gradient(ellipse 70% 60% at 50% 55%, color-mix(in srgb, var(--saffron) 30%, var(--ink)), transparent 75%),
+    color-mix(in srgb, var(--saffron) 14%, var(--ink));
+}
+
+.dog-card .dog-desc {
+  margin: 0 0 10px;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  line-height: 1.48;
+}
+
+.dog-card .dog-skill {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.dog-skill-name {
+  margin-right: 4px;
+  color: var(--saffron);
+  font-weight: 700;
+}
+
+.dog-stats {
+  display: grid;
+  gap: 6px;
+}
+
+.dog-stat {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.dog-stat-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  overflow: hidden;
+}
+
+.dog-stat-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--turquoise), var(--saffron));
 }
 
 .wardrobe-grid {

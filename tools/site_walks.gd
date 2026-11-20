@@ -14,6 +14,15 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 
+# a dog's skill goal as the walk card says it, its count filled in
+func _skill_goal(dk: String) -> String:
+	var g: Dictionary = load("res://systems/dog_skills.gd").GOALS.get(dk, {})
+	if g.is_empty():
+		return ""
+	var text := String(g.text)
+	return text % int(g.target) if text.contains("%d") else text
+
+
 func _cap_first(s: String) -> String:
 	if s.is_empty():
 		return s
@@ -66,6 +75,11 @@ func _run() -> void:
 			"mass_mult": float(d.get("mass_mult", 1.0)),
 			"reel_mult": float(d.get("reel_mult", 1.0)),
 			"gap_mult": float(d.get("gap_mult", 1.0)),
+			"dig_mult": float(d.get("dig_mult", 1.0)),
+			"nose_mult": float(d.get("nose_mult", 1.0)),
+			"leaps": bool(d.get("leaps", false)),
+			"skill": String(load("res://systems/dog_skills.gd").NAMES.get(dk, "")),
+			"skill_goal": _skill_goal(dk),
 		})
 
 	var collars := []
@@ -193,7 +207,6 @@ func _run() -> void:
 		"chase_walks": Array(game.CHASE_WALKS),
 		"dogs": dogs,
 		"training": {
-			"cost": int(game.STAT_UPGRADE_COST),
 			"max_points": int(game.MAX_STAT_POINTS),
 			"stats": Array(game.STAT_NAMES),
 		},

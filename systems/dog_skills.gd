@@ -20,6 +20,12 @@ extends RefCounted
 
 const EventFeed := preload("res://hud/event_feed.gd")
 
+# each skill's name, as the wardrobe and the website say it
+const NAMES := {
+	"millie": "The nose", "pipa": "The sprint", "mochi": "The plant", "bruna": "The herd",
+	"tito": "The squeeze", "perla": "The dig", "duna": "The leap",
+}
+
 const GOALS := {
 	"millie": {"id": "skill_nose", "text": "Sniff out and dig up a buried find", "target": 1},
 	"pipa": {"id": "skill_sprint", "text": "Sprint flat out for %d seconds", "target": 2},

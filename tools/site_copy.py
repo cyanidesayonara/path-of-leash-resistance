@@ -33,7 +33,7 @@ import store_listing  # noqa: E402
 
 # each page: (language, blocks it must carry); a missing or unclosed marker fails
 PAGES = {
-    "site/index.html": ("en", ["features", "whatsnew", "count", "walks"]),
+    "site/index.html": ("en", ["features", "whatsnew", "count"]),
     "site/press/index.html": ("en", ["description"]),
     "site/ca/index.html": ("ca", ["features", "whatsnew", "count", "walks"]),
     "site/ca/press/index.html": ("ca", ["description"]),

@@ -8,7 +8,7 @@ https://cyanidesayonara.github.io/path-of-leash-resistance/.
 
 ```
 site/
-  index.html        landing page (beats, chapters, bosses, chases, dogs, wardrobe)
+  index.html        landing page (beats, chapters, bosses, chase films, dogs, wardrobe)
   walks/<id>.html   generated page for every walk and tutorial (site_walks.py)
   walks.json        place descriptions and screenshot captions per walk
   press/index.html  press kit
@@ -60,10 +60,12 @@ GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/site_media.sh
 ```
 
 Two or three `960x540` progressive `--shot` JPEGs per walk (at its campaign sky,
-plus off-leash yard or chase/boss encounter), three clips from
+plus off-leash yard or chase/boss encounter), clips from
 `tools/intro_render.gd` joined by `tools/frames_to_gif.py` (the intro's title
-over the street, and the La Neteja and Els Senglars chase films; 128 colors,
-undithered, which is what keeps them under a megabyte each), and the icon from
+over the street at 480 px and 128 colors, and every chase walk's film at
+320 px, 8 fps and 80 colors, undithered, which keeps the nine of them near
+5 MB together), a portrait of every dog from `tools/site_dogs.gd` (the films'
+own side-on dog, on a transparent background) and the icon from
 `tools/make_icon.gd`. Set `JOBS=N` to run shots in parallel (default 4). Keep
 the whole `site/img/` folder well under 15 MB. Rerun it after a visual change
 worth showing and commit `site/img/`.
