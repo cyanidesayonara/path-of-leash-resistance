@@ -2257,6 +2257,7 @@ const T := {
 	"w_encants_nice_plant": {"en": "NICE PLANT!", "ca": "BONA PLANTADA!", "es": "¡BUENA PLANTADA!"},
 	"w_encants_auction_3": {"en": "auction bark! +3", "ca": "lladruc a la subhasta! +3", "es": "¡ladrido a la subasta! +3"},
 	"w_encants_auction_bark": {"en": "SOLD TO THE DOG!", "ca": "VENUT AL GOS!", "es": "¡VENDIDO AL PERRO!"},
+	"w_the_encants_square_off_leash": {"en": "Plaça dels Encants, off leash", "ca": "Plaça dels Encants, sense corretja", "es": "Plaça dels Encants, sin correa"},
 	"w_sold": {"en": "Sold!", "ca": "Venut!", "es": "¡Vendido!"},
 	# --- the walks: systems/santpau.gd ----------------------------------------------------
 	"w_brioche_2": {"en": "brioche! +2", "ca": "brioix! +2", "es": "¡brioche! +2"},
