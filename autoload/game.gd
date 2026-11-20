@@ -347,6 +347,8 @@ const HUMAN_SHOES := [Color(0.95, 0.93, 0.88), Color(0.16, 0.16, 0.18), Color(0.
 
 const DOGS := {
 	"millie": {
+		# training levels she is born with (Game.innate_stat)
+		"innate": {"nose": 2},
 		"quirk": "sniff",
 		"bark": "bark",
 		"name": "Millie",
@@ -360,6 +362,8 @@ const DOGS := {
 		"nose_mult": 1.3,
 	},
 	"pipa": {
+		# training levels she is born with (Game.innate_stat)
+		"innate": {"speed": 2},
 		"quirk": "stretch",
 		"bark": "bark_pipa",
 		"name": "Pipa",
@@ -372,6 +376,8 @@ const DOGS := {
 		"plant_mult": 0.55,
 	},
 	"mochi": {
+		# training levels she is born with (Game.innate_stat)
+		"innate": {"plant": 2},
 		"quirk": "sit",
 		"bark": "bark_mochi",
 		"name": "Mochi",
@@ -384,6 +390,8 @@ const DOGS := {
 		"plant_mult": 1.70,
 	},
 	"bruna": {
+		# training levels she is born with (Game.innate_stat)
+		"innate": {"herd": 2},
 		"quirk": "lie",
 		"bark": "bark_bruna",
 		"name": "Bruna",
@@ -398,6 +406,8 @@ const DOGS := {
 		"muck_mult": 1.60,
 	},
 	"tito": {
+		# training levels she is born with (Game.innate_stat)
+		"innate": {"agility": 2},
 		"quirk": "tremble",
 		"bark": "bark_tito",
 		"name": "Tito",
@@ -415,6 +425,8 @@ const DOGS := {
 	# the ratonero bodeguero, the Andalusian ratter of the wine cellars:
 	# small, square and busy, and digs anything up in no time
 	"perla": {
+		# training levels she is born with (Game.innate_stat)
+		"innate": {"nose": 1, "agility": 1},
 		"name": "Perla",
 		"breed": "Ratonero bodeguero",
 		"stars": 55,
@@ -433,6 +445,8 @@ const DOGS := {
 	# the podenco, the island hound: long legs, huge ears, and a standing
 	# jump that clears a bench as if it were not there
 	"duna": {
+		# training levels she is born with (Game.innate_stat)
+		"innate": {"speed": 1, "agility": 1},
 		"name": "Duna",
 		"breed": "Podenco",
 		"stars": 65,
@@ -884,7 +898,19 @@ var finds_found: Dictionary = {}
 var skills_done: Dictionary = {}
 
 
+# A stat's level: the levels her breed gives her for free (DOGS "innate", a
+# head start in what she is bred for) plus the levels she has trained, never
+# past MAX_STAT_POINTS. Every level counts the same toward the stat's effect.
 func get_dog_stat(d: String, stat: String) -> int:
+	return mini(innate_stat(d, stat) + trained_stat(d, stat), MAX_STAT_POINTS)
+
+
+func innate_stat(d: String, stat: String) -> int:
+	var inn: Dictionary = dog_data(d).get("innate", {})
+	return int(inn.get(stat, 0))
+
+
+func trained_stat(d: String, stat: String) -> int:
 	var du: Dictionary = dog_upgrades.get(d, {})
 	return int(du.get(stat, 0))
 
@@ -910,7 +936,7 @@ func upgrade_dog_stat(d: String, stat: String) -> bool:
 	training[d] = training_points(d) - stat_cost(d, stat)
 	if not dog_upgrades.has(d):
 		dog_upgrades[d] = {}
-	dog_upgrades[d][stat] = get_dog_stat(d, stat) + 1
+	dog_upgrades[d][stat] = trained_stat(d, stat) + 1
 	save_records()
 	return true
 
@@ -1540,7 +1566,7 @@ func load_records() -> void:
 			dog_upgrades.erase(dk)
 			continue
 		for st in (ups as Dictionary).keys():
-			ups[st] = clampi(int(ups[st]), 0, MAX_STAT_POINTS)
+			ups[st] = clampi(int(ups[st]), 0, MAX_STAT_POINTS - innate_stat(String(dk), String(st)))
 	apply_control_layout()
 	if is_inside_tree():
 		var tree := get_tree()

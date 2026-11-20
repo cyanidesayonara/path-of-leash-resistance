@@ -506,6 +506,12 @@ func _shop(vs: Vector2) -> void:
 	var shake: float = sin(float(main.locked_nudge) * 60.0) * 8.0 * (float(main.locked_nudge) / 0.35) if Game.screen_shake else 0.0
 	draw_string(Kit.body(), Vector2(r.position.x + 36.0 + shake, r.position.y + 482.0), note,
 		HORIZONTAL_ALIGNMENT_CENTER, 364.0, 16, ncol)
+	if String(it.kind) == "stats":
+		# the levels her breed gave her, which she never paid for
+		var born := Game.innate_stat(Game.dog, String(it.key))
+		if born > 0:
+			draw_string(Kit.body(), Vector2(r.position.x + 36.0, r.position.y + 504.0),
+				I18n.t("shop_born_note") % [Game.dog_name(), born], HORIZONTAL_ALIGNMENT_CENTER, 364.0, 14, Kit.TURQUOISE)
 	# the list for this tab
 	var y := r.position.y + 136.0
 	var lx := r.position.x + 440.0
