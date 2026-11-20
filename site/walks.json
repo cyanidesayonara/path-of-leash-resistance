@@ -768,5 +768,20 @@
         "alt": "Rambla del Raval: the night plaça at the north end of the rambla."
       }
     ]
+  },
+  "encants": {
+    "about": "Barcelona's old flea market at Glòries on a rainy morning: lanes of stalls heaped with junk, an auction ring, and a seller's tower of chairs that will not stay up. Steal a sock off a stall and bring it to your human on the way to Plaça dels Encants.",
+    "shots": [
+      {
+        "file": "shot-encants.jpg",
+        "caption": "The auction ring among the flea-market stalls",
+        "alt": "Els Encants: the dog leads her human past the auction ring and flea-market stalls in the rain."
+      },
+      {
+        "file": "shot-encants-2.jpg",
+        "caption": "Off the leash in Plaça dels Encants",
+        "alt": "Els Encants: the dog runs free among the trees of Plaça dels Encants in the rain."
+      }
+    ]
   }
 }

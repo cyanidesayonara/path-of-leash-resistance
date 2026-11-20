@@ -1693,6 +1693,42 @@ static func _title(c: CanvasItem, t: float) -> void:
 		IntroKit.leash(c, bpt["ring"], hand, 7.5 + sin(t * 2.0) * 1.5)
 		IntroKit.millie(c, Vector2(brx, by), bs, -1.0, Vector2.ONE, bruna_pose, by)
 
+	# 1b. Mid-street, a step further back: Perla (ratonero) scrabbling at the
+	# pavement while her bodega owner waits in his apron, and Duna (podenco)
+	# beside them, ears up, watching her dig while her owner scrolls
+	if t >= 10.15 and t <= 14.5:
+		var fy := by - 6.0
+		var fs := bs * 0.94
+		var dig := sin(t * 15.0)
+		var perla_pose := {"breed": "perla", "crouch": 0.45, "head_up": -0.55, "lean": 0.18,
+			"reach": 0.35 + 0.45 * dig, "push": 0.35, "tail": 0.5 + 0.35 * sin(t * 11.0), "ear": 0.3}
+		var bodega_pose := {
+			"reach_down": 0.35, "head": 0.3, "lean": 0.02, "phone": 0.0,
+			"hair": Color(0.20, 0.18, 0.17), "skin": Color(0.86, 0.70, 0.56),
+			"shirt": Color(0.92, 0.90, 0.85), "trousers": Color(0.22, 0.22, 0.26),
+			"shoe": Color(0.20, 0.16, 0.14)
+		}
+		var oh := IntroKit.human(c, Vector2(610.0, fy), fs, -1.0, Vector2.ONE, bodega_pose, 0.0, fy)
+		var ppt2 := IntroKit.millie_points(Vector2(552.0, fy), fs, -1.0, Vector2.ONE, perla_pose)
+		IntroKit.leash(c, ppt2["ring"], oh, 6.0)
+		IntroKit.millie(c, Vector2(552.0, fy), fs, -1.0, Vector2.ONE, perla_pose, fy)
+		# a little spray of grit behind her paws
+		for k in range(3):
+			var f := fposmod(t * 3.0 + float(k) * 0.33, 1.0)
+			IntroKit.puff(c, Vector2(548.0 + f * 22.0, fy - 6.0 - sin(f * PI) * 14.0), 3.0 * (1.0 - f) + 1.0, 0.6 * (1.0 - f))
+		var duna_pose := {"breed": "duna", "head_up": 0.35, "ear": 0.7, "lean": -0.02,
+			"tail": 0.25 + 0.15 * sin(t * 4.0)}
+		var runner_pose := {
+			"head": 0.1, "phone": 1.0, "glow": 0.3, "scroll": t * 1.1, "reach": 0.3,
+			"hair_style": "ponytail", "hair": Color(0.58, 0.30, 0.16), "skin": Color(0.95, 0.80, 0.68),
+			"shirt": Color(0.42, 0.30, 0.62), "trousers": Color(0.14, 0.14, 0.18),
+			"shoe": Color(0.96, 0.96, 0.94), "lashes": true
+		}
+		var rh := IntroKit.human(c, Vector2(752.0, fy), fs, -1.0, Vector2.ONE, runner_pose, 0.0, fy)
+		var dpt := IntroKit.millie_points(Vector2(690.0, fy), fs, -1.0, Vector2.ONE, duna_pose)
+		IntroKit.leash(c, dpt["ring"], rh, 5.0)
+		IntroKit.millie(c, Vector2(690.0, fy), fs, -1.0, Vector2.ONE, duna_pose, fy)
+
 	# 2. Centre: Walker in coral hoodie walking Mochi (Frenchie) and tiny Tito strolling eastward
 	if t >= 10.3 and t <= 14.5:
 		var mx := lerpf(400.0, 810.0, (t - 10.3) / 4.0)

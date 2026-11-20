@@ -251,19 +251,44 @@ def render_chases(data: dict) -> str:
     return "\n  ".join(links)
 
 
+# a stat as a bar: where this dog's multiplier sits between the softest and the
+# strongest of the pack, never quite empty
+def _stat_bar(label: str, value: float, lo: float, hi: float) -> str:
+    frac = 0.12 + 0.88 * max(0.0, min(1.0, (value - lo) / max(hi - lo, 0.001)))
+    return (
+        f'    <div class="dog-stat"><span class="dog-stat-name">{esc(label)}</span>'
+        f'<span class="dog-stat-bar"><span style="width:{round(frac * 100)}%"></span></span></div>\n'
+    )
+
+
 def render_dogs(data: dict) -> str:
+    dogs = data["dogs"]
+    stats = [("Speed", "speed_mult"), ("Grip", "plant_mult"), ("Heft", "mass_mult")]
+    span = {k: (min(d.get(k, 1.0) for d in dogs), max(d.get(k, 1.0) for d in dogs)) for _, k in stats}
     cards = []
-    for dog in data["dogs"]:
+    for dog in dogs:
         unlock = "Starter" if dog["stars"] == 0 else f'{dog["stars"]} stars'
+        bars = "".join(_stat_bar(label, dog.get(k, 1.0), *span[k]) for label, k in stats)
+        skill = ""
+        if dog.get("skill"):
+            skill = (
+                f'  <p class="dog-skill"><span class="dog-skill-name">{esc(dog["skill"])}</span> '
+                f'{esc(dog.get("skill_goal", ""))}</p>\n'
+            )
+        alt = f'{dog["name"]}, the {dog["breed"]}, side on'
         cards.append(
-            f'<div class="card dog-card">\n'
-            f'  <div class="dog-head">\n'
+            '<div class="card dog-card">\n'
+            f'  <img class="dog-portrait" src="img/dog-{esc(dog["id"])}.png" alt="{esc(alt)}" '
+            'width="360" height="240" loading="lazy">\n'
+            '  <div class="dog-head">\n'
             f'    <h3>{esc(dog["name"])}</h3>\n'
             f'    <span class="badge badge-star">{esc(unlock)}</span>\n'
-            f'  </div>\n'
+            '  </div>\n'
             f'  <p class="dog-breed">{esc(dog["breed"])} &middot; {esc(dog["trait"])}</p>\n'
-            f'  <p>{esc(dog["desc"])}</p>\n'
-            f'</div>'
+            f'  <p class="dog-desc">{esc(dog["desc"])}</p>\n'
+            f'{skill}'
+            f'  <div class="dog-stats">\n{bars}  </div>\n'
+            '</div>'
         )
     return "\n".join(cards)
 
@@ -324,7 +349,7 @@ def render_wardrobe(data: dict) -> str:
         f'  </div>\n'
         f'  <div class="card wardrobe-card">\n'
         f'    <h3>Training &amp; New Look</h3>\n'
-        f'    <p>Spend bones between walks on four skills ({esc(stats_list)}), up to {tr["max_points"]} points each ({tr["cost"]} bones per point). Roll a <strong>New Look</strong> for your human before heading out: {nl["skins"]} skin tones, {nl["hair_colors"]} hair colors, {len(nl["her_styles"])} + {len(nl["his_styles"])} hairstyles, {nl["shirts"]} shirts, {nl["trousers"]} trousers and {nl["shoes"]} shoe styles.</p>\n'
+        f'    <p>Every buried find she digs up and every skill goal she meets is a training point for her. Spend them on {len(tr["stats"])} stats ({esc(stats_list)}), up to {tr["max_points"]} levels each; a level costs as many points as the level it reaches. Roll a <strong>New Look</strong> for your human before heading out: {nl["skins"]} skin tones, {nl["hair_colors"]} hair colors, {len(nl["her_styles"])} + {len(nl["his_styles"])} hairstyles, {nl["shirts"]} shirts, {nl["trousers"]} trousers and {nl["shoes"]} shoe styles.</p>\n'
         f'  </div>\n'
         f'</div>'
     )
@@ -480,7 +505,7 @@ def render_walk_page(
         f'</nav>\n'
         f'\n'
         f'<footer>\n'
-        f'  <a href="../">Path of Leash Resistance</a> &middot; <a href="../press/">Press kit</a> &middot; Made in Godot by Santtu Nykänen\n'
+        f'  <a href="../">Path of Leash Resistance</a> &middot; <a href="../press/">Press kit</a> &middot; Made by Santtu Nykänen\n'
         f'</footer>\n'
         f'\n'
         f'</div>\n'

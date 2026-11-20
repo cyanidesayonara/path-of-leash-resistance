@@ -52,15 +52,15 @@ const GROUND_SHADOW := Color(0.15, 0.12, 0.10, 0.28)
 
 static func breed_id_of(breed: Variant) -> int:
 	if breed is int:
-		return clampi(breed, 0, 4)
+		return clampi(breed, 0, 6)
 	var s := str(breed)
 	match s:
 		"pipa": return 1
 		"mochi": return 2
 		"tito": return 3
 		"bruna": return 4
-		# drawn side on on another's frame, as from above (entities/dog.gd BODY_PLAN)
-		"duna": return 1
+		"perla": return 5
+		"duna": return 6
 	return 0
 
 
@@ -70,6 +70,8 @@ static func breed_scale(bid: int) -> float:
 		2: return 0.88
 		3: return 0.68
 		4: return 1.02
+		5: return 0.84
+		6: return 1.06
 	return 1.0
 
 
@@ -114,6 +116,30 @@ static func breed_palette(bid: int) -> Dictionary:
 				"muz_sh": Color(0.48, 0.50, 0.54), "collar": Color(0.85, 0.15, 0.19),
 				"collar_sh": Color(0.55, 0.10, 0.12), "ear": dark.darkened(0.15),
 				"ear_gloss": fur.lightened(0.20), "ear_flap": dark
+			}
+		5: # Perla (ratonero bodeguero - white, a black saddle, a black and tan head)
+			var fur := Color(0.95, 0.93, 0.89)
+			var dark := Color(0.76, 0.74, 0.72)
+			return {
+				"fur": fur, "dark": dark, "gloss": Color(1.0, 1.0, 0.98),
+				"far": dark.darkened(0.15), "muz": Color(0.80, 0.52, 0.28),
+				"muz_sh": Color(0.60, 0.36, 0.18), "collar": Color(0.92, 0.48, 0.16),
+				"collar_sh": Color(0.66, 0.32, 0.10), "ear": Color(0.13, 0.12, 0.14),
+				"ear_gloss": Color(0.34, 0.33, 0.37), "ear_flap": Color(0.10, 0.09, 0.11),
+				"head": Color(0.14, 0.13, 0.15), "head_dark": Color(0.07, 0.06, 0.08),
+				"head_gloss": Color(0.36, 0.35, 0.39), "saddle": Color(0.14, 0.13, 0.15),
+				"saddle_dark": Color(0.07, 0.06, 0.08), "blaze": fur
+			}
+		6: # Duna (podenco - red and white)
+			var fur := Color(0.80, 0.44, 0.24)
+			var dark := Color(0.60, 0.30, 0.15)
+			return {
+				"fur": fur, "dark": dark, "gloss": fur.lightened(0.28),
+				"far": dark.darkened(0.2), "muz": Color(0.96, 0.93, 0.87),
+				"muz_sh": Color(0.80, 0.76, 0.70), "collar": Color(0.20, 0.52, 0.30),
+				"collar_sh": Color(0.12, 0.36, 0.20), "ear": dark,
+				"ear_gloss": fur.lightened(0.18), "ear_flap": dark.darkened(0.1),
+				"blaze": Color(0.96, 0.93, 0.87)
 			}
 	return {
 		"fur": COAT, "dark": COAT_SHADE, "gloss": COAT_GLOSS,
@@ -285,10 +311,10 @@ static func _anchors(pose: Dictionary) -> Dictionary:
 	var drop := 8.0 * crouch - absf(cos(ph)) * 2.5 * g
 	var body_c := Vector2(0.0, -51.0 + drop)
 	var fwd := Vector2.RIGHT.rotated(lean)
-	var chest := body_c + fwd * (34.0 if bid == 1 else (26.0 if bid == 2 or bid == 3 else 30.0)) + Vector2(0, -3.0 if bid == 1 else -2.0)
+	var chest := body_c + fwd * (34.0 if bid == 1 or bid == 6 else (26.0 if bid == 2 or bid == 3 else 30.0)) + Vector2(0, -3.0 if bid == 1 or bid == 6 else -2.0)
 	var rump := body_c - fwd * (28.0 if bid == 3 else (30.0 if bid == 2 else 32.0))
 	var neck_top: Vector2
-	if bid == 1:
+	if bid == 1 or bid == 6:
 		neck_top = chest + Vector2(17.0, -32.0).rotated(-head_up * 0.6)
 	elif bid == 2:
 		neck_top = chest + Vector2(10.0, -20.0).rotated(-head_up * 0.6)
@@ -302,7 +328,7 @@ static func _anchors(pose: Dictionary) -> Dictionary:
 	var f_fr := Vector2(42.0 + reach * 12.0 + sin(ph) * swing, -4.0 - maxf(0.0, cos(ph)) * 7.0 * g)
 	var f_bl := Vector2(-30.0 - push * 16.0 + sin(ph) * swing, -4.0 - maxf(0.0, cos(ph)) * 7.0 * g)
 	var f_br := Vector2(-22.0 - push * 10.0 + sin(ph + PI) * swing, -4.0 - maxf(0.0, cos(ph + PI)) * 7.0 * g)
-	var muz_off := Vector2(28.0, 6.0) if bid == 1 else (Vector2(18.0, 9.0) if bid == 2 else (Vector2(17.0, 7.0) if bid == 3 else Vector2(24.0, 7.0)))
+	var muz_off := Vector2(28.0, 6.0) if bid == 1 else (Vector2(24.0, 6.0) if bid == 6 else (Vector2(18.0, 9.0) if bid == 2 else (Vector2(17.0, 7.0) if bid == 3 else Vector2(24.0, 7.0))))
 	return {
 		"_head": head, "_muzzle": head + muz_off.rotated(-head_up), "_neck": neck_top,
 		"_chest": chest, "_rump": rump, "_body": body_c, "_lean": lean,
@@ -361,6 +387,16 @@ static func _parts(pose: Dictionary, legs: bool) -> Dictionary:
 		var t_mid := t_base + Vector2(-28, 16).rotated(tail * 0.5)
 		var t_tip := t_base + Vector2(-58, 4).rotated(tail * 0.8)
 		p["tail"] = _strip(t_base, t_mid, t_tip, 4.2, 1.4)
+	elif bid == 5:
+		# the ratonero's short tail, carried up
+		var t_mid := t_base + Vector2(-9, -9).rotated(tail * 0.5)
+		var t_tip := t_base + Vector2(-8, -24).rotated(tail * 0.8)
+		p["tail"] = _strip(t_base, t_mid, t_tip, 4.6, 2.0)
+	elif bid == 6:
+		# the podenco's sickle tail, curving up over her back
+		var t_mid := t_base + Vector2(-26, -4).rotated(tail * 0.5)
+		var t_tip := t_base + Vector2(-20, -40).rotated(tail * 0.8)
+		p["tail"] = _strip(t_base, t_mid, t_tip, 4.0, 1.4)
 	elif bid == 4:
 		var t_knee := t_base + Vector2(-24, 12).rotated(tail * 0.6)
 		var t_tip := rump + Vector2(-49, -15).rotated(tail)
@@ -375,7 +411,7 @@ static func _parts(pose: Dictionary, legs: bool) -> Dictionary:
 		p["leg_fl"] = lg[1][0]
 		p["leg_br"] = _union(lg[2])
 		p["leg_fr"] = lg[3][0]
-	if bid == 1:
+	if bid == 1 or bid == 6:
 		p["rump"] = ellipse(rump, Vector2(17, 16), lean)
 		p["haunch"] = ellipse(rump + Vector2(8, 6), Vector2(14 * sit + 0.01, 12 * sit + 0.01), lean * 0.5)
 		var barrel := PackedVector2Array()
@@ -483,6 +519,20 @@ static func _parts(pose: Dictionary, legs: bool) -> Dictionary:
 		p["ear"] = _union([p["_ear_rise"], p["_ear_flap"]])
 		var ef := _rose_ear(head + Vector2(-3, -15).rotated(hrot), hrot, sw, 0.85)
 		p["ear_far"] = _union([ef[0], ef[1]])
+	elif bid == 6:
+		var e := _podenco_ear(near_root, hrot, sw, 1.0)
+		p["_ear_rise"] = e[0]
+		p["_ear_flap"] = ellipse(e[1], Vector2(2.2, 2.2))
+		p["ear"] = _union([p["_ear_rise"], p["_ear_flap"]])
+		var ef := _podenco_ear(head + Vector2(-3, -15).rotated(hrot), hrot, sw, 0.85)
+		p["ear_far"] = _union([ef[0], ellipse(ef[1], Vector2(1.8, 1.8))])
+	elif bid == 5:
+		# small and sharp, folded forward at the tips
+		var e := _ear_crease(near_root, hrot, sw, 0.8)
+		p["_ear_rise"] = _limb(near_root, e[0], 4.8, 4.2)
+		p["_ear_flap"] = _limb(e[0], e[1], 4.3, 1.0)
+		p["ear"] = _union([p["_ear_rise"], p["_ear_flap"]])
+		p["ear_far"] = _button_ear(head + Vector2(-3, -15).rotated(hrot), hrot, sw, 0.65)
 	elif bid == 4:
 		var e := _droop_ear(near_root, hrot, sw, 1.0)
 		p["_ear_rise"] = e[0]
@@ -505,6 +555,16 @@ static func _bat_ear(root: Vector2, hrot: float, sw: float, k: float) -> Array:
 	var angle := -1.35 + 0.3 * pos - 0.4 * neg
 	var tip := root + Vector2.from_angle(hrot + angle) * (24.0 * k)
 	var rise := _limb(root, tip, 7.4 * k, 5.0 * k)
+	return [rise, tip]
+
+
+# the podenco's huge upright ear: a hound listening for rabbits
+static func _podenco_ear(root: Vector2, hrot: float, sw: float, k: float) -> Array:
+	var pos := clampf(sw, 0.0, 0.7) / 0.7
+	var neg := clampf(-sw, 0.0, 0.6) / 0.4
+	var angle := -1.72 + 0.3 * pos - 0.55 * neg
+	var tip := root + Vector2.from_angle(hrot + angle) * (32.0 * k)
+	var rise := _limb(root, tip, 8.0 * k, 1.8 * k)
 	return [rise, tip]
 
 
@@ -625,6 +685,15 @@ static func _torso_mesh(a: Dictionary, fi: int, lt: Vector2, bid: int = 0) -> Ar
 		for poly: PackedVector2Array in Geometry2D.intersect_polygons(flash, sh):
 			_fill(sb, poly, PAW_SHADE)
 	_gloss(sb, torso, lt, 4.5, 3.0, ellipse(body_c + Vector2(-2, -14).rotated(ql), Vector2(26, 10), ql, 16), pal.gloss)
+	if pal.has("saddle"):
+		# the ratonero's black saddle over her back and up her neck
+		var saddle := _largest(Geometry2D.intersect_polygons(_union([
+			ellipse(body_c + Vector2(-4, -15).rotated(ql), Vector2(36, 13), ql, 24),
+			ellipse(p["_chest"] + Vector2(2, -14).rotated(ql), Vector2(13, 12), ql, 16)]), torso))
+		_fill(sb, saddle, pal.saddle)
+		for sh: PackedVector2Array in tshade:
+			for poly: PackedVector2Array in Geometry2D.intersect_polygons(saddle, sh):
+				_fill(sb, poly, pal.saddle_dark)
 	if qs > 0.3:
 		# the folded thigh's front edge, a thin inner line
 		var hc: Vector2 = p["_rump"] + Vector2(8, 6)
@@ -659,8 +728,8 @@ static func _head_mesh(a: Dictionary, fi: int, lt: Vector2, bid: int = 0) -> Arr
 	var ink := _mesh(sb, head)
 	# coat, its shadow, the grey muzzle (a darker rim where it meets the
 	# black) and the muzzle's own shadow, the gloss on the crown
-	_fill(sb, skull, pal.fur)
-	var hshade := _shade(sb, skull, lt, 6.0, pal.dark)
+	_fill(sb, skull, pal.get("head", pal.fur))
+	var hshade := _shade(sb, skull, lt, 6.0, pal.get("head_dark", pal.dark))
 	# the grey face: muzzle, cheek, and a soft ring round the eye and brow
 	var grey_shape := _union([_blunt(muz + Vector2(3, 1).rotated(hrot), Vector2(18, 8), hrot + 0.06), _grow(p["beard"], 0.5),
 		ellipse(muz + Vector2(-11, 3).rotated(hrot), Vector2(8, 7), hrot),
@@ -672,7 +741,12 @@ static func _head_mesh(a: Dictionary, fi: int, lt: Vector2, bid: int = 0) -> Arr
 		for sh: PackedVector2Array in hshade:
 			for poly: PackedVector2Array in Geometry2D.intersect_polygons(grey, sh):
 				_fill(sb, poly, pal.muz_sh)
-	_gloss(sb, skull, lt, 3.0, 2.4, ellipse(head + Vector2(-4, -11).rotated(hrot), Vector2(15, 9), hrot, 14), pal.gloss)
+	_gloss(sb, skull, lt, 3.0, 2.4, ellipse(head + Vector2(-4, -11).rotated(hrot), Vector2(15, 9), hrot, 14), pal.get("head_gloss", pal.gloss))
+	if pal.has("blaze"):
+		# a white blaze up the middle of her face, from the muzzle to the brow
+		var blaze := _largest(Geometry2D.intersect_polygons(_limb(muz + Vector2(6, -6).rotated(hrot),
+			head + Vector2(6, -15).rotated(hrot), 4.0, 2.4), skull))
+		_fill(sb, blaze, pal.blaze)
 	# a few grizzle dots on the grey, and silver grizzle through the black
 	# of her crown and cheek: the salt and pepper of a wiry coat
 	for f: Vector2 in [Vector2(0, 1), Vector2(5, 2.5), Vector2(-4, 3.5), Vector2(3, 5), Vector2(9, 1)]:
@@ -696,7 +770,7 @@ static func _ear_mesh(a: Dictionary, fi: int, lt: Vector2, bid: int = 0) -> Arra
 		return m
 	var pal := breed_palette(bid)
 	var qh := float(key.y) * Q_HEAD
-	var p := _parts({"head_up": qh, "ear": float(key.x) * Q_EAR}, false)
+	var p := _parts({"head_up": qh, "ear": float(key.x) * Q_EAR, "breed": bid}, false)
 	var head: Vector2 = p["_head"]
 	var sb := ShapeBatch.new()
 	_fill(sb, _grow(p["ear_far"], LINE), INK)
@@ -724,7 +798,7 @@ static func _tail_mesh(a: Dictionary, fi: int, lt: Vector2, bid: int = 0) -> Arr
 	if not m.is_empty():
 		return m
 	var pal := breed_palette(bid)
-	var p := _parts({"tail": float(key.x) * Q_TAIL}, false)
+	var p := _parts({"tail": float(key.x) * Q_TAIL, "breed": bid}, false)
 	var rump: Vector2 = p["_rump"]
 	var sb := ShapeBatch.new()
 	_fill(sb, _grow(p["tail"], LINE), INK)

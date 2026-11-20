@@ -5,7 +5,7 @@
     "port",
     "raval"
   ],
-  "carousel_count": 47,
+  "carousel_count": 48,
   "chapters": [
     [
       "tutorial",
@@ -62,6 +62,7 @@
       "partit",
       "scrap",
       "montserrat",
+      "encants",
       "raval"
     ]
   ],
@@ -76,20 +77,25 @@
     "molina",
     "montserrat"
   ],
-  "count": 46,
+  "count": 47,
   "dogs": [
     {
       "accel_mult": 1.0,
       "breed": "Mongrel",
       "desc": "Jack of all trades, master of sniffs",
+      "dig_mult": 1.0,
       "gap_mult": 1.0,
       "herd_mult": 1.0,
       "id": "millie",
+      "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.0,
       "name": "Millie",
+      "nose_mult": 1.3,
       "plant_mult": 1.0,
       "reel_mult": 1.0,
+      "skill": "The nose",
+      "skill_goal": "Sniff out and dig up a buried find",
       "speed_mult": 1.0,
       "stars": 0,
       "trait": "Balanced"
@@ -98,14 +104,19 @@
       "accel_mult": 1.2,
       "breed": "Galgo",
       "desc": "A lightning sighthound who hates digging in",
+      "dig_mult": 1.0,
       "gap_mult": 1.0,
       "herd_mult": 1.0,
       "id": "pipa",
+      "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.0,
       "name": "Pipa",
+      "nose_mult": 1.0,
       "plant_mult": 0.55,
       "reel_mult": 1.0,
+      "skill": "The sprint",
+      "skill_goal": "Sprint flat out for 2 seconds",
       "speed_mult": 1.2,
       "stars": 15,
       "trait": "Fast, weak plant"
@@ -114,14 +125,19 @@
       "accel_mult": 0.84,
       "breed": "French bulldog",
       "desc": "A stubborn little tank who refuses to budge",
+      "dig_mult": 1.0,
       "gap_mult": 1.0,
       "herd_mult": 1.0,
       "id": "mochi",
+      "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.0,
       "name": "Mochi",
+      "nose_mult": 1.0,
       "plant_mult": 1.7,
       "reel_mult": 1.0,
+      "skill": "The plant",
+      "skill_goal": "Dig in and trip your human 2 times",
       "speed_mult": 0.84,
       "stars": 25,
       "trait": "Plants hard, slow"
@@ -130,14 +146,19 @@
       "accel_mult": 1.05,
       "breed": "Gos d'atura",
       "desc": "A shaggy sheepdog who steers your human with ease",
+      "dig_mult": 1.0,
       "gap_mult": 1.0,
       "herd_mult": 1.45,
       "id": "bruna",
+      "leaps": false,
       "mass_mult": 1.0,
       "muck_mult": 1.6,
       "name": "Bruna",
+      "nose_mult": 1.0,
       "plant_mult": 1.0,
       "reel_mult": 1.0,
+      "skill": "The herd",
+      "skill_goal": "Herd your human for 5 seconds",
       "speed_mult": 1.0,
       "stars": 35,
       "trait": "Herds your human, collects muck"
@@ -146,27 +167,74 @@
       "accel_mult": 1.25,
       "breed": "Chihuahua",
       "desc": "A tiny chihuahua who slips between obstacles and reels in fast",
+      "dig_mult": 1.0,
       "gap_mult": 0.57,
       "herd_mult": 1.0,
       "id": "tito",
+      "leaps": false,
       "mass_mult": 0.45,
       "muck_mult": 1.0,
       "name": "Tito",
+      "nose_mult": 1.0,
       "plant_mult": 0.35,
       "reel_mult": 1.65,
+      "skill": "The squeeze",
+      "skill_goal": "Slip through 3 gaps only you fit",
       "speed_mult": 1.1,
       "stars": 45,
       "trait": "Slips through gaps, easily reeled in"
+    },
+    {
+      "accel_mult": 1.18,
+      "breed": "Ratonero bodeguero",
+      "desc": "A tricolor ratter from the bodegas who digs faster than anyone",
+      "dig_mult": 1.9,
+      "gap_mult": 0.82,
+      "herd_mult": 1.0,
+      "id": "perla",
+      "leaps": false,
+      "mass_mult": 0.7,
+      "muck_mult": 1.0,
+      "name": "Perla",
+      "nose_mult": 1.15,
+      "plant_mult": 0.8,
+      "reel_mult": 1.0,
+      "skill": "The dig",
+      "skill_goal": "Dig up 2 holes",
+      "speed_mult": 1.04,
+      "stars": 55,
+      "trait": "Digs anything up, quick on her feet"
+    },
+    {
+      "accel_mult": 1.06,
+      "breed": "Podenco",
+      "desc": "A red and white podenco who clears a bench from standing",
+      "dig_mult": 1.0,
+      "gap_mult": 1.0,
+      "herd_mult": 1.0,
+      "id": "duna",
+      "leaps": true,
+      "mass_mult": 1.0,
+      "muck_mult": 1.0,
+      "name": "Duna",
+      "nose_mult": 1.0,
+      "plant_mult": 0.72,
+      "reel_mult": 1.0,
+      "skill": "The leap",
+      "skill_goal": "Leap 2 benches",
+      "speed_mult": 1.12,
+      "stars": 65,
+      "trait": "Leaps benches, long stride"
     }
   ],
   "training": {
-    "cost": 40,
     "max_points": 5,
     "stats": [
       "speed",
       "plant",
       "herd",
-      "agility"
+      "agility",
+      "nose"
     ]
   },
   "walks": {
@@ -230,7 +298,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the giant duty-free chocolate box"
+          "text": "Make off with the giant duty-free chocolate box"
         },
         {
           "id": "spell",
@@ -253,7 +321,7 @@
       "kind": "chase",
       "lessons": [],
       "name": "L'Aeroport",
-      "prize_text": "Snatch the giant duty-free chocolate box",
+      "prize_text": "Make off with the giant duty-free chocolate box",
       "sign_material": "bagtags",
       "star_gate": 47,
       "weather": "clear"
@@ -406,7 +474,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the churro bag off the plaza ledge"
+          "text": "Make off with the churro bag on the plaza ledge"
         },
         {
           "id": "spell",
@@ -429,7 +497,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Els Àngels",
-      "prize_text": "Snatch the churro bag off the plaza ledge",
+      "prize_text": "Make off with the churro bag on the plaza ledge",
       "sign_material": "wheels",
       "star_gate": 22,
       "weather": "clear"
@@ -758,7 +826,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the tortilla pintxo off the bar's window"
+          "text": "Lift the tortilla pintxo off the bar's window ledge"
         },
         {
           "id": "spell",
@@ -781,7 +849,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Carrer de Blai",
-      "prize_text": "Snatch the tortilla pintxo off the bar's window",
+      "prize_text": "Lift the tortilla pintxo off the bar's window ledge",
       "sign_material": "pintxos",
       "star_gate": 39,
       "weather": "clear"
@@ -934,7 +1002,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the bravas from the sunset picnic blanket"
+          "text": "Steal the bravas off the sunset picnic blanket"
         },
         {
           "id": "spell",
@@ -957,7 +1025,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Els Búnquers",
-      "prize_text": "Snatch the bravas from the sunset picnic blanket",
+      "prize_text": "Steal the bravas off the sunset picnic blanket",
       "sign_material": "rubble",
       "star_gate": 33,
       "weather": "clear"
@@ -1313,6 +1381,94 @@
       "sign_material": "planeballs",
       "star_gate": 16,
       "weather": "clear"
+    },
+    "encants": {
+      "carry_text": "Steal a sock off a stall and bring it to your human",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "yard",
+      "gate_text": "PLAÇA DELS ENCANTS",
+      "gloss": "The flea market at Glòries",
+      "gloss_ca": "El mercat sota el mirall",
+      "gloss_es": "El rastro bajo el espejo",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "carry",
+          "text": "Steal a sock off a stall and bring it to your human"
+        },
+        {
+          "id": "encants_spill",
+          "text": "Plant and hold your human clear of a spill"
+        },
+        {
+          "id": "encants_auction",
+          "text": "Bark at the auction"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Nab the churro from the snack stall"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "day",
+      "id": "encants",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Els Encants",
+      "prize_text": "Nab the churro from the snack stall",
+      "sign_material": "buttons",
+      "star_gate": 50,
+      "weather": "rain"
     },
     "espanya": {
       "carry_text": "",
@@ -1726,7 +1882,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the gardener's bocadillo off his barrow"
+          "text": "Pinch the gardener's bocadillo off his wheelbarrow"
         },
         {
           "id": "spell",
@@ -1749,7 +1905,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "El Laberint d'Horta",
-      "prize_text": "Snatch the gardener's bocadillo off his barrow",
+      "prize_text": "Pinch the gardener's bocadillo off his wheelbarrow",
       "sign_material": "topiary",
       "star_gate": 41,
       "weather": "drizzle"
@@ -1990,7 +2146,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the croissant off the platform bench"
+          "text": "Swipe the croissant off the platform bench"
         },
         {
           "id": "spell",
@@ -2013,7 +2169,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "El Metro",
-      "prize_text": "Snatch the croissant off the platform bench",
+      "prize_text": "Swipe the croissant off the platform bench",
       "sign_material": "brollies",
       "star_gate": 31,
       "weather": "rain"
@@ -2254,7 +2410,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the artisanal honey and mato cheese jar"
+          "text": "Nab the jar of honey and mató"
         },
         {
           "id": "spell",
@@ -2277,7 +2433,7 @@
       "kind": "chase",
       "lessons": [],
       "name": "Montserrat",
-      "prize_text": "Snatch the artisanal honey and mato cheese jar",
+      "prize_text": "Nab the jar of honey and mató",
       "sign_material": "rosemary",
       "star_gate": 52,
       "weather": "clear"
@@ -2606,7 +2762,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the sausage from under the police horses"
+          "text": "Steal the sausage from under the police horses"
         },
         {
           "id": "spell",
@@ -2629,7 +2785,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Dia de Partit",
-      "prize_text": "Snatch the sausage from under the police horses",
+      "prize_text": "Steal the sausage from under the police horses",
       "sign_material": "scarf",
       "star_gate": 48,
       "weather": "clear"
@@ -2678,7 +2834,7 @@
         },
         {
           "id": "columns_poble",
-          "text": "Wrap the leash round 4 columns"
+          "text": "Wrap the leash around 4 columns"
         },
         {
           "id": "workshops",
@@ -2694,7 +2850,7 @@
         },
         {
           "id": "prize",
-          "text": "Swipe the glass porron off the table"
+          "text": "Swipe the glass porró off the table"
         },
         {
           "id": "spell",
@@ -2717,7 +2873,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "El Poble Espanyol",
-      "prize_text": "Swipe the glass porron off the table",
+      "prize_text": "Swipe the glass porró off the table",
       "sign_material": "azulejos",
       "star_gate": 46,
       "weather": "clear"
@@ -2762,7 +2918,7 @@
         },
         {
           "id": "gulls",
-          "text": "Startle 3 harbor seagulls into flight"
+          "text": "Send 3 harbor gulls flying"
         },
         {
           "id": "lleons_pincer",
@@ -3046,7 +3202,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the hot churros from the terrace table"
+          "text": "Nab the hot churros off the terrace table"
         },
         {
           "id": "spell",
@@ -3069,7 +3225,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Plaça Reial",
-      "prize_text": "Snatch the hot churros from the terrace table",
+      "prize_text": "Nab the hot churros off the terrace table",
       "sign_material": "fronds",
       "star_gate": 35,
       "weather": "clear"
@@ -3134,7 +3290,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the anchovy bocadillo off the wall"
+          "text": "Nab the anchovy bocadillo off the wall"
         },
         {
           "id": "spell",
@@ -3157,7 +3313,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Camí de Ronda",
-      "prize_text": "Snatch the anchovy bocadillo off the wall",
+      "prize_text": "Nab the anchovy bocadillo off the wall",
       "sign_material": "floats",
       "star_gate": 47,
       "weather": "wind"
@@ -3222,7 +3378,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the candied orange off the garden bench"
+          "text": "Pinch the candied orange off the garden bench"
         },
         {
           "id": "spell",
@@ -3245,7 +3401,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Sant Pau",
-      "prize_text": "Snatch the candied orange off the garden bench",
+      "prize_text": "Pinch the candied orange off the garden bench",
       "sign_material": "oranges",
       "star_gate": 46,
       "weather": "clear"
@@ -3574,7 +3730,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the plate of xató off the beach bar"
+          "text": "Swipe the plate of xató off the beach bar"
         },
         {
           "id": "spell",
@@ -3597,7 +3753,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "Sitges",
-      "prize_text": "Snatch the plate of xató off the beach bar",
+      "prize_text": "Swipe the plate of xató off the beach bar",
       "sign_material": "seaglass",
       "star_gate": 47,
       "weather": "wind"
@@ -3926,7 +4082,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the horchata off the orxateria table"
+          "text": "Steal a sip of horchata at the orxateria"
         },
         {
           "id": "spell",
@@ -3949,7 +4105,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "La Superilla",
-      "prize_text": "Snatch the horchata off the orxateria table",
+      "prize_text": "Steal a sip of horchata at the orxateria",
       "sign_material": "pingpong",
       "star_gate": 29,
       "weather": "clear"
@@ -4014,7 +4170,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the spun sugar off the fairground cart"
+          "text": "Swipe the cotton candy off the fairground cart"
         },
         {
           "id": "spell",
@@ -4037,7 +4193,7 @@
       "kind": "walk",
       "lessons": [],
       "name": "El Tibidabo",
-      "prize_text": "Snatch the spun sugar off the fairground cart",
+      "prize_text": "Swipe the cotton candy off the fairground cart",
       "sign_material": "bulbs",
       "star_gate": 17,
       "weather": "fog"
@@ -4313,7 +4469,7 @@
         },
         {
           "id": "prize",
-          "text": "Snatch the liver treat jar from the reception desk"
+          "text": "Raid the liver treat jar on the reception desk"
         },
         {
           "id": "spell",
@@ -4336,7 +4492,7 @@
       "kind": "chase",
       "lessons": [],
       "name": "El Veterinari",
-      "prize_text": "Snatch the liver treat jar from the reception desk",
+      "prize_text": "Raid the liver treat jar on the reception desk",
       "sign_material": "biscuits",
       "star_gate": 19,
       "weather": "clear"

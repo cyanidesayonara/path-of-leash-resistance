@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regenerates every image on the website (site/img/) from the game itself:
-# two or three screenshots for every walk in the campaign, three GIF clips and
-# the icon.
+# two or three screenshots for every walk in the campaign, the intro's title
+# and every chase film as GIF clips, a portrait of every dog, and the icon.
 #
 # Run it from the repo root with Godot in the current directory (or point
 # GODOT=/path/to/godot). On Linux CI without a display it wraps Godot in
@@ -215,6 +215,8 @@ shot site --level=site --shot-y=-1150 --shot-at=140
 shot site-2 --level=site --at-freedom --shot-at=260
 shot ronda --level=ronda --shot-y=-2500 --shot-at=260
 shot ronda-2 --level=ronda --at-freedom --shot-at=260
+shot encants --level=encants --shot-y=-2500 --shot-at=260
+shot encants-2 --level=encants --at-freedom --shot-at=260
 shot partit --level=partit --shot-y=-2500 --shot-at=260
 shot partit-2 --level=partit --at-freedom --shot-at=260
 shot scrap --level=scrap --shot-y=-2500 --shot-at=260
@@ -228,19 +230,30 @@ shot raval-3 --level=raval --at-freedom --shot-at=260
 
 wait_all
 
-# the hero is the intro's title over the street; then two chase films, past
-# their fade from black so a still of the first frame is not empty
+# the hero is the intro's title over the street; then every chase walk's
+# film, past its fade from black so a still of the first frame is not empty.
+# Smaller and fewer colours than the hero, so nine of them fit the budget.
 if [ -z "${SHOTS_ONLY:-}" ]; then
   clip hero walkies 12 480 --first=132 --last=179
-  clip sweeper sweeper 10 400 --first=4
-  clip boars boars 10 400 --first=4
+  CHASE_FILMS=(sweeper flood vet boars cremada aeroport molina montserrat gracia)
+  for film in "${CHASE_FILMS[@]}"; do
+    clip "${film}" "${film}" 8 320 --first=8 --colors=80
+  done
+
+  # every dog side on, as the films draw her, for the dog cards
+  echo "dogs"
+  APPDATA="$(native "${TMP}/app-dogs")" XDG_DATA_HOME="$(native "${TMP}/app-dogs")"     "${RUN[@]}" "${GODOT}" --rendering-method gl_compatibility --path .     --script res://tools/site_dogs.gd -- "$(native "${STAGE}")" 360 > "${TMP}/dogs.log" 2>&1 || true
+  ls "${STAGE}"/dog-*.png >/dev/null 2>&1 || { echo "  FAILED"; cat "${TMP}/dogs.log"; exit 1; }
+  for f in "${STAGE}"/dog-*.png; do
+    "${PY}" -c "import sys; from PIL import Image; im = Image.open(sys.argv[1]); im.quantize(colors=128, method=Image.Quantize.FASTOCTREE).save(sys.argv[1], optimize=True)" "${f}"
+  done
 
   echo "icon"
   APPDATA="$(native "${TMP}/app-icon")" XDG_DATA_HOME="$(native "${TMP}/app-icon")" \
     "${RUN[@]}" "${GODOT}" --rendering-method gl_compatibility --path . \
     --script res://tools/make_icon.gd -- --out="$(native "${STAGE}/icon.png")" > "${TMP}/icon.log" 2>&1 || true
   test -s "${STAGE}/icon.png" || { echo "  FAILED"; cat "${TMP}/icon.log"; exit 1; }
-  rm -f "${OUT}"/hero.gif "${OUT}"/sweeper.gif "${OUT}"/boars.gif "${OUT}"/icon.png
+  rm -f "${OUT}"/*.gif "${OUT}"/dog-*.png "${OUT}"/icon.png
 fi
 
 rm -f "${OUT}"/shot-*.jpg
