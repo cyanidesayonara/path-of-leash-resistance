@@ -19,7 +19,7 @@ extends RefCounted
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
 const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer",
 	"draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp",
-	"name_place", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+	"name_place", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
 
 # the overhead culls to the camera and runs the trains: redrawn at 30 fps
 const OVERHEAD_FOLLOWS_CAMERA := true
