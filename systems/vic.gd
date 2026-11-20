@@ -29,7 +29,6 @@ const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
-const Panot := preload("res://world/panot.gd")
 const EdgePath := preload("res://world/edge_path.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
@@ -62,10 +61,14 @@ const STONE_LIT := Color(0.82, 0.78, 0.72)
 const STONE_DARK := Color(0.48, 0.44, 0.40)
 const SETTS := Color(0.58, 0.56, 0.52)
 const SETTS_JOINT := Color(0.40, 0.38, 0.36, 0.55)
-const PLAZA := Color(0.78, 0.74, 0.66)
-const PLAZA_LIT := Color(0.86, 0.82, 0.74)
-const PANOT_INK := Color(0.62, 0.58, 0.50, 0.42)
-const PANOT_SHINE := Color(0.92, 0.88, 0.80, 0.28)
+const PLAZA := Color(0.82, 0.76, 0.64)
+const PLAZA_LIT := Color(0.90, 0.84, 0.70)
+const PLAZA_SETT := Color(0.74, 0.68, 0.56)
+const EARTH := Color(0.42, 0.34, 0.24)
+const EARTH_LIT := Color(0.56, 0.46, 0.32)
+const REED := Color(0.36, 0.48, 0.28)
+const REED_DK := Color(0.24, 0.36, 0.20)
+const BANK_STONE := Color(0.58, 0.54, 0.48)
 const SHUTTER := Color(0.42, 0.28, 0.18)
 const SHUTTER_DK := Color(0.28, 0.18, 0.12)
 const WHITEWASH := Color(0.90, 0.88, 0.84)
@@ -88,8 +91,8 @@ const COAT_NAVY := Color(0.18, 0.28, 0.42)
 const CATH_STONE := Color(0.68, 0.64, 0.58)
 const CATH_DK := Color(0.42, 0.38, 0.34)
 const TOWER_TOP := Color(0.58, 0.54, 0.50)
-const RIVER := Color(0.28, 0.42, 0.48)
-const RIVER_LIT := Color(0.42, 0.58, 0.62)
+const RIVER := Color(0.22, 0.48, 0.58)
+const RIVER_LIT := Color(0.38, 0.68, 0.74)
 const FROST := Color(0.92, 0.95, 0.98, 0.72)
 const GRASS := Color(0.34, 0.46, 0.28)
 const GRASS_LIT := Color(0.46, 0.58, 0.34)
@@ -108,10 +111,20 @@ const STALL_FUET := Vector2(520.0, -1320.0)
 const STALL_CHEESE := Vector2(760.0, -1580.0)
 const STALL_VEG := Vector2(500.0, -1760.0)
 const STALL_COATS := Vector2(780.0, -1180.0)
-const STALLS: Array[Vector2] = [STALL_FUET, STALL_CHEESE, STALL_VEG, STALL_COATS]
-const STALL_KINDS: Array[String] = ["fuet", "cheese", "veg", "coats"]
+const STALL_FUET2 := Vector2(700.0, -1080.0)
+const STALL_CHEESE2 := Vector2(540.0, -1500.0)
+const STALL_VEG2 := Vector2(780.0, -1880.0)
+const STALL_COATS2 := Vector2(520.0, -1980.0)
+const STALLS: Array[Vector2] = [
+	STALL_FUET, STALL_CHEESE, STALL_VEG, STALL_COATS,
+	STALL_FUET2, STALL_CHEESE2, STALL_VEG2, STALL_COATS2,
+]
+const STALL_KINDS: Array[String] = [
+	"fuet", "cheese", "veg", "coats", "fuet", "cheese", "veg", "coats",
+]
 
 const CATHEDRAL_RECT := Rect2(720.0, -2920.0, 220.0, 380.0)
+const CLOISTER := Rect2(960.0, -2860.0, 130.0, 200.0)
 const TOWER_BASE := Vector2(790.0, -2780.0)
 const TOWER_BARK_R := 210.0
 
@@ -198,6 +211,9 @@ static func edge_nodes(_m: Node2D = null) -> Array:
 		{"y": CATHEDRAL_END, "cx": CX, "half": 220.0},
 		{"y": BRIDGE_Y0, "cx": CX, "half": BRIDGE_HALF},
 		{"y": BRIDGE_Y1, "cx": CX, "half": BRIDGE_HALF},
+		# soft widen into the meadow (extra nodes so the corridor does not stair-step)
+		{"y": BRIDGE_Y1 - 80.0, "cx": CX, "half": 150.0},
+		{"y": BRIDGE_Y1 - 180.0, "cx": CX, "half": 200.0},
 		{"y": -4500.0, "cx": CX, "half": MEADOW_HALF},
 		{"y": GATE, "cx": CX, "half": MEADOW_HALF},
 	]
@@ -208,7 +224,7 @@ static func _edges_at(y: float) -> Vector2:
 
 
 static func solids(_m: Node2D = null) -> Array[Rect2]:
-	var out: Array[Rect2] = [CATHEDRAL_RECT]
+	var out: Array[Rect2] = [CATHEDRAL_RECT, CLOISTER]
 	out.append_array(PARAPETS)
 	# arcade back walls (outside the colonnade)
 	out.append(Rect2(250.0, MARKET_END - 20.0, 70.0, STREET_END - MARKET_END + 40.0))
@@ -305,7 +321,8 @@ static func build(m: Node2D) -> Array:
 	m.bins = Array(BINS.duplicate(), TYPE_VECTOR2, &"", null)
 	m.benches = Array([
 		Vector2(420.0, -1200.0), Vector2(860.0, -1680.0),
-		Vector2(500.0, -2500.0), Vector2(560.0, -4550.0),
+		Vector2(500.0, -2500.0),
+		Vector2(520.0, -4480.0), Vector2(760.0, -4620.0), Vector2(600.0, -4780.0),
 	], TYPE_VECTOR2, &"", null)
 
 	# mark spots: arcade columns + bridge parapet ends + meadow post
@@ -534,53 +551,62 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 
 
 static func _draw_street_houses(b: ShapeBatch, vt: float, vb: float) -> void:
-	# Old street: deep stone plots with shutters, balconies and doors, close on both sides.
+	# Old street from above: stone houses with tiled roofs, eaves, balconies
+	# and shutters, close on both sides.
 	var lo := maxf(vt - 40.0, STREET_END)
 	var hi := minf(vb + 40.0, START + 40.0)
 	if hi <= lo:
 		return
-	var plot_y := floorf(lo / 140.0) * 140.0
-	var idx := int(absf(plot_y) / 140.0)
+	# town blocks fill past the houses (never flat grey)
+	b.rect(Rect2(140.0, lo, CX - STREET_HALF - 140.0 - 40.0, hi - lo), STONE_DARK)
+	b.rect(Rect2(CX + STREET_HALF + 40.0, lo, 1140.0 - (CX + STREET_HALF + 40.0), hi - lo), STONE_DARK)
+	var plot_y := floorf(lo / 130.0) * 130.0
+	var idx := int(absf(plot_y) / 130.0)
 	while plot_y < hi:
 		var y0 := plot_y
-		var y1 := minf(plot_y + 140.0, hi)
+		var y1 := minf(plot_y + 130.0, hi)
 		if y1 > lo:
-			var tile := STONE if idx % 3 != 1 else STONE_LIT
-			var tile2 := WHITEWASH if idx % 3 == 2 else tile
-			# west plot
-			b.rect(Rect2(CX - STREET_HALF - 210.0 + 6.0, y0 + 4.0, 200.0, y1 - y0 - 4.0), SHADOW)
-			b.rect(Rect2(CX - STREET_HALF - 210.0, y0, 200.0, y1 - y0), tile2)
-			b.rect(Rect2(CX - STREET_HALF - 222.0, y0, 18.0, y1 - y0), TERRACOTTA)
-			b.rect(Rect2(CX - STREET_HALF - 8.0, y0, 10.0, y1 - y0), STONE_DARK)
-			# east plot
-			b.rect(Rect2(CX + STREET_HALF + 4.0 + 6.0, y0 + 4.0, 200.0, y1 - y0 - 4.0), SHADOW)
-			b.rect(Rect2(CX + STREET_HALF + 4.0, y0, 200.0, y1 - y0), tile)
-			b.rect(Rect2(CX + STREET_HALF + 190.0, y0, 18.0, y1 - y0), TERRACOTTA)
-			b.rect(Rect2(CX + STREET_HALF - 2.0, y0, 10.0, y1 - y0), STONE_DARK)
-			# shutters, balcony, door on each side
-			for side_i in range(2):
-				var side: float = -1.0 if side_i == 0 else 1.0
-				var edge: float = CX + side * STREET_HALF
-				var inward: float = -side
-				var sx: float = edge + inward * 28.0 - 11.0
-				for wy_off: float in [36.0, 96.0]:
-					var sy := y0 + wy_off
-					if sy > y1 - 8.0:
-						continue
-					b.rect(Rect2(sx - 4.0, sy + 10.0, 30.0, 4.0), Color(0.20, 0.20, 0.22))
-					b.rect(Rect2(sx - 2.0, sy + 8.0, 26.0, 3.0), Color(0.34, 0.34, 0.38))
-					b.rect(Rect2(sx, sy - 12.0, 22.0, 18.0), SHUTTER)
-					b.rect(Rect2(sx + 2.0, sy - 10.0, 8.0, 14.0), SHUTTER_DK)
-					b.rect(Rect2(sx + 12.0, sy - 10.0, 8.0, 14.0), SHUTTER_DK)
-				var dx: float = edge + inward * 22.0 - 7.0
-				b.rect(Rect2(dx, y0 + 108.0, 14.0, 24.0), WOOD)
-				b.rect(Rect2(dx + 2.0, y0 + 110.0, 10.0, 6.0), WOOD_LIT)
+			_stone_house(b, Vector2(CX - STREET_HALF - 72.0, (y0 + y1) * 0.5),
+				-1.0, 110.0, y1 - y0 - 6.0, idx)
+			_stone_house(b, Vector2(CX + STREET_HALF + 72.0, (y0 + y1) * 0.5),
+				1.0, 110.0, y1 - y0 - 6.0, idx + 3)
 		idx += 1
-		plot_y += 140.0
+		plot_y += 130.0
+
+
+static func _stone_house(b: ShapeBatch, p: Vector2, side: float, deep: float, along: float, seed_i: int) -> void:
+	var r := Rect2(p.x - deep * 0.5, p.y - along * 0.5, deep, along)
+	b.rect(Rect2(r.position + Vector2(10.0, 12.0), r.size), SHADOW)
+	var body := STONE_LIT if seed_i % 3 == 1 else (WHITEWASH if seed_i % 3 == 2 else STONE)
+	# path-facing wall strip
+	var face_x := r.end.x - 16.0 if side < 0.0 else r.position.x
+	b.rect(Rect2(face_x, r.position.y, 16.0, along), body.darkened(0.18))
+	b.rect(Rect2(face_x + (2.0 if side > 0.0 else 0.0), r.position.y + 3.0, 12.0, along - 6.0), body)
+	# door + shutters on the wall face
+	b.rect(Rect2(face_x + 3.0, r.position.y + along * 0.55, 10.0, 22.0), WOOD)
+	b.rect(Rect2(face_x + 2.0, r.position.y + 14.0, 12.0, 16.0), SHUTTER)
+	b.rect(Rect2(face_x + 3.0, r.position.y + 15.0, 4.0, 6.0), SHUTTER_DK)
+	b.rect(Rect2(face_x + 3.0, r.position.y + 23.0, 4.0, 6.0), SHUTTER_DK)
+	# balcony rail
+	b.rect(Rect2(face_x - (10.0 if side < 0.0 else -2.0), r.position.y + along * 0.28, 12.0, 3.0), Color(0.22, 0.22, 0.26))
+	# tiled roof covering the footprint + eaves
+	var roof := r.grow(10.0)
+	b.rect(roof, TERRACOTTA.darkened(0.12))
+	b.rect(roof.grow(-3.0), TERRACOTTA)
+	b.rect(Rect2(roof.position.x, roof.position.y, roof.size.x * 0.5, roof.size.y), TERRACOTTA.lightened(0.12))
+	b.line(Vector2(roof.get_center().x, roof.position.y + 3.0),
+		Vector2(roof.get_center().x, roof.end.y - 3.0), TERRACOTTA.darkened(0.22), 3.0)
+	for i in range(5):
+		var lx := roof.position.x + 8.0 + float(i) * (roof.size.x / 5.5)
+		b.rect(Rect2(lx, roof.position.y + 4.0, 4.0, roof.size.y - 8.0), TERRACOTTA.lightened(0.08))
+	# chimney
+	b.rect(Rect2(r.position.x + deep * 0.55, r.position.y + along * 0.18, 12.0, 14.0), STONE_DARK)
+	b.rect(Rect2(r.position.x + deep * 0.55 - 2.0, r.position.y + along * 0.18 - 3.0, 16.0, 5.0), STONE)
 
 
 static func _draw_plaza_arcades(b: ShapeBatch, vt: float, vb: float) -> void:
-	# Mercadal: continuous arcade floors, shade, shopfronts, columns and arches.
+	# Mercadal porticoes from above: roof over the arcade, shade beneath,
+	# columns at the edge, shopfronts and café tables behind.
 	var lo := maxf(vt - 40.0, MARKET_END)
 	var hi := minf(vb + 40.0, STREET_END + 20.0)
 	if hi <= lo:
@@ -589,35 +615,51 @@ static func _draw_plaza_arcades(b: ShapeBatch, vt: float, vb: float) -> void:
 	const EAST_COL := 920.0
 	const BACK_W := 200.0
 	const BACK_E := 1080.0
-	# arcade paving + shade under the portico
-	b.rect(Rect2(BACK_W, lo, WEST_COL - BACK_W, hi - lo), ARCADE)
-	b.rect(Rect2(EAST_COL, lo, BACK_E - EAST_COL, hi - lo), ARCADE)
-	b.rect(Rect2(WEST_COL - 70.0, lo, 70.0, hi - lo), ARCADE_SHADE)
-	b.rect(Rect2(EAST_COL, lo, 70.0, hi - lo), ARCADE_SHADE)
-	# shopfront colour strips behind
-	var sy := floorf(lo / 160.0) * 160.0
+	# town blocks behind the arcade (never flat grey)
+	b.rect(Rect2(140.0, lo, BACK_W - 140.0, hi - lo), STONE_DARK)
+	b.rect(Rect2(BACK_E, lo, 1140.0 - BACK_E, hi - lo), STONE_DARK)
+	# shade under the portico (floor of the arcade)
+	b.rect(Rect2(WEST_COL - 80.0, lo, 80.0, hi - lo), ARCADE_SHADE)
+	b.rect(Rect2(EAST_COL, lo, 80.0, hi - lo), ARCADE_SHADE)
+	# shopfront wall behind the arcade
+	b.rect(Rect2(BACK_W, lo, WEST_COL - 80.0 - BACK_W, hi - lo), STONE_DARK)
+	b.rect(Rect2(EAST_COL + 80.0, lo, BACK_E - (EAST_COL + 80.0), hi - lo), STONE_DARK)
+	var sy := floorf(lo / 150.0) * 150.0
 	var si := 0
 	while sy < hi:
-		var y1 := minf(sy + 160.0, hi)
-		var shop := Color(0.55, 0.30, 0.22) if si % 2 == 0 else Color(0.28, 0.38, 0.48)
+		var y1 := minf(sy + 150.0, hi)
+		var shop := Color(0.55, 0.30, 0.22) if si % 3 == 0 else (Color(0.28, 0.38, 0.48) if si % 3 == 1 else Color(0.46, 0.36, 0.22))
 		if y1 > lo:
-			b.rect(Rect2(BACK_W + 8.0, maxf(sy, lo) + 10.0, 36.0, y1 - maxf(sy, lo) - 20.0), shop)
-			b.rect(Rect2(BACK_E - 44.0, maxf(sy, lo) + 10.0, 36.0, y1 - maxf(sy, lo) - 20.0), shop.darkened(0.05))
+			var y0 := maxf(sy, lo)
+			b.rect(Rect2(BACK_W + 10.0, y0 + 12.0, 40.0, y1 - y0 - 24.0), shop)
+			b.rect(Rect2(BACK_E - 50.0, y0 + 12.0, 40.0, y1 - y0 - 24.0), shop.darkened(0.05))
+			# café tables under the arcade
+			var tx := WEST_COL - 50.0
+			b.circle(Vector2(tx, y0 + 40.0) + Vector2(4.0, 4.0), 10.0, SHADOW)
+			b.circle(Vector2(tx, y0 + 40.0), 9.0, WOOD_LIT)
+			b.circle(Vector2(EAST_COL + 50.0, y0 + 55.0), 9.0, WOOD_LIT)
 		si += 1
-		sy += 160.0
-	# columns + arch openings along both colonnades
+		sy += 150.0
+	# roof over the whole portico (eaves toward the square)
+	var west_roof := Rect2(BACK_W - 6.0, lo, WEST_COL - BACK_W + 18.0, hi - lo)
+	var east_roof := Rect2(EAST_COL - 12.0, lo, BACK_E - EAST_COL + 18.0, hi - lo)
+	b.rect(Rect2(west_roof.position + Vector2(8.0, 6.0), west_roof.size), SHADOW)
+	b.rect(west_roof, TERRACOTTA.darkened(0.1))
+	b.rect(west_roof.grow(-4.0), TERRACOTTA)
+	b.rect(Rect2(west_roof.position.x, west_roof.position.y, west_roof.size.x * 0.45, west_roof.size.y),
+		TERRACOTTA.lightened(0.1))
+	b.rect(Rect2(east_roof.position + Vector2(8.0, 6.0), east_roof.size), SHADOW)
+	b.rect(east_roof, TERRACOTTA.darkened(0.1))
+	b.rect(east_roof.grow(-4.0), TERRACOTTA)
+	b.rect(Rect2(east_roof.position.x + east_roof.size.x * 0.55, east_roof.position.y,
+		east_roof.size.x * 0.45, east_roof.size.y), TERRACOTTA.lightened(0.1))
+	# columns at the arcade edge (drawn again in draw_column; silhouette here)
 	for c: Vector2 in ARCADE_COLS:
 		if c.y < lo - 20.0 or c.y > hi + 20.0:
 			continue
-		b.rect(Rect2(c.x - 16.0, c.y - 10.0, 12.0, 20.0), SHADOW)
-		b.rect(Rect2(c.x - 12.0, c.y - 12.0, 24.0, 24.0), COLUMN_DK)
-		b.rect(Rect2(c.x - 10.0, c.y - 10.0, 20.0, 20.0), COLUMN)
-		# arch void toward the square
-		var inward := 1.0 if c.x < CX else -1.0
-		b.circle(c + Vector2(inward * 36.0, 0.0), 22.0, ARCADE_SHADE.darkened(0.12))
-	# terracotta roof strip over the arcades (depth from above)
-	b.rect(Rect2(BACK_W - 8.0, lo, 28.0, hi - lo), TERRACOTTA)
-	b.rect(Rect2(BACK_E - 20.0, lo, 28.0, hi - lo), TERRACOTTA)
+		b.circle(c + Vector2(4.0, 5.0), COL_R + 2.0, SHADOW)
+		b.circle(c, COL_R, COLUMN_DK)
+		b.circle(c + Vector2(-3.0, -3.0), COL_R * 0.65, COLUMN)
 
 
 static func _draw_cathedral_edges(b: ShapeBatch, vt: float, vb: float) -> void:
@@ -625,50 +667,136 @@ static func _draw_cathedral_edges(b: ShapeBatch, vt: float, vb: float) -> void:
 	var hi := minf(vb + 40.0, MARKET_END)
 	if hi <= lo:
 		return
-	# stone walls closing in toward the cathedral apron
-	b.rect(Rect2(200.0, lo, 120.0, hi - lo), STONE_DARK)
-	b.rect(Rect2(960.0, lo, 120.0, hi - lo), STONE_DARK)
-	b.rect(Rect2(300.0, lo, 14.0, hi - lo), STONE)
-	b.rect(Rect2(966.0, lo, 14.0, hi - lo), STONE)
+	# stone town closing in toward the cathedral apron
+	b.rect(Rect2(180.0, lo, 140.0, hi - lo), STONE_DARK)
+	b.rect(Rect2(960.0, lo, 140.0, hi - lo), STONE_DARK)
+	var y := floorf(lo / 110.0) * 110.0
+	var i := 0
+	while y < hi:
+		_stone_house(b, Vector2(250.0, y + 55.0), -1.0, 100.0, 96.0, i)
+		_stone_house(b, Vector2(1030.0, y + 55.0), 1.0, 100.0, 96.0, i + 2)
+		i += 1
+		y += 110.0
 
 
 static func _draw_river_banks(b: ShapeBatch, vt: float, vb: float) -> void:
-	if vb < BRIDGE_Y1 - 40.0 or vt > BRIDGE_Y0 + 40.0:
+	# Mèder: soft water and earth banks. y grows down the screen; the bridge
+	# runs BRIDGE_Y0 (nearer start) → BRIDGE_Y1 (further along). Water stays
+	# OFF the deck (west strip and east strip only).
+	if vb < BRIDGE_Y1 - 100.0 or vt > BRIDGE_Y0 + 100.0:
 		return
-	# soft river under / beside the bridge, feathered edges
-	var top := maxf(vt, BRIDGE_Y1 - 30.0)
-	var bot := minf(vb, BRIDGE_Y0 + 30.0)
-	b.rect(Rect2(180.0, top, RIVER_L - 180.0, bot - top), RIVER.darkened(0.08))
-	b.rect(Rect2(RIVER_R, top, 1100.0 - RIVER_R, bot - top), RIVER.darkened(0.08))
+	# top = further along (more negative); bot = toward the start
+	var top := maxf(vt - 20.0, BRIDGE_Y1 - 100.0)
+	var bot := minf(vb + 20.0, BRIDGE_Y0 + 100.0)
+	if bot <= top:
+		return
+	var deck_l := CX - BRIDGE_HALF
+	var deck_r := CX + BRIDGE_HALF
+	# riverside earth fills the void either side (never flat grey)
+	b.rect(Rect2(140.0, top, deck_l - 140.0, bot - top), EARTH)
+	b.rect(Rect2(deck_r, top, 1140.0 - deck_r, bot - top), EARTH)
+	b.rect(Rect2(150.0, top, deck_l - 160.0, bot - top), EARTH_LIT)
+	b.rect(Rect2(deck_r + 10.0, top, 1130.0 - deck_r, bot - top), EARTH_LIT)
+	# soft water west of the deck
 	b.band(PackedVector2Array([
-		Vector2(RIVER_L - 40.0, top), Vector2(RIVER_L + 30.0, top),
-		Vector2(RIVER_L - 40.0, bot), Vector2(RIVER_L + 30.0, bot),
-	]), 2, RIVER_LIT, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 0.85]))
+		Vector2(RIVER_L - 30.0, top), Vector2(deck_l - 4.0, top),
+		Vector2(RIVER_L - 20.0, (top + bot) * 0.5), Vector2(deck_l - 4.0, (top + bot) * 0.5),
+		Vector2(RIVER_L - 30.0, bot), Vector2(deck_l - 4.0, bot),
+	]), 2, Color(RIVER.r, RIVER.g, RIVER.b, 0.95),
+		PackedFloat32Array([0.5, 1.0, 0.5]), PackedFloat32Array([0.25, 1.0]))
+	# soft water east of the deck
 	b.band(PackedVector2Array([
-		Vector2(RIVER_R - 30.0, top), Vector2(RIVER_R + 40.0, top),
-		Vector2(RIVER_R - 30.0, bot), Vector2(RIVER_R + 40.0, bot),
-	]), 2, RIVER_LIT, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.85, 0.0]))
+		Vector2(deck_r + 4.0, top), Vector2(RIVER_R + 30.0, top),
+		Vector2(deck_r + 4.0, (top + bot) * 0.5), Vector2(RIVER_R + 20.0, (top + bot) * 0.5),
+		Vector2(deck_r + 4.0, bot), Vector2(RIVER_R + 30.0, bot),
+	]), 2, Color(RIVER.r, RIVER.g, RIVER.b, 0.95),
+		PackedFloat32Array([0.5, 1.0, 0.5]), PackedFloat32Array([1.0, 0.25]))
+	# sheen + darker under the span (still off the deck)
+	var u0 := maxf(top, BRIDGE_Y1)
+	var u1 := minf(bot, BRIDGE_Y0)
+	if u1 > u0:
+		b.glow(Vector2((RIVER_L + deck_l) * 0.5, (u0 + u1) * 0.5), 55.0,
+			Color(RIVER.r * 0.45, RIVER.g * 0.45, RIVER.b * 0.45, 0.55), 0.35)
+		b.glow(Vector2((deck_r + RIVER_R) * 0.5, (u0 + u1) * 0.5), 55.0,
+			Color(RIVER.r * 0.45, RIVER.g * 0.45, RIVER.b * 0.45, 0.55), 0.35)
+		b.glow(Vector2((RIVER_L + deck_l) * 0.5, (u0 + u1) * 0.5), 36.0,
+			Color(RIVER_LIT.r, RIVER_LIT.g, RIVER_LIT.b, 0.3), 0.4)
+		b.glow(Vector2((deck_r + RIVER_R) * 0.5, (u0 + u1) * 0.5), 36.0,
+			Color(RIVER_LIT.r, RIVER_LIT.g, RIVER_LIT.b, 0.3), 0.4)
+	# banks: stones and reeds
+	var by := floorf(top / 28.0) * 28.0
+	while by < bot:
+		b.coarse(Vector2(RIVER_L - 18.0 - _h(int(by)) * 20.0, by + 6.0), 7.0 + _h(int(by) + 1) * 5.0, BANK_STONE)
+		b.coarse(Vector2(RIVER_R + 18.0 + _h(int(by) + 2) * 20.0, by + 8.0), 6.0 + _h(int(by) + 3) * 5.0, BANK_STONE)
+		b.capsule(Vector2(RIVER_L - 8.0, by), Vector2(RIVER_L + 6.0, by + 10.0), 2.5, REED_DK)
+		b.capsule(Vector2(RIVER_R + 8.0, by + 2.0), Vector2(RIVER_R - 4.0, by + 12.0), 2.5, REED)
+		if int(absf(by) / 28.0) % 3 == 0:
+			b.coarse(Vector2(RIVER_L - 40.0, by + 4.0), 10.0, REED)
+			b.coarse(Vector2(RIVER_R + 40.0, by + 6.0), 10.0, REED_DK)
+		by += 28.0
+	# ripples only in the water strips
+	var tsec := float(AnimClock.msec()) * 0.001
+	for i in range(4):
+		var ry := lerpf(top + 20.0, bot - 20.0, _h(i * 7 + 2))
+		var west_x := lerpf(RIVER_L, deck_l - 10.0, 0.55) + sin(tsec * 0.6 + float(i)) * 8.0
+		var east_x := lerpf(deck_r + 10.0, RIVER_R, 0.55) + cos(tsec * 0.5 + float(i)) * 8.0
+		b.band(PackedVector2Array([
+			Vector2(west_x - 28.0, ry - 2.0), Vector2(west_x + 28.0, ry - 2.0),
+			Vector2(west_x - 28.0, ry + 2.0), Vector2(west_x + 28.0, ry + 2.0),
+		]), 2, Color(RIVER_LIT.r, RIVER_LIT.g, RIVER_LIT.b, 0.28),
+			PackedFloat32Array([0.15, 0.15]), PackedFloat32Array([0.0, 1.0]))
+		b.band(PackedVector2Array([
+			Vector2(east_x - 28.0, ry - 2.0), Vector2(east_x + 28.0, ry - 2.0),
+			Vector2(east_x - 28.0, ry + 2.0), Vector2(east_x + 28.0, ry + 2.0),
+		]), 2, Color(RIVER_LIT.r, RIVER_LIT.g, RIVER_LIT.b, 0.28),
+			PackedFloat32Array([0.15, 0.15]), PackedFloat32Array([0.0, 1.0]))
 
 
 static func _draw_meadow(b: ShapeBatch, m: Node2D, vt: float, vb: float) -> void:
-	if vb < GATE - 40.0 or vt > BRIDGE_END + 40.0:
+	# meadow lies past the bridge (more negative than BRIDGE_Y1) down to GATE
+	if vb < GATE - 40.0 or vt > BRIDGE_Y1 + 80.0:
 		return
-	var top := maxf(vt, GATE - 20.0)
-	var bot := minf(vb, BRIDGE_END)
+	var top := maxf(vt - 20.0, GATE - 20.0)
+	var bot := minf(vb + 20.0, BRIDGE_Y1 + 60.0)
 	if bot <= top:
 		return
-	b.quad(Vector2(200.0, top), Vector2(1080.0, top), Vector2(1080.0, bot), Vector2(200.0, bot), GRASS)
-	# frost patches on the approach
-	for i in range(12):
-		var fx := lerpf(240.0, 1040.0, _h(i * 5 + 2))
+	# soft grass field that covers the corridor's widen (no stair-step edge)
+	b.quad(Vector2(140.0, top), Vector2(1140.0, top), Vector2(1140.0, bot), Vector2(140.0, bot), GRASS)
+	b.band(PackedVector2Array([
+		Vector2(180.0, top), Vector2(1100.0, top),
+		Vector2(200.0, bot), Vector2(1080.0, bot),
+	]), 2, GRASS_LIT, PackedFloat32Array([0.45, 0.95]), PackedFloat32Array([1.0, 1.0]))
+	# feather toward the bridge so the join is soft, not stepped blocks
+	b.band(PackedVector2Array([
+		Vector2(200.0, bot - 60.0), Vector2(1080.0, bot - 60.0),
+		Vector2(160.0, bot + 20.0), Vector2(1120.0, bot + 20.0),
+	]), 2, GRASS, PackedFloat32Array([0.95, 0.0]), PackedFloat32Array([1.0, 1.0]))
+	# river bank on the west (soft), dry-stone wall + hedge on the east
+	b.band(PackedVector2Array([
+		Vector2(RIVER_L - 40.0, top), Vector2(RIVER_L + 50.0, top),
+		Vector2(RIVER_L - 40.0, bot), Vector2(RIVER_L + 50.0, bot),
+	]), 2, EARTH_LIT, PackedFloat32Array([0.7, 0.7]), PackedFloat32Array([0.0, 0.9]))
+	b.rect(Rect2(980.0, top, 18.0, bot - top), STONE_DARK)
+	var wy := floorf(top / 36.0) * 36.0
+	while wy < bot:
+		b.rect(Rect2(976.0, wy + 4.0, 26.0, 10.0), STONE)
+		b.rect(Rect2(982.0, wy + 16.0, 8.0, 14.0), STONE_LIT)
+		# hedge clumps inside the wall
+		b.coarse(Vector2(960.0, wy + 10.0), 12.0, REED)
+		wy += 36.0
+	# frost on the grass (campaign sky is fog+morning; still frost on clear day)
+	for i in range(18):
+		var fx := lerpf(260.0, 940.0, _h(i * 5 + 2))
 		var fy := lerpf(top + 10.0, bot - 10.0, _h(i * 11 + 4))
-		b.circle(Vector2(fx, fy), 3.0 + _h(i * 3 + 1) * 4.0, FROST)
+		b.circle(Vector2(fx, fy), 2.5 + _h(i * 3 + 1) * 3.5, FROST)
+	# benches are drawn by main from m.benches; meadow poplars are poles
 	if m != null and float(m.GATE_Y) < vb + 40.0:
-		b.glow(Vector2(640.0, float(m.GATE_Y) - 140.0), 160.0, Color(RIVER.r, RIVER.g, RIVER.b, 0.55))
+		b.glow(Vector2(640.0, float(m.GATE_Y) - 140.0), 160.0, Color(RIVER.r, RIVER.g, RIVER.b, 0.45), 0.4)
 
 
 static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: float, _ctop: float, vt: float, vb: float) -> void:
-	# path surface
+	# path surface: street setts, Mercadal sand setts (not Barcelona panots),
+	# bridge stone, meadow grass
 	var y := minf(vb + 20.0, START)
 	var top := maxf(vt - 20.0, GATE)
 	while y > top:
@@ -684,16 +812,18 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 		elif mid >= STREET_END:
 			col = SETTS
 		wc.quad(Vector2(ea.x, y2), Vector2(ea.y, y2), Vector2(eb.y, y), Vector2(eb.x, y), col)
-		# sett joints on the old street
+		# sett joints: old street dark; Mercadal pale sand joints
 		if mid >= STREET_END:
 			wc.line(Vector2(ea.x + 4.0, mid), Vector2(ea.y - 4.0, mid), SETTS_JOINT, 1.0)
+		elif mid < STREET_END and mid > MARKET_END:
+			wc.line(Vector2(ea.x + 6.0, mid), Vector2(ea.y - 6.0, mid), PLAZA_SETT, 1.2)
+			# short cross joints so it reads as sand-coloured setts, not a slab
+			var jx := ea.x + 30.0 + fposmod(mid * 0.1, 40.0)
+			while jx < ea.y - 20.0:
+				wc.line(Vector2(jx, mid - 16.0), Vector2(jx, mid + 16.0), PLAZA_SETT, 1.0)
+				jx += 48.0
 		y = y2
-	# panot on the Mercadal (town pavement that is not setts/stone/indoor)
-	if vt < STREET_END and vb > MARKET_END:
-		var e0 := _edges_at(clampf((vt + vb) * 0.5, MARKET_END, STREET_END))
-		Panot.flor(wc, e0.x + 8.0, e0.y - 8.0, maxf(vt, MARKET_END), minf(vb, STREET_END),
-			PANOT_INK, PANOT_SHINE)
-	# bridge: stone deck, arched voids in the river, frost on parapets
+	# bridge: deck of setts between parapets; cutwaters into the river
 	if vt < BRIDGE_Y0 + 40.0 and vb > BRIDGE_Y1 - 40.0:
 		_draw_bridge(wc, vt, vb)
 	# cathedral body
@@ -702,31 +832,58 @@ static func draw_cross_section(m: Node2D, wc: ShapeBatch, _top: float, _bottom: 
 
 
 static func _draw_bridge(wc: ShapeBatch, vt: float, vb: float) -> void:
+	# From above: deck of setts between two parapets with coping; cutwaters
+	# (pointed piers) poke into the river on both sides; arches show only as
+	# darker water and shadow beside the piers. Nothing round on the deck.
 	var deck_l := CX - BRIDGE_HALF
 	var deck_r := CX + BRIDGE_HALF
-	# stone deck flagstones
-	wc.rect(Rect2(deck_l, maxf(vt, BRIDGE_Y1), deck_r - deck_l, minf(vb, BRIDGE_Y0) - maxf(vt, BRIDGE_Y1)), STONE_LIT)
-	var gy := BRIDGE_Y1 + 20.0
+	var y0 := maxf(vt, BRIDGE_Y1)
+	var y1 := minf(vb, BRIDGE_Y0)
+	if y1 <= y0:
+		return
+	# stone deck
+	wc.rect(Rect2(deck_l, y0, deck_r - deck_l, y1 - y0), STONE_LIT)
+	var gy := BRIDGE_Y1 + 18.0
 	while gy < BRIDGE_Y0:
 		if gy >= vt and gy <= vb:
 			wc.line(Vector2(deck_l + 4.0, gy), Vector2(deck_r - 4.0, gy), SETTS_JOINT, 1.2)
-		gy += 36.0
-	# three stone arches spanning the river (voids read as dark water under)
+			var jx := deck_l + 28.0
+			while jx < deck_r - 20.0:
+				wc.line(Vector2(jx, gy - 14.0), Vector2(jx, gy + 14.0), SETTS_JOINT, 1.0)
+				jx += 36.0
+		gy += 34.0
+	# cutwaters poke into the river on both sides; arches read as darker
+	# water beside them. No band or circle on the deck itself.
 	for i in range(3):
-		var ay := BRIDGE_Y0 - 70.0 - float(i) * 150.0
-		if ay < vt - 50.0 or ay > vb + 50.0:
+		var ay := BRIDGE_Y0 - 80.0 - float(i) * 145.0
+		if ay < vt - 40.0 or ay > vb + 40.0:
 			continue
-		wc.circle(Vector2(CX, ay), 58.0, STONE)
-		wc.circle(Vector2(CX, ay), 58.0, SHADOW)
-		wc.circle(Vector2(CX, ay), 42.0, RIVER.darkened(0.15))
-		wc.glow(Vector2(CX, ay), 36.0, Color(RIVER_LIT.r, RIVER_LIT.g, RIVER_LIT.b, 0.35))
+		var west := PackedVector2Array([
+			Vector2(deck_l, ay - 18.0), Vector2(deck_l - 54.0, ay), Vector2(deck_l, ay + 18.0),
+		])
+		var east := PackedVector2Array([
+			Vector2(deck_r, ay - 18.0), Vector2(deck_r + 54.0, ay), Vector2(deck_r, ay + 18.0),
+		])
+		wc.polygon(west, STONE_DARK)
+		wc.polygon(PackedVector2Array([
+			west[0] + Vector2(-3.0, 5.0), west[1] + Vector2(8.0, 0.0), west[2] + Vector2(-3.0, -5.0),
+		]), STONE)
+		wc.polygon(east, STONE_DARK)
+		wc.polygon(PackedVector2Array([
+			east[0] + Vector2(3.0, 5.0), east[1] + Vector2(-8.0, 0.0), east[2] + Vector2(3.0, -5.0),
+		]), STONE)
+		# arch shadow in the water only
+		wc.glow(Vector2(deck_l - 34.0, ay), 22.0, Color(0.05, 0.08, 0.12, 0.5), 0.35)
+		wc.glow(Vector2(deck_r + 34.0, ay), 22.0, Color(0.05, 0.08, 0.12, 0.5), 0.35)
+		wc.glow(Vector2(deck_l - 34.0, ay), 14.0, Color(RIVER.r * 0.55, RIVER.g * 0.55, RIVER.b * 0.55, 0.45), 0.4)
+		wc.glow(Vector2(deck_r + 34.0, ay), 14.0, Color(RIVER.r * 0.55, RIVER.g * 0.55, RIVER.b * 0.55, 0.45), 0.4)
+	# parapets with coping and frost
 	for r: Rect2 in PARAPETS:
 		if r.end.y < vt or r.position.y > vb:
 			continue
 		wc.rect(Rect2(r.position + Vector2(3, 4), r.size), SHADOW)
 		wc.rect(r, STONE_DARK)
 		wc.rect(Rect2(r.position.x + 2.0, r.position.y + 2.0, r.size.x - 4.0, r.size.y - 4.0), STONE)
-		# frost along the coping
 		wc.rect(Rect2(r.position.x - 3.0, r.position.y, r.size.x + 6.0, 10.0), FROST)
 		for k in range(8):
 			var fy := r.position.y + 30.0 + float(k) * 55.0
@@ -737,40 +894,73 @@ static func _draw_bridge(wc: ShapeBatch, vt: float, vb: float) -> void:
 
 static func _draw_cathedral(wc: ShapeBatch) -> void:
 	var r := CATHEDRAL_RECT
-	# apron paving around the facade
-	wc.rect(Rect2(r.position.x - 40.0, r.position.y - 20.0, r.size.x + 80.0, r.size.y + 60.0), STONE)
-	wc.rect(Rect2(r.position + Vector2(10, 12), r.size), SHADOW)
-	wc.rect(r, CATH_STONE)
-	# facade steps up to the door
+	# long shadow thrown by the mass
+	wc.rect(Rect2(r.position + Vector2(18.0, 22.0), r.size + Vector2(40.0, 30.0)), SHADOW)
+	# apron paving
+	wc.rect(Rect2(r.position.x - 36.0, r.position.y - 24.0, r.size.x + 72.0, r.size.y + 70.0), STONE)
+	# nave walls under a pitched tiled roof
+	wc.rect(r, CATH_DK)
+	wc.rect(r.grow(-8.0), CATH_STONE)
+	# pitched roof with ridge along the nave
+	var roof := r.grow(12.0)
+	wc.rect(roof, TERRACOTTA.darkened(0.08))
+	wc.rect(Rect2(roof.position.x, roof.position.y, roof.size.x * 0.5, roof.size.y), TERRACOTTA.lightened(0.1))
+	wc.rect(Rect2(roof.position.x + roof.size.x * 0.5, roof.position.y, roof.size.x * 0.5, roof.size.y), TERRACOTTA.darkened(0.12))
+	wc.line(Vector2(roof.get_center().x, roof.position.y + 4.0),
+		Vector2(roof.get_center().x, roof.end.y - 4.0), TERRACOTTA.lightened(0.22), 4.0)
+	for i in range(6):
+		var lx := roof.position.x + 12.0 + float(i) * (roof.size.x / 6.5)
+		wc.rect(Rect2(lx, roof.position.y + 6.0, 5.0, roof.size.y - 12.0), TERRACOTTA.lightened(0.06))
+	# rounded apse at the north (more negative y) end
+	var apse := Vector2(r.get_center().x, r.position.y)
+	wc.circle(apse + Vector2(8.0, 8.0), r.size.x * 0.42, SHADOW)
+	wc.circle(apse, r.size.x * 0.42, TERRACOTTA.darkened(0.05))
+	wc.circle(apse - Vector2(4.0, 4.0), r.size.x * 0.30, TERRACOTTA.lightened(0.08))
+	# facade steps at the south end
 	for k in range(4):
-		var sw := r.size.x - 40.0 - float(k) * 10.0
-		wc.rect(Rect2(r.get_center().x - sw * 0.5, r.end.y - 8.0 - float(k) * 10.0, sw, 10.0),
+		var sw := r.size.x - 30.0 - float(k) * 12.0
+		wc.rect(Rect2(r.get_center().x - sw * 0.5, r.end.y - 6.0 - float(k) * 9.0, sw, 9.0),
 			STONE_LIT if k % 2 == 0 else STONE_DARK)
-	# rose / nave windows
-	wc.circle(Vector2(r.get_center().x, r.position.y + 70.0), 28.0, CATH_DK)
-	wc.circle(Vector2(r.get_center().x, r.position.y + 70.0), 18.0, Color(0.35, 0.42, 0.48, 0.55))
-	for k in range(3):
-		wc.rect(Rect2(r.position.x + 28.0 + float(k) * 55.0, r.position.y + 120.0, 26.0, 70.0), Color(0.30, 0.36, 0.42, 0.6))
-	# Romanesque bell tower — big enough to read from above even half lost in fog
+	# cloister beside the nave (west): open square with arcade roof around a garth
+	var cl := CLOISTER
+	wc.rect(Rect2(cl.position + Vector2(8.0, 10.0), cl.size), SHADOW)
+	wc.rect(cl, STONE_DARK)
+	wc.rect(cl.grow(-22.0), GRASS_DK)
+	wc.rect(cl.grow(-28.0), GRASS)
+	# cloister walk roof as a ring
+	wc.rect(Rect2(cl.position.x, cl.position.y, cl.size.x, 18.0), TERRACOTTA)
+	wc.rect(Rect2(cl.position.x, cl.end.y - 18.0, cl.size.x, 18.0), TERRACOTTA)
+	wc.rect(Rect2(cl.position.x, cl.position.y, 18.0, cl.size.y), TERRACOTTA)
+	wc.rect(Rect2(cl.end.x - 18.0, cl.position.y, 18.0, cl.size.y), TERRACOTTA)
+	# Romanesque bell tower: square shaft, arched openings, pyramid roof
 	var fog := Game.fog_amount()
 	var base := TOWER_BASE
-	wc.rect(Rect2(base.x - 38.0 + 8.0, base.y - 280.0 + 10.0, 76.0, 280.0), SHADOW)
-	wc.rect(Rect2(base.x - 38.0, base.y - 280.0, 76.0, 280.0), CATH_DK)
-	wc.rect(Rect2(base.x - 30.0, base.y - 268.0, 60.0, 260.0), CATH_STONE)
-	# staged setbacks so the shaft reads as a tower, not a box
-	wc.rect(Rect2(base.x - 26.0, base.y - 200.0, 52.0, 8.0), STONE_LIT)
-	wc.rect(Rect2(base.x - 26.0, base.y - 120.0, 52.0, 8.0), STONE_LIT)
-	for k in range(4):
-		var ty := base.y - 70.0 - float(k) * 48.0
-		wc.rect(Rect2(base.x - 16.0, ty, 14.0, 26.0), Color(0.18, 0.18, 0.20, 0.75))
-		wc.rect(Rect2(base.x + 4.0, ty, 14.0, 26.0), Color(0.18, 0.18, 0.20, 0.75))
-	wc.rect(Rect2(base.x - 44.0, base.y - 300.0, 88.0, 28.0), TOWER_TOP)
-	wc.circle(base + Vector2(0.0, -310.0), 12.0, TOWER_TOP.lightened(0.12))
-	# fog only eats the very top; the shaft stays readable nearby
+	wc.rect(Rect2(base.x - 42.0 + 10.0, base.y - 300.0 + 12.0, 84.0, 300.0), SHADOW)
+	wc.rect(Rect2(base.x - 42.0, base.y - 300.0, 84.0, 300.0), CATH_DK)
+	wc.rect(Rect2(base.x - 34.0, base.y - 288.0, 68.0, 280.0), CATH_STONE)
+	# arched openings on every side of the shaft
+	for k in range(5):
+		var ty := base.y - 60.0 - float(k) * 46.0
+		wc.rect(Rect2(base.x - 18.0, ty, 12.0, 22.0), Color(0.14, 0.14, 0.16, 0.85))
+		wc.rect(Rect2(base.x + 6.0, ty, 12.0, 22.0), Color(0.14, 0.14, 0.16, 0.85))
+		wc.circle(Vector2(base.x - 12.0, ty), 6.0, Color(0.14, 0.14, 0.16, 0.85))
+		wc.circle(Vector2(base.x + 12.0, ty), 6.0, Color(0.14, 0.14, 0.16, 0.85))
+	# pyramid roof
+	var peak := PackedVector2Array([
+		Vector2(base.x - 48.0, base.y - 300.0),
+		Vector2(base.x, base.y - 360.0),
+		Vector2(base.x + 48.0, base.y - 300.0),
+	])
+	wc.polygon(peak, TOWER_TOP.darkened(0.1))
+	wc.polygon(PackedVector2Array([
+		peak[0] + Vector2(8.0, 0.0), peak[1] + Vector2(0.0, 8.0), peak[2] + Vector2(-8.0, 0.0),
+	]), TOWER_TOP)
+	wc.line(peak[1], Vector2(base.x, base.y - 300.0), TOWER_TOP.lightened(0.15), 2.0)
+	# fog eats only the top; the base stays clear
 	if fog > 0.25:
 		var a := clampf(fog, 0.0, 1.0) * 0.55
-		wc.glow(base + Vector2(0.0, -290.0), 90.0, Color(FOG_VEIL.r, FOG_VEIL.g, FOG_VEIL.b, a))
-		wc.glow(base + Vector2(0.0, -330.0), 110.0, Color(FOG_VEIL.r, FOG_VEIL.g, FOG_VEIL.b, a * 0.85))
+		wc.glow(base + Vector2(0.0, -330.0), 100.0, Color(FOG_VEIL.r, FOG_VEIL.g, FOG_VEIL.b, a), 0.35)
+		wc.glow(base + Vector2(0.0, -370.0), 120.0, Color(FOG_VEIL.r, FOG_VEIL.g, FOG_VEIL.b, a * 0.85), 0.35)
 
 
 static func draw_column(_m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
@@ -816,37 +1006,39 @@ static func _draw_stalls(wc: ShapeBatch, vt: float, vb: float) -> void:
 		if s.y < vt - 40.0 or s.y > vb + 40.0:
 			continue
 		var kind := STALL_KINDS[i]
-		wc.rect(Rect2(s.x - 42.0 + 5.0, s.y - 30.0 + 5.0, 84.0, 52.0), SHADOW)
+		wc.rect(Rect2(s.x - 46.0 + 5.0, s.y - 34.0 + 5.0, 92.0, 60.0), SHADOW)
 		# striped awning
-		wc.rect(Rect2(s.x - 42.0, s.y - 30.0, 84.0, 16.0), CANVAS)
-		for stripe in range(7):
-			var sx := s.x - 40.0 + float(stripe) * 12.0
-			wc.rect(Rect2(sx, s.y - 28.0, 6.0, 12.0), CANVAS_DK if stripe % 2 == 0 else CANVAS.lightened(0.1))
+		wc.rect(Rect2(s.x - 46.0, s.y - 34.0, 92.0, 18.0), CANVAS)
+		for stripe in range(8):
+			var sx := s.x - 44.0 + float(stripe) * 11.0
+			wc.rect(Rect2(sx, s.y - 32.0, 6.0, 14.0), CANVAS_DK if stripe % 2 == 0 else CANVAS.lightened(0.1))
 		# counter
-		wc.rect(Rect2(s.x - 38.0, s.y - 10.0, 76.0, 30.0), WOOD)
-		wc.rect(Rect2(s.x - 36.0, s.y - 8.0, 72.0, 6.0), WOOD_LIT)
+		wc.rect(Rect2(s.x - 40.0, s.y - 12.0, 80.0, 34.0), WOOD)
+		wc.rect(Rect2(s.x - 38.0, s.y - 10.0, 76.0, 6.0), WOOD_LIT)
 		match kind:
 			"fuet":
-				# fuet and llonganissa hanging — readable at a glance
-				for k in range(6):
-					var hx := s.x - 28.0 + float(k) * 11.0
-					wc.line(Vector2(hx, s.y - 30.0), Vector2(hx, s.y - 14.0), Color(0.18, 0.16, 0.14), 1.4)
-					wc.capsule(Vector2(hx, s.y - 14.0), Vector2(hx + 2.0, s.y - 2.0), 5.5, FUET)
-					wc.circle(Vector2(hx - 1.0, s.y - 16.0), 3.0, FUET_LIT)
+				for k in range(7):
+					var hx := s.x - 30.0 + float(k) * 10.0
+					wc.line(Vector2(hx, s.y - 34.0), Vector2(hx, s.y - 16.0), Color(0.18, 0.16, 0.14), 1.4)
+					wc.capsule(Vector2(hx, s.y - 16.0), Vector2(hx + 2.0, s.y - 2.0), 5.5, FUET)
+					wc.circle(Vector2(hx - 1.0, s.y - 18.0), 3.0, FUET_LIT)
 			"cheese":
-				for k in range(4):
-					var cx := s.x - 22.0 + float(k) * 14.0
+				for k in range(5):
+					var cx := s.x - 26.0 + float(k) * 13.0
 					wc.circle(Vector2(cx, s.y + 2.0), 10.0, CHEESE_RIND)
 					wc.circle(Vector2(cx - 2.0, s.y), 7.0, CHEESE)
 			"veg":
+				wc.rect(Rect2(s.x - 28.0, s.y - 2.0, 22.0, 16.0), WOOD_LIT)
 				wc.circle(s + Vector2(-16.0, 4.0), 8.0, VEG_GREEN)
 				wc.circle(s + Vector2(-2.0, 8.0), 7.0, VEG_ORANGE)
 				wc.circle(s + Vector2(14.0, 3.0), 8.0, VEG_GREEN)
 				wc.circle(s + Vector2(4.0, -2.0), 5.0, Color(0.72, 0.22, 0.18))
+				wc.circle(s + Vector2(22.0, 6.0), 6.0, VEG_ORANGE)
 			"coats":
-				wc.rect(Rect2(s.x - 24.0, s.y - 6.0, 18.0, 26.0), COAT_NAVY)
-				wc.rect(Rect2(s.x - 2.0, s.y - 6.0, 18.0, 26.0), Color(0.42, 0.22, 0.18))
-				wc.rect(Rect2(s.x + 18.0, s.y - 4.0, 16.0, 24.0), Color(0.28, 0.32, 0.28))
+				wc.line(Vector2(s.x - 28.0, s.y - 14.0), Vector2(s.x + 28.0, s.y - 14.0), Color(0.2, 0.2, 0.22), 2.0)
+				wc.rect(Rect2(s.x - 26.0, s.y - 12.0, 18.0, 28.0), COAT_NAVY)
+				wc.rect(Rect2(s.x - 4.0, s.y - 12.0, 18.0, 28.0), Color(0.42, 0.22, 0.18))
+				wc.rect(Rect2(s.x + 16.0, s.y - 10.0, 16.0, 26.0), Color(0.28, 0.32, 0.28))
 
 
 static func _draw_sausage(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
@@ -877,14 +1069,16 @@ static func _draw_sausage(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> vo
 static func _draw_market_people(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	if not Outdoors.shops_open(Game.weather, Game.hour):
 		return
-	# a few stallholders and shoppers that loom out of fog as she nears
-	var folks: Array = [
-		STALL_FUET + Vector2(-50.0, 10.0),
-		STALL_CHEESE + Vector2(48.0, 8.0),
-		STALL_VEG + Vector2(-48.0, 12.0),
-		Vector2(640.0, -1400.0),
-		Vector2(600.0, -1850.0),
-	]
+	# stallholders behind each stall + shoppers queuing in the square
+	var folks: Array = []
+	for i in range(STALLS.size()):
+		folks.append(STALLS[i] + Vector2(-42.0 if i % 2 == 0 else 44.0, 6.0))
+		folks.append(STALLS[i] + Vector2(0.0, 38.0 + float(i % 3) * 14.0))
+		folks.append(STALLS[i] + Vector2(18.0, 52.0 + float((i + 1) % 3) * 12.0))
+	folks.append_array([
+		Vector2(640.0, -1400.0), Vector2(600.0, -1850.0), Vector2(680.0, -1200.0),
+		Vector2(610.0, -1600.0), Vector2(700.0, -1750.0),
+	])
 	var cam: Vector2 = m.dog.global_position if m.dog != null else Vector2(CX, (vt + vb) * 0.5)
 	var fog := Game.fog_amount()
 	for i in range(folks.size()):
@@ -893,7 +1087,7 @@ static func _draw_market_people(m: Node2D, wc: ShapeBatch, vt: float, vb: float)
 			continue
 		var dist := cam.distance_to(p)
 		if fog > 0.35 and dist > 340.0:
-			continue  # faded into the grey; they loom only as she nears
+			continue
 		NpcFigure.person(wc, p, Vector2(0.0, -1.0), 5100 + i, -1.0, {"arms": NpcFigure.Arms.SIDE})
 
 
