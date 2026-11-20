@@ -2,7 +2,8 @@ extends SceneTree
 
 # The campaign's chapters (Game.chapters, the walk select and YOUR WALKS):
 # they cover the carousel exactly once and in its order, every boss walk ends
-# a chapter, no chapter runs longer than CHAPTER_MAX, and paging a chapter at
+# a chapter, there are always CHAPTERS of them, none runs longer than
+# CHAPTER_MAX, and paging a chapter at
 # a time comes back round to where it started.
 
 var checks := 0
@@ -38,7 +39,13 @@ func _run() -> void:
 		_check(String(ch[ch.size() - 1]) == boss, "%s ends its chapter" % boss)
 	for lv: String in game.CHASE_WALKS:
 		_check(lv in game.CAROUSEL, "chase walk %s is in the carousel" % lv)
-	_check(chs.size() >= 4 and chs.size() <= 6, "the campaign is about five chapters (%d)" % chs.size())
+	_check(chs.size() == game.CHAPTERS, "the campaign is %d chapters (%d)" % [game.CHAPTERS, chs.size()])
+	# a walk added to the last run between bosses never makes a sixth chapter
+	var more: Array = Array(game.CAROUSEL).duplicate()
+	for extra in ["x1", "x2", "x3", "x4"]:
+		more.insert(more.size() - 1, extra)
+		_check(game.chapters_of(more).size() == game.CHAPTERS, "with %d walks, still %d chapters" % [more.size(), game.CHAPTERS])
+	_check(game.chapters_of(Array(game.CAROUSEL)) == chs, "chapters() is chapters_of the carousel")
 	# paging: down a chapter at a time all the way round lands back home
 	game.level_id = "barri"
 	var start := game.chapter_index("barri") as int

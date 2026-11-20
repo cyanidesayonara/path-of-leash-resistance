@@ -1812,32 +1812,45 @@ func star_str(n: int) -> String:
 
 
 # The campaign's chapters, for the walk select: the carousel cut after each
-# boss walk, so every chapter ends on a boss; a run longer than CHAPTER_MAX
-# between bosses is halved. Derived, so it follows the carousel's order.
+# boss walk, so every chapter ends on a boss. Until every boss is in, the
+# longest run between bosses is halved until there are CHAPTERS of them (the
+# five chapter achievements), so adding a walk never makes a sixth chapter.
+# Derived, so it follows the carousel's order.
 const BOSS_WALKS: Array[String] = ["ciutadella", "guell", "port", "raval"]
 const CHASE_WALKS: Array[String] = ["neteja", "besos", "vet", "boars", "gracia", "cremada", "aeroport", "molina",
 	"montserrat"]
-const CHAPTER_MAX := 12
+const CHAPTERS := 5
+# the longest a chapter may run; a guard, held by tests/test_chapters.gd
+const CHAPTER_MAX := 16
 
 
 func chapters() -> Array:
+	return chapters_of(CAROUSEL)
+
+
+# the chapters a carousel in this order would make
+func chapters_of(carousel: Array) -> Array:
 	var out: Array = []
 	var run: Array = []
-	for lv: String in CAROUSEL:
+	for lv: String in carousel:
 		run.append(lv)
 		if lv in BOSS_WALKS:
-			out.append_array(_split_chapter(run))
+			out.append(run)
 			run = []
 	if not run.is_empty():
-		out.append_array(_split_chapter(run))
+		out.append(run)
+	while out.size() < CHAPTERS:
+		var longest := 0
+		for i in range(out.size()):
+			if (out[i] as Array).size() > (out[longest] as Array).size():
+				longest = i
+		var whole: Array = out[longest]
+		if whole.size() < 2:
+			break
+		var half := ceili(float(whole.size()) / 2.0)
+		out[longest] = whole.slice(0, half)
+		out.insert(longest + 1, whole.slice(half))
 	return out
-
-
-func _split_chapter(run: Array) -> Array:
-	if run.size() <= CHAPTER_MAX:
-		return [run.duplicate()]
-	var half := ceili(float(run.size()) / 2.0)
-	return [run.slice(0, half), run.slice(half)]
 
 
 func chapter_index(lv: String) -> int:
