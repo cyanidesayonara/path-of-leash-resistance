@@ -231,8 +231,8 @@ const LINES := {
 		"done": "First cove's calmer anyway. Enjoy the shingle!"},
 	"haggler": {"idle": "Forty for the crate? Fine, thirty. Want a dare while I think?",
 		"dare": "%d tricks in %d seconds, and I'll throw in a button!",
-		"won": "Sold! You're sharper than these lamps. Harder?",
-		"lost": "No deal. Come back when you've got the goods.",
+		"won": "Sold! You're sharper than these lamps. Come back for a harder one.",
+		"lost": "No deal. Come back and try again.",
 		"done": "Take the button. I've got more crates to sort."},
 }
 
