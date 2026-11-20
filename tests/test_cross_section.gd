@@ -17,6 +17,7 @@ var LevelBuild: GDScript
 const PAVED_FREEDOM: Array[String] = [
 	"aeroport",
 	"barri",
+	"encants",
 	"forum",
 	"market",
 	"neteja",
