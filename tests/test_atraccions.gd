@@ -116,12 +116,12 @@ func _run() -> void:
 		A.tick(m, 0.05)
 	_check(m.human_soak > 0.0, "human in the splash gets soaked (%.2f)" % m.human_soak)
 
-	# dodge: threatened on the dry side, never hit
+	# dodge: threatened on the dry (left) side, never hit
 	m.atraccions_flume = {"state": "wait", "t": 0.0, "cooldown": 0.0, "hit": false, "threatened": false, "warned": false, "paid": false}
 	m.atraccions_flume_dodges = 0
 	m.human_soak = 0.0
-	m.dog.global_position = Vector2(A.FLUME_DRY_X + 10.0, -2920.0)
-	m.human.global_position = Vector2(A.FLUME_DRY_X + 20.0, -2920.0)
+	m.dog.global_position = Vector2(A.FLUME_DRY_X - 10.0, -2920.0)
+	m.human.global_position = Vector2(A.FLUME_DRY_X - 20.0, -2920.0)
 	m.dog.planted = true
 	t = 0.0
 	while t < 5.0:
@@ -129,6 +129,13 @@ func _run() -> void:
 		t += 0.05
 	_check(m.atraccions_flume_dodges >= 1, "pulling clear / planting dry awards a flume dodge (%d)" % m.atraccions_flume_dodges)
 	m.dog.planted = false
+
+	# flume pool is off the corridor; path past it is walkable and dry side is not water
+	_check(A.FLUME_POOL.position.x >= A.PATH_R, "flume pool sits beside the path (x >= PATH_R)")
+	_check(A.surface(m, Vector2(A.CX, -2920.0)) == A.Surfaces.S.PAVEMENT, "path past the flume is pavement, not water")
+	_check(A.surface(m, Vector2(A.FLUME_DRY_X - 10.0, -2920.0)) != A.Surfaces.S.WATER, "dry side is not water")
+	_check(A.surface(m, A.FLUME_POOL.get_center()) == A.Surfaces.S.WATER, "pool itself is water")
+	_check(A.surface(m, Vector2(A.CX, -2600.0)) == A.Surfaces.S.MUD, "selva packed earth is mud")
 
 	# 6. bark goals
 	m.atraccions_churro_barked = false

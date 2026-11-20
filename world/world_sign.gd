@@ -44,7 +44,7 @@ const MATERIALS := {
 # the space nearest its middle, rather than shrunk.
 const NAME_MIN_H := 42.0
 const LINE_PITCH := 1.5
-const SPLIT_MIN := 4             # letters either side of a break
+const SPLIT_MIN := 3             # letters either side of a break (LES / ATRACCIONS; not EL / BOSC)
 # The pieces fall into place when a sign is laid out: left to right over
 # REVEAL_SWEEP seconds, each landing in REVEAL_DROP from DROP_H cap heights up.
 const REVEAL_SWEEP := 0.55
@@ -71,7 +71,7 @@ const FEEL := {
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
 	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
 	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
-	"stubs": {"spacing": 0.14, "r": 0.06, "drag": 4.2, "take": 1.25, "spin": 5.5, "align": true},
+	"stubs": {"spacing": 0.13, "r": 0.055, "gap": 1.65, "drag": 4.2, "take": 1.25, "spin": 5.5, "align": true},
 	"brollies": {"spacing": 0.17, "r": 0.075, "drag": 4.6, "take": 1.2, "spin": 3.0, "align": true},
 	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
 	"pintxos": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
