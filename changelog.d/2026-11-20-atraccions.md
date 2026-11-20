@@ -5,3 +5,4 @@
 - Flume splash pool sits beside the path; the wave sloshes across a dry walkway
 - Signature flume splash telegraphs with a scream, then soaks; pull clear for a dodge
 - Balloon dare-giver, stubs world-sign pieces (LES / ATRACCIONS on two lines), clear-day park crowd
+- Densified land fronts (village, saloon street both sides, jungle wall, entry kiosks); thicker ship, trestle and coaster; sign room forces the two-line split

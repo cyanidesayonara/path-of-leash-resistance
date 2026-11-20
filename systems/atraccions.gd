@@ -91,16 +91,22 @@ const TURNSTILES: Array[Vector2] = [
 const HARBOUR := Rect2(PATH_L - 210.0, -1140.0, 190.0, 180.0)
 const SHIP := Vector2(PATH_L - 115.0, -1050.0)
 const SHIP_PIVOT := Vector2(PATH_L - 115.0, -1150.0)
-const VILLAGE_FRONTS: Array[float] = [-480.0, -640.0, -800.0, -960.0, -1120.0, -1280.0]
+const VILLAGE_FRONTS: Array[float] = [
+	-460.0, -540.0, -620.0, -700.0, -780.0, -860.0,
+	-940.0, -1020.0, -1100.0, -1180.0, -1260.0, -1340.0,
+]
 
 # Canyon del Sol
 const SALOON := Rect2(PATH_R - 100.0, -1720.0, 90.0, 80.0)
 const MINE_YS: Array[float] = [-1520.0, -1720.0, -1920.0, -2120.0, -2280.0]
-const WEST_FRONTS: Array[float] = [-1480.0, -1680.0, -1880.0, -2080.0, -2280.0]
+const WEST_FRONTS: Array[float] = [
+	-1460.0, -1540.0, -1620.0, -1700.0, -1780.0,
+	-1860.0, -1940.0, -2020.0, -2100.0, -2180.0, -2260.0, -2340.0,
+]
 
-# Selva + flume — splash pool beside the path on the east; path stays dry
+# Selva + flume — splash pool well east of the corridor; path stays dry
 const FLUME_DROP := Vector2(PATH_R - 20.0, -2880.0)
-const FLUME_POOL := Rect2(PATH_R + 16.0, -3060.0, 210.0, 180.0)
+const FLUME_POOL := Rect2(PATH_R + 48.0, -3060.0, 200.0, 180.0)
 const FLUME_WARN := 1.0
 const FLUME_SPLASH := 1.4
 const FLUME_COOLDOWN := 7.0
@@ -295,7 +301,7 @@ static func _tick_flume(m: Node2D, delta: float) -> void:
 				if cleared and not bool(w.get("paid", false)):
 					w["paid"] = true
 					m.atraccions_flume_dodges += 1
-					m.combo.add("FLUME DODGED", 45)
+					m.combo.add(I18n.t("w_flume_dodged"), 45)
 					m.award_points(45, I18n.t("w_stayed_dry_45"))
 					m.float_text(hpos + Vector2(0.0, -34.0), I18n.t("w_missed_me"), Color(0.75, 0.96, 1.0), m.POP_SAY)
 					m.feed.say(I18n.t("w_pulled_clear"), EventFeed.Tone.GOOD)
@@ -365,27 +371,49 @@ static func _edge_gates(b: ShapeBatch, top: float, bot: float) -> void:
 	var hi := minf(bot, 200.0)
 	if hi <= lo:
 		return
-	# entry plaza: flower beds and park fencing, not a hedge strip
+	# entry plaza paving either side, then kiosk fronts — never a hedge strip
 	b.rect(Rect2(-460.0, lo, PATH_L + 460.0, hi - lo), PAVEMENT_LIT)
 	b.rect(Rect2(PATH_R, lo, 1740.0 - PATH_R, hi - lo), PAVEMENT_LIT)
-	var y := floorf(lo / 70.0) * 70.0
+	var y := floorf(lo / 110.0) * 110.0
+	var i := 0
 	while y < hi:
-		# bed
-		b.rect(Rect2(PATH_L - 110.0, y + 8.0, 90.0, 50.0), GRASS)
-		b.rect(Rect2(PATH_R + 20.0, y + 8.0, 90.0, 50.0), GRASS)
-		for j in range(4):
-			b.coarse(Vector2(PATH_L - 90.0 + float(j) * 18.0, y + 28.0), 7.0, MAGENTA if j % 2 == 0 else SAFFRON)
-			b.coarse(Vector2(PATH_R + 40.0 + float(j) * 18.0, y + 28.0), 7.0, TURQ if j % 2 == 0 else SAFFRON)
-		# fence posts
-		b.rect(Rect2(PATH_L - 14.0, y + 4.0, 6.0, 58.0), STEEL_DARK)
-		b.rect(Rect2(PATH_R + 8.0, y + 4.0, 6.0, 58.0), STEEL_DARK)
-		y += 70.0
-	# ticket-office roof block behind the booth
+		var seed_n := _h(float(i) * 5.0)
+		# left kiosk / gift-shop front with awning
+		var left := Rect2(PATH_L - 170.0 - seed_n * 30.0, y + 6.0, 150.0, 96.0)
+		b.rect(Rect2(left.position + Vector2(8.0, 10.0), left.size), SHADOW)
+		b.rect(left, MAGENTA.darkened(0.18) if i % 2 == 0 else TURQ.darkened(0.15))
+		b.rect(left.grow(-8.0), MAGENTA if i % 2 == 0 else TURQ)
+		b.rect(Rect2(left.position.x - 8.0, left.position.y - 16.0, left.size.x + 16.0, 20.0), SAFFRON)
+		b.rect(Rect2(left.position.x + 18.0, left.position.y + 28.0, 36.0, 28.0), Color(0.70, 0.88, 0.95))
+		b.rect(Rect2(left.position.x + 70.0, left.position.y + 40.0, 22.0, 36.0), Color(0.30, 0.18, 0.14))
+		# flower planter strip between kiosk and path
+		b.rect(Rect2(PATH_L - 22.0, y + 16.0, 16.0, 76.0), GRASS)
+		for j in range(3):
+			b.coarse(Vector2(PATH_L - 14.0, y + 28.0 + float(j) * 22.0), 6.0,
+				MAGENTA if j % 2 == 0 else SAFFRON)
+		# right souvenir arcade
+		var right := Rect2(PATH_R + 18.0, y + 10.0, 140.0 + seed_n * 40.0, 90.0)
+		b.rect(Rect2(right.position + Vector2(8.0, 10.0), right.size), SHADOW)
+		b.rect(right, STEEL_DARK)
+		b.rect(right.grow(-8.0), STEEL)
+		b.rect(Rect2(right.position.x - 6.0, right.position.y - 14.0, right.size.x + 12.0, 18.0), MAGENTA)
+		b.rect(Rect2(PATH_R + 4.0, y + 16.0, 12.0, 76.0), GRASS)
+		for j in range(3):
+			b.coarse(Vector2(PATH_R + 10.0, y + 28.0 + float(j) * 22.0), 6.0,
+				TURQ if j % 2 == 0 else SAFFRON)
+		# rail posts along the kerb
+		b.rect(Rect2(PATH_L - 8.0, y + 8.0, 5.0, 88.0), STEEL_DARK)
+		b.rect(Rect2(PATH_R + 3.0, y + 8.0, 5.0, 88.0), STEEL_DARK)
+		y += 110.0
+		i += 1
+	# ticket-office block behind the booth (a little building, not a flat box)
 	if BOOTH.end.y > top and BOOTH.position.y < bot:
-		var roof := Rect2(PATH_L - 40.0, BOOTH.position.y - 20.0, 130.0, 90.0)
-		b.rect(Rect2(roof.position + Vector2(8.0, 10.0), roof.size), SHADOW)
-		b.rect(roof, MAGENTA.darkened(0.25))
+		var roof := Rect2(PATH_L - 50.0, BOOTH.position.y - 28.0, 150.0, 100.0)
+		b.rect(Rect2(roof.position + Vector2(10.0, 12.0), roof.size), SHADOW)
+		b.rect(roof, MAGENTA.darkened(0.28))
 		b.rect(roof.grow(-10.0), SAFFRON)
+		b.rect(Rect2(roof.position.x + 20.0, roof.position.y + 24.0, 40.0, 28.0), Color(0.70, 0.88, 0.95))
+		b.rect(Rect2(roof.position.x + 80.0, roof.position.y + 40.0, 28.0, 40.0), Color(0.30, 0.18, 0.14))
 
 
 static func _edge_corsari(b: ShapeBatch, top: float, bot: float) -> void:
@@ -409,23 +437,35 @@ static func _edge_corsari(b: ShapeBatch, top: float, bot: float) -> void:
 
 
 static func _village_house(b: ShapeBatch, p: Vector2, side: float, seed_n: float) -> void:
-	var w := 88.0 + seed_n * 24.0
-	var h := 70.0 + seed_n * 18.0
+	# depth like Sitges: terrace parapet, barrel-tile roof, shutters, chimney
+	var w := 96.0 + seed_n * 28.0
+	var h := 78.0 + seed_n * 22.0
 	var r := Rect2(p.x - w * 0.5, p.y - h * 0.5, w, h)
-	b.rect(Rect2(r.position + Vector2(7.0, 9.0), r.size), SHADOW)
+	b.rect(Rect2(r.position + Vector2(9.0, 11.0), r.size), SHADOW)
 	b.rect(r, WHITEWASH)
-	# pitched terracotta roof (top-down ridge)
-	var roof := Rect2(r.position.x - 6.0, r.position.y - 18.0, r.size.x + 12.0, 22.0)
+	b.rect(r.grow(-4.0), WHITE_SHADE.lightened(0.04))
+	# pitched terracotta roof with light/shade flutes
+	var roof := Rect2(r.position.x - 8.0, r.position.y - 22.0, r.size.x + 16.0, 26.0)
 	b.rect(roof, TERRACOTTA)
 	b.rect(Rect2(roof.position.x, roof.position.y, roof.size.x * 0.5, roof.size.y), TERRACOTTA_LIT)
-	b.line(Vector2(roof.get_center().x, roof.position.y + 2.0), Vector2(roof.get_center().x, roof.end.y - 2.0), TERRACOTTA.darkened(0.2), 2.5)
-	# door + shutter
-	b.rect(Rect2(r.position.x + w * 0.35, r.position.y + h * 0.35, 16.0, 28.0), Color(0.42, 0.28, 0.18))
-	b.rect(Rect2(r.position.x + 10.0, r.position.y + 14.0, 14.0, 18.0), SHUTTER)
-	b.rect(Rect2(r.position.x + 10.0, r.position.y + 14.0, 6.0, 18.0), SHUTTER.darkened(0.15))
-	# chimney
-	b.rect(Rect2(r.position.x + w * 0.7, r.position.y - 28.0, 12.0, 16.0), WHITE_SHADE)
-	b.circle(p + Vector2(side * 10.0, -8.0), 3.5, Color(0.70, 0.78, 0.86))
+	b.line(Vector2(roof.get_center().x, roof.position.y + 2.0), Vector2(roof.get_center().x, roof.end.y - 2.0), TERRACOTTA.darkened(0.22), 3.0)
+	for rx in range(4):
+		var lx := roof.position.x + 10.0 + float(rx) * (roof.size.x / 4.5)
+		b.rect(Rect2(lx, roof.position.y + 2.0, 5.0, roof.size.y - 4.0), TERRACOTTA_LIT.lightened(0.06))
+	# whitewash parapet on the path face
+	b.rect(Rect2(r.position.x - 4.0 * side, r.position.y + 4.0, 8.0, h - 8.0), WHITEWASH)
+	b.rect(Rect2(r.position.x - 8.0 * side, r.position.y + 8.0, 5.0, h - 16.0), SHADOW)
+	# door + cobalt shutters
+	b.rect(Rect2(r.position.x + w * 0.38, r.position.y + h * 0.38, 16.0, 30.0), Color(0.42, 0.28, 0.18))
+	b.rect(Rect2(r.position.x + 12.0, r.position.y + 16.0, 16.0, 20.0), SHUTTER)
+	b.rect(Rect2(r.position.x + 12.0, r.position.y + 16.0, 7.0, 9.0), SHUTTER.lightened(0.12))
+	b.rect(Rect2(r.position.x + 12.0, r.position.y + 27.0, 7.0, 9.0), SHUTTER.lightened(0.12))
+	# chimney + laundry line
+	b.rect(Rect2(r.position.x + w * 0.68, r.position.y - 34.0, 14.0, 18.0), WHITE_SHADE)
+	b.circle(p + Vector2(side * 12.0, -10.0), 4.0, Color(0.70, 0.78, 0.86))
+	if seed_n > 0.45:
+		b.line(r.position + Vector2(8.0, 8.0), r.position + Vector2(w - 8.0, 6.0), Color(0.85, 0.85, 0.88), 1.2)
+		b.rect(Rect2(r.position.x + w * 0.2, r.position.y + 2.0, 14.0, 10.0), Color(0.92, 0.55, 0.55, 0.85))
 
 
 static func _edge_canyon(b: ShapeBatch, top: float, bot: float) -> void:
@@ -436,16 +476,23 @@ static func _edge_canyon(b: ShapeBatch, top: float, bot: float) -> void:
 	# red dust and rock either side of the boardwalk
 	b.rect(Rect2(-460.0, lo, PATH_L + 460.0, hi - lo), DUST)
 	b.rect(Rect2(PATH_R, lo, 1740.0 - PATH_R, hi - lo), DUST)
-	var y := floorf(lo / 40.0) * 40.0
+	var y := floorf(lo / 36.0) * 36.0
 	while y < hi:
-		b.coarse(Vector2(PATH_L - 60.0 - _h(y) * 80.0, y + 12.0), 18.0 + _h(y + 1.0) * 14.0, DUST_LIT)
-		b.coarse(Vector2(PATH_R + 60.0 + _h(y + 2.0) * 80.0, y + 16.0), 16.0 + _h(y + 3.0) * 12.0, DUST.darkened(0.12))
-		y += 40.0
-	# false-front saloon row on the east
+		b.coarse(Vector2(PATH_L - 50.0 - _h(y) * 100.0, y + 12.0), 20.0 + _h(y + 1.0) * 16.0, DUST_LIT)
+		b.coarse(Vector2(PATH_R + 50.0 + _h(y + 2.0) * 100.0, y + 16.0), 18.0 + _h(y + 3.0) * 14.0, DUST.darkened(0.12))
+		# rock shelves
+		b.polygon(PackedVector2Array([
+			Vector2(PATH_L - 20.0 - _h(y) * 40.0, y),
+			Vector2(PATH_L - 70.0 - _h(y + 1.0) * 50.0, y + 10.0),
+			Vector2(PATH_L - 30.0, y + 22.0),
+		]), DUST.darkened(0.18))
+		y += 36.0
+	# false-front saloon row on BOTH sides
 	for fy: float in WEST_FRONTS:
 		if fy < top - 80.0 or fy > bot + 80.0:
 			continue
-		_saloon_front(b, Vector2(PATH_R + 70.0, fy), _h(fy))
+		_saloon_front(b, Vector2(PATH_R + 78.0, fy), _h(fy))
+		_saloon_front(b, Vector2(PATH_L - 78.0, fy - 40.0), _h(fy + 2.0))
 	if SALOON.end.y > top and SALOON.position.y < bot:
 		_saloon_front(b, SALOON.get_center(), 0.4)
 
@@ -481,19 +528,21 @@ static func _edge_selva(b: ShapeBatch, top: float, bot: float) -> void:
 		return
 	b.rect(Rect2(-460.0, lo, PATH_L + 460.0, hi - lo), EARTH)
 	b.rect(Rect2(PATH_R, lo, 1740.0 - PATH_R, hi - lo), EARTH)
-	var y := floorf(lo / 36.0) * 36.0
+	var y := floorf(lo / 28.0) * 28.0
 	while y < hi:
-		# big-leaved planting
-		var lx := PATH_L - 40.0 - _h(y) * 160.0
-		var rx := PATH_R + 40.0 + _h(y + 2.0) * 160.0
-		b.coarse(Vector2(lx, y + 10.0), 22.0 + _h(y) * 16.0, JUNGLE)
-		b.coarse(Vector2(lx - 18.0, y + 18.0), 14.0, JUNGLE_LIT)
-		b.coarse(Vector2(rx, y + 12.0), 24.0 + _h(y + 1.0) * 14.0, JUNGLE)
-		b.coarse(Vector2(rx + 16.0, y + 20.0), 12.0, JUNGLE_LIT)
-		# root knuckles along the verge
-		b.capsule(Vector2(PATH_L - 6.0, y), Vector2(PATH_L + 18.0, y + 10.0), 3.0, EARTH_LIT)
-		b.capsule(Vector2(PATH_R + 6.0, y + 4.0), Vector2(PATH_R - 16.0, y + 14.0), 3.0, EARTH_LIT)
-		y += 36.0
+		# continuous big-leaved wall of planting, not sparse bushes
+		for k in range(3):
+			var lx := PATH_L - 30.0 - float(k) * 55.0 - _h(y + float(k)) * 40.0
+			var rx := PATH_R + 30.0 + float(k) * 55.0 + _h(y + float(k) + 2.0) * 40.0
+			var rr := 18.0 + _h(y + float(k) * 3.0) * 14.0
+			b.coarse(Vector2(lx, y + 8.0 + float(k) * 4.0), rr, JUNGLE if k % 2 == 0 else JUNGLE_LIT)
+			b.coarse(Vector2(rx, y + 10.0 + float(k) * 3.0), rr + 2.0, JUNGLE_LIT if k % 2 == 0 else JUNGLE)
+		# root knuckles and fallen logs along the verge
+		b.capsule(Vector2(PATH_L - 8.0, y), Vector2(PATH_L + 22.0, y + 12.0), 3.5, EARTH_LIT)
+		b.capsule(Vector2(PATH_R + 8.0, y + 4.0), Vector2(PATH_R - 20.0, y + 16.0), 3.5, EARTH_LIT)
+		if int(absf(y) / 28.0) % 5 == 0:
+			b.capsule(Vector2(PATH_L - 40.0, y + 6.0), Vector2(PATH_L - 10.0, y + 14.0), 5.0, WOOD_DARK)
+		y += 28.0
 
 
 static func _edge_loop(b: ShapeBatch, top: float, bot: float) -> void:
@@ -661,31 +710,37 @@ static func _draw_gates(wc: ShapeBatch, lo: float, hi: float) -> void:
 
 
 static func _welcome_arch(wc: ShapeBatch) -> void:
-	var left := Vector2(ARCH.x - 150.0, ARCH.y)
-	var right := Vector2(ARCH.x + 150.0, ARCH.y)
-	# pier shadows + bodies
+	var left := Vector2(ARCH.x - 160.0, ARCH.y)
+	var right := Vector2(ARCH.x + 160.0, ARCH.y)
+	# deep piers with stepped bases and capitals
 	for pier: Vector2 in [left, right]:
-		wc.rect(Rect2(pier.x - 22.0 + 8.0, pier.y - 10.0 + 10.0, 44.0, 70.0), SHADOW)
-		wc.rect(Rect2(pier.x - 22.0, pier.y - 10.0, 44.0, 70.0), TURQ.darkened(0.2))
-		wc.rect(Rect2(pier.x - 16.0, pier.y - 4.0, 32.0, 58.0), TURQ)
-		wc.rect(Rect2(pier.x - 10.0, pier.y + 8.0, 20.0, 36.0), TURQ.lightened(0.12))
-	# deep lintel with park name
-	wc.rect(Rect2(ARCH.x - 178.0 + 8.0, ARCH.y - 58.0 + 8.0, 356.0, 42.0), SHADOW)
-	wc.rect(Rect2(ARCH.x - 178.0, ARCH.y - 58.0, 356.0, 42.0), SAFFRON)
-	wc.rect(Rect2(ARCH.x - 168.0, ARCH.y - 50.0, 336.0, 26.0), MAGENTA)
-	# letter blocks for LES ATRACCIONS across the lintel
-	var label := "LES ATRACCIONS"
-	var lw := 300.0
-	var lx := ARCH.x - lw * 0.5
-	for i in range(label.length()):
-		var ch := label.substr(i, 1)
-		if ch == " ":
-			continue
-		var cx := lx + (float(i) + 0.5) / float(label.length()) * lw
-		wc.rect(Rect2(cx - 6.0, ARCH.y - 46.0, 12.0, 16.0), SAFFRON)
-	# keystone jewel
-	wc.circle(ARCH + Vector2(0.0, -58.0), 10.0, TURQ)
-	wc.circle(ARCH + Vector2(0.0, -58.0), 5.0, SAFFRON)
+		wc.rect(Rect2(pier.x - 28.0 + 10.0, pier.y - 14.0 + 12.0, 56.0, 86.0), SHADOW)
+		wc.rect(Rect2(pier.x - 28.0, pier.y + 50.0, 56.0, 18.0), TURQ.darkened(0.3))
+		wc.rect(Rect2(pier.x - 24.0, pier.y - 14.0, 48.0, 78.0), TURQ.darkened(0.18))
+		wc.rect(Rect2(pier.x - 18.0, pier.y - 8.0, 36.0, 64.0), TURQ)
+		wc.rect(Rect2(pier.x - 12.0, pier.y + 4.0, 24.0, 40.0), TURQ.lightened(0.14))
+		wc.rect(Rect2(pier.x - 30.0, pier.y - 22.0, 60.0, 14.0), SAFFRON)
+	# deep lintel with park name on two ranks of letter blocks
+	wc.rect(Rect2(ARCH.x - 190.0 + 10.0, ARCH.y - 72.0 + 10.0, 380.0, 56.0), SHADOW)
+	wc.rect(Rect2(ARCH.x - 190.0, ARCH.y - 72.0, 380.0, 56.0), SAFFRON)
+	wc.rect(Rect2(ARCH.x - 178.0, ARCH.y - 64.0, 356.0, 40.0), MAGENTA)
+	# LES
+	var les := "LES"
+	for i in range(les.length()):
+		var cx := ARCH.x - 70.0 + float(i) * 28.0
+		wc.rect(Rect2(cx - 8.0, ARCH.y - 58.0, 16.0, 12.0), SAFFRON)
+	# ATRACCIONS
+	var atr := "ATRACCIONS"
+	var aw := 300.0
+	var ax0 := ARCH.x - aw * 0.5
+	for i in range(atr.length()):
+		var cx2 := ax0 + (float(i) + 0.5) / float(atr.length()) * aw
+		wc.rect(Rect2(cx2 - 7.0, ARCH.y - 42.0, 14.0, 14.0), SAFFRON)
+	# keystone jewel and hanging lanterns
+	wc.circle(ARCH + Vector2(0.0, -72.0), 12.0, TURQ)
+	wc.circle(ARCH + Vector2(0.0, -72.0), 6.0, SAFFRON)
+	wc.glow(left + Vector2(0.0, -30.0), 14.0, Color(1.0, 0.90, 0.55, 0.35), 0.35)
+	wc.glow(right + Vector2(0.0, -30.0), 14.0, Color(1.0, 0.90, 0.55, 0.35), 0.35)
 
 
 static func _draw_corsari(wc: ShapeBatch, lo: float, hi: float) -> void:
@@ -712,31 +767,38 @@ static func _draw_corsari(wc: ShapeBatch, lo: float, hi: float) -> void:
 static func _pirate_ship(wc: ShapeBatch) -> void:
 	var swing := sin(float(AnimClock.msec()) * 0.0020) * 0.38
 	var tip := SHIP_PIVOT + Vector2(sin(swing) * 70.0, cos(swing) * 70.0)
-	# A-frame
-	wc.line(SHIP_PIVOT + Vector2(-55.0, 10.0), SHIP_PIVOT + Vector2(0.0, -70.0), STEEL_DARK, 5.0)
-	wc.line(SHIP_PIVOT + Vector2(55.0, 10.0), SHIP_PIVOT + Vector2(0.0, -70.0), STEEL_DARK, 5.0)
-	wc.line(SHIP_PIVOT + Vector2(-55.0, 10.0), SHIP_PIVOT + Vector2(55.0, 10.0), STEEL, 4.0)
-	wc.circle(SHIP_PIVOT + Vector2(0.0, -70.0), 6.0, STEEL_DARK)
+	# A-frame with thick posts and a cross-brace
+	wc.rect(Rect2(SHIP_PIVOT.x - 62.0 + 6.0, SHIP_PIVOT.y + 4.0 + 6.0, 124.0, 14.0), SHADOW)
+	wc.rect(Rect2(SHIP_PIVOT.x - 62.0, SHIP_PIVOT.y + 4.0, 124.0, 14.0), STEEL_DARK)
+	wc.line(SHIP_PIVOT + Vector2(-58.0, 10.0), SHIP_PIVOT + Vector2(0.0, -78.0), STEEL_DARK, 8.0)
+	wc.line(SHIP_PIVOT + Vector2(58.0, 10.0), SHIP_PIVOT + Vector2(0.0, -78.0), STEEL_DARK, 8.0)
+	wc.line(SHIP_PIVOT + Vector2(-58.0, 10.0), SHIP_PIVOT + Vector2(0.0, -78.0), STEEL, 4.0)
+	wc.line(SHIP_PIVOT + Vector2(58.0, 10.0), SHIP_PIVOT + Vector2(0.0, -78.0), STEEL, 4.0)
+	wc.line(SHIP_PIVOT + Vector2(-40.0, -20.0), SHIP_PIVOT + Vector2(40.0, -20.0), STEEL, 3.0)
+	wc.circle(SHIP_PIVOT + Vector2(0.0, -78.0), 9.0, STEEL_DARK)
+	wc.circle(SHIP_PIVOT + Vector2(0.0, -78.0), 5.0, STEEL)
 	# hangers
-	wc.line(SHIP_PIVOT + Vector2(0.0, -70.0), tip, STEEL, 2.5)
-	# hull + shadow
-	wc.circle(tip + Shade.light * 16.0, 36.0, SHADOW)
-	var left := tip + Vector2.from_angle(swing + PI) * 42.0
-	var right := tip + Vector2.from_angle(swing) * 42.0
-	wc.capsule(left, right, 14.0, WOOD_DARK)
-	wc.capsule(left + Vector2(0.0, -4.0), right + Vector2(0.0, -4.0), 10.0, WOOD)
+	wc.line(SHIP_PIVOT + Vector2(0.0, -78.0), tip, STEEL_DARK, 4.0)
+	wc.line(SHIP_PIVOT + Vector2(0.0, -78.0), tip, STEEL, 2.0)
+	# hull + shadow (reads as a boat from above)
+	wc.circle(tip + Shade.light * 18.0, 42.0, SHADOW)
+	var left := tip + Vector2.from_angle(swing + PI) * 48.0
+	var right := tip + Vector2.from_angle(swing) * 48.0
+	wc.capsule(left, right, 18.0, WOOD_DARK)
+	wc.capsule(left + Vector2(0.0, -5.0), right + Vector2(0.0, -5.0), 13.0, WOOD)
+	wc.capsule(left + Vector2(0.0, -9.0), right + Vector2(0.0, -9.0), 7.0, WOOD_LIT)
 	# mast + sail
-	var mast := tip + Vector2.from_angle(swing - PI * 0.5) * 36.0
-	wc.line(tip, mast, WOOD_DARK, 3.0)
-	wc.quad(mast, mast + Vector2.from_angle(swing) * 22.0,
-		mast + Vector2.from_angle(swing) * 18.0 + Vector2.from_angle(swing - PI * 0.5) * 10.0,
-		mast + Vector2.from_angle(swing - PI * 0.5) * 12.0, Color(0.86, 0.18, 0.20))
-	# riders
-	for i in range(3):
-		var f := (float(i) - 1.0) * 0.35
-		var rp := tip + Vector2.from_angle(swing) * f * 28.0 + Vector2.from_angle(swing - PI * 0.5) * 8.0
-		wc.circle(rp, 5.0, Color(0.86, 0.68, 0.52))
-		wc.circle(rp + Vector2(0.0, 7.0), 6.0, Color(0.30 + _h(float(i)) * 0.4, 0.45, 0.70))
+	var mast := tip + Vector2.from_angle(swing - PI * 0.5) * 42.0
+	wc.line(tip, mast, WOOD_DARK, 4.0)
+	wc.quad(mast, mast + Vector2.from_angle(swing) * 26.0,
+		mast + Vector2.from_angle(swing) * 20.0 + Vector2.from_angle(swing - PI * 0.5) * 12.0,
+		mast + Vector2.from_angle(swing - PI * 0.5) * 14.0, Color(0.86, 0.18, 0.20))
+	# riders in the hull
+	for i in range(4):
+		var f := (float(i) - 1.5) * 0.28
+		var rp := tip + Vector2.from_angle(swing) * f * 34.0 + Vector2.from_angle(swing - PI * 0.5) * 10.0
+		wc.circle(rp, 5.5, Color(0.86, 0.68, 0.52))
+		wc.circle(rp + Vector2(0.0, 8.0), 6.5, Color(0.30 + _h(float(i)) * 0.4, 0.45, 0.70))
 
 
 static func _draw_canyon(wc: ShapeBatch, lo: float, hi: float) -> void:
@@ -1016,77 +1078,88 @@ static func _draw_mine_train(b: ShapeBatch) -> void:
 		var f := float(s) / 11.0
 		var pt := left.lerp(right, f) + Vector2(0.0, sin(f * PI) * 22.0)
 		b.circle(pt + Shade.light * 28.0 + Vector2(0.0, 40.0), 10.0, Color(SHADOW, 0.35))
-	# twin rails
-	for rail: float in [-7.0, 7.0]:
+	# twin rails with sleepers (reads as a trestle track, not a thin line)
+	for rail: float in [-9.0, 9.0]:
 		var prev := left + Vector2(0.0, rail)
-		for s in range(1, 14):
-			var f := float(s) / 13.0
+		for s in range(1, 16):
+			var f := float(s) / 15.0
 			var pt := left.lerp(right, f) + Vector2(0.0, rail + sin(f * PI) * 22.0)
-			b.line(prev, pt, STEEL_DARK, 3.2)
-			b.line(prev + Vector2(0.0, 1.0), pt + Vector2(0.0, 1.0), STEEL, 1.6)
+			b.line(prev, pt, STEEL_DARK, 5.0)
+			b.line(prev + Vector2(0.0, 1.5), pt + Vector2(0.0, 1.5), STEEL, 2.5)
+			if s % 2 == 0:
+				b.line(pt + Vector2(0.0, -9.0), pt + Vector2(0.0, 9.0), WOOD_DARK, 3.0)
 			prev = pt
 	# trestle posts + cross-bracing
 	for my: float in MINE_YS:
 		var f := clampf((my - y0) / (y1 - y0), 0.0, 1.0)
 		var at := left.lerp(right, f) + Vector2(0.0, sin(f * PI) * 22.0)
-		b.line(at, Vector2(at.x, at.y + 55.0), WOOD_DARK, 4.0)
-		b.line(Vector2(at.x - 18.0, at.y + 55.0), Vector2(at.x + 18.0, at.y + 55.0), WOOD_DARK, 3.0)
-		b.line(at + Vector2(-12.0, 20.0), at + Vector2(12.0, 40.0), WOOD, 2.0)
-		b.line(at + Vector2(12.0, 20.0), at + Vector2(-12.0, 40.0), WOOD, 2.0)
-	# train
+		b.line(at + Shade.light * 10.0, Vector2(at.x, at.y + 60.0) + Shade.light * 10.0, Color(SHADOW, 0.4), 6.0)
+		b.line(at, Vector2(at.x, at.y + 60.0), WOOD_DARK, 6.0)
+		b.line(Vector2(at.x - 22.0, at.y + 60.0), Vector2(at.x + 22.0, at.y + 60.0), WOOD_DARK, 4.0)
+		b.line(at + Vector2(-14.0, 18.0), at + Vector2(14.0, 42.0), WOOD, 3.0)
+		b.line(at + Vector2(14.0, 18.0), at + Vector2(-14.0, 42.0), WOOD, 3.0)
+	# train of two cars
 	var span := left.distance_to(right)
 	var shift := fmod(float(AnimClock.msec()) * 0.001 * 75.0, span + 140.0) - 70.0
 	if shift > 0.0 and shift < span:
 		var f := shift / span
-		var car := left.lerp(right, f) + Vector2(0.0, sin(f * PI) * 22.0)
-		b.rect(Rect2(car.x - 22.0 + 4.0, car.y - 12.0 + 6.0, 44.0, 22.0), SHADOW)
-		b.rect(Rect2(car.x - 22.0, car.y - 12.0, 44.0, 22.0), Color(0.55, 0.22, 0.14))
-		b.rect(Rect2(car.x - 18.0, car.y - 8.0, 36.0, 12.0), Color(0.72, 0.34, 0.20))
-		b.circle(car + Vector2(-10.0, 10.0), 5.0, STEEL_DARK)
-		b.circle(car + Vector2(10.0, 10.0), 5.0, STEEL_DARK)
-		b.circle(car + Vector2(-6.0, -14.0), 4.0, Color(0.90, 0.70, 0.55))
-		b.circle(car + Vector2(6.0, -14.0), 4.0, Color(0.90, 0.70, 0.55))
+		for ci in range(2):
+			var f2 := clampf(f - float(ci) * 0.04, 0.0, 1.0)
+			var car := left.lerp(right, f2) + Vector2(0.0, sin(f2 * PI) * 22.0)
+			b.rect(Rect2(car.x - 20.0 + 4.0, car.y - 12.0 + 6.0, 40.0, 22.0), SHADOW)
+			b.rect(Rect2(car.x - 20.0, car.y - 12.0, 40.0, 22.0), Color(0.55, 0.22, 0.14))
+			b.rect(Rect2(car.x - 16.0, car.y - 8.0, 32.0, 12.0), Color(0.72, 0.34, 0.20))
+			b.circle(car + Vector2(-8.0, 10.0), 5.0, STEEL_DARK)
+			b.circle(car + Vector2(8.0, 10.0), 5.0, STEEL_DARK)
+			b.circle(car + Vector2(-4.0, -14.0), 4.0, Color(0.90, 0.70, 0.55))
+			b.circle(car + Vector2(4.0, -14.0), 4.0, Color(0.90, 0.70, 0.55))
 
 
 static func _draw_coaster(b: ShapeBatch) -> void:
 	var base := Vector2(PATH_R - 90.0, LOOP_Y0 - 40.0)
 	var top := LIFT_HILL + Vector2(0.0, -140.0)
-	# lift shadow
-	b.line(base + Shade.light * 20.0, top + Shade.light * 20.0, Color(SHADOW, 0.4), 10.0)
-	b.line(base, top, STEEL_DARK, 11.0)
-	b.line(base + Vector2(14.0, 0.0), top + Vector2(14.0, 0.0), STEEL, 7.0)
-	b.line(base + Vector2(7.0, 0.0), top + Vector2(7.0, 0.0), Color(0.75, 0.78, 0.82), 3.0)
-	# lift supports
-	for i in range(5):
-		var f := float(i) / 4.0
+	# solid lift hill with twin rails, sleepers and a ground shadow
+	b.line(base + Shade.light * 24.0, top + Shade.light * 24.0, Color(SHADOW, 0.45), 16.0)
+	b.line(base, top, STEEL_DARK, 16.0)
+	b.line(base + Vector2(16.0, 0.0), top + Vector2(16.0, 0.0), STEEL_DARK, 16.0)
+	b.line(base + Vector2(4.0, 0.0), top + Vector2(4.0, 0.0), STEEL, 8.0)
+	b.line(base + Vector2(12.0, 0.0), top + Vector2(12.0, 0.0), STEEL, 8.0)
+	b.line(base + Vector2(8.0, 0.0), top + Vector2(8.0, 0.0), Color(0.78, 0.80, 0.84), 3.0)
+	# lift supports with cross-bracing
+	for i in range(6):
+		var f := float(i) / 5.0
 		var at := base.lerp(top, f)
-		b.line(at, Vector2(at.x, at.y + 40.0 + (1.0 - f) * 50.0), STEEL_DARK, 3.5)
-	# loop with shadow
+		var foot_y := at.y + 44.0 + (1.0 - f) * 56.0
+		b.line(at + Vector2(8.0, 0.0), Vector2(at.x + 8.0, foot_y), STEEL_DARK, 5.0)
+		b.line(at + Vector2(-6.0, 18.0), at + Vector2(20.0, 36.0), STEEL, 2.5)
+		b.line(at + Vector2(20.0, 18.0), at + Vector2(-6.0, 36.0), STEEL, 2.5)
+	# loop with solid track + shadow
 	var c := LOOP_C
 	var pts := PackedVector2Array()
-	for i in range(28):
-		var a := -PI * 0.5 + float(i) / 27.0 * TAU
+	for i in range(32):
+		var a := -PI * 0.5 + float(i) / 31.0 * TAU
 		pts.append(c + Vector2.from_angle(a) * LOOP_R)
 	for i in range(pts.size() - 1):
-		b.line(pts[i] + Shade.light * 16.0, pts[i + 1] + Shade.light * 16.0, Color(SHADOW, 0.35), 6.0)
+		b.line(pts[i] + Shade.light * 18.0, pts[i + 1] + Shade.light * 18.0, Color(SHADOW, 0.4), 12.0)
 	for i in range(pts.size() - 1):
-		b.line(pts[i], pts[i + 1], STEEL_DARK, 9.0)
-		b.line(pts[i], pts[i + 1], STEEL, 5.0)
-		b.line(pts[i], pts[i + 1], Color(0.78, 0.80, 0.84), 2.0)
+		b.line(pts[i], pts[i + 1], STEEL_DARK, 14.0)
+		b.line(pts[i], pts[i + 1], STEEL, 8.0)
+		b.line(pts[i], pts[i + 1], Color(0.80, 0.82, 0.86), 3.0)
 	# runout from lift to loop
-	b.line(top, pts[0], STEEL_DARK, 5.0)
-	b.line(top + Vector2(8.0, 0.0), pts[0] + Vector2(8.0, 0.0), STEEL, 3.0)
-	# train
+	b.line(top, pts[0], STEEL_DARK, 10.0)
+	b.line(top + Vector2(10.0, 0.0), pts[0] + Vector2(10.0, 0.0), STEEL, 6.0)
+	# train of three cars
 	var u := fmod(float(AnimClock.msec()) * 0.001 * COASTER_SPEED / (TAU * LOOP_R), 1.0)
-	var ang := -PI * 0.5 + u * TAU
-	var tp := c + Vector2.from_angle(ang) * LOOP_R
-	var tang := Vector2.from_angle(ang + PI * 0.5)
-	b.capsule(tp + tang * 14.0, tp - tang * 14.0, 7.0, MAGENTA)
-	b.circle(tp, 6.0, SAFFRON)
-	b.circle(tp + tang * 8.0 + Vector2.from_angle(ang) * 6.0, 3.5, Color(0.90, 0.70, 0.55))
-	b.circle(tp - tang * 8.0 + Vector2.from_angle(ang) * 6.0, 3.5, Color(0.90, 0.70, 0.55))
+	for car_i in range(3):
+		var uc := fmod(u + float(car_i) * 0.04, 1.0)
+		var ang := -PI * 0.5 + uc * TAU
+		var tp := c + Vector2.from_angle(ang) * LOOP_R
+		var tang := Vector2.from_angle(ang + PI * 0.5)
+		b.capsule(tp + tang * 12.0, tp - tang * 12.0, 7.0, MAGENTA if car_i == 0 else SAFFRON)
+		b.circle(tp + Vector2.from_angle(ang) * 5.0, 4.0, Color(0.90, 0.70, 0.55))
 	if u > 0.2 and u < 0.35:
-		b.glow(tp, 40.0, Color(1.0, 0.85, 0.45, 0.4), 0.4)
+		var tip := c + Vector2.from_angle(-PI * 0.5 + u * TAU) * LOOP_R
+		b.glow(tip, 44.0, Color(1.0, 0.85, 0.45, 0.4), 0.4)
 
 
 static func is_lamp(_m: Node2D, _p: Vector2) -> bool:
@@ -1094,8 +1167,11 @@ static func is_lamp(_m: Node2D, _p: Vector2) -> bool:
 
 
 static func name_place(_m: Node2D) -> Dictionary:
-	# tight room so stub pieces for ATRACCIONS stay inside the paving
-	return {"x": CX, "room": 300.0}
+	# stubs are fat (gap 1.65): one line of LES ATRACCIONS is ~509 px at
+	# NAME_H, so a room under NAME_MIN_H forces LES / ATRACCIONS on two
+	# lines. Keep the room wide enough that ATRACCIONS itself stays at
+	# full height (~364 px) with margin inside the 540-wide path
+	return {"x": CX, "room": 400.0}
 
 
 static func tree_kind(m: Node2D, p: Vector2) -> int:

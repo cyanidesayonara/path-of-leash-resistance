@@ -131,11 +131,22 @@ func _run() -> void:
 	m.dog.planted = false
 
 	# flume pool is off the corridor; path past it is walkable and dry side is not water
-	_check(A.FLUME_POOL.position.x >= A.PATH_R, "flume pool sits beside the path (x >= PATH_R)")
+	_check(A.FLUME_POOL.position.x >= A.PATH_R + 40.0, "flume pool sits well beside the path (x >= PATH_R + 40)")
+	_check(A.FLUME_POOL.end.x > A.PATH_R, "pool is entirely east of the corridor")
 	_check(A.surface(m, Vector2(A.CX, -2920.0)) == A.Surfaces.S.PAVEMENT, "path past the flume is pavement, not water")
+	_check(A.surface(m, Vector2(A.PATH_R - 20.0, -2920.0)) != A.Surfaces.S.WATER, "corridor edge by the pool is not water")
 	_check(A.surface(m, Vector2(A.FLUME_DRY_X - 10.0, -2920.0)) != A.Surfaces.S.WATER, "dry side is not water")
 	_check(A.surface(m, A.FLUME_POOL.get_center()) == A.Surfaces.S.WATER, "pool itself is water")
 	_check(A.surface(m, Vector2(A.CX, -2600.0)) == A.Surfaces.S.MUD, "selva packed earth is mud")
+	# middle lane past the pool stays walkable (no solid, no water surface)
+	var mid_ok := true
+	for yy in [-3060.0, -2980.0, -2920.0, -2860.0]:
+		if A.surface(m, Vector2(A.CX, yy)) == A.Surfaces.S.WATER:
+			mid_ok = false
+		for r: Rect2 in A.solids(m):
+			if r.grow(16.0).has_point(Vector2(A.CX, yy)):
+				mid_ok = false
+	_check(mid_ok, "path past the pool is walkable without wading")
 
 	# 6. bark goals
 	m.atraccions_churro_barked = false
