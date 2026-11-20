@@ -1772,6 +1772,9 @@ static func build_level_data(m: Node2D) -> void:
 			hyd_list.assign(pl_encants[0])
 			keb_list.assign(pl_encants[1])
 		"vic":
+			var pl_vic: Array = Vic.build(m)
+			hyd_list.assign(pl_vic[0])
+			keb_list.assign(pl_vic[1])
 		"sarria":
 			var pl_sarria: Array = Sarria.build(m)
 			hyd_list.assign(pl_sarria[0])
@@ -2623,6 +2626,7 @@ static func build_level_data(m: Node2D) -> void:
 		Ronda.add_cliff_rope(m)
 	if m.lvl == "encants":
 		for r: Rect2 in Encants.wrap_rects(m):
+			add_rope_rect(m, r)
 	if m.lvl == "vic":
 		for r: Rect2 in Vic.wrap_rects(m):
 			add_rope_rect(m, r)
@@ -2759,6 +2763,8 @@ static func build_level_data(m: Node2D) -> void:
 			m.prize_pos = Encants.PRIZE
 			m.prize_text = Encants.PRIZE_TEXT
 		"vic":
+			m.prize_pos = Vic.PRIZE
+			m.prize_text = Vic.PRIZE_TEXT
 		"sarria":
 			m.prize_pos = Sarria.PRIZE
 			m.prize_text = Sarria.PRIZE_TEXT
@@ -3267,8 +3273,14 @@ const FREEDOM_PROPS := {
 		[Vector2(548.0, -492.0), "tyre"],
 		[Vector2(238.0, -338.0), "post"], [Vector2(538.0, -468.0), "post"], [Vector2(778.0, -452.0), "post"],
 		[Vector2(1028.0, -358.0), "post"], [Vector2(258.0, -228.0), "shrub"], [Vector2(998.0, -218.0), "shrub"],
+	],
 	"vic": [
+		[Vector2(280.0, -460.0), "dig"], [Vector2(640.0, -290.0), "dig"], [Vector2(980.0, -310.0), "dig"],
+		[Vector2(380.0, -470.0), "planter"], [Vector2(900.0, -470.0), "planter"],
+		[Vector2(230.0, -340.0), "post"], [Vector2(520.0, -455.0), "post"], [Vector2(760.0, -455.0), "post"],
+		[Vector2(1020.0, -360.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
 		# clear of the gate bench (y offset -200 sat inside the 110 px bench radius)
+		[Vector2(820.0, -340.0), "log"],
 	],
 	"forum": [
 		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
@@ -3783,6 +3795,9 @@ static func level_solid_rects(m: Node2D) -> Array:
 			for i in range(ps_encants.size()):
 				out.append(["encants_solid_%d" % i, ps_encants[i]])
 		"vic":
+			var ps_vic: Array[Rect2] = Vic.solids(m)
+			for i in range(ps_vic.size()):
+				out.append(["vic_solid_%d" % i, ps_vic[i]])
 		"sarria":
 			var ps_sarria: Array[Rect2] = Sarria.solids(m)
 			for i in range(ps_sarria.size()):

@@ -56,9 +56,9 @@ func _run() -> void:
 
 	# 1. Placement in Game (present, not necessarily last)
 	_check(game.LEVELS.has("vic"), "vic present in Game.LEVELS")
-	var mont_idx: int = game.CAROUSEL.find("montserrat")
-	_check(mont_idx >= 0 and mont_idx + 1 < game.CAROUSEL.size() and game.CAROUSEL[mont_idx + 1] == "vic",
-		"CAROUSEL places vic right after montserrat")
+	var enc_idx: int = game.CAROUSEL.find("encants")
+	_check(enc_idx >= 0 and enc_idx + 1 < game.CAROUSEL.size() and game.CAROUSEL[enc_idx + 1] == "vic",
+		"CAROUSEL places vic right after encants")
 	_check(int(game.STAR_GATE.get("vic", -1)) == 50, "STAR_GATE vic == 50")
 	_check(String(game.CHASE_GATE.get("vic", "")) == String(game.CHASE_GATE.get("scrap", "")),
 		"CHASE_GATE vic matches scrap")

@@ -78,6 +78,7 @@ const FEEL := {
 	"floats": {"spacing": 0.14, "r": 0.08, "drag": 1.3, "take": 1.15, "roll": true},
 	"buttons": {"spacing": 0.13, "r": 0.07, "drag": 1.5, "take": 1.1, "roll": true},
 	"tesserae": {"spacing": 0.09, "r": 0.055, "drag": 4.0, "take": 0.9, "spin": 2.0, "align": true},
+	"cheeses": {"spacing": 0.14, "r": 0.075, "drag": 1.2, "take": 1.1, "roll": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
@@ -566,6 +567,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_buttons(c, sign, h)
 		"tesserae":
 			_tesserae(c, sign, h, light)
+		"cheeses":
+			_cheeses(c, sign, h)
 		"brollies":
 			_brollies(c, sign, h)
 		"pastries":
@@ -1376,6 +1379,22 @@ static func _buttons(c: Object, sign: Dictionary, _h: float) -> void:
 		for i in range(holes):
 			var a := float(i) * TAU / float(holes) + float(pc.rot)
 			c.draw_circle(p + Vector2.from_angle(a) * r * 0.32, r * 0.12, Color(0.12, 0.10, 0.08))
+
+
+static func _cheeses(c: Object, sign: Dictionary, _h: float) -> void:
+	# Vic market wheels of mató and cured cheese, rind and pale paste
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.r) * 1.08, Color(0, 0, 0, 0.26))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var v := float(pc["var"])
+		var rind := Color(0.78, 0.62, 0.28) if v > 0.5 else Color(0.86, 0.74, 0.48)
+		var paste := Color(0.96, 0.90, 0.72) if v > 0.5 else Color(0.94, 0.82, 0.42)
+		c.draw_circle(p, r, rind.darkened(0.18))
+		c.draw_circle(p, r * 0.88, rind)
+		c.draw_circle(p - Vector2(r * 0.12, r * 0.12), r * 0.62, paste)
+		c.draw_circle(p - Vector2(r * 0.28, r * 0.28), r * 0.22, paste.lightened(0.2))
 
 
 # a croissant's three lobes along its curve, and their bake from the

@@ -62,7 +62,7 @@ const AT := {"metro": Vector2(445.0, -1430.0), "reial": Vector2(800.0, -1850.0),
 	"ronda": Vector2(655.0, -2150.0),
 	"encants": Vector2(520.0, -1650.0),
 	"tarragona": Vector2(640.0, -2120.0),
-	"vic": Vector2(820.0, -1480.0)}
+	"vic": Vector2(780.0, -2380.0)}
 
 # what each of them sits or stands on, solid and wrapping the leash; the
 # monkey's marble block is the walk's own (LevelBuild.beach_block_stones)
@@ -239,6 +239,11 @@ const LINES := {
 		"won": "Sold! You're sharper than these lamps. Come back for a harder one.",
 		"lost": "No deal. Come back and try again.",
 		"done": "Take the button. I've got more crates to sort."},
+	"farmer": {"idle": "Fog's thick, cheese is fresh. Want a dare?",
+		"dare": "%d tricks in %d seconds, before the fog lifts!",
+		"won": "Good dog! Come back for a harder one.",
+		"lost": "Lost in the mist? Come back and try again.",
+		"done": "Take a wheel. You've earned it."},
 }
 
 # who they are, for the result card
