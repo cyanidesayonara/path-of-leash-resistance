@@ -596,7 +596,7 @@ static func night_fronts(m: Node2D) -> Array[Dictionary]:
 		idx += 1
 		var kind := NightFronts.kind_of(k)
 		if kind == "":
-			kind = "ajar" if idx % 2 == 0 else "bar"
+			kind = "home" if idx % 2 == 0 else "bar"
 		var side := door.z
 		out.append(NightFronts.front(Vector2(door.x, door.y), -side, kind, k))
 	return out

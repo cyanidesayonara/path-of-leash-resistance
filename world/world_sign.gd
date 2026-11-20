@@ -34,7 +34,8 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "sitges": "seaglass", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "sitges": "seaglass", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", 	"aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "raval": "pegs", "tutorial": "balls",
+	"encants": "buttons",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -74,6 +75,7 @@ const FEEL := {
 	"pintxos": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"oranges": {"spacing": 0.14, "r": 0.075, "drag": 1.1, "take": 1.1, "roll": true},
 	"floats": {"spacing": 0.14, "r": 0.08, "drag": 1.3, "take": 1.15, "roll": true},
+	"buttons": {"spacing": 0.13, "r": 0.07, "drag": 1.5, "take": 1.1, "roll": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
@@ -558,6 +560,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_oranges(c, sign, h)
 		"floats":
 			_floats(c, sign, h)
+		"buttons":
+			_buttons(c, sign, h)
 		"brollies":
 			_brollies(c, sign, h)
 		"pastries":
@@ -1344,6 +1348,30 @@ static func _floats(c: Object, sign: Dictionary, _h: float) -> void:
 		c.draw_circle(p - Vector2(r * 0.34, r * 0.34), r * 0.25, col.lightened(0.45))
 		if v > 0.55:
 			c.draw_line(p + ax * (r * 0.75), p + ax * (r * 1.35), Color(0.76, 0.68, 0.52), maxf(1.1, r * 0.24))
+
+
+const BUTTON_COLS: Array[Color] = [
+	Color(0.18, 0.22, 0.48), Color(0.72, 0.16, 0.20), Color(0.90, 0.88, 0.82),
+	Color(0.28, 0.52, 0.34), Color(0.55, 0.40, 0.22), Color(0.86, 0.62, 0.16),
+]
+
+
+static func _buttons(c: Object, sign: Dictionary, _h: float) -> void:
+	# loose coat buttons from a flea-market tin: round, two or four holes, brass rim
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.r) * 1.05, Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var v := float(pc["var"])
+		var col := BUTTON_COLS[int(v * 97.0) % BUTTON_COLS.size()]
+		c.draw_circle(p, r, Color(0.55, 0.48, 0.28))
+		c.draw_circle(p, r * 0.88, col)
+		c.draw_circle(p - Vector2(r * 0.18, r * 0.18), r * 0.28, col.lightened(0.35))
+		var holes := 4 if v > 0.45 else 2
+		for i in range(holes):
+			var a := float(i) * TAU / float(holes) + float(pc.rot)
+			c.draw_circle(p + Vector2.from_angle(a) * r * 0.32, r * 0.12, Color(0.12, 0.10, 0.08))
 
 
 # a croissant's three lobes along its curve, and their bake from the

@@ -52,14 +52,15 @@ const WHO := {"beach": "monkey", "street": "statue", "port": "fisher", "site": "
 	"carmel": "photographer", "superilla": "chess", "forum": "drone", "espanya": "bubbles", "raval": "fortune",
 	"eixample": "guide", "angels": "skateboarder", "poble": "potter", "ciutadella": "juggler", "cremada": "devil",
 	"aeroport": "pilot", "montserrat": "monk", "diagonal": "rider", "blai": "cook", "sitges": "kitesurfer", "santpau": "sketcher", "molina": "instructor",
-	"ronda": "snorkeler"}
+	"ronda": "snorkeler", "encants": "haggler"}
 
 # where they are on a walk whose spot main's rule (either side of the
 # corridor 1600 px in) would put on something or under it: El Metro's
 # escalator, a palm's crown on Plaça Reial, the solar pergola on El Fòrum
 const AT := {"metro": Vector2(445.0, -1430.0), "reial": Vector2(800.0, -1850.0), "forum": Vector2(820.0, -1150.0), "santpau": Vector2(780.0, -1580.0),
 	"sitges": Vector2(444.0, -1460.0),
-	"ronda": Vector2(655.0, -2150.0)}
+	"ronda": Vector2(655.0, -2150.0),
+	"encants": Vector2(520.0, -1650.0)}
 
 # what each of them sits or stands on, solid and wrapping the leash; the
 # monkey's marble block is the walk's own (LevelBuild.beach_block_stones)
@@ -76,7 +77,7 @@ const FOOTPRINT := {"kid": Vector2(28.0, 62.0), "statue": Vector2(30.0, 30.0), "
 	"bubbles": Vector2(20.0, 20.0), "fortune": Vector2(28.0, 28.0), "guide": Vector2(20.0, 20.0),
 	"skateboarder": Vector2(20.0, 20.0), "potter": Vector2(28.0, 28.0), "juggler": Vector2(20.0, 20.0),
 	"devil": Vector2(20.0, 20.0), "pilot": Vector2(24.0, 22.0), "monk": Vector2(22.0, 22.0),
-	"rider": Vector2(24.0, 24.0), "cook": Vector2(20.0, 20.0), "kitesurfer": Vector2(24.0, 24.0), "sketcher": Vector2(24.0, 26.0), "instructor": Vector2(22.0, 22.0), "snorkeler": Vector2(24.0, 24.0)}
+	"rider": Vector2(24.0, 24.0), "cook": Vector2(20.0, 20.0), "kitesurfer": Vector2(24.0, 24.0), "sketcher": Vector2(24.0, 26.0), "instructor": Vector2(22.0, 22.0), "snorkeler": Vector2(24.0, 24.0), "haggler": Vector2(26.0, 24.0)}
 
 # What each of them says, as people talk, each line starting with a capital. "dare" always names
 # the numbers as "N tricks in N seconds", and the bubble adds TAKE while the dare waits
@@ -228,6 +229,11 @@ const LINES := {
 		"won": "Sharp as a sea urchin! Want an even harder one?",
 		"lost": "Swept right off the rock! Catch your breath and try again.",
 		"done": "First cove's calmer anyway. Enjoy the shingle!"},
+	"haggler": {"idle": "Forty for the crate? Fine, thirty. Want a dare while I think?",
+		"dare": "%d tricks in %d seconds, and I'll throw in a button!",
+		"won": "Sold! You're sharper than these lamps. Come back for a harder one.",
+		"lost": "No deal. Come back and try again.",
+		"done": "Take the button. I've got more crates to sort."},
 }
 
 # who they are, for the result card
@@ -243,7 +249,8 @@ const NAMES := {"kid": "the kid", "monkey": "the monkey", "statue": "the statue"
 	"fortune": "the fortune teller", "guide": "the tour guide", "skateboarder": "the skateboarder",
 	"potter": "the potter", "juggler": "the juggler", "devil": "the devil", "pilot": "the pilot",
 	"monk": "the monk", "rider": "the delivery rider", "cook": "the cook", "kitesurfer": "the kitesurfer",
-	"instructor": "the ski instructor", "sketcher": "the watercolor painter", "snorkeler": "the snorkeler"}
+	"instructor": "the ski instructor", "sketcher": "the watercolor painter", "snorkeler": "the snorkeler",
+	"haggler": "the flea-market haggler"}
 
 var main: Node2D
 var my_dog: Node2D

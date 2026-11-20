@@ -79,6 +79,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_kitesurfer(c, fd, t, s)
 		"snorkeler":
 			_snorkeler(c, fd, t, s)
+		"haggler":
+			_haggler(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -931,6 +933,29 @@ static func _kitesurfer(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	c.draw_line(bar_p + side * 6.0, wing[6], Color(0.90, 0.92, 0.94, 0.65), 1.0)
 	for e: float in [-1.0, 1.0]:
 		_arm(c, side * e * 8.0, bar_p + side * e * 5.5, teal, skin)
+
+
+# Els Encants: a flea-market haggler crouched over an open crate, haggling
+static func _haggler(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.82, 0.64, 0.50)
+	var coat := Color(0.42, 0.28, 0.18)
+	var shirt := Color(0.78, 0.72, 0.55)
+	var crate := Color(0.58, 0.42, 0.24)
+	_shadow(c, Vector2(0.0, 2.0), 16.0, 14.0)
+	# Open crate of finds at their feet
+	c.draw_colored_polygon(_bar(fd * 6.0, side, 14.0, 9.0), crate.darkened(0.25))
+	c.draw_colored_polygon(_bar(fd * 5.5, side, 12.0, 7.0), crate)
+	c.draw_circle(fd * 5.0 + side * 4.0, 3.0, Color(0.70, 0.55, 0.30))
+	c.draw_circle(fd * 6.5 - side * 3.0, 2.5, Color(0.55, 0.58, 0.62))
+	# Crouched figure leaning over the goods
+	var at := -fd * 1.5
+	_person(c, at, fd, shirt, skin, Color(0.28, 0.18, 0.12), "crop", "", Color.BLACK)
+	c.draw_colored_polygon(_bar(at, side, 13.0, 4.0), coat)
+	# One hand gesturing a price, the other on the crate rim
+	var bob := sin(t * 4.0 + s) * 2.0
+	_arm(c, at - side * 7.0, at - side * 11.0 + fd * (4.0 + bob), coat, skin)
+	_arm(c, at + side * 7.0, at + side * 8.0 + fd * 7.0, coat, skin)
 
 
 # Camí de Ronda: a snorkeler seated on a coastal boulder overlooking the cove,
