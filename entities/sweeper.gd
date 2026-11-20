@@ -100,6 +100,17 @@ var _rng := RandomNumberGenerator.new()
 const ChaseVehicleScript := preload("res://systems/chase_vehicle.gd")
 var drive = ChaseVehicleScript.new()
 const DODGE_K := 2.2              # how much harder it steers to get round something than to wander
+# the face's menace ramps from MENACE_NEAR + MENACE_RAMP of runway down to MENACE_NEAR
+const MENACE_NEAR := 80.0
+const MENACE_RAMP := 420.0
+# the headlamps' beams down the road at her, and how far they reach
+const BEAM_LEN := 300.0
+# the headlamp eyes' size against the lamps they grew from: big enough to read
+# as a face from across the street, as the film's one great eye does
+const EYE_SCALE := 1.4
+# set at the top of each _draw: where the eyes look (body frame) and how close she is
+var _look := Vector2(0.0, 1.0)
+var _menace := 0.0
 
 
 func setup(m: Node2D, start_front_y: float, corridor_cx: float, corridor_half: float, sweeper_speed: float) -> void:
@@ -280,6 +291,18 @@ func _draw() -> void:
 	var jig := Vector2(sin(rumble * 61.0), cos(rumble * 47.0)) * (3.0 if stuck else 0.8)
 	var body_at := Vector2(sway, BODY_Y) + jig + drive.jolt()
 	var body_xf := Transform2D(-heading, body_at)
+	# the face watches her: its eyes follow the dog, and it squints and
+	# gnashes harder the closer she is to the brushes
+	_look = Vector2(0.0, 1.0)
+	_menace = 0.0
+	if main != null and main.get("dog") != null:
+		var dp: Vector2 = main.dog.global_position
+		var to: Vector2 = body_xf.affine_inverse() * (dp - global_position) - Vector2(0.0, BODY_HALF_LEN - 8.0)
+		if to.length_squared() > 1.0:
+			_look = to.normalized()
+		_menace = 1.0 - clampf((gap_to(dp) - MENACE_NEAR) / MENACE_RAMP, 0.0, 1.0)
+	if stuck:
+		_menace = 1.0
 
 	# --- the road it has already been over --------------------------------
 	# ground-up and oil-dark, and deliberately featureless: the eye should
@@ -368,15 +391,29 @@ func _draw() -> void:
 	_draw_body(b, pal, stuck)
 	b.draw_set_transform(Vector2.ZERO)
 
-	# A wash of beacon light on the road it is about to take. Full corridor
-	# width and faded in bands rather than one polygon: the first version was
-	# a trapezoid from the cab to the kerbs, and its two straight edges read
-	# as hard triangular wedges lying on the road instead of as light.
+	# A wash of beacon light on the road it is about to take: full corridor
+	# width, one gradient feathering out ahead (a trapezoid's straight edges
+	# read as wedges lying on the road, and stacked bands as steps).
 	var glow: float = 0.055 + 0.025 * sin(rumble * 6.0)
-	for i in range(5):
-		var f := float(i) / 4.0
-		b.draw_rect(Rect2(-half, -6.0 + f * 46.0, full, 12.0),
-			Color(1.0, 0.80, 0.30, glow * (1.0 - f)))
+	b.band(PackedVector2Array([Vector2(-half, -6.0), Vector2(half, -6.0), Vector2(-half, 52.0), Vector2(half, 52.0)]),
+		2, Color(1.0, 0.80, 0.30, glow), PackedFloat32Array([1.0, 0.0]))
+	# the headlamps' beams down the road at her, soft-sided, brighter after
+	# dark and as it closes in
+	var lamp_k := 0.5
+	var _gm2: Node = get_node_or_null("/root/Game")
+	if _gm2 != null and _gm2.has_method("lamp_glow"):
+		lamp_k = float(_gm2.lamp_glow())
+	var beam_a := (0.10 + 0.24 * lamp_k) * (0.8 + 0.4 * _menace)
+	var fwd: Vector2 = body_xf.basis_xform(Vector2(0.0, 1.0))
+	var side: Vector2 = body_xf.basis_xform(Vector2(1.0, 0.0))
+	for s: float in [-1.0, 1.0]:
+		var lp: Vector2 = body_xf * Vector2(s * (CAB_HALF - 18.0), BODY_HALF_LEN - 4.0)
+		var pts := PackedVector2Array()
+		for row: Vector2 in [Vector2(0.0, 8.0), Vector2(BEAM_LEN * 0.4, 44.0), Vector2(BEAM_LEN, 96.0)]:
+			for k in range(3):
+				pts.append(lp + fwd * row.x + side * (row.y * float(k - 1)))
+		b.band(pts, 3, Color(1.0, 0.94, 0.70, beam_a), PackedFloat32Array([1.0, 0.55, 0.0]),
+			PackedFloat32Array([0.0, 1.0, 0.0]))
 	drive.draw_debris(b, global_position)
 	b.flush()
 
@@ -508,28 +545,38 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 		Color(0.12, 0.13, 0.15))
 	b.draw_rect(Rect2(-CAB_HALF + 6.0, L - 6.0, CAB_HALF * 2.0 - 12.0, 7.0), Color(0.30, 0.31, 0.34))
 	# the grille between the lamps, a grimace of steel teeth, as in the film
-	# (intro/film_sweeper.gd): to a dog, the machine has a face
-	b.draw_rect(Rect2(-30.0, L - 12.0, 60.0, 14.0), Color(0.16, 0.05, 0.05))
+	# (intro/film_sweeper.gd): to a dog, the machine has a face. The jaw
+	# champs as it drives, wider and faster the closer she is
+	var jaw := (1.5 + 3.5 * _menace) * (0.5 + 0.5 * sin(rumble * (9.0 + 7.0 * _menace)))
+	b.draw_rect(Rect2(-31.0, L - 13.0, 62.0, 16.0 + jaw), Color(0.16, 0.05, 0.05))
 	for i in range(6):
 		var tx := -28.0 + float(i) * 9.6
-		b.draw_colored_polygon(PackedVector2Array([Vector2(tx, L - 12.0), Vector2(tx + 8.0, L - 12.0),
+		b.draw_colored_polygon(PackedVector2Array([Vector2(tx, L - 13.0), Vector2(tx + 8.0, L - 13.0),
 			Vector2(tx + 4.0, L - 4.0)]), pal.trim)
-		b.draw_colored_polygon(PackedVector2Array([Vector2(tx, L + 2.0), Vector2(tx + 8.0, L + 2.0),
-			Vector2(tx + 4.0, L - 5.0)]), pal.trim)
+		b.draw_colored_polygon(PackedVector2Array([Vector2(tx, L + 3.0 + jaw), Vector2(tx + 8.0, L + 3.0 + jaw),
+			Vector2(tx + 4.0, L - 5.0 + jaw)]), pal.trim)
 	for i in range(7):
 		b.draw_circle(Vector2(-CAB_HALF + 16.0 + float(i) * (CAB_HALF * 2.0 - 32.0) / 6.0, L + 1.0), 2.4,
 			Color(0.70, 0.84, 0.95))
-	# the headlamps as glaring eyes, looking down the road at you, under
-	# brows scowling in toward the grille
+	# the headlamps as glaring eyes that follow her, under brows scowling in
+	# toward the grille; the lids drop into a squint as it closes in
+	var m := _menace
+	var e := EYE_SCALE
 	for k in range(2):
 		var s := -1.0 if k == 0 else 1.0
-		var lamp := Vector2(s * (CAB_HALF - 18.0), L - 8.0)
-		b.draw_circle(lamp, 15.0, Color(1.0, 0.92, 0.60, 0.25))
-		b.draw_circle(lamp, 10.0, Color(0.10, 0.10, 0.12))
-		b.draw_circle(lamp, 8.0, Color(1.0, 0.97, 0.84))
-		b.draw_circle(lamp + Vector2(-s * 1.5, 3.0), 3.6, Color(0.08, 0.08, 0.10))
-		b.draw_colored_polygon(PackedVector2Array([lamp + Vector2(s * 14.0, -16.0), lamp + Vector2(-s * 12.0, -8.0),
-			lamp + Vector2(-s * 12.0, -3.0), lamp + Vector2(s * 14.0, -10.0)]), pal.dark)
+		var lamp := Vector2(s * (CAB_HALF - 20.0), L - 10.0)
+		b.glow(lamp + Vector2(0.0, 4.0), (30.0 + 10.0 * m) * e, Color(1.0, 0.90, 0.55, 0.35 + 0.25 * m), 0.25)
+		b.draw_circle(lamp, 11.5 * e, Color(0.10, 0.10, 0.12))
+		b.draw_circle(lamp, 9.5 * e, Color(1.0, 0.97, 0.84))
+		var pupil := lamp + _look * 3.8 * e
+		b.draw_circle(pupil, lerpf(4.4, 3.0, m) * e, Color(0.08, 0.08, 0.10))
+		b.draw_circle(pupil + Vector2(-1.2, -1.2) * e, 1.1 * e, Color(1.0, 1.0, 1.0, 0.9))
+		# the lid, body-coloured, cutting the top of the eye on a slant
+		b.draw_colored_polygon(PackedVector2Array([lamp + Vector2(s * 12.5, -13.0) * e, lamp + Vector2(-s * 12.5, -13.0) * e,
+			lamp + Vector2(-s * 12.5, -3.5 + 4.0 * m) * e, lamp + Vector2(s * 12.5, -8.0 + 2.5 * m) * e]), pal.body)
+		b.draw_colored_polygon(PackedVector2Array([lamp + Vector2(s * 16.0, -19.0 + 3.0 * m) * e,
+			lamp + Vector2(-s * 14.0, -10.0 + 4.5 * m) * e, lamp + Vector2(-s * 14.0, -3.0 + 4.5 * m) * e,
+			lamp + Vector2(s * 16.0, -12.0 + 3.0 * m) * e]), pal.dark)
 
 	# --- beacons ----------------------------------------------------------
 	# a bar across the back of the cab roof: amber strobes for the sweeper,
@@ -551,7 +598,7 @@ func _draw_body(b: ShapeBatch, pal: Dictionary, stuck: bool) -> void:
 			var lit: bool = true if not flashes_on else (on if bx < 0.0 else not on)
 			b.draw_circle(Vector2(bx, by), 7.0, Color(1.0, 0.78, 0.16) if lit else Color(0.38, 0.28, 0.06))
 			if lit:
-				b.draw_circle(Vector2(bx, by), 15.0, Color(1.0, 0.80, 0.25, 0.18))
+				b.glow(Vector2(bx, by), 30.0, Color(1.0, 0.80, 0.25, 0.45), 0.2)
 	if stuck:
 		# steam off the hopper while it strains
 		for i in range(5):
