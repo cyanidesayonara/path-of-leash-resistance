@@ -125,15 +125,16 @@ func _run() -> void:
 	m.queue_free()
 	await process_frame
 
-	# training: level n costs n
+	# training: level n costs n (speed, where Millie has no head start)
 	game.training = {"millie": 3}
-	_check(game.stat_cost("millie", "nose") == 1, "the first level of a stat costs 1")
-	_check(game.upgrade_dog_stat("millie", "nose"), "1 point buys it")
-	_check(game.stat_cost("millie", "nose") == 2, "the second costs 2")
-	_check(game.upgrade_dog_stat("millie", "nose"), "2 points buy it")
+	_check(game.stat_cost("millie", "speed") == 1, "the first level of a stat costs 1")
+	_check(game.upgrade_dog_stat("millie", "speed"), "1 point buys it")
+	_check(game.stat_cost("millie", "speed") == 2, "the second costs 2")
+	_check(game.upgrade_dog_stat("millie", "speed"), "2 points buy it")
 	_check(game.training_points("millie") == 0, "which spends all 3")
-	_check(not game.upgrade_dog_stat("millie", "nose"), "and nothing is left for the third")
-	_check(game.dog_nose_mult("millie") > game.dog_nose_mult("pipa"), "a trained nose reaches further")
+	_check(not game.upgrade_dog_stat("millie", "speed"), "and nothing is left for the third")
+	_check(game.dog_speed_mult("millie") > float(game.DOGS["millie"].get("speed_mult", 1.0)), "trained legs go faster")
+	_check(game.dog_nose_mult("millie") > game.dog_nose_mult("pipa"), "her nose, born keen, reaches further")
 
 	print("\n%d checks, %d failures" % [checks, failures.size()])
 	if failures.is_empty():

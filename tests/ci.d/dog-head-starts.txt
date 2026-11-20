@@ -1,0 +1,2 @@
+# Each dog born with training levels in what she is bred for (Game.DOGS "innate")
+--headless --path . --script res://tests/test_dog_head_starts.gd

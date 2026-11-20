@@ -299,6 +299,7 @@ const T := {
 	"shop_wearing": {"en": "WEARING", "ca": "POSAT", "es": "PUESTO"},
 	"shop_owned": {"en": "OWNED", "ca": "TEU", "es": "TUYO"},
 	"shop_level": {"en": "Lv %d/%d", "ca": "Nv %d/%d", "es": "Nv %d/%d"},
+	"shop_born_note": {"en": "%s was born with %d of these", "ca": "%s ja en té %d de naixement", "es": "%s ya trae %d de nacimiento"},
 	"stat_speed": {"en": "Sprint Speed", "ca": "Velocitat", "es": "Velocidad"},
 	"stat_plant": {"en": "Plant Grip", "ca": "Aferrament", "es": "Agarre"},
 	"stat_herd": {"en": "Human Influence", "ca": "Persuasió", "es": "Persuasión"},
