@@ -1094,8 +1094,8 @@ static func is_lamp(_m: Node2D, _p: Vector2) -> bool:
 
 
 static func name_place(_m: Node2D) -> Dictionary:
-	# tight room so ATRACCIONS on the second line stays inside the paving
-	return {"x": CX, "room": 340.0}
+	# tight room so stub pieces for ATRACCIONS stay inside the paving
+	return {"x": CX, "room": 300.0}
 
 
 static func tree_kind(m: Node2D, p: Vector2) -> int:
