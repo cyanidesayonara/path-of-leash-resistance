@@ -34,7 +34,7 @@ const MATERIALS := {
 	"spook": "chestnuts", "scrap": "plate", "guell": "trencadis", "neteja": "suds",
 	"partit": "scarf", "oldtown": "setts", "station": "studs", "besos": "pebbles",
 	"montjuic": "cactus", "port": "rope", "reial": "fronds", "vet": "biscuits",
-	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "sitges": "seaglass", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", 	"aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "raval": "pegs", "tutorial": "balls",
+	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "sitges": "seaglass", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "atraccions": "stubs", "raval": "pegs", "tutorial": "balls",
 	"encants": "buttons",
 	"vic": "cheeses",
 }
@@ -44,7 +44,7 @@ const MATERIALS := {
 # the space nearest its middle, rather than shrunk.
 const NAME_MIN_H := 42.0
 const LINE_PITCH := 1.5
-const SPLIT_MIN := 4             # letters either side of a break
+const SPLIT_MIN := 3             # letters either side of a break (LES / ATRACCIONS; not EL / BOSC)
 # The pieces fall into place when a sign is laid out: left to right over
 # REVEAL_SWEEP seconds, each landing in REVEAL_DROP from DROP_H cap heights up.
 const REVEAL_SWEEP := 0.55
@@ -71,6 +71,7 @@ const FEEL := {
 	"suds": {"spacing": 0.055, "r": 0.05, "drag": 3.0, "take": 1.4, "pop": true},
 	"pegs": {"spacing": 0.15, "r": 0.06, "drag": 5.0, "take": 1.1, "spin": 5.0, "align": true},
 	"tickets": {"spacing": 0.15, "r": 0.065, "drag": 4.0, "take": 1.3, "spin": 6.0, "align": true},
+	"stubs": {"spacing": 0.11, "r": 0.042, "gap": 1.22, "drag": 4.2, "take": 1.25, "spin": 5.5, "align": true},
 	"brollies": {"spacing": 0.17, "r": 0.075, "drag": 4.6, "take": 1.2, "spin": 3.0, "align": true},
 	"papers": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 4.0, "align": true},
 	"pintxos": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
@@ -555,6 +556,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_topiary(c, lines, h, key, light)
 		"tickets":
 			_tickets(c, sign, h)
+		"stubs":
+			_stubs(c, sign, h)
 		"papers":
 			_papers(c, sign, h)
 		"pintxos":
@@ -1243,6 +1246,25 @@ static func _tickets(c: Object, sign: Dictionary, h: float) -> void:
 		c.draw_colored_polygon(_box(p + ax * r * 0.55, rot, r * 0.2, r * 0.72), Color(0.12, 0.10, 0.10))
 		if float(pc["var"]) > 0.6:
 			c.draw_circle(p - ax * r * 0.5, r * 0.18, Color(0.22, 0.14, 0.10))
+
+
+static func _stubs(c: Object, sign: Dictionary, h: float) -> void:
+	# torn ride-ticket stubs on the park path: saffron and magenta halves, a
+	# ragged edge where they were torn at the turnstile
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.rot), r * 1.15, r * 0.7), Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ax := Vector2.from_angle(rot)
+		var card := Color(0.96, 0.72, 0.18) if float(pc["var"]) > 0.45 else Color(0.86, 0.22, 0.52)
+		c.draw_colored_polygon(_box(p, rot, r * 1.15, r * 0.68), Color(0.22, 0.14, 0.10))
+		c.draw_colored_polygon(_box(p, rot, r * 1.05, r * 0.58), card)
+		# ragged tear
+		c.draw_colored_polygon(_box(p + ax * r * 0.35, rot, r * 0.12, r * 0.58), Color(0.96, 0.94, 0.90))
+		c.draw_circle(p - ax * r * 0.4, r * 0.14, Color(0.18, 0.16, 0.14))
 
 
 static func _brollies(c: Object, sign: Dictionary, _h: float) -> void:

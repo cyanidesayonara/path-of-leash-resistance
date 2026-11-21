@@ -241,6 +241,9 @@ const STYLES := {
 	# Rambla del Raval: the finale's fight, fast and minor, its own chords and melody
 	"raval": {"bpm": 148, "key": 0, "minor": true, "lead": "guitar", "lead2": ["accordion", 0], "lead2_all": true,
 		"comp": "push", "bass": "eighths", "drums": "drive", "verb": 0.20, "chords": RAVAL_BOSS_CHORDS, "mel": RAVAL_BOSS_MELODY},
+	# Les Atraccions: bright carnival bounce, whistle and glock over a walking bass
+	"atraccions": {"bpm": 128, "key": 5, "lead": "glock", "lead2": ["whistle", 12], "comp": "push",
+		"bass": "walk", "drums": "groove", "swing": 0.05, "verb": 0.22},
 	"freedom": {"bpm": 120, "key": 5, "lead": "whistle", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "kickrim", "swing": 0.1, "verb": 0.22},
 }
@@ -608,6 +611,12 @@ const DARES := {
 			[4, 0.5, 72], [4.5, 0.5, 74], [5, 1, 77], [6, 1, 76], [7, 1, 74],
 			[8, 0.5, 72], [8.5, 0.5, 74], [9, 0.5, 79], [9.5, 0.5, 81], [10, 1, 77], [11, 1, 74],
 			[12, 0.5, 72], [12.5, 0.5, 70], [13, 0.5, 69], [13.5, 0.5, 67], [14, 2, 62]]},
+	"balloon": {"bpm": 150, "lead": "glock", "lead2": ["whistle", 12], "comp": "push", "bass": "octave",
+		"drums": "claps", "verb": 0.16, "chords": [[65, "maj"], [60, "maj"], [67, "maj"], [65, "maj"]],
+		"mel": [[0, 0.5, 84], [0.5, 0.5, 88], [1, 0.5, 91], [1.5, 0.5, 88], [2, 1, 84], [3, 1, 79],
+			[4, 0.5, 83], [4.5, 0.5, 86], [5, 0.5, 91], [5.5, 0.5, 86], [6, 1, 83], [7, 1, 79],
+			[8, 0.5, 84], [8.5, 0.5, 88], [9, 0.5, 93], [9.5, 0.5, 88], [10, 1, 84], [11, 1, 79],
+			[12, 0.5, 86], [12.5, 0.5, 84], [13, 0.5, 83], [13.5, 0.5, 81], [14, 2, 84]]},
 }
 
 # --- the score: what plays when ---------------------------------------------

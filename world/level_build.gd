@@ -27,6 +27,7 @@ const Cremada := preload("res://systems/cremada.gd")
 const Aeroport := preload("res://systems/aeroport.gd")
 const Montserrat := preload("res://systems/montserrat.gd")
 const Molina := preload("res://systems/molina.gd")
+const Atraccions := preload("res://systems/atraccions.gd")
 const BossMamut := preload("res://systems/boss_mamut.gd")
 const BossDrac := preload("res://systems/boss_drac.gd")
 const Carmel := preload("res://systems/carmel.gd")
@@ -154,6 +155,7 @@ const CROSS_SECTIONS := {
 	"aeroport": ["none", 0.0, "none", 0.0],        # Terminal 1: glass curtain wall and boarding gates
 	"montserrat": ["none", 0.0, "none", 0.0],      # Montserrat mountain trail and terrace
 	"molina": ["none", 0.0, "none", 0.0],          # La Molina's piste between the snowbanks
+	"atraccions": ["none", 0.0, "none", 0.0],      # theme park path, lands in systems/atraccions.gd
 	# flood wall on the left, grass then the river on the right
 	"besos": ["none", 0.0, "grass", 120.0],
 }
@@ -1413,6 +1415,7 @@ static func apply_corridor(m: Node2D) -> void:
 		"aeroport": half = Aeroport.HALF
 		"montserrat": half = Montserrat.HALF
 		"molina": half = Molina.HALF
+		"atraccions": half = Atraccions.HALF
 		"besos": half = BESOS_HALF
 	m.walk_cx = BESOS_CX if m.lvl == "besos" else 640.0
 	m.walk_half = half
@@ -1827,6 +1830,10 @@ static func build_level_data(m: Node2D) -> void:
 			var pl_mol: Array = Molina.build(m)
 			hyd_list.assign(pl_mol[0])
 			keb_list.assign(pl_mol[1])
+		"atraccions":
+			var pl_at: Array = Atraccions.build(m)
+			hyd_list.assign(pl_at[0])
+			keb_list.assign(pl_at[1])
 		"raval":
 			var pl_raval: Array = BossGat.build(m)
 			hyd_list.assign(pl_raval[0])
@@ -2642,6 +2649,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "molina":
 		for r: Rect2 in Molina.wrap_rects():
 			add_rope_rect(m, r)
+	if m.lvl == "atraccions":
+		for r: Rect2 in Atraccions.wrap_rects():
+			add_rope_rect(m, r)
 	if m.lvl == "ciutadella":
 		for r: Rect2 in Ciutadella.wrap_rects():
 			add_rope_rect(m, r)
@@ -2801,6 +2811,9 @@ static func build_level_data(m: Node2D) -> void:
 		"molina":
 			m.prize_pos = Molina.PRIZE
 			m.prize_text = Molina.PRIZE_TEXT
+		"atraccions":
+			m.prize_pos = Atraccions.PRIZE
+			m.prize_text = Atraccions.PRIZE_TEXT
 		"ciutadella":
 			m.prize_pos = BossMamut.PRIZE
 			m.prize_text = BossMamut.PRIZE_TEXT
@@ -3481,6 +3494,13 @@ const FREEDOM_PROPS := {
 		[Vector2(160.0, -400.0), "rock"], [Vector2(300.0, -300.0), "rock"], [Vector2(790.0, -540.0), "rock"],
 		[Vector2(1090.0, -460.0), "rock"], [Vector2(950.0, -250.0), "post"],
 	],
+	# picnic lawn behind the last land: digs, a log, shrubs, a post
+	"atraccions": [
+		[Vector2(240.0, -480.0), "dig"], [Vector2(640.0, -280.0), "dig"], [Vector2(1020.0, -320.0), "dig"],
+		[Vector2(380.0, -520.0), "log"], [Vector2(880.0, -500.0), "log"],
+		[Vector2(180.0, -360.0), "shrub"], [Vector2(300.0, -280.0), "rock"], [Vector2(800.0, -520.0), "shrub"],
+		[Vector2(1080.0, -440.0), "rock"], [Vector2(940.0, -240.0), "post"],
+	],
 }
 
 
@@ -3846,6 +3866,10 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_mol: Array[Rect2] = Molina.solids(m)
 			for i in range(ps_mol.size()):
 				out.append(["molina_solid_%d" % i, ps_mol[i]])
+		"atraccions":
+			var ps_at: Array[Rect2] = Atraccions.solids(m)
+			for i in range(ps_at.size()):
+				out.append(["atraccions_solid_%d" % i, ps_at[i]])
 		"ciutadella":
 			var ps_ciut: Array[Rect2] = Ciutadella.solids(m)
 			for i in range(ps_ciut.size()):
@@ -4468,6 +4492,9 @@ static func build_walls(m: Node2D) -> void:
 	if m.lvl == "molina":
 		for r: Rect2 in Molina.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "atraccions":
+		for r: Rect2 in Atraccions.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "ciutadella":
 		for r: Rect2 in Ciutadella.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
@@ -4704,6 +4731,7 @@ const CONE_KINDS := {
 	"aigues": ["bottle", "can"],
 	"montserrat": ["bottle", "can"],     # a pilgrim's empty water bottle
 	"molina": ["can", "bottle"],          # a skier's drink, dropped in the snow
+	"atraccions": ["bottle", "ball"],     # park litter by the queues
 }
 
 

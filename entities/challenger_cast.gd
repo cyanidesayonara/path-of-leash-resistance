@@ -85,6 +85,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_gladiator(c, fd, t, s)
 		"farmer":
 			_farmer(c, fd, t, s)
+		"balloon":
+			_balloon(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -1043,3 +1045,26 @@ static func _gladiator(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	c.draw_circle(tip, 2.4, bronze)
 	_arm(c, side * 7.0, sh, tunic, skin)
 	_arm(c, -side * 6.0, tip * 0.4, tunic, skin)
+
+
+# Les Atraccions: a balloon seller whose bunch tugs upward
+static func _balloon(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.86, 0.68, 0.52)
+	var shirt := Color(0.18, 0.62, 0.68)
+	_shadow(c, Vector2.ZERO, 12.0, 14.0)
+	_shoes(c, fd, side, Color(0.22, 0.20, 0.20))
+	_person(c, Vector2.ZERO, fd, shirt, skin, Color(0.28, 0.20, 0.16), "short", "cap", Color(0.92, 0.30, 0.42))
+	var tug := sin(t * 2.2 + s) * 2.5
+	var hand := side * 12.0 + fd * 2.0 + Vector2(0.0, -2.0 - tug)
+	_arm(c, side * 8.0, hand, shirt, skin)
+	var cols: Array[Color] = [Color(0.92, 0.22, 0.28), Color(0.24, 0.52, 0.90), Color(0.98, 0.80, 0.18),
+		Color(0.30, 0.74, 0.42), Color(0.86, 0.40, 0.84), Color(0.98, 0.56, 0.18), Color(0.18, 0.72, 0.68)]
+	for k in range(7):
+		var a := float(k) / 7.0 * TAU + 0.2
+		var lift := 16.0 + sin(t * 1.6 + float(k) + s) * 3.0
+		var bp := hand - fd * lift + side * 4.0 + Vector2.from_angle(a) * (9.0 + tug * 0.4) \
+			+ Vector2(sin(t * 1.5 + float(k)), cos(t * 1.2 + float(k))) * 1.8
+		c.draw_line(hand, bp, Color(0.96, 0.96, 0.94, 0.55), 0.8)
+		c.draw_circle(bp, 6.2, cols[k])
+		c.draw_circle(bp - Vector2(2.0, 2.0), 1.8, Color(1.0, 1.0, 1.0, 0.55))

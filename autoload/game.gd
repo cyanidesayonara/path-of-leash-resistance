@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "sarria", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "metro", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "blai", "molina", "santpau", "sitges", "ronda", "encants", "tarragona", "vic"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "sarria", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "metro", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "blai", "molina", "santpau", "sitges", "ronda", "atraccions", "encants", "tarragona", "vic"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -67,6 +67,7 @@ const LEVEL_NAMES := {
 	"santpau": "Sant Pau",
 	"sitges": "Sitges",
 	"ronda": "Camí de Ronda",
+	"atraccions": "Les Atraccions",
 	"encants": "Els Encants",
 	"tarragona": "Tarragona",
 	"vic": "Vic",
@@ -129,6 +130,7 @@ const LEVEL_SUBTITLES := {
 	"santpau": "The modernista hospital gardens",
 	"sitges": "Whitewashed streets by the sea",
 	"ronda": "The cliff path above the coves",
+	"atraccions": "Rides on the Costa Daurada",
 	"encants": "The flea market at Glòries",
 	"tarragona": "Roman stones above the sea",
 	"vic": "Saturday market in the fog",
@@ -136,7 +138,7 @@ const LEVEL_SUBTITLES := {
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "blai": 39, "aigues": 39, "gracia": 40, "horta": 41, "molina": 42, "port": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "aeroport": 47, "site": 47, "ronda": 47, "encants": 50, "tarragona": 50, "vic": 50, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "blai": 39, "aigues": 39, "gracia": 40, "horta": 41, "molina": 42, "port": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "aeroport": 47, "site": 47, "ronda": 47, "encants": 50, "tarragona": 50, "vic": 50, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53, "atraccions": 47}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -179,6 +181,7 @@ const CHASE_GATE := {
 	# the sixth chase, Festa de Gràcia
 	"gracia": "cremada",
 	"sitges": "cremada",
+	"atraccions": "cremada",
 	# the seventh chase, Barcelona-El Prat Terminal 1
 	"aeroport": "gracia",
 	# the snow chase, La Molina's piste
@@ -279,6 +282,7 @@ const CAMPAIGN_SKY := {
 	"molina": ["snow", "day"],
 	# Costa Brava cliff path in the tramuntana
 	"ronda": ["wind", "day"],
+	"atraccions": ["clear", "day"],
 	# flea market under the mirrored canopy at Glòries
 	"encants": ["rain", "day"],
 	# Roman stones above the Mediterranean at dusk
@@ -288,7 +292,7 @@ const CAMPAIGN_SKY := {
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "station", "carmel", "reial", "cremada", "forum", "diagonal", "blai", "aigues", "gracia", "horta", "molina", "port", "espanya", "santpau", "poble", "sitges", "aeroport", "site", "ronda", "partit", "scrap", "montserrat", "encants", "tarragona", "vic", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "station", "carmel", "reial", "cremada", "forum", "diagonal", "blai", "aigues", "gracia", "horta", "molina", "port", "espanya", "santpau", "poble", "sitges", "atraccions", "aeroport", "site", "ronda", "partit", "scrap", "montserrat", "encants", "tarragona", "vic", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -638,6 +642,7 @@ const LEVEL_SUBTITLES_CA := {
 	"santpau": "Els jardins de l'hospital modernista",
 	"sitges": "Carrers emblanquinats vora el mar",
 	"ronda": "El camí de ronda sobre les cales",
+	"atraccions": "Un parc a la Costa Daurada",
 	"encants": "El mercat sota el mirall",
 	"tarragona": "Pedres romanes damunt el mar",
 	"vic": "Mercat del dissabte amb boira",
@@ -690,6 +695,7 @@ const LEVEL_SUBTITLES_ES := {
 	"santpau": "Los jardines del hospital modernista",
 	"sitges": "Calles encaladas junto al mar",
 	"ronda": "El camino de ronda sobre las calas",
+	"atraccions": "Un parque en la Costa Daurada",
 	"encants": "El rastro bajo el espejo",
 	"tarragona": "Piedras romanas sobre el mar",
 	"vic": "Mercado del sábado con niebla",
@@ -702,7 +708,7 @@ var agility_best := 0.0
 var gate_open: Array[String] = []
 # the walks that arrived with the chase gates: no save predates them, so
 # none is grandfathered past its gate
-const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "molina", "diagonal", "metro", "sarria", "blai", "santpau", "sitges", "ronda", "encants", "tarragona", "vic"]
+const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "molina", "diagonal", "metro", "sarria", "blai", "santpau", "sitges", "ronda", "atraccions", "encants", "tarragona", "vic"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.

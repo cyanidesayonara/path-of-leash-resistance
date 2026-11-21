@@ -62,6 +62,7 @@ const CLOCK_TARGETS := {
 	"aeroport": 180,    # concourse sprint and security squad chase
 	"montserrat": 185,  # mountain trail climb and goat herd sprint
 	"molina": 180,      # up the piste and the run home ahead of the groomer
+	"atraccions": 185,  # theme park lands and the flume splash
 	"ciutadella": 200,  # the walk plus the fight with El Mamut
 	"raval": 210,  # the walk plus the whole fight with El Gat
 }
@@ -114,6 +115,7 @@ const JAMON_POS := {
 	"aeroport": Vector2(740.0, -2200.0),
 	"montserrat": Vector2(620.0, -2100.0),
 	"molina": Vector2(700.0, -2380.0),
+	"atraccions": Vector2(560.0, -2050.0),
 	"ciutadella": Vector2(560.0, -1300.0),
 	"raval": Vector2(640.0, -2200.0),
 }
