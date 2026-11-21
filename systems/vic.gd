@@ -2341,7 +2341,12 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	var b := ShapeBatch.new()
 	b.lod = true
 	var grass := _path_grass()
-	b.rect(Rect2(r.position.x - 200.0, top - 40.0, r.size.x + 400.0, r.size.y + 80.0), grass)
+	b.rect(Rect2(r.position.x - 200.0, top + 40.0, r.size.x + 400.0, r.size.y), grass)
+	# the meadow fades into the fog beyond rather than stopping on a line
+	b.band(PackedVector2Array([
+		Vector2(r.position.x - 200.0, top - 80.0), Vector2(r.end.x + 200.0, top - 80.0),
+		Vector2(r.position.x - 200.0, top + 40.0), Vector2(r.end.x + 200.0, top + 40.0),
+	]), 2, grass, PackedFloat32Array([0.0, 1.0]))
 	for i in range(10):
 		var gp := Vector2(lerpf(r.position.x, r.end.x, _h(i * 13 + 2)), lerpf(top, gy, _h(i * 7 + 9)))
 		var gcol := GRASS_LIT if i % 2 == 0 else GRASS_DK
