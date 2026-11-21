@@ -1080,15 +1080,82 @@ static func _edge_canyon(b: ShapeBatch, top: float, bot: float) -> void:
 	for side: float in [-1.0, 1.0]:
 		var x0 := -460.0 if side < 0.0 else PATH_R
 		var x1 := PATH_L if side < 0.0 else 1740.0
+		var xc := PATH_L - 126.0 if side < 0.0 else PATH_R + 126.0
 		b.rect(Rect2(x0, s.x, x1 - x0, s.y - s.x), DUST)
-		# wind ripples and pebbles in the dust
+		# alkali flats, iron-red washes and packed gravel patches layered softly
+		var py := floorf(s.x / 110.0) * 110.0
+		while py < s.y:
+			var k := py * 0.13 + side * 17.0
+			var ax := PATH_L - 65.0 - _hk(k, 1.0) * 150.0 if side < 0.0 else PATH_R + 65.0 + _hk(k, 1.0) * 150.0
+			b.glow(Vector2(ax, py + 45.0), 86.0 + _hk(k, 2.0) * 52.0, Color(0.86, 0.70, 0.50, 0.34), 0.25)
+			var rx := PATH_L - 40.0 - _hk(k, 3.0) * 180.0 if side < 0.0 else PATH_R + 40.0 + _hk(k, 3.0) * 180.0
+			b.glow(Vector2(rx, py + 80.0), 74.0 + _hk(k, 4.0) * 44.0, Color(0.62, 0.32, 0.20, 0.30), 0.2)
+			py += 110.0
+		# dry winding arroyo runoff channel between buildings and mesa foot
+		var ay := floorf(s.x / 28.0) * 28.0
+		var prev_pt := Vector2(xc + sin(ay * 0.008 + side) * 28.0, ay)
+		while ay < s.y:
+			var ny := ay + 28.0
+			var next_pt := Vector2(xc + sin(ny * 0.008 + side) * 28.0, ny)
+			var perp := (next_pt - prev_pt).normalized().orthogonal()
+			b.band(PackedVector2Array([
+				prev_pt - perp * 16.0, prev_pt, prev_pt + perp * 16.0,
+				next_pt - perp * 16.0, next_pt, next_pt + perp * 16.0,
+			]), 3, Color(0.50, 0.32, 0.20, 0.45), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 1.0, 0.0]))
+			b.line(prev_pt - perp * 13.0, next_pt - perp * 13.0, Color(DUST_LIT, 0.45), 2.5)
+			prev_pt = next_pt
+			ay = ny
+		# wagon wheel ruts and wind-carved sand ripples along the shoulder
 		var y := floorf(s.x / 26.0) * 26.0
 		while y < s.y:
-			var rx := lerpf(x0, x1, _h(y + side))
-			b.line(Vector2(rx, y), Vector2(rx + 34.0, y + 4.0), DUST_LIT, 2.0)
-			b.line(Vector2(rx + 10.0, y + 9.0), Vector2(rx + 40.0, y + 13.0), DUST.darkened(0.10), 1.5)
-			b.circle(Vector2(lerpf(x0, x1, _h(y * 1.3 + side)), y + 18.0), 2.5, DUST.darkened(0.2))
+			var ruty := y + 26.0
+			var rx0 := PATH_L - 22.0 + sin(y * 0.015) * 4.0 if side < 0.0 else PATH_R + 22.0 + sin(y * 0.015) * 4.0
+			var rx1 := PATH_L - 22.0 + sin(ruty * 0.015) * 4.0 if side < 0.0 else PATH_R + 22.0 + sin(ruty * 0.015) * 4.0
+			b.line(Vector2(rx0, y), Vector2(rx1, ruty), Color(0.54, 0.34, 0.20, 0.42), 2.2)
+			b.line(Vector2(rx0 - 11.0 * side, y), Vector2(rx1 - 11.0 * side, ruty), Color(0.54, 0.34, 0.20, 0.35), 2.0)
+			var rx := lerpf(maxf(x0, -240.0), minf(x1, 1520.0), _h(y + side))
+			b.line(Vector2(rx, y + 6.0), Vector2(rx + 28.0, y + 10.0), DUST_LIT, 2.0)
+			b.line(Vector2(rx + 8.0, y + 14.0), Vector2(rx + 36.0, y + 18.0), DUST.darkened(0.14), 1.6)
+			# stratified sandstone pebbles & desert sagebrush tufts
+			var pk := y * 1.3 + side * 7.0
+			if _hk(pk, 1.0) > 0.32:
+				var bx := lerpf(PATH_L - 230.0 if side < 0.0 else PATH_R + 26.0, PATH_L - 26.0 if side < 0.0 else PATH_R + 230.0, _hk(pk, 2.0))
+				var bp := Vector2(bx, y + 15.0)
+				if _hk(pk, 3.0) < 0.55:
+					var rr := 5.0 + _hk(pk, 4.0) * 7.0
+					b.circle(bp + Shade.light * 4.0, rr, Color(SHADOW, 0.20))
+					b.circle(bp, rr, ROCK.darkened(0.08))
+					b.circle(bp - Vector2(1.5, 1.5), rr * 0.62, ROCK_LIT)
+				else:
+					b.circle(bp + Shade.light * 3.0, 5.5, Color(SHADOW, 0.16))
+					b.circle(bp, 5.5, Color(0.40, 0.46, 0.28))
+					b.circle(bp + Vector2(-2.0, -1.5), 3.2, Color(0.54, 0.60, 0.36))
 			y += 26.0
+		# flat stratified sandstone outcrops out in the sand beside the mesas
+		var oy := floorf(s.x / 160.0) * 160.0
+		while oy < s.y:
+			var ok := oy * 0.19 + side * 13.0
+			if _hk(ok, 5.0) > 0.38:
+				var ox := (PATH_L - 140.0 if side < 0.0 else PATH_R + 140.0) + (_hk(ok, 6.0) - 0.5) * 44.0
+				var oc := Vector2(ox, oy + 70.0)
+				if not (side < 0.0 and oc.y > MINE_STATION.position.y - 40.0 and oc.y < MINE_STATION.end.y + 40.0):
+					_disc_shadow(b, oc, 22.0, 8.0)
+					b.circle(oc, 21.0, ROCK_DARK)
+					b.circle(oc - Vector2(3.0, 3.0), 15.0, ROCK)
+					b.circle(oc - Vector2(5.0, 5.0), 9.0, ROCK_LIT)
+			oy += 160.0
+		# rusty abandoned narrow-gauge mine spur beside the mine siding
+		if side < 0.0 and MINE_STATION.end.y > s.x - 180.0 and MINE_STATION.position.y < s.y + 180.0:
+			var sx0 := MINE_STATION.position.x - 38.0
+			var sy0 := maxf(s.x, CANYON_Y1 + 30.0)
+			var sy1 := minf(s.y, CANYON_Y0 - 30.0)
+			var ty := floorf(sy0 / 16.0) * 16.0
+			while ty < sy1:
+				if _h(ty * 0.37) > 0.18:
+					b.line(Vector2(sx0 - 11.0, ty), Vector2(sx0 + 11.0, ty), WOOD_DARK, 3.2)
+				ty += 16.0
+			for rx_off: float in [-7.0, 7.0]:
+				b.line(Vector2(sx0 + rx_off, sy0), Vector2(sx0 + rx_off, sy1), Color(RUST, 0.65), 2.4)
 		_mesa(b, side, s.x, s.y)
 	if MINE_STATION.end.y > s.x - 40.0 and MINE_STATION.position.y < s.y + 40.0:
 		_mine_station(b)
@@ -1235,24 +1302,102 @@ static func _western(b: ShapeBatch, side: float, y0: float, y1: float, k: float)
 
 static func _mine_station(b: ShapeBatch) -> void:
 	var r := MINE_STATION
-	_cast(b, r, 30.0)
+	_cast(b, r, 32.0)
 	# the track running in at the south end and out at the north
 	b.rect(Rect2(r.position.x + 50.0, r.position.y - 30.0, 32.0, r.size.y + 60.0), Color(0.44, 0.30, 0.20))
-	# the platform along the path side, under the eaves
+	# south end wall peeking under the shed's south gable eaves
+	b.rect(Rect2(r.position.x, r.end.y - 2.0, r.size.x - 40.0, 12.0), WOOD_DARK)
+	# the platform along the path side, under the awning
 	var plat := Rect2(r.end.x - 40.0, r.position.y + 10.0, 40.0, r.size.y - 20.0)
 	b.rect(plat, WOOD_LIT)
 	var pl := plat.position.y
 	while pl < plat.end.y:
 		b.line(Vector2(plat.position.x, pl), Vector2(plat.end.x, pl), WOOD_DARK, 1.0)
 		pl += 7.0
-	# the shed's long shingle roof, ridge up the screen
+	# projecting rafter tails under both eaves of the main shed roof
 	var roof := Rect2(r.position.x, r.position.y, r.size.x - 40.0, r.size.y)
-	_roof(b, roof, Color(0.46, 0.32, 0.22), true, 7.0)
-	# a louvred lantern along the ridge
-	var lan := Rect2(roof.get_center().x - 12.0, roof.position.y + 40.0, 24.0, roof.size.y - 80.0)
-	b.rect(Rect2(lan.position + Shade.light * 8.0, lan.size), Color(SHADOW, 0.3))
+	var ry := roof.position.y + 8.0
+	while ry < roof.end.y - 4.0:
+		b.rect(Rect2(roof.position.x - 4.0, ry, 5.0, 3.0), WOOD_DARK)
+		ry += 14.0
+	# the shed's long shake-shingle roof, ridge up the screen
+	var col_s := Color(0.46, 0.32, 0.22)
+	_roof(b, roof, col_s, true, 9.0)
+	# staggered cedar shake courses & weathered shingle tone variation on both slopes
+	var cx_r := roof.get_center().x
+	var sy := roof.position.y + 3.0
+	var srow := 0
+	while sy < roof.end.y - 6.0:
+		var sx := roof.position.x + (6.0 if srow % 2 == 0 else 2.0)
+		while sx < roof.end.x - 4.0:
+			if absf(sx - cx_r) > 5.0:
+				var tone := _hk(sx * 0.13 + sy * 0.07, float(srow))
+				if tone > 0.72:
+					b.rect(Rect2(sx, sy, 8.0, 7.0), Color(0.56, 0.40, 0.28, 0.55) if sx < cx_r else Color(0.32, 0.22, 0.15, 0.55))
+				elif tone < 0.18:
+					b.rect(Rect2(sx, sy, 8.0, 7.0), Color(0.28, 0.18, 0.12, 0.50))
+				b.line(Vector2(sx, sy), Vector2(sx, sy + 7.5), Color(0.22, 0.14, 0.09, 0.45), 1.0)
+			sx += 11.0
+		sy += 9.0
+		srow += 1
+	# bolted corrugated-tin repair patches with rust streaks on the roof slopes
+	for pr: Rect2 in [
+		Rect2(roof.position.x + 14.0, roof.position.y + 42.0, 34.0, 26.0),
+		Rect2(cx_r + 12.0, roof.end.y - 78.0, 38.0, 28.0),
+	]:
+		b.rect(Rect2(pr.position + Vector2(1.5, 2.0), pr.size), Color(SHADOW, 0.26))
+		b.rect(pr, TIN.darkened(0.06))
+		b.rect(Rect2(pr.position + Vector2(3.0, 4.0), pr.size * 0.55), Color(RUST, 0.52))
+		var rx2 := pr.position.x + 4.0
+		while rx2 < pr.end.x - 2.0:
+			b.line(Vector2(rx2, pr.position.y), Vector2(rx2, pr.end.y), STEEL_DARK, 1.0)
+			rx2 += 5.0
+		b.circle(pr.position + Vector2(3.0, 3.0), 1.4, STEEL_DARK)
+		b.circle(pr.end - Vector2(3.0, 3.0), 1.4, STEEL_DARK)
+	# heavy bolted timber ridge straps across the roof slope
+	for ty: float in [roof.position.y + 28.0, roof.position.y + 92.0, roof.end.y - 92.0, roof.end.y - 28.0]:
+		b.rect(Rect2(roof.position.x + 3.0, ty - 2.0, roof.size.x - 6.0, 4.0), Color(0.26, 0.18, 0.12, 0.65))
+		b.circle(Vector2(roof.position.x + 10.0, ty), 1.6, INK)
+		b.circle(Vector2(roof.end.x - 10.0, ty), 1.6, INK)
+	# a sloping corrugated-tin awning extending out over the east boarding platform
+	var aw := Rect2(roof.end.x - 3.0, plat.position.y + 6.0, 27.0, plat.size.y - 12.0)
+	b.rect(Rect2(aw.position + Shade.light * 10.0, aw.size), Color(SHADOW, 0.28))
+	b.rect(aw, TIN.darkened(0.14))
+	b.rect(Rect2(aw.position.x, aw.position.y, 4.0, aw.size.y), TIN.lightened(0.08))
+	b.rect(Rect2(aw.position.x + 8.0, aw.position.y + 24.0, 12.0, 46.0), Color(RUST, 0.42))
+	var ay := aw.position.y + 4.0
+	while ay < aw.end.y - 2.0:
+		b.line(Vector2(aw.position.x, ay), Vector2(aw.end.x, ay), TIN.darkened(0.32), 1.2)
+		ay += 5.0
+	b.rect(Rect2(aw.end.x - 2.0, aw.position.y, 2.0, aw.size.y), STEEL_DARK)
+	# small west ore-chute dormer projection over the mine siding
+	var dor := Rect2(roof.position.x - 10.0, roof.end.y - 68.0, 28.0, 38.0)
+	b.rect(Rect2(dor.position + Shade.light * 6.0, dor.size), Color(SHADOW, 0.26))
+	_roof(b, dor, Color(0.42, 0.28, 0.20), false, 6.0)
+	# gabled louvered clerestory cupola along the ridge with spun smoke vents
+	var lan := Rect2(cx_r - 16.0, roof.position.y + 40.0, 32.0, roof.size.y - 80.0)
+	b.rect(Rect2(lan.position + Shade.light * 9.0, lan.size), Color(SHADOW, 0.32))
+	b.rect(Rect2(lan.position.x - 3.0, lan.position.y + 4.0, lan.size.x + 6.0, lan.size.y - 8.0), Color(0.24, 0.16, 0.10))
+	var ly2 := lan.position.y + 8.0
+	while ly2 < lan.end.y - 8.0:
+		b.line(Vector2(lan.position.x - 3.0, ly2), Vector2(lan.end.x + 3.0, ly2), Color(0.14, 0.10, 0.08), 1.2)
+		ly2 += 6.0
 	_roof(b, lan, Color(0.40, 0.28, 0.20), true, 5.0)
-	# the station's sign over the platform: a big board, ore cart on it
+	b.rect(Rect2(lan.position.x - 1.0, lan.position.y, lan.size.x + 2.0, 3.0), WOOD_LIT)
+	b.rect(Rect2(lan.position.x - 1.0, lan.end.y - 3.0, lan.size.x + 2.0, 3.0), WOOD_DARK)
+	for vy: float in [lan.position.y + 34.0, lan.end.y - 34.0]:
+		var vc := Vector2(cx_r, vy)
+		_disc_shadow(b, vc, 7.0, 5.0)
+		b.circle(vc, 7.0, STEEL_DARK)
+		b.circle(vc, 5.0, TIN)
+		b.circle(vc - Vector2(1.0, 1.0), 2.2, INK)
+	# brick chimney stack on the southwest slope
+	var ch := Vector2(roof.position.x + 22.0, roof.position.y + 24.0)
+	b.rect(Rect2(ch + Shade.light * 10.0, Vector2(14.0, 14.0)), Color(SHADOW, 0.30))
+	b.rect(Rect2(ch, Vector2(14.0, 14.0)), Color(0.54, 0.24, 0.18))
+	b.rect(Rect2(ch, Vector2(14.0, 3.0)), Color(0.70, 0.34, 0.24))
+	b.rect(Rect2(ch + Vector2(3.0, 3.0), Vector2(8.0, 8.0)), INK)
+	# the station's sign over the platform: a big board, ore cart emblem on it
 	var sign := Rect2(r.end.x - 14.0, r.get_center().y - 50.0, 12.0, 100.0)
 	b.rect(Rect2(sign.position + Vector2(4.0, 6.0), sign.size), Color(SHADOW, 0.3))
 	b.rect(sign, Color(0.24, 0.16, 0.10))
@@ -1753,23 +1898,40 @@ static func _draw_path(wc: ShapeBatch, lo: float, hi: float) -> void:
 		# a gutter of blue tiles down each side, as the village's lanes have
 		wc.rect(Rect2(PATH_L, c0, 8.0, c1 - c0), Color(0.56, 0.66, 0.78))
 		wc.rect(Rect2(PATH_R - 8.0, c0, 8.0, c1 - c0), Color(0.56, 0.66, 0.78))
-	# Canyon: timber boardwalk + dust shoulders
+	# Canyon: timber boardwalk + feathered wind-blown sand drifts
 	var bw0 := maxf(lo, CANYON_Y1)
 	var bw1 := minf(hi, CANYON_Y0)
 	if bw1 > bw0:
 		wc.rect(Rect2(PATH_L, bw0, PATH_R - PATH_L, bw1 - bw0), WOOD_LIT)
 		var y := floorf(bw0 / 14.0) * 14.0
 		while y < bw1:
+			var ptone := _h(y * 0.23)
+			if ptone > 0.68:
+				wc.rect(Rect2(PATH_L + 8.0, y, PATH_R - PATH_L - 16.0, 14.0), Color(0.76, 0.56, 0.36, 0.45))
+			elif ptone < 0.26:
+				wc.rect(Rect2(PATH_L + 8.0, y, PATH_R - PATH_L - 16.0, 14.0), Color(0.50, 0.34, 0.22, 0.32))
 			wc.rect(Rect2(PATH_L, y, PATH_R - PATH_L, 1.6), WOOD_DARK)
-			# board ends staggered, nail heads
+			# board ends staggered, weathered knots and nail heads
 			var bx := PATH_L + 60.0 + _h(y) * 120.0
 			wc.rect(Rect2(bx, y, 1.4, 14.0), WOOD_DARK)
 			wc.rect(Rect2(bx + 180.0 + _h(y + 1.0) * 80.0, y, 1.4, 14.0), WOOD_DARK)
 			if int(absf(y) / 14.0) % 3 == 0:
 				wc.rect(Rect2(PATH_L + 30.0 + _h(y + 2.0) * 400.0, y + 4.0, 70.0, 8.0), WOOD_LIT.lightened(0.06))
-			wc.rect(Rect2(PATH_L, y + 1.0, 10.0, 12.0), DUST)
-			wc.rect(Rect2(PATH_R - 10.0, y + 1.0, 10.0, 12.0), DUST)
+			wc.circle(Vector2(bx + 4.0, y + 4.0), 1.1, WOOD_DARK)
+			wc.circle(Vector2(bx + 4.0, y + 10.0), 1.1, WOOD_DARK)
 			y += 14.0
+		# timber stringer curbs & feathered red-sand drifts blown in over the edges
+		wc.band(PackedVector2Array([Vector2(PATH_L, bw0), Vector2(PATH_L + 26.0, bw0), Vector2(PATH_L, bw1), Vector2(PATH_L + 26.0, bw1)]),
+			2, DUST, PackedFloat32Array([0.75, 0.75]), PackedFloat32Array([1.0, 0.0]))
+		wc.band(PackedVector2Array([Vector2(PATH_R - 26.0, bw0), Vector2(PATH_R, bw0), Vector2(PATH_R - 26.0, bw1), Vector2(PATH_R, bw1)]),
+			2, DUST, PackedFloat32Array([0.75, 0.75]), PackedFloat32Array([0.0, 1.0]))
+		wc.rect(Rect2(PATH_L, bw0, 9.0, bw1 - bw0), WOOD_DARK)
+		wc.rect(Rect2(PATH_R - 9.0, bw0, 9.0, bw1 - bw0), WOOD_DARK)
+		var cy2 := floorf(bw0 / 42.0) * 42.0
+		while cy2 < bw1:
+			wc.circle(Vector2(PATH_L + 4.5, cy2 + 12.0), 1.6, STEEL_DARK)
+			wc.circle(Vector2(PATH_R - 4.5, cy2 + 12.0), 1.6, STEEL_DARK)
+			cy2 += 42.0
 	# Selva: packed earth with roots (handles as mud)
 	var s0 := maxf(lo, SELVA_Y1)
 	var s1 := minf(hi, SELVA_Y0)
@@ -1842,14 +2004,27 @@ static func _draw_track_shadows(wc: ShapeBatch, lo: float, hi: float) -> void:
 		if maxf(a.y, z.y) < lo - 30.0 or minf(a.y, z.y) > hi + 30.0:
 			continue
 		wc.line(a, z, Color(SHADOW, 0.20), 22.0)
-	var path := _coaster_path()
-	var d2 := Shade.light * 64.0
-	for i in range(path.size() - 1):
-		var a: Vector2 = path[i] + d2
-		var z: Vector2 = path[i + 1] + d2
-		if maxf(a.y, z.y) < lo - 30.0 or minf(a.y, z.y) > hi + 30.0:
+	_coaster_path()
+	var d2_base := Shade.light
+	for i in range(_coaster_gp.size() - 1):
+		var ha := _coaster_hv[i]
+		var hz := _coaster_hv[i + 1]
+		var a: Vector2 = _coaster_gp[i] + d2_base * ha
+		var z: Vector2 = _coaster_gp[i + 1] + d2_base * hz
+		if maxf(a.y, z.y) < lo - 40.0 or minf(a.y, z.y) > hi + 40.0:
 			continue
-		wc.line(a, z, Color(SHADOW, 0.18), 18.0)
+		var hm := (ha + hz) * 0.5
+		var al := clampf(0.24 - hm * 0.00055, 0.13, 0.24)
+		var wid := 16.0 + hm * 0.035
+		wc.line(a, z, Color(SHADOW, al), wid)
+	# the loop tower's A-frame ground shadows: from the four concrete footings up to the saddle collars
+	if LOOP_C.y > lo - 260.0 and LOOP_C.y < hi + 260.0:
+		var crown_g := Vector2(700.0, -3965.0)
+		var crown_sh := crown_g + Shade.light * 112.0
+		for leg: Vector2 in [Vector2(604.0, -3996.0), Vector2(604.0, -3934.0), Vector2(796.0, -3996.0), Vector2(796.0, -3934.0)]:
+			var collar := crown_g + Vector2(-58.0 if leg.x < crown_g.x else 58.0, 0.0) + Shade.light * 102.0
+			wc.line(leg, collar, Color(SHADOW, 0.20), 9.0)
+		wc.line(crown_sh + Vector2(-58.0, 0.0), crown_sh + Vector2(58.0, 0.0), Color(SHADOW, 0.18), 8.0)
 	# the arch's lintel throws a band of shade across the path
 	d = Shade.light * 52.0
 	var ly := ARCH.y - 46.0 + d.y
@@ -1964,6 +2139,8 @@ static func _draw_picnic(wc: ShapeBatch, lo: float, hi: float) -> void:
 		wc.circle(t.get_center() + Vector2(22.0, 0.0), 6.0, Color(0.96, 0.96, 0.94))
 		wc.circle(t.get_center() + Vector2(22.0, 0.0), 3.5, Color(0.50, 0.70, 0.30))
 		wc.rect(Rect2(t.get_center() + Vector2(-6.0, -8.0), Vector2(12.0, 16.0)), Color(0.80, 0.62, 0.40))
+		wc.circle(t.get_center(), 4.2, WOOD_DARK)
+		wc.circle(t.get_center(), 2.6, Color(0.98, 0.86, 0.56))
 	# the grill (its fire and smoke are live)
 	if PRIZE.y > lo - 60.0 and PRIZE.y < hi + 60.0:
 		var g := PRIZE + Vector2(0.0, -40.0)
@@ -2280,7 +2457,13 @@ static func _flume_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void
 	var st: String = str(w.get("state", "wait"))
 	var t: float = float(w.get("t", 0.0))
 	var t_ms := float(AnimClock.msec())
+	var glow := Game.lamp_glow()
+	var tint := _tint(m)
 	var pool_c := FLUME_POOL.get_center()
+	if glow > 0.02:
+		# underwater lagoon floodlight so the splash pool and drop gleam after dark
+		wc.glow(pool_c + Vector2(-18.0, 6.0), 88.0, SkyLook.light(Color(0.24, 0.80, 0.98, 0.44 * glow), tint), 0.25)
+		wc.glow(Vector2(PATH_R + 16.0, (FLUME_Y0 + FLUME_Y1) * 0.5), 60.0, SkyLook.light(Color(0.36, 0.84, 1.0, 0.20 * glow), tint), 0.15)
 	var boat := pool_c + Vector2(sin(t_ms * 0.0007) * 30.0, cos(t_ms * 0.0005) * 14.0)
 	var tilt := 1.0
 	if st == "climb":
@@ -2301,25 +2484,44 @@ static func _flume_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void
 	if st == "climb":
 		wc.glow(boat + Vector2(0.0, -10.0), 30.0, Color(1.0, 0.85, 0.4, 0.30), 0.4)
 	if st == "splash":
-		var fade := minf(1.0, minf(t * 4.0, (FLUME_SPLASH - t) * 3.0))
-		# the plume where it hits the pool
+		var fade := minf(1.0, minf(t * 5.0, (FLUME_SPLASH - t) * 2.5))
+		var sweep := clampf(t / (FLUME_SPLASH * 0.42), 0.25, 1.0)
+		var lead := lerpf(PATH_R - 20.0, FLUME_WASH_X, sweep)
+		var c_water := Color(WATER.lightened(0.28), 0.68 * fade)
+		var c_crest := Color(0.84, 0.96, 1.0, 0.72 * fade)
+		if glow > 0.02:
+			c_water = c_water.lerp(SkyLook.light(Color(0.26, 0.74, 0.96, 0.66 * fade), tint), glow)
+			c_crest = c_crest.lerp(SkyLook.light(Color(0.42, 0.88, 1.0, 0.74 * fade), tint), glow)
+		# aerated plume where the log boat hits the pool (soft mist bursts, no hard dots)
 		var foot := FLUME_FOOT + Vector2(0.0, 30.0)
-		wc.glow(foot, 60.0 + t * 30.0, Color(1.0, 1.0, 1.0, 0.55 * fade), 0.3)
+		wc.glow(foot, 72.0 + t * 32.0, Color(c_crest.r, c_crest.g, c_crest.b, c_crest.a * 0.65), 0.2)
 		for j in range(10):
-			var a := float(j) * TAU / 10.0
-			var r := 20.0 + t * 70.0
-			wc.circle(foot + Vector2.from_angle(a) * r, 6.0, Color(1.0, 1.0, 1.0, 0.6 * fade))
-		# the wave from the pool across the path toward the dry (west) side
-		wc.band(PackedVector2Array([
-			Vector2(FLUME_WASH_X, FLUME_Y0), Vector2(PATH_R + 50.0, FLUME_Y0),
-			Vector2(FLUME_WASH_X + 20.0, FLUME_Y0 + 40.0), Vector2(PATH_R + 50.0, FLUME_Y0 + 40.0),
-			Vector2(FLUME_WASH_X + 40.0, (FLUME_Y0 + FLUME_Y1) * 0.5), Vector2(PATH_R + 50.0, (FLUME_Y0 + FLUME_Y1) * 0.5),
-			Vector2(FLUME_WASH_X + 60.0, FLUME_Y1), Vector2(PATH_R + 50.0, FLUME_Y1),
-		]), 2, Color(WATER.lightened(0.25), 0.55 * fade), PackedFloat32Array([0.4, 0.8, 0.8, 0.3]), PackedFloat32Array([0.0, 1.0]))
-		for j in range(16):
-			var f := fposmod(t_ms * 0.0015 + float(j) * 0.11, 1.0)
-			var p := Vector2(lerpf(PATH_R + 40.0, FLUME_WASH_X, f), lerpf(FLUME_Y0, FLUME_Y1, _h(float(j))))
-			wc.circle(p, 4.0 + f * 8.0, Color(1.0, 1.0, 1.0, 0.55 * fade * (1.0 - f)))
+			var a := float(j) * TAU / 10.0 + t * 0.6
+			var r := 22.0 + t * 66.0
+			wc.glow(foot + Vector2.from_angle(a) * r, 14.0 + float(j % 2) * 5.0, Color(c_crest.r, c_crest.g, c_crest.b, c_crest.a * 0.55), 0.05)
+		# curved hydraulic surge sheet across the boardwalk, feathered north/south
+		var wpts := PackedVector2Array()
+		var cpts := PackedVector2Array()
+		var nrows := 7
+		for ri in range(nrows):
+			var u := float(ri) / float(nrows - 1)
+			var wy := lerpf(FLUME_Y0 - 6.0, FLUME_Y1 + 6.0, u)
+			var front := lead + u * 28.0 - sin(u * PI) * 24.0
+			wpts.append(Vector2(front - 6.0, wy))
+			wpts.append(Vector2(front + 18.0, wy))
+			wpts.append(Vector2(PATH_R + 50.0, wy))
+			cpts.append(Vector2(front - 10.0, wy))
+			cpts.append(Vector2(front + 4.0, wy))
+			cpts.append(Vector2(front + 24.0, wy))
+		wc.band(wpts, 3, c_water, PackedFloat32Array([0.0, 0.55, 0.88, 0.95, 0.88, 0.55, 0.0]), PackedFloat32Array([0.0, 1.0, 0.95]))
+		wc.band(cpts, 3, c_crest, PackedFloat32Array([0.0, 0.55, 0.95, 1.0, 0.95, 0.55, 0.0]), PackedFloat32Array([0.0, 1.0, 0.0]))
+		for j in range(14):
+			var f := fposmod(t_ms * 0.0014 + float(j) * 0.13, 1.0)
+			var u := _h(float(j) + 3.0)
+			var wy := lerpf(FLUME_Y0 + 8.0, FLUME_Y1 - 8.0, u)
+			var front := lead + u * 28.0 - sin(u * PI) * 24.0
+			var p := Vector2(lerpf(PATH_R + 36.0, front + 8.0, f), wy)
+			wc.glow(p, 11.0 + f * 12.0, Color(c_crest.r, c_crest.g, c_crest.b, c_crest.a * 0.48 * (1.0 - f * 0.5)), 0.05)
 
 
 # --- bulbs: the rides' and kiosks' lights, unlit by day, glowing after dark ------
@@ -2341,6 +2543,13 @@ static func _bulbs() -> Array[Vector3]:
 			while y < r.end.y - 8.0:
 				out.append(Vector3(ex, y, 0.0))
 				y += 16.0
+		for pl: Array in _plots(CORSARI_Y1, CORSARI_Y0, 23.0 + side, 76.0, 128.0, 10.0):
+			var hq := HARBOUR.grow(QUAY + 14.0)
+			if side < 0.0 and pl[1] > hq.position.y - 30.0 and pl[0] < hq.end.y + 30.0:
+				continue
+			var hr := _house_rect(side, pl[0], pl[1], pl[2])
+			var px_v := PATH_L - 4.0 if side < 0.0 else PATH_R + 4.0
+			out.append(Vector3(px_v, _house_door_y(hr, pl[2]), 1.0))
 		for pl: Array in _plots(CANYON_Y1, CANYON_Y0, 31.0 + side, 84.0, 130.0, 60.0):
 			if side < 0.0 and pl[1] > MINE_STATION.position.y - 20.0 and pl[0] < MINE_STATION.end.y + 20.0:
 				continue
@@ -2382,12 +2591,32 @@ static func _bulbs() -> Array[Vector3]:
 	while sy < STATION.end.y - 20.0:
 		out.append(Vector3(STATION.position.x - 18.0, sy, 2.0))
 		sy += 20.0
-	# the pirate ship's beam
+	# the pirate ship's beam, harbour quay bollards and moored llaguts' bow lanterns
 	var q := HARBOUR.grow(QUAY)
 	var bx := q.position.x + 30.0
 	while bx < q.end.x - 20.0:
 		out.append(Vector3(bx, SHIP.y + 7.0, 2.0))
 		bx += 22.0
+	var hw := HARBOUR
+	for bp: Vector2 in [
+		Vector2(hw.end.x + 15.0, hw.position.y + 40.0),
+		Vector2(hw.end.x + 15.0, hw.end.y - 40.0),
+		Vector2(hw.position.x + 60.0, hw.end.y + 15.0),
+	]:
+		out.append(Vector3(bp.x, bp.y, 1.0))
+	for i in range(2):
+		out.append(Vector3(hw.position.x + 30.0, hw.position.y + 24.0 + float(i) * 120.0, 1.0))
+	# the churro cart's warm lantern
+	out.append(Vector3(CHURRO.x - 16.0, CHURRO.y - 10.0, 1.0))
+	# picnic table lanterns, pergola lanterns and lawn entrance pillars
+	for t: Rect2 in PICNIC_TABLES:
+		var tc := t.get_center()
+		out.append(Vector3(tc.x, tc.y, 1.0))
+	for i in range(2):
+		out.append(Vector3(PERGOLA.position.x + 75.0, PERGOLA.position.y + 50.0 + float(i) * 80.0, 1.0))
+	out.append(Vector3(PERGOLA.position.x + 4.0, PERGOLA.position.y + 90.0, 1.0))
+	out.append(Vector3(PATH_L - 26.0, PICNIC_Y - 12.0, 1.0))
+	out.append(Vector3(PATH_R + 26.0, PICNIC_Y - 12.0, 1.0))
 	_bulb_cache = out
 	return out
 
@@ -2502,48 +2731,69 @@ static func _lintel(m: Node2D, b: ShapeBatch, t_ms: float) -> void:
 			b.line(pl[i], pl[i + 1], Color(1.0, 0.94, 0.78), 4.4)
 		b.circle(pl[0], 2.2, Color(1.0, 0.94, 0.78))
 		b.circle(pl[pl.size() - 1], 2.2, Color(1.0, 0.94, 0.78))
-	# the crest over the middle: a sun in a ring, a coaster car across it
-	var cc := Vector2(CX, top.position.y - 20.0)
-	b.circle(cc + Shade.light * 12.0, 34.0, Color(SHADOW, 0.3))
-	b.circle(cc, 34.0, TURQ.darkened(0.2))
+	# the pediment anchored to the lintel's top, seating the crest inside it
+	var glow := Game.lamp_glow()
+	var tint := _tint(m)
+	# bulbs along the beam's edge, chasing after dark (stopping cleanly at the pediment)
+	var chase := int(t_ms / 180.0)
+	var bx := x0 + 8.0
+	var j := 0
+	while bx < x1:
+		if absf(bx - CX) >= 90.0:
+			var p := Vector2(bx, top.position.y + 2.0)
+			if glow > 0.02:
+				var col := _bulb_col(2.0, j)
+				var k := 0.5 if (j + chase) % 3 == 0 else 1.0
+				b.coarse(p, 7.0, SkyLook.light(Color(col.r, col.g, col.b, 0.25 * glow * k), tint))
+				b.coarse(p, 2.6, SkyLook.light(Color(col.r, col.g, col.b, glow * k), tint))
+			else:
+				b.coarse(p, 2.2, BULB_DAY)
+		bx += 16.0
+		j += 1
+	var ped_w := 180.0
+	var py0 := top.position.y
+	# stepped masonry/timber pediment casting compact shade directly onto the beam
+	b.quad(Vector2(CX - ped_w * 0.5, py0 + 8.0) + Shade.light * 5.0,
+		Vector2(CX + ped_w * 0.5, py0 + 8.0) + Shade.light * 5.0,
+		Vector2(CX + ped_w * 0.5, py0 - 6.0) + Shade.light * 5.0,
+		Vector2(CX - ped_w * 0.5, py0 - 6.0) + Shade.light * 5.0, Color(SHADOW, 0.28))
+	b.quad(Vector2(CX - ped_w * 0.5, py0 + 8.0), Vector2(CX + ped_w * 0.5, py0 + 8.0),
+		Vector2(CX + 56.0, py0 - 20.0), Vector2(CX - 56.0, py0 - 20.0), SAFFRON.darkened(0.22))
+	b.quad(Vector2(CX - ped_w * 0.5 + 8.0, py0 + 5.0), Vector2(CX + ped_w * 0.5 - 8.0, py0 + 5.0),
+		Vector2(CX + 50.0, py0 - 15.0), Vector2(CX - 50.0, py0 - 15.0), SAFFRON)
+	b.rect(Rect2(CX - ped_w * 0.5, py0 + 2.0, ped_w, 8.0), TURQ.darkened(0.28))
+	b.rect(Rect2(CX - ped_w * 0.5 + 4.0, py0 + 3.5, ped_w - 8.0, 4.0), MAGENTA.darkened(0.15))
+	for sd: float in [-1.0, 1.0]:
+		b.circle(Vector2(CX + sd * (ped_w * 0.5 - 6.0), py0 - 1.0), 5.0, TURQ.darkened(0.2))
+		b.circle(Vector2(CX + sd * (ped_w * 0.5 - 6.0), py0 - 1.0), 3.0, SAFFRON.lightened(0.25))
+	# the crest seated right inside the pediment (flush with top edge)
+	var cc := Vector2(CX, top.position.y - 2.0)
+	b.circle(cc + Shade.light * 5.0, 34.0, Color(SHADOW, 0.26))
+	b.circle(cc, 34.0, TURQ.darkened(0.24))
 	b.circle(cc, 29.0, TURQ)
 	_cone(b, cc, 24.0, SAFFRON, SAFFRON.lightened(0.25), 12, 0.0)
 	b.capsule(cc + Vector2(-14.0, 4.0), cc + Vector2(14.0, 4.0), 6.0, MAGENTA)
 	b.circle(cc + Vector2(-8.0, 2.0), 3.0, Color(0.96, 0.80, 0.66))
 	b.circle(cc + Vector2(6.0, 2.0), 3.0, Color(0.96, 0.80, 0.66))
 	# the letters' bulbs: unlit by day, the name in lights after dark
-	var glow := Game.lamp_glow()
-	var tint := _tint(m)
 	for p: Vector2 in _arch_points:
 		if glow > 0.02:
 			b.coarse(p, 7.0, SkyLook.light(Color(BULB.r, BULB.g, BULB.b, 0.22 * glow), tint))
 			b.coarse(p, 2.4, SkyLook.light(Color(BULB.r, BULB.g, BULB.b, glow), tint))
 		else:
 			b.coarse(p, 1.4, Color(0.98, 0.98, 0.94))
-	# bulbs along the beam's edge, chasing after dark
-	var chase := int(t_ms / 180.0)
-	var bx := x0 + 8.0
-	var j := 0
-	while bx < x1:
-		var p := Vector2(bx, top.position.y + 2.0)
-		if glow > 0.02:
-			var col := _bulb_col(2.0, j)
-			var k := 0.5 if (j + chase) % 3 == 0 else 1.0
-			b.coarse(p, 7.0, SkyLook.light(Color(col.r, col.g, col.b, 0.25 * glow * k), tint))
-			b.coarse(p, 2.6, SkyLook.light(Color(col.r, col.g, col.b, glow * k), tint))
-		else:
-			b.coarse(p, 2.2, BULB_DAY)
-		bx += 16.0
-		j += 1
 
 
 # festoons of coloured bulbs strung across the plazas and the lawn: the wire
 # sagging between its poles, the bulbs unlit by day
 const FESTOONS: Array = [
 	[Vector2(PATH_L - 40.0, -300.0), Vector2(PATH_R + 40.0, -360.0)],
+	[Vector2(PATH_L - 36.0, -640.0), Vector2(PATH_R + 36.0, -700.0)],
+	[Vector2(PATH_L - 30.0, -1040.0), Vector2(PATH_R + 36.0, -1100.0)],
 	[Vector2(PATH_L - 30.0, -3460.0), Vector2(PATH_R + 30.0, -3520.0)],
 	[Vector2(PATH_L - 30.0, -4180.0), Vector2(PATH_R + 30.0, -4240.0)],
 	[Vector2(PATH_L - 40.0, -4560.0), Vector2(PATH_R + 40.0, -4600.0)],
+	[Vector2(PATH_L - 40.0, -4700.0), Vector2(PATH_R + 40.0, -4680.0)],
 	[Vector2(PATH_L - 40.0, -4860.0), Vector2(PATH_R + 40.0, -4820.0)],
 ]
 
@@ -2634,8 +2884,8 @@ static func _along(path: PackedVector2Array, cum: PackedFloat32Array, s: float) 
 	for i in range(path.size() - 1):
 		if s <= cum[i + 1] and cum[i + 1] > cum[i]:
 			var f := (s - cum[i]) / (cum[i + 1] - cum[i])
-			return [path[i].lerp(path[i + 1], f), (path[i + 1] - path[i]).normalized(), i]
-	return [path[0], Vector2.UP, 0]
+			return [path[i].lerp(path[i + 1], f), (path[i + 1] - path[i]).normalized(), i, f]
+	return [path[0], Vector2.UP, 0, 0.0]
 
 
 static var _mine_pv := PackedVector2Array()
@@ -2713,80 +2963,167 @@ static func _draw_mine_train(b: ShapeBatch, t_ms: float) -> void:
 
 
 static var _coaster_pv := PackedVector2Array()
+static var _coaster_gp := PackedVector2Array()
+static var _coaster_hv := PackedFloat32Array()
 static var _coaster_cum := PackedFloat32Array()
+const COASTER_LOOP_START := 26
+const COASTER_LOOP_END := 74
 
 
-# the coaster's circuit: out of the station north up the lift, round over the
-# crest and west down into the loop, once round it, then back east over the
-# queue into the station
+static func _append_catmull(gp: PackedVector2Array, hv: PackedFloat32Array, pts: Array, steps := 4) -> void:
+	for i in range(pts.size() - 1):
+		var p0: Vector3 = pts[maxi(i - 1, 0)]
+		var p1: Vector3 = pts[i]
+		var p2: Vector3 = pts[i + 1]
+		var p3: Vector3 = pts[mini(i + 2, pts.size() - 1)]
+		for s in range(steps):
+			var t := float(s) / float(steps)
+			var t2 := t * t
+			var t3 := t2 * t
+			var v := 0.5 * ((2.0 * p1) + (-p0 + p2) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
+			gp.append(Vector2(v.x, v.y))
+			hv.append(v.z)
+
+
+# the coaster's circuit: out of the station north up the lift, curved drop into
+# the upright clothoid vertical loop over the plaza, then back into the station
 static func _coaster_path() -> PackedVector2Array:
 	if not _coaster_pv.is_empty():
 		return _coaster_pv
-	var p := PackedVector2Array()
-	p.append(Vector2(LIFT_TOP.x, STATION.end.y - 10.0))
-	p.append(Vector2(LIFT_TOP.x, STATION.position.y))
-	p.append(LIFT_TOP)
-	var crest := LIFT_TOP + Vector2(-70.0, 0.0)
-	for i in range(1, 9):
-		p.append(crest + Vector2.from_angle(-float(i) * PI / 8.0) * 70.0)
-	p.append(Vector2(860.0, -4230.0))
-	p.append(Vector2(780.0, -4140.0))
-	var top := LOOP_C + Vector2(0.0, -LOOP_R)
-	p.append(top + Vector2(20.0, -2.0))
+	var gp := PackedVector2Array()
+	var hv := PackedFloat32Array()
+	gp.append(Vector2(LIFT_TOP.x, STATION.end.y - 10.0))
+	hv.append(30.0)
+	gp.append(Vector2(LIFT_TOP.x, STATION.position.y))
+	hv.append(36.0)
+	var drop_pts := [
+		Vector3(LIFT_TOP.x, LIFT_TOP.y, 88.0),
+		Vector3(1022.0, -4328.0, 94.0),
+		Vector3(930.0, -4308.0, 80.0),
+		Vector3(846.0, -4200.0, 56.0),
+		Vector3(788.0, -4055.0, 40.0),
+		Vector3(754.0, -3992.0, 36.5),
+		Vector3(700.0, -3983.0, 36.0),
+	]
+	_append_catmull(gp, hv, drop_pts, 4)
+	# upright clothoid loop across (700, -3965), projected by (0, -0.72 * h)
+	var loop_base := Vector2(700.0, -3965.0)
 	for i in range(49):
-		var a := -PI * 0.5 - float(i) * TAU / 48.0
-		p.append(LOOP_C + Vector2.from_angle(a) * LOOP_R + Vector2(0.0, -float(i) * 0.25))
-	p.append(Vector2(600.0, -4140.0))
-	p.append(Vector2(530.0, -4090.0))
-	p.append(Vector2(510.0, -3990.0))
-	p.append(Vector2(540.0, -3880.0))
-	p.append(Vector2(640.0, -3840.0))
-	p.append(Vector2(800.0, -3810.0))
-	p.append(Vector2(940.0, -3760.0))
-	p.append(Vector2(LIFT_TOP.x - 20.0, -3720.0))
-	p.append(Vector2(LIFT_TOP.x, STATION.end.y - 10.0))
-	_coaster_pv = p
-	_coaster_cum = _cumulative(p)
-	return p
+		var u := float(i) / 48.0
+		var theta := u * TAU
+		var rx := 92.0 * (1.0 - 0.08 * (1.0 - cos(theta)))
+		var shift := lerpf(-18.0, 22.0, u)
+		var h := 36.0 + 66.0 * (1.0 - cos(theta))
+		gp.append(loop_base + Vector2(-sin(theta) * rx, shift))
+		hv.append(h)
+	var ret_pts := [
+		Vector3(648.0, -3944.0, 37.0),
+		Vector3(548.0, -3942.0, 42.0),
+		Vector3(496.0, -3894.0, 44.0),
+		Vector3(536.0, -3834.0, 40.0),
+		Vector3(675.0, -3802.0, 38.0),
+		Vector3(865.0, -3770.0, 36.0),
+		Vector3(1008.0, -3732.0, 34.0),
+		Vector3(LIFT_TOP.x, STATION.end.y - 10.0, 30.0),
+	]
+	_append_catmull(gp, hv, ret_pts, 4)
+	var last_p: Vector3 = ret_pts[ret_pts.size() - 1]
+	gp.append(Vector2(last_p.x, last_p.y))
+	hv.append(last_p.z)
+	var pv := PackedVector2Array()
+	pv.resize(gp.size())
+	for i in range(gp.size()):
+		pv[i] = gp[i] + Vector2(0.0, -0.72 * hv[i])
+	_coaster_gp = gp
+	_coaster_hv = hv
+	_coaster_pv = pv
+	_coaster_cum = _cumulative(pv)
+	return pv
+
+
+static func _draw_coaster_segs(b: ShapeBatch, path: PackedVector2Array, lo_i: int, hi_i: int, min_h: float, max_h: float) -> void:
+	for i in range(lo_i, hi_i):
+		var hm := (_coaster_hv[i] + _coaster_hv[i + 1]) * 0.5
+		if hm < min_h or hm >= max_h:
+			continue
+		var sc := 1.0 + (hm - 34.0) * 0.0028
+		var a := path[i]
+		var z := path[i + 1]
+		var spine := Color(0.24, 0.20, 0.30).lightened(clampf((hm - 36.0) * 0.0012, 0.0, 0.14))
+		b.line(a, z, spine, 15.0 * sc)
+		b.circle(a, 7.5 * sc, spine)
+	for i in range(lo_i, hi_i):
+		var hm := (_coaster_hv[i] + _coaster_hv[i + 1]) * 0.5
+		if hm < min_h or hm >= max_h:
+			continue
+		var sc := 1.0 + (hm - 34.0) * 0.0028
+		var a := path[i]
+		var z := path[i + 1]
+		var seg := a.distance_to(z)
+		if seg < 0.01:
+			continue
+		var dir := (z - a) / seg
+		var n := dir.orthogonal()
+		var s := 0.0
+		while s < seg:
+			b.line(a + dir * s - n * 7.6 * sc, a + dir * s + n * 7.6 * sc, MAGENTA.darkened(0.28), 2.0 * sc)
+			s += 8.5 * sc
+		for r: float in [-5.3, 5.3]:
+			b.line(a + n * r * sc, z + n * r * sc, Color(0.88, 0.90, 0.94), 2.5 * sc)
 
 
 static func _draw_coaster(b: ShapeBatch, t_ms: float) -> void:
 	var path := _coaster_path()
-	# the pylons under the track, and the loop's own A-frame
+	# concrete pads and pylon columns along the lower circuit
 	var acc := 0.0
 	for i in range(path.size() - 1):
+		if i >= COASTER_LOOP_START and i <= COASTER_LOOP_END:
+			continue
 		acc += path[i].distance_to(path[i + 1])
-		if acc > 90.0:
+		if acc > 82.0:
 			acc = 0.0
-			b.circle(path[i] + Shade.light * 10.0, 7.0, Color(SHADOW, 0.3))
-			b.circle(path[i], 7.0, STEEL_DARK)
-			b.circle(path[i] - Vector2(1.5, 1.5), 3.5, STEEL)
-	b.line(LOOP_C + Vector2(-LOOP_R - 18.0, 30.0), LOOP_C + Vector2(LOOP_R + 18.0, 30.0), STEEL_DARK, 8.0)
-	b.line(LOOP_C + Vector2(-LOOP_R - 18.0, 28.0), LOOP_C + Vector2(LOOP_R + 18.0, 28.0), STEEL, 3.0)
-	# the track: a dark spine, its ties, two bright rails
-	for i in range(path.size() - 1):
-		var a := path[i]
-		var z := path[i + 1]
-		b.line(a, z, Color(0.24, 0.20, 0.30), 16.0)
-		b.circle(a, 8.0, Color(0.24, 0.20, 0.30))
-	for i in range(path.size() - 1):
-		var a := path[i]
-		var z := path[i + 1]
-		var dir := (z - a).normalized()
-		var n := dir.orthogonal()
-		var seg := a.distance_to(z)
-		var s := 0.0
-		while s < seg:
-			b.line(a + dir * s - n * 8.0, a + dir * s + n * 8.0, MAGENTA.darkened(0.3), 2.0)
-			s += 9.0
-		for r: float in [-5.5, 5.5]:
-			b.line(a + n * r, z + n * r, Color(0.86, 0.88, 0.92), 2.6)
-	# the lift's chain up the middle
-	var ly := STATION.position.y
-	while ly > LIFT_TOP.y:
-		b.rect(Rect2(LIFT_TOP.x - 1.5, ly - 4.0, 3.0, 4.0), INK)
-		ly -= 8.0
-	# the train: five cars, riders two by two, arms up on the loop
+			b.circle(_coaster_gp[i] + Shade.light * _coaster_hv[i] * 0.22, 7.0, Color(SHADOW, 0.28))
+			b.line(_coaster_gp[i], path[i], STEEL_DARK, 4.5)
+			b.circle(path[i], 6.5, STEEL_DARK)
+			b.circle(path[i] - Vector2(1.2, 1.2), 3.2, STEEL)
+	# pass 1: lower circuit and loop entry/exit aprons
+	_draw_coaster_segs(b, path, 0, path.size() - 1, -10.0, 62.0)
+	# the lift's chain up the station-to-crest incline
+	var p1 := path[1]
+	var p2 := path[2]
+	var lift_len := p1.distance_to(p2)
+	var lift_dir := (p2 - p1).normalized()
+	var cs := 10.0
+	while cs < lift_len:
+		var cp := p1 + lift_dir * cs
+		b.rect(Rect2(cp - Vector2(1.5, 2.0), Vector2(3.0, 4.0)), INK)
+		cs += 8.0
+	# steel A-frame tower cradling the vertical loop at waist height h=96 (4 ground footings)
+	var crown_g := Vector2(700.0, -3965.0)
+	var collar_l := crown_g + Vector2(-84.0, -6.0) + Vector2(0.0, -0.72 * 96.0)
+	var collar_r := crown_g + Vector2(84.0, -6.0) + Vector2(0.0, -0.72 * 96.0)
+	for ft: Array in [
+		[Vector2(604.0, -3996.0), collar_l],
+		[Vector2(604.0, -3934.0), collar_l],
+		[Vector2(796.0, -3996.0), collar_r],
+		[Vector2(796.0, -3934.0), collar_r],
+	]:
+		var fpos: Vector2 = ft[0]
+		var top: Vector2 = ft[1]
+		b.rect(Rect2(fpos - Vector2(7.0, 7.0), Vector2(14.0, 14.0)), Color(0.46, 0.46, 0.48))
+		b.line(fpos, top, STEEL_DARK, 8.5)
+		b.line(fpos - Vector2(1.5, 0.0), top - Vector2(1.5, 0.0), STEEL.lightened(0.1), 3.2)
+	b.line(collar_l, collar_r, STEEL_DARK, 9.0)
+	b.line(collar_l + Vector2(0.0, -2.0), collar_r + Vector2(0.0, -2.0), STEEL.lightened(0.15), 3.6)
+	for cpos: Vector2 in [collar_l, collar_r]:
+		b.circle(cpos, 9.0, STEEL_DARK)
+		b.circle(cpos - Vector2(1.5, 1.5), 4.5, STEEL.lightened(0.15))
+	# crossover shade where the descending arch passes over the entry approach
+	var over_p := path[COASTER_LOOP_START + 38]
+	b.circle(over_p + Shade.light * 16.0, 14.0, Color(SHADOW, 0.24))
+	# pass 2: elevated upper arch (h >= 62), widening with altitude
+	_draw_coaster_segs(b, path, 0, path.size() - 1, 62.0, 999.0)
+	# the train: five cars, scaling with height, showing undercarriage when inverted
 	var total := _coaster_cum[_coaster_cum.size() - 1]
 	var head := fposmod(t_ms * 0.001 * COASTER_SPEED, total + 600.0)
 	if head > total:
@@ -2798,19 +3135,32 @@ static func _draw_coaster(b: ShapeBatch, t_ms: float) -> void:
 		var at: Array = _along(path, _coaster_cum, s)
 		var p: Vector2 = at[0]
 		var dir: Vector2 = at[1]
+		var idx: int = clampi(int(at[2]), 0, _coaster_hv.size() - 2)
+		var f_seg: float = float(at[3])
+		var h_car := lerpf(_coaster_hv[idx], _coaster_hv[idx + 1], f_seg)
+		var sc := 1.0 + (h_car - 34.0) * 0.0022
 		var n := dir.orthogonal()
 		var col := MAGENTA if ci == 0 else (SAFFRON if ci % 2 == 1 else TURQ)
-		b.capsule(p - dir * 10.0 + Shade.light * 12.0, p + dir * 10.0 + Shade.light * 12.0, 9.0, Color(SHADOW, 0.25))
-		b.capsule(p - dir * 10.0, p + dir * 10.0, 9.0, col.darkened(0.2))
-		b.capsule(p - dir * 9.0, p + dir * 9.0, 7.0, col)
-		var on_loop := int(at[2]) >= 14 and int(at[2]) <= 62
-		for d: float in [-1.0, 1.0]:
-			var rp := p + n * d * 4.0
-			var k := float(ci * 2) + d
-			b.circle(rp, 3.4, _pick(SKINS, k, 2.0))
-			b.circle(rp - dir * 0.8, 2.8, _pick(HAIRS, k, 3.0))
-			if on_loop:
-				b.circle(rp + n * d * 5.0 + dir * 3.0, 1.6, _pick(SKINS, k, 2.0))
+		var gpos := _coaster_gp[idx].lerp(_coaster_gp[idx + 1], f_seg)
+		b.capsule(gpos + Shade.light * h_car - dir * 9.0, gpos + Shade.light * h_car + dir * 9.0, 8.5, Color(SHADOW, 0.22))
+		if h_car > 112.0:
+			b.capsule(p - dir * 10.0 * sc, p + dir * 10.0 * sc, 8.8 * sc, col.darkened(0.32))
+			b.capsule(p - dir * 8.5 * sc, p + dir * 8.5 * sc, 5.4 * sc, STEEL_DARK)
+			b.line(p - dir * 6.0 * sc, p + dir * 6.0 * sc, STEEL, 2.2 * sc)
+			for ax: float in [-5.5, 5.5]:
+				for wx: float in [-6.5, 6.5]:
+					b.circle(p + dir * ax * sc + n * wx * sc, 2.3 * sc, INK)
+		else:
+			b.capsule(p - dir * 10.0 * sc, p + dir * 10.0 * sc, 9.0 * sc, col.darkened(0.2))
+			b.capsule(p - dir * 9.0 * sc, p + dir * 9.0 * sc, 7.0 * sc, col)
+			var on_loop := idx >= COASTER_LOOP_START and idx <= COASTER_LOOP_END
+			for d: float in [-1.0, 1.0]:
+				var rp := p + n * d * 4.0 * sc
+				var k := float(ci * 2) + d
+				b.circle(rp, 3.4 * sc, _pick(SKINS, k, 2.0))
+				b.circle(rp - dir * 0.8 * sc, 2.8 * sc, _pick(HAIRS, k, 3.0))
+				if on_loop:
+					b.circle(rp + n * d * 5.0 * sc + dir * 3.0 * sc, 1.6 * sc, _pick(SKINS, k, 2.0))
 
 
 # --- night ---------------------------------------------------------------------------
@@ -2865,8 +3215,15 @@ static func night_lights(m: Node2D) -> Array[Vector3]:
 	for p: Vector3 in [
 		Vector3(ARCH.x, ARCH.y + 30.0, 260.0), Vector3(CAROUSEL.x, CAROUSEL.y, 230.0),
 		Vector3(SHIP.x + 80.0, SHIP.y, 230.0), Vector3(STATION.position.x - 20.0, STATION.get_center().y, 240.0),
-		Vector3(PATH_R + 20.0, FLUME_POOL.position.y - 80.0, 200.0), Vector3(PRIZE.x, PRIZE.y - 40.0, 210.0),
-		Vector3(FOUNTAIN.x, FOUNTAIN.y, 200.0),
+		Vector3(PATH_R + 20.0, FLUME_POOL.position.y - 80.0, 200.0),
+		Vector3(PATH_R + 90.0, FLUME_POOL.get_center().y, 240.0), Vector3(CX + 80.0, -2950.0, 230.0),
+		Vector3(CHURRO.x, CHURRO.y, 190.0), Vector3(CX, -680.0, 210.0),
+		Vector3(HARBOUR.end.x + 15.0, HARBOUR.position.y + 40.0, 190.0),
+		Vector3(HARBOUR.end.x + 15.0, HARBOUR.end.y - 40.0, 190.0),
+		Vector3(PRIZE.x, PRIZE.y - 40.0, 210.0), Vector3(FOUNTAIN.x, FOUNTAIN.y, 200.0),
+		Vector3(PERGOLA.get_center().x, PERGOLA.get_center().y, 210.0),
+		Vector3(448.0, -4538.0, 175.0), Vector3(808.0, -4538.0, 175.0),
+		Vector3(568.0, -4698.0, 175.0), Vector3(748.0, -4818.0, 175.0),
 	]:
 		out.append(p)
 	return out
