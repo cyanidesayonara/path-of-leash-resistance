@@ -81,6 +81,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_snorkeler(c, fd, t, s)
 		"haggler":
 			_haggler(c, fd, t, s)
+		"gladiator":
+			_gladiator(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -988,3 +990,27 @@ static func _snorkeler(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	c.draw_circle(at + side * 8.5 - fd * 9.0, 1.6, fin)
 	_arm(c, at - side * 7.5, at - side * 9.0 + fd * 5.0, suit, skin)
 	_arm(c, at + side * 7.5, at + side * 9.0 + fd * 5.0, suit, skin)
+
+
+# Tarragona: a Roman-festival re-enactor with a wooden sword and round shield
+static func _gladiator(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.86, 0.66, 0.50)
+	var tunic := Color(0.72, 0.18, 0.16)
+	var wood := Color(0.55, 0.36, 0.18)
+	var bronze := Color(0.78, 0.58, 0.28)
+	_shadow(c, Vector2(0.0, 2.0), 16.0, 16.0)
+	_person(c, Vector2.ZERO, fd, tunic, skin, Color(0.22, 0.16, 0.10), "crop", "", Color.BLACK)
+	# round shield on one side
+	var sh := side * 11.0 + fd * 2.0
+	c.draw_circle(sh + Vector2(1.5, 1.5), 10.0, Color(0, 0, 0, 0.2))
+	c.draw_circle(sh, 9.5, wood)
+	c.draw_circle(sh, 6.5, bronze)
+	c.draw_circle(sh, 2.2, Color(0.30, 0.22, 0.14))
+	# wooden sword, a light swing
+	var swing := sin(t * 2.4 + s) * 0.35
+	var tip := -side * 8.0 + fd.rotated(swing) * 16.0
+	c.draw_line(-side * 4.0, tip, wood, 3.2)
+	c.draw_circle(tip, 2.4, bronze)
+	_arm(c, side * 7.0, sh, tunic, skin)
+	_arm(c, -side * 6.0, tip * 0.4, tunic, skin)

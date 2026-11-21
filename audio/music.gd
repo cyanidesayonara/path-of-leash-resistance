@@ -199,6 +199,9 @@ const STYLES := {
 	# Els Encants: rainy flea-market shuffle, accordion and vibes under the canopy
 	"encants": {"bpm": 112, "key": 3, "minor": true, "lead": "accordion", "lead2": ["vibes", 12], "comp": "skank",
 		"bass": "walk", "drums": "brushsoft", "swing": 0.08, "verb": 0.32},
+	# Tarragona: warm dusk Roman stones, guitar and high whistle over a slow walk
+	"tarragona": {"bpm": 112, "key": 2, "lead": "guitar", "lead2": ["whistle", 12], "comp": "arp",
+		"bass": "walk", "drums": "brushsoft", "swing": 0.05, "verb": 0.32},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
@@ -588,6 +591,13 @@ const DARES := {
 			[4, 0.5, 70], [4.5, 0.5, 72], [5, 1, 75], [6, 1, 74], [7, 1, 72],
 			[8, 0.5, 70], [8.5, 0.5, 72], [9, 0.5, 77], [9.5, 0.5, 79], [10, 1, 75], [11, 1, 72],
 			[12, 0.5, 70], [12.5, 0.5, 68], [13, 0.5, 67], [13.5, 0.5, 65], [14, 2, 60]]},
+	# the gladiator: a bold brass-ish whistle call over drums, arena bravado
+	"gladiator": {"bpm": 140, "lead": "whistle", "lead2": ["marimba", -12], "comp": "push", "bass": "eighths",
+		"drums": "drive", "verb": 0.18, "chords": [[62, "maj"], [57, "maj"], [59, "min"], [62, "maj"]],
+		"mel": [[0, 0.5, 74], [0.5, 0.5, 78], [1, 1, 81], [2, 0.5, 78], [2.5, 0.5, 74], [3, 1, 81],
+			[4, 0.5, 76], [4.5, 0.5, 79], [5, 1, 83], [6, 1, 79], [7, 1, 76],
+			[8, 0.5, 74], [8.5, 0.5, 78], [9, 0.5, 81], [9.5, 0.5, 86], [10, 1, 83], [11, 1, 81],
+			[12, 0.5, 79], [12.5, 0.5, 78], [13, 0.5, 76], [13.5, 0.5, 74], [14, 2, 74]]},
 }
 
 # --- the score: what plays when ---------------------------------------------

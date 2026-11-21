@@ -186,6 +186,10 @@ var crowd_shift := 0.0
 const MATCH_PACE_MIN := 0.88
 var match_on := false
 var match_pace := 1.0
+# walk modules may drop this for a soft live crowd (Tarragona castellers):
+# 1 is normal; below that they crawl without touching the motor
+const WALK_PACE_MIN := 0.12
+var walk_pace := 1.0
 # the away goal: they walk it off, they do not plant
 var slump_t := 0.0
 const GOAL_HOLD := 1.6
@@ -742,6 +746,7 @@ func _walk(delta: float) -> void:
 		speed *= 1.0 + give_fwd * clampf(along, 0.0, 1.0) - GIVE_BACK * clampf(-along, 0.0, 1.0)
 		speed *= clampf(crowd_pace, CROWD_PACE_MIN, CROWD_PACE_MAX)
 		speed *= clampf(match_pace, MATCH_PACE_MIN, 1.0)
+		speed *= clampf(walk_pace, WALK_PACE_MIN, 1.0)
 		if slump_t > 0.0:
 			speed *= 0.7
 	# a solid thing against the path's edge just ahead (El Mercat's wall

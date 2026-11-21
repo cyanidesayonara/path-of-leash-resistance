@@ -399,6 +399,7 @@ const WALK_MODULES := {
 	"sitges": preload("res://systems/sitges.gd"),
 	"ronda": preload("res://systems/ronda.gd"),
 	"encants": preload("res://systems/encants.gd"),
+	"tarragona": preload("res://systems/tarragona.gd"),
 	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
@@ -782,6 +783,12 @@ var encants_spill_held := 0
 var encants_auction_barked := false
 var encants_stilts_marked: Dictionary = {}
 var encants_browsers: Array = []
+# Tarragona: casteller practice, Balcó view, Roman stones
+var tarragona_castell: Dictionary = {}
+var tarragona_balco := false
+var tarragona_balco_t := 0.0
+var tarragona_stones: Dictionary = {}
+var tarragona_sitters: Array = []
 # El Metro: the walk's state (systems/metro.gd), and its goals' tallies
 var metro: RefCounted = null
 var metro_turnstile_slipped := false
@@ -11526,6 +11533,7 @@ const FREEDOM_KINDS := {
 	# Cala del Pinar, the small shingle cove at the end of Camí de Ronda
 	"ronda": "yard",
 	"encants": "yard",
+	"tarragona": "yard",
 	# up the stairs at Sant Gos, into its little square
 	"metro": "placa",
 	# the beach where the Dimoni is burned
