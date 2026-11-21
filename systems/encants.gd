@@ -19,7 +19,7 @@ extends RefCounted
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
 const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer",
-	"draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp",
+	"draw_freedom", "draw_grove", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp",
 	"night_fronts", "on_bark", "surface", "tick", "tree_kind"]
 
 
@@ -704,17 +704,25 @@ static func _draw_torre(b: ShapeBatch, p: Vector2) -> void:
 		b.glow(p + Vector2(-r * 0.32, -r * 0.34), r * 0.75, Color(1.0, 1.0, 1.0, 0.26))
 
 
+# Draw a passer-by or market customer at full adult scale to match the player's human.
+static func _person(b: ShapeBatch, p: Vector2, fwd: Vector2, key: int, stride := -1.0, o := {}) -> void:
+	var opts := o.duplicate()
+	if not opts.has("size"):
+		opts["size"] = 1.62 + (_h(key * 13 + 5) - 0.5) * 0.14
+	NpcFigure.person(b, p, fwd, key, stride, opts)
+
+
 # a passer-by on the open street: an umbrella over them in the rain
 static func _passer(b: ShapeBatch, p: Vector2, fwd: Vector2, key: int, wet: bool) -> void:
 	if wet:
-		NpcFigure.person(b, p, fwd, key, -1.0, {"arms": NpcFigure.Arms.READY})
-		_umbrella(b, p + fwd * 2.0, 17.0 + _h(key) * 4.0, key)
+		_person(b, p, fwd, key, -1.0, {"arms": NpcFigure.Arms.READY})
+		_umbrella(b, p + fwd * 2.0, 23.0 + _h(key) * 4.0, key)
 	else:
 		var o := {}
 		if _snowy():
 			o["headwear"] = "beanie"
 			o["headwear_col"] = UMBRELLAS[int(_h(key) * 7.0) % UMBRELLAS.size()]
-		NpcFigure.person(b, p, fwd, key, 0.8 + _h(key) * 2.0, o)
+		_person(b, p, fwd, key, 0.8 + _h(key) * 2.0, o)
 
 
 # An umbrella from above: eight panels round the tip, lit on the sun's side,
@@ -783,7 +791,7 @@ static func _edge_market(b: ShapeBatch, lo: float, hi: float) -> void:
 					var ax := 168.0 + _h(k * 3 + j) * 30.0 if j == 0 else 1084.0 + _h(k * 11 + j) * 30.0
 					var p := Vector2(ax, y + 20.0 + hk * 60.0)
 					var fwd := Vector2(0.0, -1.0) if _h(k + j * 31) < 0.5 else Vector2(0.0, 1.0)
-					NpcFigure.person(b, p, fwd, 5200 + k * 3 + j, _h(k + j) * TAU)
+					_person(b, p, fwd, 5200 + k * 3 + j, _h(k + j) * TAU)
 		y += step
 
 
@@ -1099,12 +1107,12 @@ static func _draw_stalls(wc: ShapeBatch, lo: float, hi: float) -> void:
 			var hk := _h(i * 17 + j * 3 + 1)
 			if hk < fill * (0.85 if j == 0 else 0.45):
 				var front_x := r.end.x if face > 0.0 else r.position.x
-				var p := Vector2(front_x + face * (14.0 + _h(i + j * 7) * 16.0), r.position.y + 12.0 + hk * (r.size.y - 18.0))
+				var p := Vector2(front_x + face * (18.0 + _h(i + j * 7) * 16.0), r.position.y + 12.0 + hk * (r.size.y - 18.0))
 				var look := Vector2(-face, (_h(i * 3 + j) - 0.5) * 0.8)
 				var o := {}
 				if _h(i * 5 + j) < 0.4:
 					o["arms"] = NpcFigure.Arms.READY
-				NpcFigure.person(wc, p, look, 6100 + i * 5 + j, -1.0, o)
+				_person(wc, p, look, 6100 + i * 5 + j, -1.0, o)
 
 
 # --- a stall ----------------------------------------------------------------------
@@ -1208,15 +1216,15 @@ static func _stall(b: ShapeBatch, r: Rect2, face: float, k: int, people: bool) -
 	if people and Outdoors.flea_sellers(Game.weather, Game.hour) and _h(k * 19 + 5) < 0.85:
 		var top := _h(k * 23) < 0.5
 		var sp := _u_pt(r, face, depth - 9.0, 9.0 if top else r.size.y - 9.0)
-		var chair := Rect2(sp.x - 7.0 - face * 4.0, sp.y - 7.0, 14.0, 14.0)
+		var chair := Rect2(sp.x - 9.0 - face * 4.0, sp.y - 9.0, 18.0, 18.0)
 		b.rect(Rect2(chair.position + Shade.light * 3.0, chair.size), SHADOW)
 		b.rect(chair, Color(0.30, 0.42, 0.36) if k % 2 == 0 else Color(0.62, 0.30, 0.24))
 		var look := Vector2(face, 0.4 if top else -0.4)
-		var o := {"arms": NpcFigure.Arms.READY, "size": 0.92}
+		var o := {"arms": NpcFigure.Arms.READY, "size": 1.54}
 		if _h(k * 29) < 0.3:
 			o["headwear"] = "cap"
 			o["headwear_col"] = AWNINGS[(k + 4) % AWNINGS.size()]
-		NpcFigure.person(b, sp, look, 7300 + k * 3, -1.0, o)
+		_person(b, sp, look, 7300 + k * 3, -1.0, o)
 
 
 # a rect across a stall from `ua` to `ub` out from its back wall, `va` to `vb`
@@ -1624,31 +1632,31 @@ static func _draw_auction(wc: ShapeBatch, lo: float, hi: float) -> void:
 			_:
 				_lamp(wc, lp, 11.0, 6)
 	# the rostrum: a raised lectern on its crate, the auctioneer behind it
-	var ro := Rect2(c.x - 20.0, c.y - R + 22.0, 40.0, 18.0)
+	var ro := Rect2(c.x - 24.0, c.y - R + 20.0, 48.0, 22.0)
 	_shadow_rect(wc, ro, 10.0)
 	wc.rect(ro, Color(0.30, 0.18, 0.10))
 	wc.rect(ro.grow(-2.0), Color(0.46, 0.30, 0.16))
 	wc.rect(Rect2(ro.position.x + 4.0, ro.end.y - 6.0, ro.size.x - 8.0, 4.0), Color(0.86, 0.72, 0.36))
-	NpcFigure.person(wc, Vector2(c.x, ro.position.y - 4.0), Vector2(0.0, 1.0), 8801, -1.0,
-		{"top": Color(0.20, 0.20, 0.24), "hair_style": "bald", "arms": NpcFigure.Arms.READY})
+	_person(wc, Vector2(c.x, ro.position.y - 6.0), Vector2(0.0, 1.0), 8801, -1.0,
+		{"top": Color(0.20, 0.20, 0.24), "hair_style": "bald", "arms": NpcFigure.Arms.READY, "size": 1.68})
 	# the bidders on folding chairs, rows either side of the lane
 	for side: float in [-1.0, 1.0]:
 		for col in range(3):
-			var x := (PATH_L + 26.0 + float(col) * 30.0) if side < 0.0 else (PATH_R - 26.0 - float(col) * 30.0)
-			for row in range(7):
-				var y := AUCTION_Y - 96.0 + float(row) * 30.0
+			var x := (PATH_L + 24.0 + float(col) * 33.0) if side < 0.0 else (PATH_R - 24.0 - float(col) * 33.0)
+			for row in range(6):
+				var y := AUCTION_Y - 82.0 + float(row) * 33.0
 				var k := col * 11 + row * 3 + (50 if side > 0.0 else 0)
 				var face := Vector2(-side, 0.0)
 				var cp := Vector2(x, y)
-				_chair(wc, cp - face * 3.0, side * PI * 0.5, k, 1.05)
+				_chair(wc, cp - face * 4.0, side * PI * 0.5, k, 1.38)
 				if _h(k * 7 + 2) < 0.9:
-					var o := {"arms": NpcFigure.Arms.READY if _h(k) < 0.7 else NpcFigure.Arms.SIDE}
-					NpcFigure.person(wc, cp, face, 8900 + k, -1.0, o)
+					var o := {"arms": NpcFigure.Arms.READY if _h(k) < 0.7 else NpcFigure.Arms.SIDE, "size": 1.54}
+					_person(wc, cp, face, 8900 + k, -1.0, o)
 					if _h(k * 5) < 0.18:
 						# a bidder's paddle up
-						var pad := cp + face * 10.0 + Vector2(0.0, -6.0)
-						wc.rect(Rect2(pad.x - 4.0, pad.y - 4.0, 8.0, 8.0), Color(0.98, 0.96, 0.90))
-						wc.rect(Rect2(pad.x - 2.0, pad.y - 1.0, 4.0, 2.0), Color(0.80, 0.16, 0.16))
+						var pad := cp + face * 14.0 + Vector2(0.0, -8.0)
+						wc.rect(Rect2(pad.x - 5.5, pad.y - 5.5, 11.0, 11.0), Color(0.98, 0.96, 0.90))
+						wc.rect(Rect2(pad.x - 3.0, pad.y - 1.5, 6.0, 3.0), Color(0.80, 0.16, 0.16))
 
 
 # The tower of chairs that spills: crates at its foot and chairs stacked high,
@@ -1674,9 +1682,9 @@ static func _draw_spill_stack_static(wc: ShapeBatch, lo: float, hi: float) -> vo
 	var tp := base + Vector2(-8.0, -84.0)
 	_chair(wc, tp, 0.9, 7, 1.6)
 	wc.glow(tp, 18.0, Color(1.0, 0.92, 0.60, 0.22))
-	var seller := base + Vector2(40.0, 16.0)
-	wc.rect(Rect2(seller.x - 7.0, seller.y - 4.0, 14.0, 14.0), Color(0.30, 0.42, 0.36))
-	NpcFigure.person(wc, seller, Vector2(-1.0, -0.3), 8711, -1.0, {"arms": NpcFigure.Arms.UP, "headwear": "cap", "headwear_col": Color(0.72, 0.18, 0.16)})
+	var seller := base + Vector2(42.0, 16.0)
+	wc.rect(Rect2(seller.x - 9.0, seller.y - 6.0, 18.0, 18.0), Color(0.30, 0.42, 0.36))
+	_person(wc, seller, Vector2(-1.0, -0.3), 8711, -1.0, {"arms": NpcFigure.Arms.UP, "headwear": "cap", "headwear_col": Color(0.72, 0.18, 0.16), "size": 1.64})
 
 
 # Where the canopy ends over the open street: a darker line of drips on the
@@ -1726,6 +1734,64 @@ static func draw_overhead(m: Node2D, ci: Object) -> void:
 # The canopy over the market either side of the lane: its mirrored underside
 # in tilted facets, each catching the stalls below in its own warm or cool
 # tone, steel joints between them, and the steel edge beam along the lane.
+static func _bary(t0: Vector2, t1: Vector2, t2: Vector2, u: float, v: float) -> Vector2:
+	return t0 * (1.0 - u - v) + t1 * u + t2 * v
+
+
+# Render one folded mirror facet with crisp geometry clipped strictly inside its triangle.
+static func _mirror_facet(b: ShapeBatch, t0: Vector2, t1: Vector2, t2: Vector2, base_col: Color, a: float, k: int, col: int) -> void:
+	b.polygon(PackedVector2Array([t0, t1, t2]), Color(base_col, a))
+	# horizon cut: tilted reflection of cool sky vs warm concrete floor
+	var h_col := Color(0.64, 0.72, 0.80, a * 0.40) if k % 2 == 0 else Color(base_col.lightened(0.14), a * 0.42)
+	b.polygon(PackedVector2Array([t0, _bary(t0, t1, t2, 0.78, 0.14), _bary(t0, t1, t2, 0.18, 0.74)]), h_col)
+	# crisp sheared stall awning & stripes caught inside this facet's mirror plane
+	if _h(k + 5) < 0.72:
+		var aw: Color = AWNINGS[(k * 3 + 1) % AWNINGS.size()]
+		var aw_lite := aw.lightened(0.45)
+		var u0 := 0.12 + _h(k + 9) * 0.10
+		var v0 := 0.14 + _h(k + 11) * 0.08
+		var q0 := _bary(t0, t1, t2, u0, v0)
+		var q1 := _bary(t0, t1, t2, u0 + 0.46, v0 + 0.06)
+		var q2 := _bary(t0, t1, t2, u0 + 0.40, v0 + 0.34)
+		var q3 := _bary(t0, t1, t2, u0 - 0.04, v0 + 0.28)
+		b.polygon(PackedVector2Array([q0, q1, q2, q3]), Color(aw, a * 0.64))
+		for s in range(2):
+			var f0 := 0.18 + float(s) * 0.38
+			var f1 := f0 + 0.16
+			b.polygon(PackedVector2Array([
+				q0.lerp(q1, f0), q0.lerp(q1, f1), q3.lerp(q2, f1), q3.lerp(q2, f0),
+			]), Color(aw_lite, a * 0.58))
+	# alternate reflections of timber tables, rugs, floor expansion joints or lane paint
+	var kind_r := k % 3
+	if kind_r == 0:
+		var tc: Color = WOODS[k % WOODS.size()]
+		b.polygon(PackedVector2Array([
+			_bary(t0, t1, t2, 0.20, 0.52), _bary(t0, t1, t2, 0.50, 0.40),
+			_bary(t0, t1, t2, 0.46, 0.48), _bary(t0, t1, t2, 0.16, 0.62),
+		]), Color(tc, a * 0.55))
+	elif kind_r == 1:
+		b.line(_bary(t0, t1, t2, 0.08, 0.56), _bary(t0, t1, t2, 0.72, 0.14), Color(PITCH_PAINT.r, PITCH_PAINT.g, PITCH_PAINT.b, a * 0.48), 2.2)
+	else:
+		var rc: Color = RUG_COLS[k % RUG_COLS.size()]
+		b.polygon(PackedVector2Array([
+			_bary(t0, t1, t2, 0.22, 0.48), _bary(t0, t1, t2, 0.46, 0.44),
+			_bary(t0, t1, t2, 0.36, 0.56), _bary(t0, t1, t2, 0.14, 0.58),
+		]), Color(rc, a * 0.52))
+	b.line(_bary(t0, t1, t2, 0.14, 0.74), _bary(t0, t1, t2, 0.74, 0.10), Color(0.24, 0.24, 0.26, a * 0.30), 1.0)
+	# crisp reflected shopper silhouette on inner facets near the aisle
+	if col <= 2 and _h(k + 7) < 0.55:
+		var fp := _bary(t0, t1, t2, 0.36, 0.36)
+		var fdir := (t1 - t0).normalized()
+		var sc: Color = GARMENTS[(k + 2) % GARMENTS.size()]
+		b.capsule(fp - fdir * 4.5, fp + fdir * 4.5, 2.8, Color(sc, a * 0.65))
+		b.circle(fp + Vector2(-1.5, -1.5), 2.6, Color(0.84, 0.68, 0.54, a * 0.68))
+	# hard anodized metallic specular glint stripe across the facet
+	b.polygon(PackedVector2Array([
+		_bary(t0, t1, t2, 0.08, 0.10), _bary(t0, t1, t2, 0.24, 0.08),
+		_bary(t0, t1, t2, 0.10, 0.68), _bary(t0, t1, t2, 0.04, 0.56),
+	]), Color(1.0, 0.97, 0.90, a * 0.24))
+
+
 static func _canopy_flank(b: ShapeBatch, lo: float, hi: float, side: float) -> void:
 	var edge_x := PATH_L - 4.0 if side < 0.0 else PATH_R + 4.0
 	var cell := 74.0
@@ -1743,19 +1809,15 @@ static func _canopy_flank(b: ShapeBatch, lo: float, hi: float, side: float) -> v
 			var ca: Color = MIRRORS[int(_h(k) * float(MIRRORS.size())) % MIRRORS.size()]
 			var cb: Color = MIRRORS[int(_h(k + 1) * float(MIRRORS.size())) % MIRRORS.size()]
 			if (row + col) % 2 == 0:
-				b.polygon(PackedVector2Array([p00, p10, p11]), Color(ca, a))
-				b.polygon(PackedVector2Array([p00, p11, p01]), Color(cb.darkened(0.1), a))
+				_mirror_facet(b, p00, p10, p11, ca, a, k * 2, col)
+				_mirror_facet(b, p00, p11, p01, cb.darkened(0.08), a, k * 2 + 1, col)
 			else:
-				b.polygon(PackedVector2Array([p00, p10, p01]), Color(ca.lightened(0.05), a))
-				b.polygon(PackedVector2Array([p10, p11, p01]), Color(cb, a))
-			# a stall's colour caught warped in the mirror
-			if _h(k + 5) < 0.45:
-				var rc: Color = AWNINGS[k % AWNINGS.size()]
-				b.glow((p00 + p11) * 0.5, cell * 0.42, Color(rc, a * 0.45))
-			var jc := Color(0.80, 0.82, 0.84, a * 0.8)
-			b.line(p00, p10, jc, 1.5)
-			b.line(p00, p01, jc, 1.5)
-			b.line(p00, p11 if (row + col) % 2 == 0 else p01, Color(0.30, 0.32, 0.36, a * 0.5), 1.0)
+				_mirror_facet(b, p00, p10, p01, ca.lightened(0.05), a, k * 2, col)
+				_mirror_facet(b, p10, p11, p01, cb, a, k * 2 + 1, col)
+			var jc := Color(0.84, 0.86, 0.88, a * 0.85)
+			b.line(p00, p10, jc, 1.6)
+			b.line(p00, p01, jc, 1.6)
+			b.line(p00, p11 if (row + col) % 2 == 0 else p01, Color(0.28, 0.30, 0.34, a * 0.65), 1.2)
 	# the soft shade the canopy throws at its edge onto the lane below
 	var shade_x := edge_x - side * 46.0
 	b.band(PackedVector2Array([
@@ -1798,8 +1860,18 @@ static func _fascia(b: ShapeBatch, edge: float) -> void:
 	while x < x1:
 		var tip := Vector2(x + 18.0, y_in + out * 4.0)
 		var c: Color = MIRRORS[k % MIRRORS.size()]
-		b.polygon(PackedVector2Array([Vector2(x, edge - out * 4.0), Vector2(x + 36.0, edge - out * 4.0), tip]), Color(c, 0.85))
+		var t_a := Vector2(x, edge - out * 4.0)
+		var t_b := Vector2(x + 36.0, edge - out * 4.0)
+		b.polygon(PackedVector2Array([t_a, t_b, tip]), Color(c, 0.85))
+		var aw_f: Color = AWNINGS[k % AWNINGS.size()]
+		b.polygon(PackedVector2Array([
+			_bary(t_a, t_b, tip, 0.25, 0.25), _bary(t_a, t_b, tip, 0.62, 0.16), _bary(t_a, t_b, tip, 0.42, 0.45),
+		]), Color(aw_f, 0.48))
+		b.polygon(PackedVector2Array([
+			_bary(t_a, t_b, tip, 0.08, 0.10), _bary(t_a, t_b, tip, 0.24, 0.10), _bary(t_a, t_b, tip, 0.12, 0.58),
+		]), Color(1.0, 0.97, 0.90, 0.25))
 		b.polygon(PackedVector2Array([Vector2(x + 18.0, y_in), tip, Vector2(x + 36.0, edge - out * 4.0)]), Color(MIRRORS[(k + 2) % MIRRORS.size()], 0.6))
+		b.line(t_a, tip, Color(0.84, 0.86, 0.88, 0.7), 1.0)
 		x += 36.0
 		k += 1
 	b.rect(Rect2(x0, edge - (4.0 if out > 0.0 else 0.0), x1 - x0, 4.0), CANOPY_DARK)
@@ -1826,10 +1898,10 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 		var p: Vector2 = br["pos"]
 		if p.y < vt - 40.0 or p.y > vb + 40.0:
 			continue
-		var o := {"arms": NpcFigure.Arms.READY}
-		NpcFigure.person(b, p, Vector2(0.0, 1.0), int(br["key"]), -1.0, o)
+		var o := {"arms": NpcFigure.Arms.READY, "size": 1.58}
+		_person(b, p, Vector2(0.0, 1.0), int(br["key"]), -1.0, o)
 		if not _under_canopy(p.y) and _rainy():
-			_umbrella(b, p, 17.0, int(br["key"]))
+			_umbrella(b, p, 23.0, int(br["key"]))
 	var tsec := float(AnimClock.msec()) * 0.001
 	# shoppers drifting up and down the lane's edges, stopping at a stall
 	var fill := Outdoors.flea_browsers(Game.weather, Game.hour)
@@ -1848,13 +1920,13 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 			continue
 		var x := (PATH_L + 118.0 + _h(i * 9) * 110.0) if side < 0.0 else (PATH_R - 118.0 - _h(i * 9) * 110.0)
 		var fwd := Vector2(0.0, -1.0) if going_up else Vector2(0.0, 1.0)
-		NpcFigure.person(b, Vector2(x, y), fwd, 9100 + i * 7, tsec * speed * 0.45)
+		_person(b, Vector2(x, y), fwd, 9100 + i * 7, tsec * speed * 0.45)
 	# auction: the auctioneer's gavel arm going
 	if AUCTION_Y >= vt - 120.0 and AUCTION_Y <= vb + 120.0:
 		var wave := sin(tsec * 6.0) * 5.0
-		var ap := Vector2(CX, AUCTION_Y - AUCTION_R - 28.0 + 22.0 - 4.0)
-		b.line(ap + Vector2(6.0, 2.0), ap + Vector2(14.0 + wave * 0.3, 4.0 - absf(wave)), Color(0.86, 0.68, 0.54), 2.4)
-		b.rect(Rect2(ap.x + 12.0 + wave * 0.3, 1.0 + ap.y - absf(wave), 6.0, 4.0), Color(0.40, 0.24, 0.12))
+		var ap := Vector2(CX, AUCTION_Y - AUCTION_R - 28.0 + 20.0 - 6.0)
+		b.line(ap + Vector2(10.0, 3.0), ap + Vector2(21.0 + wave * 0.4, 6.0 - absf(wave) * 1.3), Color(0.86, 0.68, 0.54), 3.6)
+		b.rect(Rect2(ap.x + 18.0 + wave * 0.4, 2.0 + ap.y - absf(wave) * 1.3, 8.0, 5.0), Color(0.40, 0.24, 0.12))
 	# spill wobble / slide over the resting stack
 	if SPILL_Y >= vt - 120.0 and SPILL_Y <= vb + 120.0:
 		var st: Dictionary = m.encants_spill
@@ -1885,21 +1957,172 @@ static func draw_live(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 
 # --- the off-leash square ---------------------------------------------------------
 
+static func draw_grove(m: Node2D, c: Object, p: Vector2, _i: int) -> void:
+	# Plaça dels Encants plane trees stand in square stone-kerbed Barcelona
+	# escocell tree pits (cast-iron grates), never forest roots on pavement tiles.
+	var b := ShapeBatch.new()
+	b.lod = true
+	b.rect(Rect2(p.x - 19.0, p.y - 19.0, 38.0, 38.0), KERB.darkened(0.08))
+	b.rect(Rect2(p.x - 19.0, p.y - 19.0, 38.0, 3.0), KERB.lightened(0.16))
+	b.rect(Rect2(p.x - 15.0, p.y - 15.0, 30.0, 30.0), Color(0.22, 0.24, 0.26))
+	for gi in range(5):
+		var gy := p.y - 12.0 + float(gi) * 6.0
+		b.rect(Rect2(p.x - 14.0, gy, 28.0, 1.6), Color(0.12, 0.13, 0.15))
+	b.circle(p, 8.5, Color(0.28, 0.22, 0.16))
+	b.flush(c)
+	m.broadleaf_grove(c, p)
+
+
+static func _plaza_stall(b: ShapeBatch, r: Rect2, kind: int, k: int, rain: bool) -> void:
+	var aw: Color = AWNINGS[k % AWNINGS.size()]
+	_shadow_rect(b, r, 5.0)
+	# striped sun awning cantilevered from the north parapet
+	var awning := Rect2(r.position.x - 4.0, r.position.y - 2.0, r.size.x + 8.0, 16.0)
+	b.rect(Rect2(awning.position + Shade.light * 4.0, awning.size), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.22))
+	b.rect(awning, aw)
+	var sx := awning.position.x
+	var si := 0
+	while sx < awning.end.x - 4.0:
+		if si % 2 == 0:
+			b.rect(Rect2(sx, awning.position.y, minf(8.0, awning.end.x - sx), awning.size.y), aw.lightened(0.5))
+		sx += 8.0
+		si += 1
+	# trestle table & cloth
+	var table := Rect2(r.position.x, r.position.y + 12.0, r.size.x, r.size.y - 12.0)
+	b.rect(table, WOODS[k % WOODS.size()])
+	var cloth: Color = CLOTHS[(k * 3 + 2) % CLOTHS.size()]
+	b.rect(table.grow(-3.0), cloth)
+	b.rect(Rect2(table.position.x + 3.0, table.end.y - 5.0, table.size.x - 6.0, 3.0), cloth.darkened(0.2))
+	_goods(b, table.grow(-5.0), 1.0, kind, k)
+	# a browser or stallkeeper beside the front edge
+	if Outdoors.flea_browsers(Game.weather, Game.hour) > 0.2:
+		var bp := Vector2(r.get_center().x + (_h(k * 7) - 0.5) * 28.0, r.end.y + 14.0)
+		_person(b, bp, Vector2(0.0, -1.0), 9600 + k * 5, -1.0, {"arms": NpcFigure.Arms.READY, "size": 1.56})
+		if rain:
+			_umbrella(b, bp, 23.0, 9600 + k * 5)
+
+
 static func draw_freedom(m: Node2D, c: Object) -> void:
 	var r: Rect2 = m._freedom_rect()
 	var b := ShapeBatch.new()
 	b.lod = true
 	var pave := _pave()
 	var wet := _rainy()
-	# Plaça dels Encants: its own panots, a stone kerb, blocks of flats round it
+	var gl: float = float(m.gate_l) if "gate_l" in m else 420.0
+	var gr: float = float(m.gate_r) if "gate_r" in m else 860.0
+	# Plaça dels Encants: panot promenade surround, double stone kerb, perimeter blocks
 	b.rect(Rect2(r.position.x - 100.0, r.position.y - 100.0, r.size.x + 200.0, r.size.y + 200.0), pave.darkened(0.12))
 	b.rect(r, pave)
 	Panot.flor(b, r.position.x + 8.0, r.end.x - 8.0, r.position.y + 8.0, r.end.y - 8.0,
 		PANOT_WET_GROOVE if wet else PANOT_DRY_GROOVE, PANOT_WET_SHINE if wet else PANOT_DRY_SHINE)
+	# inlaid terracotta-and-sandstone market carpet centered in the plaza
+	var carpet := Rect2(r.position.x + 170.0, r.position.y + 88.0, r.size.x - 340.0, r.size.y - 176.0)
+	var stone_warm := Color(0.76, 0.71, 0.61) if not wet else Color(0.56, 0.54, 0.49)
+	var terra_tile := TERRAT if not wet else TERRAT.darkened(0.22)
+	b.rect(carpet.grow(8.0), KERB.darkened(0.16))
+	b.rect(carpet.grow(4.0), KERB)
+	b.rect(carpet, stone_warm)
+	var bay := 84.0
+	var bx0 := carpet.position.x + 12.0
+	var by0 := carpet.position.y + 12.0
+	var bcol := 0
+	var bx := bx0
+	while bx < carpet.end.x - 20.0:
+		var bw := minf(bay - 8.0, carpet.end.x - 12.0 - bx)
+		var brow := 0
+		var by := by0
+		while by < carpet.end.y - 20.0:
+			var bh := minf(bay - 8.0, carpet.end.y - 12.0 - by)
+			var panel := Rect2(bx, by, bw, bh)
+			b.rect(panel, terra_tile.darkened(0.08 if (bcol + brow) % 2 == 0 else 0.0) if (bcol + brow) % 2 == 0 else stone_warm.darkened(0.06))
+			b.rect(panel.grow(-4.0), Color(1.0, 0.96, 0.88, 0.08))
+			by += bay
+			brow += 1
+		bx += bay
+		bcol += 1
+	# steel drainage grate strips edging the west and east carpet seams
+	for gx: float in [carpet.position.x - 6.0, carpet.end.x + 2.0]:
+		b.rect(Rect2(gx, carpet.position.y, 4.0, carpet.size.y), Color(0.24, 0.26, 0.28))
+		var gy := carpet.position.y + 4.0
+		while gy < carpet.end.y - 4.0:
+			b.rect(Rect2(gx + 0.5, gy, 3.0, 2.0), Color(0.12, 0.13, 0.15))
+			gy += 6.0
+	# central flush octagonal trencadis medallion (Rosa dels Encants)
+	var mc := carpet.get_center() + Vector2(0.0, -16.0)
+	b.circle(mc, 68.0, KERB.darkened(0.18))
+	b.circle(mc, 63.0, KERB.lightened(0.06))
+	b.circle(mc, 56.0, stone_warm.lightened(0.04))
+	var med_cols: Array[Color] = [Color(0.88, 0.66, 0.20), Color(0.18, 0.58, 0.58), TERRAT, Color(0.22, 0.38, 0.62)]
+	for si in range(8):
+		var a0 := TAU * float(si) / 8.0 + 0.035
+		var a1 := TAU * float(si + 1) / 8.0 - 0.035
+		var wcol: Color = med_cols[si % med_cols.size()]
+		if wet:
+			wcol = wcol.darkened(0.18)
+		b.polygon(PackedVector2Array([
+			mc + Vector2.from_angle(a0) * 19.0,
+			mc + Vector2.from_angle(a0) * 51.0,
+			mc + Vector2.from_angle(a1) * 51.0,
+			mc + Vector2.from_angle(a1) * 19.0,
+		]), wcol)
+	b.circle(mc, 19.0, KERB.darkened(0.16))
+	b.circle(mc, 15.0, Color(0.68, 0.50, 0.24))
+	b.circle(mc - Vector2(2.0, 2.0), 8.0, Color(0.84, 0.66, 0.34))
+	# perimeter stone kerb & north boundary railing
 	b.rect(Rect2(r.position.x - 8.0, r.position.y - 8.0, r.size.x + 16.0, 10.0), KERB)
 	b.rect(Rect2(r.position.x - 8.0, r.end.y - 2.0, r.size.x + 16.0, 10.0), KERB)
 	b.rect(Rect2(r.position.x - 8.0, r.position.y, 10.0, r.size.y), KERB)
 	b.rect(Rect2(r.end.x - 2.0, r.position.y, 10.0, r.size.y), KERB)
+	# southern folded-mirror canopy gateway wings and Corten herb planters flanking the gate
+	for wing: Array in [[r.position.x + 18.0, gl - 18.0, 0], [gr + 18.0, r.end.x - 18.0, 5]]:
+		var wx0: float = float(wing[0])
+		var wx1: float = float(wing[1])
+		var wk: int = int(wing[2])
+		var wy := r.end.y - 18.0
+		b.rect(Rect2(wx0, wy + 6.0, wx1 - wx0, 18.0), Color(SHADOW.r, SHADOW.g, SHADOW.b, 0.24))
+		b.rect(Rect2(wx0, wy, wx1 - wx0, 22.0), CANOPY_STEEL.darkened(0.08))
+		var fx := wx0
+		var fi := wk
+		while fx < wx1 - 30.0:
+			var t0 := Vector2(fx, wy + 20.0)
+			var t1 := Vector2(fx + 36.0, wy + 20.0)
+			var tip := Vector2(fx + 18.0, wy + 2.0)
+			b.polygon(PackedVector2Array([t0, t1, tip]), Color(MIRRORS[fi % MIRRORS.size()], 0.88))
+			b.polygon(PackedVector2Array([
+				_bary(t0, t1, tip, 0.22, 0.22), _bary(t0, t1, tip, 0.62, 0.16), _bary(t0, t1, tip, 0.42, 0.44),
+			]), Color(AWNINGS[fi % AWNINGS.size()], 0.50))
+			b.polygon(PackedVector2Array([
+				_bary(t0, t1, tip, 0.08, 0.10), _bary(t0, t1, tip, 0.24, 0.10), _bary(t0, t1, tip, 0.12, 0.56),
+			]), Color(1.0, 0.97, 0.90, 0.26))
+			fx += 36.0
+			fi += 1
+		b.rect(Rect2(wx0, wy, wx1 - wx0, 2.5), Color(0.92, 0.94, 0.96, 0.85))
+	for px: float in [gl - 46.0, gr + 16.0]:
+		var pr := Rect2(px, r.end.y - 36.0, 30.0, 16.0)
+		_shadow_rect(b, pr, 5.0)
+		b.rect(pr, Color(0.56, 0.28, 0.18))
+		b.rect(pr.grow(-2.5), Color(0.24, 0.42, 0.22))
+		for lx in range(3):
+			b.circle(Vector2(pr.position.x + 6.0 + float(lx) * 9.0, pr.get_center().y), 4.5, Color(0.32, 0.54, 0.26))
+	# open-air spillover antique stalls & vermut kiosk along the clear north promenade
+	var st_y := r.position.y + 8.0
+	for st_spec: Array in [
+		[280.0, G.BOOKS, 2],
+		[438.0, G.RECORDS, 4],
+		[570.0, G.BRICA, 6],
+		[902.0, G.FRAMES, 8],
+	]:
+		_plaza_stall(b, Rect2(float(st_spec[0]), st_y, 84.0, 42.0), int(st_spec[1]), int(st_spec[2]), wet)
+	# small striped Vermut & Xurreria cart in the open north-west bay
+	var vc := Vector2(r.position.x + 126.0, r.position.y + 34.0)
+	var vr := Rect2(vc.x - 22.0, vc.y - 12.0, 44.0, 24.0)
+	_shadow_rect(b, vr, 6.0)
+	b.rect(vr, Color(0.78, 0.20, 0.18))
+	b.rect(vr.grow(-3.0), Color(0.94, 0.90, 0.80))
+	b.rect(Rect2(vr.position.x + 5.0, vr.position.y + 5.0, 18.0, 10.0), Color(0.68, 0.44, 0.22))
+	b.circle(vc + Vector2(18.0, 0.0), 3.6, Color(0.14, 0.14, 0.16))
+	_umbrella(b, vc + Vector2(-8.0, -4.0), 22.0, 31)
+	_person(b, vc + Vector2(28.0, 4.0), Vector2(-1.0, 0.0), 9680, -1.0, {"arms": NpcFigure.Arms.READY, "size": 1.56})
 	# the blocks round the square, their fronts on it
 	var y := r.position.y + 10.0
 	var k := 0
@@ -1918,19 +2141,24 @@ static func draw_freedom(m: Node2D, c: Object) -> void:
 	if wet:
 		for j in range(9):
 			b.glow(Vector2(lerpf(r.position.x + 120.0, r.end.x - 120.0, _h(j * 3)), lerpf(r.position.y + 100.0, r.end.y - 100.0, _h(j * 7))),
-				30.0 + _h(j) * 24.0, Color(0.36, 0.44, 0.56, 0.38))
-	# lamp posts at the corners
+				30.0 + _h(j) * 24.0, Color(0.36, 0.44, 0.56, 0.34))
+	# Barcelona cast-iron fanal lamps round the plaza perimeter
+	var glow_a := Game.lamp_glow()
 	for corner: Vector2 in [
 		Vector2(r.position.x + 30.0, r.position.y + 30.0),
 		Vector2(r.end.x - 30.0, r.position.y + 30.0),
 		Vector2(r.position.x + 30.0, r.end.y - 30.0),
 		Vector2(r.end.x - 30.0, r.end.y - 30.0),
+		Vector2(r.position.x + 148.0, mc.y),
+		Vector2(r.end.x - 148.0, mc.y),
+		Vector2(gl - 26.0, r.end.y - 44.0),
+		Vector2(gr + 26.0, r.end.y - 44.0),
 	]:
-		b.circle(corner + Shade.light * 5.0, 8.0, SHADOW)
-		b.circle(corner, 6.0, LAMP_POST)
-		var glow_a := Game.lamp_glow()
+		b.circle(corner + Shade.light * 6.0, 8.5, SHADOW)
+		b.circle(corner, 7.0, Color(0.18, 0.20, 0.22))
+		b.circle(corner, 4.2, Color(0.84, 0.80, 0.64) if glow_a <= 0.05 else Color(1.0, 0.90, 0.58))
 		if glow_a > 0.05:
-			b.glow(corner, 28.0, Color(1.0, 0.88, 0.55, 0.22 * glow_a))
+			b.glow(corner, 34.0, Color(1.0, 0.88, 0.55, 0.26 * glow_a))
 	b.flush(c)
 	if m.has_method("_draw_freedom_benches"):
 		m._draw_freedom_benches(c, r, STALL_WOOD)
