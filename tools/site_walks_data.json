@@ -1492,9 +1492,9 @@
       "clock_text": "2:55",
       "freedom_kind": "yard",
       "gate_text": "PLAÇA DELS ENCANTS",
-      "gloss": "The flea market at Glòries",
-      "gloss_ca": "El mercat sota el mirall",
-      "gloss_es": "El rastro bajo el espejo",
+      "gloss": "Flea-market junk under a mirror",
+      "gloss_ca": "Parades d'andròmines sota el mirall",
+      "gloss_es": "Trastos y puestos bajo el espejo",
       "goals": [
         {
           "id": "mark",
