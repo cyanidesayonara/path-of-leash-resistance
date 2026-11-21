@@ -1,0 +1,9 @@
+## 2026-11-20 - Els Encants: the canopy and the lanes
+
+- Every stall is its own: twelve kinds of goods (furniture, odd chairs, lamps, record crates, boxes of books, clothes rails, rugs, bric-a-brac, bicycles, frames and mirrors, old radios, crockery), each with its own awning colour, cut and depth, a tarp at the back, a table, blanket or bare floor, and its seller on a folding chair. At night the stalls are packed up under roped tarps.
+- Browsers stand at the stalls and shoppers drift up and down the lane; more stall rows and an aisle of their own either side under the canopy.
+- The canopy reads overhead along both sides of the lane: tilted mirror facets catching the stalls' colours, steel joints and a bolted edge beam, and a steel fascia across each end that drips in the rain. The old blue wash over the whole lane is gone; under the roof the rain fades from the screen and the light is half the dry day's.
+- The market floor is poured concrete in slabs with stains, cracks and painted pitch lines, the mirror's light a soft warm gradient down the lane; ramps are ribbed slopes with a shadowed foot, a lit crest and yellow nosing.
+- The street at Glòries follows the weather: dry or rain-dark panots, lamp reflections and puddles only in the rain, umbrellas (eight panels, mixed colours) over the passers-by, the tram on its grass bed with plane trees and scooters, an office block, and Torre Glòries from above as a glass bullet of coloured louvres with its long shadow (no branding; lit in colours at night).
+- The auction is a roped timber dais with the lots round its rim, the auctioneer at his rostrum and rows of bidders with paddles; the chair tower rises in a stack of mismatched chairs with its long shadow.
+- Past the canopy, blocks of flats with terrats, washing and tiled roofs line Castillejos and Plaça dels Encants.
