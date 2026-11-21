@@ -130,10 +130,10 @@ const LEVEL_SUBTITLES := {
 	"santpau": "The modernista hospital gardens",
 	"sitges": "Whitewashed streets by the sea",
 	"ronda": "The cliff path above the coves",
-	"atraccions": "Rides on the Costa Daurada",
-	"encants": "The flea market at Glòries",
-	"tarragona": "Roman stones above the sea",
-	"vic": "Saturday market in the fog",
+	"atraccions": "Coasters, queues and churros",
+	"encants": "Flea-market junk under a mirror",
+	"tarragona": "Roman walls above the dusk sea",
+	"vic": "Fog, arcades and hanging fuet",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
@@ -642,10 +642,10 @@ const LEVEL_SUBTITLES_CA := {
 	"santpau": "Els jardins de l'hospital modernista",
 	"sitges": "Carrers emblanquinats vora el mar",
 	"ronda": "El camí de ronda sobre les cales",
-	"atraccions": "Un parc a la Costa Daurada",
-	"encants": "El mercat sota el mirall",
-	"tarragona": "Pedres romanes damunt el mar",
-	"vic": "Mercat del dissabte amb boira",
+	"atraccions": "Muntanyes russes, cues i xurros",
+	"encants": "Parades d'andròmines sota el mirall",
+	"tarragona": "Muralles romanes al capvespre",
+	"vic": "Boira, porxos i fuets penjats",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -695,10 +695,10 @@ const LEVEL_SUBTITLES_ES := {
 	"santpau": "Los jardines del hospital modernista",
 	"sitges": "Calles encaladas junto al mar",
 	"ronda": "El camino de ronda sobre las calas",
-	"atraccions": "Un parque en la Costa Daurada",
-	"encants": "El rastro bajo el espejo",
-	"tarragona": "Piedras romanas sobre el mar",
-	"vic": "Mercado del sábado con niebla",
+	"atraccions": "Montañas rusas, colas y churros",
+	"encants": "Trastos y puestos bajo el espejo",
+	"tarragona": "Murallas romanas al atardecer",
+	"vic": "Niebla, porches y fuet colgado",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.

@@ -18,8 +18,9 @@ extends RefCounted
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
 const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer",
-	"draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp",
+	"draw_freedom_ground", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp",
 	"name_place", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
+const SOFT_WEAR := true
 
 # the overhead culls to the camera and runs the trains: redrawn at 30 fps
 const OVERHEAD_FOLLOWS_CAMERA := true
@@ -2961,6 +2962,27 @@ static func surface(m: Node2D, p: Vector2) -> int:
 			return Surfaces.S.PAVEMENT
 		return Surfaces.S.GRASS
 	return Surfaces.S.PAVEMENT
+
+
+static func draw_freedom_ground(m: Node2D, c: Object) -> void:
+	var r: Rect2 = m._freedom_rect()
+	c.draw_rect(r, GRASS)
+	var gy := floorf(r.position.y / 40.0) * 40.0
+	while gy < r.end.y:
+		if int(absf(gy) / 40.0) % 2 == 1:
+			var y0 := maxf(gy, r.position.y)
+			var y1 := minf(gy + 40.0, r.end.y)
+			if y1 > y0:
+				c.draw_rect(Rect2(r.position.x, y0, r.size.x, y1 - y0), GRASS.lightened(0.05))
+		gy += 40.0
+	if m.has_method("_worn_patch"):
+		m._worn_patch(c, r.get_center(), 150.0, Color(0.42, 0.44, 0.30, 0.35))
+	if m.has_method("_draw_freedom_fence"):
+		m._draw_freedom_fence(c, r, false)
+	if m.has_method("_draw_freedom_benches"):
+		m._draw_freedom_benches(c, r, WOOD)
+	if m.has_method("_freedom_sign"):
+		m._freedom_sign(c, r, m.gate_text, I18n.t("w_the_picnic_lawn_off_leash"))
 
 
 static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
