@@ -400,6 +400,7 @@ const WALK_MODULES := {
 	"ronda": preload("res://systems/ronda.gd"),
 	"encants": preload("res://systems/encants.gd"),
 	"tarragona": preload("res://systems/tarragona.gd"),
+	"vic": preload("res://systems/vic.gd"),
 	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
@@ -789,6 +790,15 @@ var tarragona_balco := false
 var tarragona_balco_t := 0.0
 var tarragona_stones: Dictionary = {}
 var tarragona_sitters: Array = []
+# Vic: loose fuet, fog find-your-human, arcade column marks (systems/vic.gd)
+var vic_sausage: Dictionary = {}
+var vic_sausage_returned := 0
+var vic_sausage_eaten := 0
+var vic_found_human := 0
+var vic_lost := false
+var vic_cols_marked: Dictionary = {}
+var vic_tower_barked := false
+var vic_sniffs: Dictionary = {}
 # El Metro: the walk's state (systems/metro.gd), and its goals' tallies
 var metro: RefCounted = null
 var metro_turnstile_slipped := false
@@ -11534,6 +11544,8 @@ const FREEDOM_KINDS := {
 	"ronda": "yard",
 	"encants": "yard",
 	"tarragona": "yard",
+	# riverside meadow on the Mèder past the Roman bridge
+	"vic": "clearing",
 	# up the stairs at Sant Gos, into its little square
 	"metro": "placa",
 	# the beach where the Dimoni is burned

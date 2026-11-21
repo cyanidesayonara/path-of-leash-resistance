@@ -87,27 +87,29 @@ run_item() {
   local kind="$1" payload="$2" log="$3"
   case "${kind}" in
     test)
+      # stdin from /dev/null: Windows Godot drains the plan pipe/file the
+      # while-loop feeds, and the rest of the suite never runs
       if [ "${XVFB}" = 1 ] && [[ " ${payload} " != *" --headless "* ]]; then
         # shellcheck disable=SC2086
         LIBGL_ALWAYS_SOFTWARE=1 timeout "${TIMEOUT}" xvfb-run -a --server-args="-screen 0 1280x1024x24" \
-          bash tools/godot_ci.sh "${GODOT}" ${payload} >"${log}" 2>&1
+          bash tools/godot_ci.sh "${GODOT}" ${payload} >"${log}" 2>&1 < /dev/null
       else
         # shellcheck disable=SC2086
-        timeout "${TIMEOUT}" bash tools/godot_ci.sh "${GODOT}" ${payload} >"${log}" 2>&1
+        timeout "${TIMEOUT}" bash tools/godot_ci.sh "${GODOT}" ${payload} >"${log}" 2>&1 < /dev/null
       fi
       ;;
     walk)
       # the level's structural sanity sweep (props on their own ground,
       # goals the walk can satisfy), then 1800 frames of the walk itself
-      timeout "${TIMEOUT}" "${GODOT}" --headless --path . -- --level="${payload}" --selftest >"${log}" 2>&1
+      timeout "${TIMEOUT}" "${GODOT}" --headless --path . -- --level="${payload}" --selftest >"${log}" 2>&1 < /dev/null
       [ $? -ne 124 ] || return 1
       grep -q 'SELFTEST OK' "${log}" && ! grep -q 'SELFTEST FAIL' "${log}" && no_errors "${log}" || return 1
-      timeout "${TIMEOUT}" "${GODOT}" --headless --path . --quit-after 1800 -- --level="${payload}" >>"${log}" 2>&1
+      timeout "${TIMEOUT}" "${GODOT}" --headless --path . --quit-after 1800 -- --level="${payload}" >>"${log}" 2>&1 < /dev/null
       [ $? -ne 124 ] && no_errors "${log}"
       ;;
     smoke)
       # shellcheck disable=SC2086
-      timeout "${TIMEOUT}" "${GODOT}" --headless --path . --quit-after ${payload%% *} -- ${payload#* } >"${log}" 2>&1
+      timeout "${TIMEOUT}" "${GODOT}" --headless --path . --quit-after ${payload%% *} -- ${payload#* } >"${log}" 2>&1 < /dev/null
       [ $? -ne 124 ] && no_errors "${log}"
       ;;
     autowalk)
@@ -117,7 +119,7 @@ run_item() {
       local v="${payload}"
       [ "${v}" = plain ] && v=""
       # shellcheck disable=SC2086
-      timeout "${TIMEOUT}" "${GODOT}" --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk ${v} >"${log}" 2>&1
+      timeout "${TIMEOUT}" "${GODOT}" --headless --fixed-fps 60 --path . --quit-after 12000 -- --level=street --autowalk ${v} >"${log}" 2>&1 < /dev/null
       [ $? -ne 124 ] && ! grep -qE 'SCRIPT ERROR|Parse Error' "${log}" &&
         grep -q 'AUTOWALK FINISHED' "${log}" && ! grep -q 'AUTOWALK STALL' "${log}"
       ;;

@@ -52,6 +52,7 @@ const CLOCK_TARGETS := {
 	"ronda": 185,       # cliff-path wind and two headland turns
 	"encants": 175,     # flea-market lanes and a spill dodge
 	"tarragona": 190,   # amphitheatre rim and old-town pinch
+	"vic": 175,         # fog market, cathedral and the Mèder bridge
 	"metro": 185,    # the turnstiles, the surge and one stop on the train
 	"sarria": 175,
 	"angels": 180,
@@ -103,6 +104,7 @@ const JAMON_POS := {
 	"ronda": Vector2(490.0, -2450.0),
 	"encants": Vector2(500.0, -2550.0),
 	"tarragona": Vector2(600.0, -2440.0),
+	"vic": Vector2(520.0, -2680.0),
 	"metro": Vector2(846.0, -4330.0),   # by the platform edge at Sant Gos, past the last pillar
 	"sarria": Vector2(300.0, -3010.0),
 	"angels": Vector2(380.0, -2950.0),
