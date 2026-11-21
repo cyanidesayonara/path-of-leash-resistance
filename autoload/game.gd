@@ -292,7 +292,7 @@ const CAMPAIGN_SKY := {
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "station", "carmel", "reial", "cremada", "forum", "diagonal", "blai", "aigues", "gracia", "horta", "molina", "port", "espanya", "santpau", "poble", "sitges", "aeroport", "site", "ronda", "partit", "scrap", "montserrat", "encants", "tarragona", "vic", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "station", "carmel", "reial", "cremada", "forum", "diagonal", "blai", "aigues", "gracia", "horta", "molina", "port", "espanya", "santpau", "poble", "sitges", "atraccions", "aeroport", "site", "ronda", "partit", "scrap", "montserrat", "encants", "tarragona", "vic", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
