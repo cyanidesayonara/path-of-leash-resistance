@@ -115,6 +115,28 @@ func _run() -> void:
 	_check(not Vic.is_lamp(m, Vic.ARCADE_COLS[0]), "arcade column is not a lamp")
 	_check(Vic.tree_kind(m, Vic.PLANE_TREES[0]) == m.TREE_PLANE, "plane tree_kind")
 
+	# After dark every stall keeps its lantern, over the street's own lamps
+	var lights: Array[Vector3] = Vic.night_lights(m)
+	var street_lights: Array[Vector3] = m.street_night_lights()
+	_check(lights.size() == street_lights.size() + Vic.STALLS.size(),
+		"night_lights is the street's lamps plus one lantern a stall (%d)" % lights.size())
+	for s: Vector2 in Vic.STALLS:
+		var lit := false
+		for l: Vector3 in lights:
+			if Vector2(l.x, l.y).distance_to(s) < 40.0 and l.z < m.NIGHT_LAMP_R:
+				lit = true
+		_check(lit, "stall %s has its lantern after dark" % [s])
+
+	# A ground band over the market's south end that stops short of its north
+	# end still lays every stall in it (the overlap test once ran backwards)
+	Vic._recs.clear()
+	Vic._recs_key = []
+	Vic.draw_cross_section(m, load("res://systems/shape_batch.gd").new(), 0.0, 0.0, 0.0, -1460.0, -900.0)
+	for i in range(Vic.STALLS.size()):
+		var sy: float = Vic.STALLS[i].y
+		if sy > -1460.0 and sy < -900.0:
+			_check(Vic._recs.has(["stall", i]), "stall %d at y %d is laid in a band short of the market's north end" % [i, sy])
+
 	# Solids match drawn
 	var drawn_solids: Array[Rect2] = Vic.solids(m)
 	var built_solids: Array = LevelBuild.level_solid_rects(m)
