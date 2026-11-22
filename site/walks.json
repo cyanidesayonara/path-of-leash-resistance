@@ -649,6 +649,21 @@
       }
     ]
   },
+  "atraccions": {
+    "about": "A theme park of its own invention on the Costa Daurada, on a bright day: through the ticket gates, past a white fishing village, a boardwalk Wild West, a jungle with a log flume beside the path and the big coaster's loop. When the flume plunges, pull your human to the dry side before the wave crosses the walkway, then run free on the picnic lawn.",
+    "shots": [
+      {
+        "file": "shot-atraccions.jpg",
+        "caption": "The log flume splashes the path in Selva dels Llorers",
+        "alt": "Les Atraccions: the log flume splashes across the jungle path as the dog leads her human."
+      },
+      {
+        "file": "shot-atraccions-2.jpg",
+        "caption": "Off the leash in Jardí del Pícnic",
+        "alt": "Les Atraccions: the dog runs free on the picnic lawn of Jardí del Pícnic."
+      }
+    ]
+  },
   "aeroport": {
     "about": "Out along the gleaming glass pier of Terminal 1 at El Prat, gliding on moving walkways past boarding rushes, giant chocolates and spinning baggage carousels toward La Cabina. Trigger the gate alarm and airport security keeps pace behind you the whole pier back.",
     "shots": [
@@ -749,6 +764,51 @@
       }
     ]
   },
+  "encants": {
+    "about": "Barcelona's old flea market at Glòries on a rainy morning: lanes of stalls heaped with junk, an auction ring, and a seller's tower of chairs that will not stay up. Steal a sock off a stall and bring it to your human on the way to Plaça dels Encants.",
+    "shots": [
+      {
+        "file": "shot-encants.jpg",
+        "caption": "The auction ring among the flea-market stalls",
+        "alt": "Els Encants: the dog leads her human past the auction ring and flea-market stalls in the rain."
+      },
+      {
+        "file": "shot-encants-2.jpg",
+        "caption": "Off the leash in Plaça dels Encants",
+        "alt": "Els Encants: the dog runs free among the trees of Plaça dels Encants in the rain."
+      }
+    ]
+  },
+  "tarragona": {
+    "about": "Roman Tarragona at dusk: from the Balcó del Mediterrani's railing above the sea, round the rim of the amphitheatre, up the Rambla Nova past the casteller monument and a practice in the plaça, through the Roman walls to the cathedral square. Mark the Roman stones and keep clear while the tower is crowned.",
+    "shots": [
+      {
+        "file": "shot-tarragona.jpg",
+        "caption": "The casteller monument on the Rambla Nova",
+        "alt": "Tarragona: the dog leads her human past the casteller monument on the Rambla Nova at dusk."
+      },
+      {
+        "file": "shot-tarragona-2.jpg",
+        "caption": "Off the leash in Plaça de la Seu",
+        "alt": "Tarragona: the dog runs free in Plaça de la Seu below the cathedral at dusk."
+      }
+    ]
+  },
+  "vic": {
+    "about": "The inland market town on a winter morning in thick fog: narrow stone streets into the arcades of the Mercadal, where fuet hangs from the stalls, past the cathedral's bell tower and over the old bridge on the Mèder. When a fuet drops and rolls, carry it back to its stall, and find your human again in the fog.",
+    "shots": [
+      {
+        "file": "shot-vic.jpg",
+        "caption": "A fuet coming loose in the Mercadal",
+        "alt": "Vic: a fuet comes loose at a market stall in the foggy Mercadal."
+      },
+      {
+        "file": "shot-vic-2.jpg",
+        "caption": "Off the leash in Prat de Vic",
+        "alt": "Vic: the dog runs free on the foggy meadow of Prat de Vic."
+      }
+    ]
+  },
   "raval": {
     "about": "Streetlights and tall palms down the broad Rambla del Raval, where a giant plump bronze cat ordinarily naps peacefully on its plinth. Here El Gat springs down to prowl the promenade, scattering pigeons and leaping from awnings until a hard leash fling brings him back to earth.",
     "shots": [
@@ -766,21 +826,6 @@
         "file": "shot-raval-3.jpg",
         "caption": "The open square past the plinth",
         "alt": "Rambla del Raval: the night plaça at the north end of the rambla."
-      }
-    ]
-  },
-  "encants": {
-    "about": "Barcelona's old flea market at Glòries on a rainy morning: lanes of stalls heaped with junk, an auction ring, and a seller's tower of chairs that will not stay up. Steal a sock off a stall and bring it to your human on the way to Plaça dels Encants.",
-    "shots": [
-      {
-        "file": "shot-encants.jpg",
-        "caption": "The auction ring among the flea-market stalls",
-        "alt": "Els Encants: the dog leads her human past the auction ring and flea-market stalls in the rain."
-      },
-      {
-        "file": "shot-encants-2.jpg",
-        "caption": "Off the leash in Plaça dels Encants",
-        "alt": "Els Encants: the dog runs free among the trees of Plaça dels Encants in the rain."
       }
     ]
   }
