@@ -60,7 +60,12 @@ Exactly 51 walks, no more, no less:
 Dropped on 2026-11-16: La Revetlla, Els Terrats, Les Tortugues as a boss.
 Bench: Vallvidrera's funicular. El Delta stays rejected.
 
-### The order (draft, to be locked before the save reset)
+### The order
+
+Applied to `Game.CAROUSEL` on 2026-11-23 (gates version 5), with walk 41 left
+for Girona; until it lands the walks between El Port and the Raval are split
+in two chapters by `Game.chapters_of`. Locked, with the save reset, once
+Girona is in.
 
 New walks in bold; (C) chase, (B) boss.
 

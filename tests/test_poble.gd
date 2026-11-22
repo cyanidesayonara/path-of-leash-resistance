@@ -186,7 +186,7 @@ func _run() -> void:
 	_check(String(game.LEVEL_SUBTITLES_ES.get("poble", "")) == "Un pueblo amurallado de copias", "ES subtitle matches")
 	_check(int(game.STAR_GATE.get("poble", -1)) == 46, "STAR_GATE['poble'] is 46")
 	_check(int(game.STAR_GATE.get("espanya", -1)) == 45 and int(game.STAR_GATE.get("site", -1)) == 47, "neighboring star gates unrenumbered (45, 47)")
-	_check(String(game.CHASE_GATE.get("poble", "")) == "boars", "poble gated by boars")
+	_check(String(game.CHASE_GATE.get("poble", "")) == "molina", "poble gated by molina")
 	var sky: Array = game.CAMPAIGN_SKY.get("poble", [])
 	_check(sky == ["clear", "day"], "CAMPAIGN_SKY['poble'] is ['clear', 'day']")
 	_check(game.WALKS_SINCE_GATES.has("poble"), "WALKS_SINCE_GATES has poble")

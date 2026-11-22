@@ -112,7 +112,7 @@ func _run() -> void:
 	_check(game.LEVEL_NAMES.get("espanya") == "Plaça d'Espanya", "LEVEL_NAMES is Plaça d'Espanya")
 	_check(game.LEVEL_SUBTITLES.has("espanya"), "LEVEL_SUBTITLES has espanya")
 	_check(game.STAR_GATE.get("espanya") == 45, "STAR_GATE for espanya is 45")
-	_check(game.CHASE_GATE.get("espanya") == "boars", "CHASE_GATE for espanya is boars")
+	_check(game.CHASE_GATE.get("espanya") == "molina", "CHASE_GATE for espanya is molina")
 
 	# 2. Exact 15 goals roster
 	var goals_mod: GDScript = load("res://systems/goals.gd")

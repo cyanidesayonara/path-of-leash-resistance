@@ -56,9 +56,9 @@ func _run() -> void:
 	var ci: int = game.CAROUSEL.find("cremada")
 	# one on for each of Sarrià (before El Bosc) and El Metro (after La
 	# Superilla); the 51-walk reorder puts the chases back on every fifth walk
-	_check(ci == 27, "the chase at campaign walk 27: %d" % ci)
-	_check(game.CAROUSEL[ci - 1] == "reial", "after Plaça Reial")
-	_check(int(game.STAR_GATE["cremada"]) == 36, "opens at 36 stars")
+	_check(ci == 25, "the chase at campaign walk 25: %d" % ci)
+	_check(game.CAROUSEL[ci - 1] == "carmel", "after Els Búnquers")
+	_check(int(game.STAR_GATE["cremada"]) == 33, "opens at 33 stars")
 	_check(String(game.CHASE_GATE.get("cremada", "")) == "boars", "after Els Senglars")
 	_check(String(game.LEVEL_NAMES["cremada"]) == "La Cremada", "named La Cremada")
 	_check(game.CAMPAIGN_SKY["cremada"] == ["clear", "night"], "a clear night")

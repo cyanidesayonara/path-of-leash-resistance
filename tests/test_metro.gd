@@ -59,7 +59,7 @@ func _run() -> void:
 	_check(game.LEVELS.has("metro"), "in LEVELS")
 	_check(game.LEVELS.find("metro") == game.LEVELS.find("superilla") + 1, "in LEVELS right after La Superilla")
 	_check(game.CAROUSEL.find("metro") == game.CAROUSEL.find("superilla") + 1, "in CAROUSEL right after La Superilla")
-	_check(int(game.STAR_GATE.get("metro", -1)) == int(game.STAR_GATE["station"]), "opens at L'Estació's star gate")
+	_check(int(game.STAR_GATE.get("metro", -1)) > int(game.STAR_GATE["superilla"]), "opens after La Superilla's star gate")
 	_check(String(game.CHASE_GATE.get("metro", "")) == String(game.CHASE_GATE["superilla"]), "in La Superilla's chase tier")
 	_check(String(game.LEVEL_NAMES["metro"]) == "El Metro", "named El Metro")
 	_check(game.LEVEL_SUBTITLES.has("metro") and game.LEVEL_SUBTITLES_CA.has("metro") and game.LEVEL_SUBTITLES_ES.has("metro"),

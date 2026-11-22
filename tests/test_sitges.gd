@@ -96,7 +96,7 @@ func _run() -> void:
 	_check(game.LEVELS.has("sitges") and game.LEVELS.find("sitges") > game.LEVELS.find("santpau"), "sitges in LEVELS after santpau")
 	_check(game.CAROUSEL.find("sitges") == game.CAROUSEL.find("poble") + 1, "in CAROUSEL right after poble")
 	_check(int(game.STAR_GATE["sitges"]) == 47, "STAR_GATE is 47")
-	_check(String(game.CHASE_GATE.get("sitges", "")) == "cremada", "CHASE_GATE is cremada")
+	_check(String(game.CHASE_GATE.get("sitges", "")) == "molina", "CHASE_GATE is molina")
 	_check(game.CAMPAIGN_SKY["sitges"] == ["wind", "day"], "CAMPAIGN_SKY is wind/day")
 	_check(String(game.LEVEL_NAMES["sitges"]) == "Sitges", "named Sitges")
 	_check(String(game.LEVEL_SUBTITLES["sitges"]) == "Whitewashed streets by the sea", "subtitle The town by the sea")

@@ -36,36 +36,36 @@
     [
       "superilla",
       "metro",
-      "station",
       "carmel",
-      "reial",
       "cremada",
+      "station",
+      "reial",
       "forum",
-      "diagonal",
-      "blai",
       "aigues",
-      "gracia",
-      "horta",
-      "molina",
+      "aeroport",
       "port"
     ],
     [
+      "diagonal",
+      "blai",
+      "horta",
+      "molina",
       "espanya",
       "santpau",
       "poble",
       "sitges",
       "atraccions",
-      "aeroport",
-      "site",
-      "ronda"
+      "site"
     ],
     [
+      "ronda",
       "partit",
-      "scrap",
       "montserrat",
       "encants",
       "tarragona",
       "vic",
+      "scrap",
+      "gracia",
       "raval"
     ]
   ],
@@ -343,9 +343,9 @@
   "walks": {
     "aeroport": {
       "carry_text": "",
-      "chapter": 4,
-      "chase_gate": "gracia",
-      "chase_gate_name": "Festa de Gràcia",
+      "chapter": 3,
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
       "chase_warning": "AIRPORT SECURITY! RUN FOR IT!",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -426,14 +426,14 @@
       "name": "L'Aeroport",
       "prize_text": "Make off with the giant duty-free chocolate box",
       "sign_material": "bagtags",
-      "star_gate": 47,
+      "star_gate": 39,
       "weather": "clear"
     },
     "aigues": {
       "carry_text": "",
       "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -514,7 +514,7 @@
       "name": "La Carretera de les Aigües",
       "prize_text": "Nab the runner's banana off the mirador bench",
       "sign_material": "pinecones",
-      "star_gate": 39,
+      "star_gate": 38,
       "weather": "clear"
     },
     "angels": {
@@ -608,8 +608,8 @@
     "atraccions": {
       "carry_text": "",
       "chapter": 4,
-      "chase_gate": "cremada",
-      "chase_gate_name": "La Cremada",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 185,
       "clock_text": "3:05",
@@ -959,9 +959,9 @@
     },
     "blai": {
       "carry_text": "",
-      "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chapter": 4,
+      "chase_gate": "aeroport",
+      "chase_gate_name": "L'Aeroport",
       "chase_warning": "",
       "clock_target": 185,
       "clock_text": "3:05",
@@ -1042,7 +1042,7 @@
       "name": "Carrer de Blai",
       "prize_text": "Lift the tortilla pintxo off the bar's window ledge",
       "sign_material": "pintxos",
-      "star_gate": 39,
+      "star_gate": 41,
       "weather": "clear"
     },
     "boars": {
@@ -1218,7 +1218,7 @@
       "name": "Els Búnquers",
       "prize_text": "Steal the bravas off the sunset picnic blanket",
       "sign_material": "rubble",
-      "star_gate": 33,
+      "star_gate": 31,
       "weather": "clear"
     },
     "ciutadella": {
@@ -1394,14 +1394,14 @@
       "name": "La Cremada",
       "prize_text": "Grab the dropped sparkler",
       "sign_material": "casings",
-      "star_gate": 36,
+      "star_gate": 33,
       "weather": "clear"
     },
     "diagonal": {
       "carry_text": "",
-      "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chapter": 4,
+      "chase_gate": "aeroport",
+      "chase_gate_name": "L'Aeroport",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -1482,7 +1482,7 @@
       "name": "La Diagonal",
       "prize_text": "Snatch the bocadillo off the bench",
       "sign_material": "papers",
-      "star_gate": 38,
+      "star_gate": 40,
       "weather": "clear"
     },
     "eixample": {
@@ -1576,8 +1576,8 @@
     "encants": {
       "carry_text": "Steal a sock off a stall and bring it to your human",
       "chapter": 5,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "montserrat",
+      "chase_gate_name": "Montserrat",
       "chase_warning": "",
       "clock_target": 175,
       "clock_text": "2:55",
@@ -1658,14 +1658,14 @@
       "name": "Els Encants",
       "prize_text": "Nab the churro from the snack stall",
       "sign_material": "buttons",
-      "star_gate": 50,
+      "star_gate": 49,
       "weather": "rain"
     },
     "espanya": {
       "carry_text": "",
       "chapter": 4,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -1752,8 +1752,8 @@
     "forum": {
       "carry_text": "",
       "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -1839,9 +1839,9 @@
     },
     "gracia": {
       "carry_text": "",
-      "chapter": 3,
-      "chase_gate": "cremada",
-      "chase_gate_name": "La Cremada",
+      "chapter": 5,
+      "chase_gate": "montserrat",
+      "chase_gate_name": "Montserrat",
       "chase_warning": "CORREFOC! RUN FROM THE FIRE DEVILS",
       "clock_target": 175,
       "clock_text": "2:55",
@@ -1922,7 +1922,7 @@
       "name": "Festa de Gràcia",
       "prize_text": "Claim the festival award banner before the plaça",
       "sign_material": "tickets",
-      "star_gate": 40,
+      "star_gate": 52,
       "weather": "clear"
     },
     "guell": {
@@ -2015,9 +2015,9 @@
     },
     "horta": {
       "carry_text": "",
-      "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chapter": 4,
+      "chase_gate": "aeroport",
+      "chase_gate_name": "L'Aeroport",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -2098,7 +2098,7 @@
       "name": "El Laberint d'Horta",
       "prize_text": "Pinch the gardener's bocadillo off his wheelbarrow",
       "sign_material": "topiary",
-      "star_gate": 41,
+      "star_gate": 42,
       "weather": "drizzle"
     },
     "llevant": {
@@ -2367,7 +2367,7 @@
     },
     "molina": {
       "carry_text": "",
-      "chapter": 3,
+      "chapter": 4,
       "chase_gate": "aeroport",
       "chase_gate_name": "L'Aeroport",
       "chase_warning": "THE GROOMER'S BRAKE IS OFF! RUN!",
@@ -2450,7 +2450,7 @@
       "name": "La Molina",
       "prize_text": "Snatch the botifarra off the xalet's grill",
       "sign_material": "snowflakes",
-      "star_gate": 42,
+      "star_gate": 43,
       "weather": "snow"
     },
     "montjuic": {
@@ -2544,8 +2544,8 @@
     "montserrat": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "aeroport",
-      "chase_gate_name": "L'Aeroport",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "WILD GOATS! WATCH FOR BOULDERS",
       "clock_target": 185,
       "clock_text": "3:05",
@@ -2626,7 +2626,7 @@
       "name": "Montserrat",
       "prize_text": "Nab the jar of honey and mató",
       "sign_material": "rosemary",
-      "star_gate": 52,
+      "star_gate": 48,
       "weather": "clear"
     },
     "neteja": {
@@ -2896,8 +2896,8 @@
     "partit": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 175,
       "clock_text": "2:55",
@@ -2978,14 +2978,14 @@
       "name": "Dia de Partit",
       "prize_text": "Steal the sausage from under the police horses",
       "sign_material": "scarf",
-      "star_gate": 48,
+      "star_gate": 47,
       "weather": "clear"
     },
     "poble": {
       "carry_text": "",
       "chapter": 4,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -3072,8 +3072,8 @@
     "port": {
       "carry_text": "",
       "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "aeroport",
+      "chase_gate_name": "L'Aeroport",
       "chase_warning": "",
       "clock_target": 175,
       "clock_text": "2:55",
@@ -3154,7 +3154,7 @@
       "name": "El Port",
       "prize_text": "Snatch the prize catch from the auction stall",
       "sign_material": "rope",
-      "star_gate": 43,
+      "star_gate": 39,
       "weather": "clear"
     },
     "rain": {
@@ -3336,8 +3336,8 @@
     "reial": {
       "carry_text": "",
       "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
       "chase_warning": "",
       "clock_target": 170,
       "clock_text": "2:50",
@@ -3418,14 +3418,14 @@
       "name": "Plaça Reial",
       "prize_text": "Nab the hot churros off the terrace table",
       "sign_material": "fronds",
-      "star_gate": 35,
+      "star_gate": 36,
       "weather": "clear"
     },
     "ronda": {
       "carry_text": "",
-      "chapter": 4,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chapter": 5,
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 185,
       "clock_text": "3:05",
@@ -3512,8 +3512,8 @@
     "santpau": {
       "carry_text": "",
       "chapter": 4,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -3688,8 +3688,8 @@
     "scrap": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "montserrat",
+      "chase_gate_name": "Montserrat",
       "chase_warning": "",
       "clock_target": 175,
       "clock_text": "2:55",
@@ -3770,14 +3770,14 @@
       "name": "La Ferralla",
       "prize_text": "Steal the bone from under the guard's nose",
       "sign_material": "plate",
-      "star_gate": 49,
+      "star_gate": 50,
       "weather": "clear"
     },
     "site": {
       "carry_text": "",
       "chapter": 4,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 170,
       "clock_text": "2:50",
@@ -3864,8 +3864,8 @@
     "sitges": {
       "carry_text": "",
       "chapter": 4,
-      "chase_gate": "cremada",
-      "chase_gate_name": "La Cremada",
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
       "chase_warning": "",
       "clock_target": 180,
       "clock_text": "3:00",
@@ -4040,8 +4040,8 @@
     "station": {
       "carry_text": "",
       "chapter": 3,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
       "chase_warning": "",
       "clock_target": 170,
       "clock_text": "2:50",
@@ -4122,7 +4122,7 @@
       "name": "L'Estació",
       "prize_text": "Grab the sandwich off the moving walkway",
       "sign_material": "studs",
-      "star_gate": 31,
+      "star_gate": 35,
       "weather": "clear"
     },
     "street": {
@@ -4304,8 +4304,8 @@
     "tarragona": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "montserrat",
+      "chase_gate_name": "Montserrat",
       "chase_warning": "",
       "clock_target": 190,
       "clock_text": "3:10",
@@ -4779,8 +4779,8 @@
     "vic": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "boars",
-      "chase_gate_name": "Els Senglars",
+      "chase_gate": "montserrat",
+      "chase_gate_name": "Montserrat",
       "chase_warning": "",
       "clock_target": 175,
       "clock_text": "2:55",

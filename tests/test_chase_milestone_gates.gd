@@ -44,16 +44,16 @@ func _run() -> void:
 	for lv in game.LEVELS:
 		game.records[lv] = game._default_level_record()
 
-	_check(game.GATES_VERSION == 4, "gates version is 4")
+	_check(game.GATES_VERSION == 5, "gates version is 5")
 	_check(game.chase_gate_needed("barri") == "", "barri has no chase gate")
 	_check(game.chase_gate_needed("neteja") == "", "neteja, the first chase, has no chase gate")
 	_check(game.chase_gate_needed("besos") == "neteja", "besos requires neteja completed")
 	_check(game.chase_gate_needed("market") == "neteja", "market requires neteja completed")
 	_check(game.chase_gate_needed("vet") == "besos", "vet requires besos completed")
 	_check(game.chase_gate_needed("spook") == "vet", "spook requires vet completed")
-	_check(game.chase_gate_needed("site") == "boars", "site requires boars completed")
-	_check(game.chase_gate_needed("gracia") == "cremada", "gracia requires cremada completed")
-	_check(game.chase_gate_needed("aeroport") == "gracia", "aeroport requires gracia completed")
+	_check(game.chase_gate_needed("site") == "molina", "site requires molina completed")
+	_check(game.chase_gate_needed("gracia") == "montserrat", "gracia requires montserrat completed")
+	_check(game.chase_gate_needed("aeroport") == "cremada", "aeroport requires cremada completed")
 	_check(game.chase_gate_needed("raval") == "gracia", "raval requires gracia completed")
 
 	# 2. Check lock text formatting
@@ -167,16 +167,30 @@ func _run() -> void:
 	for i: int in range(16):
 		game.records[game.LEVELS[i]].stars = 3
 	game.records[game.LEVELS[16]].stars = 2
-	_check(not game.is_unlocked("gracia"), "without grandfathering, Gracia waits for La Cremada")
+	_check(not game.is_unlocked("gracia"), "without grandfathering, Gracia waits for Montserrat")
 	game._grandfather_from(game.V3_STAR_GATE, game.V3_CHASE_GATE)
 	_check(game.is_unlocked("gracia"), "a v3 save with 50 stars keeps Festa de Gracia open")
 	_check(not game.is_unlocked("aeroport"), "a v3 save with 50 stars without La Cremada keeps L'Aeroport shut")
 	game.gate_open.clear()
 	game.records[game.LEVELS[16]].stars = 3
 	game.records["cremada"].bones = 9
-	_check(not game.is_unlocked("aeroport"), "without grandfathering, L'Aeroport waits for Festa de Gracia")
+	_check(game.is_unlocked("aeroport"), "with La Cremada walked, L'Aeroport is open under the roadmap order")
 	game._grandfather_from(game.V3_STAR_GATE, game.V3_CHASE_GATE)
 	_check(game.is_unlocked("aeroport"), "a v3 save with 51 stars and La Cremada completed keeps L'Aeroport open")
+	game.gate_open.clear()
+
+	# 9b. A save from before the roadmap order keeps what its gates had open:
+	# Festa de Gracia at 40 stars after La Cremada, though it now closes the
+	# chase run at walk 50 behind Montserrat
+	for lv in game.LEVELS:
+		game.records[lv] = game._default_level_record()
+	for i: int in range(14):
+		game.records[game.LEVELS[i]].stars = 3
+	game.records["cremada"].bones = 9
+	_check(not game.is_unlocked("gracia"), "under the roadmap order, Gracia waits for Montserrat")
+	game._grandfather_from(game.V4_STAR_GATE, game.V4_CHASE_GATE)
+	_check(game.is_unlocked("gracia"), "a v4 save with 42 stars and La Cremada walked keeps Festa de Gracia open")
+	_check(not game.is_unlocked("montserrat"), "a v4 save below Montserrat's old 52 stars keeps it shut")
 	game.gate_open.clear()
 
 	# 10. Free play mode opens all walks
