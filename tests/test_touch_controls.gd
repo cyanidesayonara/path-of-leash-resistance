@@ -151,6 +151,7 @@ func _run() -> void:
 	_check(Input.is_action_pressed("goals"), "tapping the goals card presses goals")
 	_tap(t, gc, false)
 	_check(not Input.is_action_pressed("goals"), "and letting go releases it")
+	await _stick_checks(main, t)
 	# Restart reloads the scene before the finger comes up. The outgoing
 	# controls must release their synthetic press or the next R cannot become
 	# just_pressed in the new scene.
@@ -166,6 +167,68 @@ func _run() -> void:
 	t.free()
 	_check(not Input.is_action_pressed("restart"), "scene teardown releases restart for the next tap")
 	_finish()
+
+
+func _drag(t: Control, at: Vector2) -> void:
+	var e := InputEventScreenDrag.new()
+	e.index = 3
+	e.position = at
+	t._input(e)
+
+
+func _held() -> Array:
+	var out := []
+	for a in ["move_left", "move_right", "move_up", "move_down"]:
+		if Input.is_action_pressed(a):
+			out.append(a)
+	return out
+
+
+# The stick in the menus: touch-down pressed all four directions at strength
+# zero, so every tap stepped the menu down (or right) and no drag could step
+# it again. A menu takes the stick as a d-pad now; a walk keeps it analog.
+func _stick_checks(main: Node2D, t: Control) -> void:
+	var MenuFlow := load("res://hud/menu_flow.gd")
+	var vs: Vector2 = t.get_viewport_rect().size
+	var at := Vector2(vs.x * 0.25, vs.y * 0.55)
+	main.started = false
+	main.frozen = false
+	main.paused = false
+	main.main_idx = 0
+	_tap(t, at, true)
+	_check(_held().is_empty(), "menu: a tap on the stick presses no direction (%s)" % [_held()])
+	MenuFlow.tick_main(main)
+	_check(int(main.main_idx) == 0, "menu: a tap does not move the selection")
+	_drag(t, at + Vector2(4.0, 20.0))
+	_check(_held().is_empty(), "menu: a small nudge presses nothing (%s)" % [_held()])
+	await process_frame
+	_drag(t, at + Vector2(12.0, 60.0))
+	_check(_held() == ["move_down"], "menu: pulled down, only down is held (%s)" % [_held()])
+	MenuFlow.tick_main(main)
+	_check(int(main.main_idx) == 1, "menu: pulling down steps the selection down")
+	_drag(t, at + Vector2(10.0, 36.0))
+	_check(_held() == ["move_down"], "menu: easing off a little keeps down held")
+	await process_frame
+	_drag(t, at + Vector2(0.0, -60.0))
+	_check(_held() == ["move_up"], "menu: swung up through the middle, only up is held (%s)" % [_held()])
+	MenuFlow.tick_main(main)
+	_check(int(main.main_idx) == 0, "menu: pulling up steps the selection back up")
+	_drag(t, at + Vector2(2.0, 8.0))
+	_check(_held().is_empty(), "menu: back to the middle lets go")
+	_drag(t, at + Vector2(-70.0, 25.0))
+	_check(_held() == ["move_left"], "menu: a pull mostly left is left alone (%s)" % [_held()])
+	_tap(t, at + Vector2(-70.0, 25.0), false)
+	_check(_held().is_empty(), "menu: lifting the thumb lets go")
+	# walking: analog, nothing on touch-down, the pull's strength after
+	main.started = true
+	_tap(t, at, true)
+	_check(_held().is_empty(), "walk: touch-down presses no direction (%s)" % [_held()])
+	_drag(t, at + Vector2(45.0, 0.0))
+	_check(_held() == ["move_right"], "walk: pulled right, only right is held (%s)" % [_held()])
+	_check(absf(Input.get_action_strength("move_right") - 0.5) < 0.01, "walk: half a pull is half strength")
+	_tap(t, at + Vector2(45.0, 0.0), false)
+	_check(_held().is_empty(), "walk: lifting the thumb lets go")
+	await process_frame
 
 
 func _finish() -> void:
