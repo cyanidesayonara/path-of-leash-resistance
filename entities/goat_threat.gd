@@ -25,6 +25,12 @@ const GOAT_HORN := Color(0.50, 0.44, 0.38)
 const GOAT_HORN_TIP := Color(0.24, 0.21, 0.20)
 const GOAT_HORN_RIDGE := Color(0.20, 0.17, 0.17, 0.75)
 const GOAT_EYE := Color(0.98, 0.84, 0.16)
+# the rim of a charging goat's eye, film and walk alike
+const GOAT_GLARE := Color(0.84, 0.16, 0.10)
+# the boulders: the mountain's rock in its shade, so they stand off the paths
+const BOULDER := Color(0.52, 0.44, 0.44)
+const BOULDER_LIT := Color(0.72, 0.64, 0.60)
+const BOULDER_DEEP := Color(0.32, 0.26, 0.29)
 const DUST_COL := Color(0.84, 0.78, 0.70)
 const INK := Color(0.05, 0.04, 0.06)
 # the line, west to east: [place across the catch line (-1..1), scale, how
@@ -330,9 +336,11 @@ func _draw_boulders(b: ShapeBatch) -> void:
 		var r := BOULDER_R * 0.56 * (1.0 + 0.22 * hop)
 		b.circle(at_p + Vector2(5.0, 6.0) * (1.0 + hop * 2.2), r * (1.0 - 0.2 * hop), Color(0.06, 0.05, 0.08, 0.34))
 		var c := at_p + Vector2(0.0, -hop * 16.0)
-		b.circle(c, r + 2.0, INK)
-		b.circle(c, r, Montserrat.ROCK)
-		b.circle(c + Vector2(-0.22, -0.28) * r, r * 0.72, Montserrat.ROCK_LIT)
+		b.circle(c, r + 2.5, INK)
+		b.circle(c, r, BOULDER)
+		b.circle(c + Vector2(0.18, 0.20) * r, r * 0.80, BOULDER_DEEP)
+		b.circle(c + Vector2(-0.16, -0.20) * r, r * 0.68, BOULDER)
+		b.circle(c + Vector2(-0.32, -0.38) * r, r * 0.30, BOULDER_LIT)
 		var spin := float(bl.get("t", 0.0)) * 7.0
 		for d in range(6):
 			var pa := spin + float(d) * 1.05
@@ -403,16 +411,19 @@ func _goat(b: ShapeBatch, nose: Vector2, k: float, phase: float, lead: bool, ton
 	# the eyes: yellow, a black slot across each, the brows down toward the nose
 	for s: float in [-1.0, 1.0]:
 		var e := c + Vector2(s * 8.5, 33.0) * k
-		b.circle(e, 4.4 * k, INK)
+		b.circle(e, 5.4 * k, INK)
+		b.circle(e, 4.4 * k, GOAT_GLARE)
 		b.circle(e, 3.4 * k, GOAT_EYE)
-		b.line(e + Vector2(-2.6, 0) * k, e + Vector2(2.6, 0) * k, INK, 1.7 * k)
-		b.line(c + Vector2(s * 14.5, 27.0) * k, c + Vector2(s * 4.0, 31.5) * k, INK, 2.8 * k)
+		b.line(e + Vector2(-2.8, 0) * k, e + Vector2(2.8, 0) * k, INK, 2.0 * k)
+		b.circle(e + Vector2(-1.2, -1.2) * k, 0.9 * k, Color(1, 1, 1))
+		b.polygon(PackedVector2Array([c + Vector2(s * 15.5, 26.0) * k, c + Vector2(s * 3.0, 31.0) * k,
+			c + Vector2(s * 4.0, 33.5) * k, c + Vector2(s * 15.0, 29.0) * k]), INK)
 	# a snort off the nose now and then
-	var sn := fposmod(phase * 0.07 + tone, 1.0)
-	if sn < 0.4:
+	var sn := fposmod(phase * 0.09 + tone, 1.0)
+	if sn < 0.55:
 		for s: float in [-1.0, 1.0]:
-			b.circle(nose + Vector2(s * (4.0 + sn * 16.0), 6.0 + sn * 26.0) * k, (3.0 + sn * 12.0) * k,
-				Color(0.96, 0.96, 0.96, 0.5 * (1.0 - sn / 0.4)))
+			b.circle(nose + Vector2(s * (4.0 + sn * 18.0), 6.0 + sn * 30.0) * k, (3.5 + sn * 13.0) * k,
+				Color(0.96, 0.96, 0.96, 0.62 * (1.0 - sn / 0.55)))
 
 
 # one horn from its root on the brow: out to the side, back along the neck

@@ -238,6 +238,7 @@ static func _herd(c: CanvasItem, t: float, t_real: float) -> void:
 		var rx := lerpf(CRAG_X + 80.0, bx + 250.0, bo)
 		var hop := absf(sin(t_real * 7.0))
 		var ry := lerpf(CRAG_TOP + 60.0, FEET - 52.0, bo * bo) - hop * 90.0 * bo
+		streaks(c, Vector2(rx, ry), 52.0, t_real)
 		boulder(c, Vector2(rx, ry), 52.0, t_real * 6.0)
 		if hop < 0.25 and bo >= 1.0:
 			IntroKit.puff(c, Vector2(rx - 30.0, FEET - 12.0), 30.0, 0.8)
@@ -245,13 +246,38 @@ static func _herd(c: CanvasItem, t: float, t_real: float) -> void:
 
 # a boulder of the mountain's rock, turning: shared with the card
 static func boulder(c: CanvasItem, at: Vector2, r: float, spin: float) -> void:
-	c.draw_circle(at, r + 4.0, INK)
-	c.draw_circle(at, r, ROCK)
-	c.draw_circle(at + Vector2(-0.2, -0.26) * r, r * 0.72, ROCK_LIT)
-	for d in range(8):
-		var a := spin + float(d) * 0.8
-		var pd := r * (0.28 + 0.5 * fposmod(float(d) * 0.37, 1.0))
-		c.draw_circle(at + Vector2.from_angle(a) * pd, r * (0.07 + 0.03 * float(d % 3)), Montserrat.PEBBLES[d % 5])
+	# the mountain's rock in its shade, so it stands off the pale cliffs: a lit
+	# cap up to the left, the deep side down to the right, a crack across it
+	c.draw_circle(at, r + 5.0, INK)
+	c.draw_circle(at, r, Goats.BOULDER)
+	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(0.18, 0.20) * r, Vector2(0.80, 0.78) * r), Goats.BOULDER_DEEP)
+	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(-0.16, -0.20) * r, Vector2(0.70, 0.66) * r), Goats.BOULDER)
+	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(-0.32, -0.38) * r, Vector2(0.34, 0.24) * r), Goats.BOULDER_LIT)
+	for d in range(9):
+		var a := spin + float(d) * 0.71
+		var pd := r * (0.24 + 0.56 * fposmod(float(d) * 0.37, 1.0))
+		var pr := r * (0.07 + 0.035 * float(d % 3))
+		var pp := at + Vector2.from_angle(a) * pd
+		c.draw_circle(pp, pr + 1.5, Goats.BOULDER_DEEP.darkened(0.3))
+		c.draw_circle(pp, pr, Montserrat.PEBBLES[d % 5])
+	# a jagged split across it, turning with it: straight zigzags, never a curve
+	var dir := Vector2.from_angle(spin * 0.5 + 0.7)
+	var across := dir.orthogonal()
+	var crack := PackedVector2Array()
+	for q in range(5):
+		var f := float(q) / 4.0
+		crack.append(at + dir * r * lerpf(-0.78, 0.30, f) + across * r * (0.10 if q % 2 == 0 else -0.08))
+	c.draw_polyline(crack, INK, 3.0)
+
+
+# speed lines streaming back off a moving thing's trailing side
+static func streaks(c: CanvasItem, at: Vector2, r: float, t: float) -> void:
+	for q in range(5):
+		var y := at.y + (float(q) - 2.0) * r * 0.36
+		var f := fposmod(t * 3.0 + float(q) * 0.37, 1.0)
+		var x0 := at.x - r * (1.05 + f * 0.4)
+		var run_len := r * (0.6 + 0.5 * float(q % 2)) * (1.0 - f * 0.5)
+		c.draw_line(Vector2(x0, y), Vector2(x0 - run_len, y), Color(INK.r, INK.g, INK.b, 0.55 * (1.0 - f)), 3.0)
 
 
 # a wild goat side on, facing right, its feet at `at`, at scale k: the shaggy
@@ -265,6 +291,11 @@ static func goat(c: CanvasItem, at: Vector2, k: float, t: float, tone: float, bi
 	var bob := absf(sin(t * 9.0)) * 8.0 * k * run
 	var o := at - Vector2(0.0, bob)
 	var p := func(v: Vector2) -> Vector2: return o + v * k
+	# running, the head goes down and the horns come forward: the charge.
+	# Everything from the neck up is turned about the withers by `dip`.
+	var dip := (0.42 if billy else 0.24) * run
+	var neck := Vector2(66.0, -108.0)
+	var ph := func(v: Vector2) -> Vector2: return o + (neck + (v - neck).rotated(dip)) * k
 	c.draw_colored_polygon(MillieSide.ellipse(at + Vector2(0, 2) * k, Vector2(96, 9) * k), Color(0.05, 0.04, 0.06, 0.30))
 	# legs, the far pair first: thin, knobbly, black to the knee
 	for i in range(4):
@@ -273,10 +304,17 @@ static func goat(c: CanvasItem, at: Vector2, k: float, t: float, tone: float, bi
 		var knee: Vector2 = hip + Vector2.from_angle(PI * 0.5 + swing) * 28.0
 		var foot: Vector2 = knee + Vector2.from_angle(PI * 0.5 + swing * 0.4 - 0.15 * run) * 28.0
 		var col := fur.darkened(0.3) if i < 2 else fur
-		c.draw_line(p.call(hip), p.call(knee), INK, 13.0 * k)
-		c.draw_line(p.call(knee), p.call(foot), INK, 10.0 * k)
-		c.draw_line(p.call(hip), p.call(knee), col, 8.5 * k)
-		c.draw_circle(p.call(foot), 5.5 * k, INK)
+		c.draw_line(p.call(hip), p.call(knee), INK, 17.0 * k)
+		c.draw_circle(p.call(knee), 7.0 * k, INK)
+		c.draw_line(p.call(knee), p.call(foot), INK, 12.0 * k)
+		c.draw_line(p.call(hip), p.call(knee), col, 11.5 * k)
+		c.draw_circle(p.call(knee), 4.6 * k, col)
+		c.draw_line(p.call(knee), p.call(foot) - Vector2(0, 6) * k, col.darkened(0.35), 6.5 * k)
+		# the cloven hoof, split at the front
+		var hf: Vector2 = p.call(foot)
+		c.draw_colored_polygon(PackedVector2Array([hf + Vector2(-7, -6) * k, hf + Vector2(8, -6) * k,
+			hf + Vector2(11, 3) * k, hf + Vector2(-7, 3) * k]), INK)
+		c.draw_line(hf + Vector2(4, -4) * k, hf + Vector2(7, 3) * k, Goats.GOAT_HORN, 1.6 * k)
 	# the scut
 	var flick := sin(t * 14.0) * 5.0 * run
 	c.draw_line(p.call(Vector2(-88, -96)), p.call(Vector2(-102, -116 + flick)), INK, 11.0 * k)
@@ -293,23 +331,37 @@ static func goat(c: CanvasItem, at: Vector2, k: float, t: float, tone: float, bi
 	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-8, -66)), Vector2(64, 15) * k), Goats.GOAT_BELLY.lerp(fur, 0.45))
 	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(-10, -116)), Vector2(74, 9) * k), Goats.GOAT_DARK.darkened(0.35))
 	# the neck up to the head, the long face, the ear
-	c.draw_line(p.call(Vector2(66, -108)), p.call(Vector2(96, -140)), INK, 46.0 * k)
-	c.draw_line(p.call(Vector2(66, -108)), p.call(Vector2(96, -140)), fur, 37.0 * k)
+	c.draw_line(p.call(Vector2(60, -102)), ph.call(Vector2(96, -140)), INK, 46.0 * k)
+	c.draw_line(p.call(Vector2(60, -102)), ph.call(Vector2(96, -140)), fur, 37.0 * k)
 	var head := PackedVector2Array()
 	for v: Vector2 in [Vector2(78, -166), Vector2(112, -164), Vector2(152, -134), Vector2(158, -118), Vector2(140, -110),
 			Vector2(98, -122), Vector2(80, -138)]:
-		head.append(p.call(v))
+		head.append(ph.call(v))
 	c.draw_colored_polygon(head, fur)
 	head.append(head[0])
 	c.draw_polyline(head, INK, 4.5 * k)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(Vector2(148, -122)), Vector2(12, 10) * k), Goats.GOAT_BELLY)
-	c.draw_circle(p.call(Vector2(154, -126)), 2.2 * k, INK)
-	c.draw_line(p.call(Vector2(140, -112)), p.call(Vector2(154, -114)), INK, 2.5 * k)
-	c.draw_colored_polygon(PackedVector2Array([p.call(Vector2(84, -150)), p.call(Vector2(58, -146)),
-		p.call(Vector2(82, -138))]), fur.darkened(0.2))
+	c.draw_colored_polygon(MillieSide.ellipse(ph.call(Vector2(148, -122)), Vector2(12, 10) * k), Goats.GOAT_BELLY)
+	c.draw_circle(ph.call(Vector2(154, -126)), 2.2 * k, INK)
+	# the jaw dropped in a snarl: the dark of the mouth, a row of teeth along
+	# it and the lower jaw hanging under
+	var gape := (0.6 + 0.4 * absf(sin(t * 5.0))) * (1.0 if run > 0.0 else 0.35)
+	var mouth := PackedVector2Array([ph.call(Vector2(116, -118)), ph.call(Vector2(158, -118)),
+		ph.call(Vector2(150, -118 + 16.0 * gape)), ph.call(Vector2(122, -114 + 8.0 * gape))])
+	c.draw_colored_polygon(mouth, Color(0.30, 0.06, 0.08))
+	for q in range(4):
+		var tx := 128.0 + float(q) * 7.0
+		c.draw_colored_polygon(PackedVector2Array([ph.call(Vector2(tx, -118)), ph.call(Vector2(tx + 6.0, -118)),
+			ph.call(Vector2(tx + 3.0, -112))]), Color(0.98, 0.96, 0.90))
+	var jaw := PackedVector2Array([ph.call(Vector2(118, -114 + 8.0 * gape)), ph.call(Vector2(150, -116 + 16.0 * gape)),
+		ph.call(Vector2(146, -108 + 16.0 * gape)), ph.call(Vector2(122, -106 + 8.0 * gape))])
+	c.draw_colored_polygon(jaw, fur)
+	jaw.append(jaw[0])
+	c.draw_polyline(jaw, INK, 3.5 * k)
+	c.draw_colored_polygon(PackedVector2Array([ph.call(Vector2(84, -150)), ph.call(Vector2(58, -146)),
+		ph.call(Vector2(82, -138))]), fur.darkened(0.2))
 	# the beard, streaming
-	c.draw_colored_polygon(PackedVector2Array([p.call(Vector2(126, -112)), p.call(Vector2(142, -110)),
-		p.call(Vector2(120 - 10.0 * run, -76 + flick))]), Goats.GOAT_DARK.darkened(0.3) if billy else Goats.GOAT_BELLY.darkened(0.12))
+	c.draw_colored_polygon(PackedVector2Array([ph.call(Vector2(126, -106 + 8.0 * gape)), ph.call(Vector2(142, -106 + 12.0 * gape)),
+		ph.call(Vector2(130 - 6.0 * run, -82 + 12.0 * gape + flick))]), Goats.GOAT_DARK.darkened(0.3) if billy else Goats.GOAT_BELLY.darkened(0.12))
 	# the horn: up off the brow, back, down and round to a point by the jaw
 	var hk := 1.3 if billy else 1.0
 	var centre := Vector2(84.0, -158.0) + Vector2(-20.0, 4.0) * hk
@@ -318,7 +370,7 @@ static func goat(c: CanvasItem, at: Vector2, k: float, t: float, tone: float, bi
 	for i in range(n + 1):
 		var f := float(i) / float(n)
 		var a := -0.35 - f * PI * 1.7
-		pts.append(p.call(centre + Vector2.from_angle(a) * (30.0 - f * 15.0) * hk))
+		pts.append(ph.call(centre + Vector2.from_angle(a) * (30.0 - f * 15.0) * hk))
 	for i in range(n):
 		c.draw_line(pts[i], pts[i + 1], INK, (17.0 - float(i) * 0.85) * hk * k)
 		c.draw_circle(pts[i + 1], (17.0 - float(i) * 0.85) * hk * k * 0.5, INK)
@@ -331,14 +383,22 @@ static func goat(c: CanvasItem, at: Vector2, k: float, t: float, tone: float, bi
 			var dir := (pts[i + 1] - pts[i]).normalized().orthogonal()
 			c.draw_line(pts[i + 1] - dir * w * 0.5, pts[i + 1] + dir * w * 0.5, Goats.GOAT_HORN_RIDGE, 2.0 * k)
 	# the eye under its scowl
-	c.draw_circle(p.call(Vector2(118, -146)), 8.0 * k, INK)
-	c.draw_circle(p.call(Vector2(118, -146)), 6.0 * k, Goats.GOAT_EYE)
-	c.draw_line(p.call(Vector2(113, -146)), p.call(Vector2(123, -146)), INK, 3.0 * k)
-	c.draw_line(p.call(Vector2(102, -160)), p.call(Vector2(132, -150)), INK, 6.5 * k)
+	# the eye: bloodshot round its rim, the yellow, the black slot, a glint, and
+	# a heavy brow driven down over it
+	var eye: Vector2 = ph.call(Vector2(118, -144))
+	c.draw_circle(eye, 11.0 * k, INK)
+	c.draw_circle(eye, 9.0 * k, Goats.GOAT_GLARE)
+	c.draw_circle(eye, 7.0 * k, Goats.GOAT_EYE)
+	c.draw_line(ph.call(Vector2(111, -144)), ph.call(Vector2(125, -144)), INK, 4.2 * k)
+	c.draw_circle(ph.call(Vector2(115, -147)), 1.8 * k, Color(1, 1, 1))
+	c.draw_colored_polygon(PackedVector2Array([ph.call(Vector2(98, -164)), ph.call(Vector2(136, -150)),
+		ph.call(Vector2(132, -144)), ph.call(Vector2(100, -154))]), INK)
 	# a snort off the nose
-	var sn := fposmod(t * 2.0, 1.0)
-	if sn < 0.5 and run > 0.0:
-		IntroKit.puff(c, p.call(Vector2(172 + sn * 60.0, -124 - sn * 26.0)), (7.0 + sn * 18.0) * k, 1.0 - sn * 2.0)
+	var sn := fposmod(t * 2.6, 1.0)
+	if sn < 0.6 and run > 0.0:
+		var a := 1.0 - sn / 0.6
+		IntroKit.puff(c, ph.call(Vector2(170 + sn * 70.0, -120 + sn * 10.0)), (8.0 + sn * 22.0) * k, a)
+		IntroKit.puff(c, ph.call(Vector2(164 + sn * 50.0, -112 + sn * 34.0)), (6.0 + sn * 16.0) * k, a * 0.8)
 
 
 # the iron rail along the drop, in front of everything: posts and a top bar
@@ -362,6 +422,8 @@ static func _title(c: CanvasItem, t: float) -> void:
 		IntroKit.puff(c, Vector2(-80.0 + f * 200.0, 640.0 - f * 160.0 + sin(float(p) * 2.0) * 40.0), 40.0 + f * 60.0,
 			0.8 * (1.0 - f))
 	goat(c, Vector2(-80.0 + d * 150.0, 716.0), 2.5, t, 0.8, true, 1.0)
-	boulder(c, Vector2(470.0 + d * 190.0, 600.0 - absf(sin(d * 8.0)) * 60.0), 64.0, t * 6.0)
+	var bc := Vector2(470.0 + d * 190.0, 600.0 - absf(sin(d * 8.0)) * 60.0)
+	streaks(c, bc, 64.0, t)
+	boulder(c, bc, 64.0, t * 6.0)
 	FilmKit.slam(c, t, "RUN!", Vector2(900, 210))
 	IntroKit.fade(c, 1.0 - Anim.span(t, TITLE_AT, TITLE_AT + 0.2), Color(1.0, 0.95, 0.85))
