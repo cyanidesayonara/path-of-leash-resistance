@@ -288,6 +288,10 @@ itself is the whole procedure. Tagging runs CI on the tagged SHA;
 web and Windows, pushes each to its own itch channel with butler (which
 uploads only changed blocks), and attaches zips to a GitHub release.
 Missing `BUTLER_API_KEY` fails the release (it does not skip itch).
+Release secrets live in GitHub environments (`store`, `itch`,
+`google-play`), never as repository secrets, and reach scripts only through
+`env:`; `docs/release-secrets.md` lists them and how to check them without
+publishing, and `tests/test_workflow_secrets.py` holds the workflows to it.
 
 Export the web build locally:
 ```

@@ -67,6 +67,12 @@ jobs:
         if: matrix.shard == 1
         run: python3 tests/test_store_images.py
 
+      # production secrets only in their environments, and nothing
+      # interpolated into a script (docs/release-secrets.md)
+      - name: Workflow secrets tests
+        if: matrix.shard == 1
+        run: python3 tests/test_workflow_secrets.py
+
       # A GitHub release download can fail for minutes at a time (504s on
       # 2026-11-08 failed every job): keep the zip in the Actions cache and
       # retry the download when it is not there.
@@ -123,8 +129,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Every shard passed
+        env:
+          RESULT: ${{ needs.shard.result }}
         run: |
-          if [ "${{ needs.shard.result }}" != "success" ]; then
-            echo "A shard did not pass (${{ needs.shard.result }}); see the shard jobs."
+          if [ "$RESULT" != "success" ]; then
+            echo "A shard did not pass ($RESULT); see the shard jobs."
             exit 1
           fi
