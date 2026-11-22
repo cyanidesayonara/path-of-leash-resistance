@@ -12,6 +12,7 @@ site/
   walks/<id>.html   generated page for every walk and tutorial (site_walks.py)
   walks.json        place descriptions and screenshot captions per walk
   press/index.html  press kit
+  privacy/index.html  privacy policy (Google Play needs its URL; English only)
   palette.css       generated from hud/ui_kit.gd (tools/site_palette.gd)
   style.css         one stylesheet for every page (palette variables only)
   img/              every image, generated (below), never edited by hand
