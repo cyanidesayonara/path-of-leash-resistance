@@ -58,6 +58,7 @@ const PLANE_SHADE := Color(0.82, 0.85, 0.90)
 const TEAL := Color(0.10, 0.52, 0.58)
 const INK := IntroKit.INK
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const Threat := preload("res://entities/aeroport_threat.gd")
 # the sound cues: [time, sound, pitch, volume dB]
 const CUES := [
 	[1.25, "chime", 1.0, -4.0],
@@ -501,36 +502,93 @@ static func _item(c: CanvasItem, item: String, hand: Vector2, t: float, k: float
 	c.draw_circle(hand, 6.5 * k, Color(0.96, 0.96, 0.94))
 
 
-# The travel crate, side on, its open mouth to the right at `mouth`: grey
-# shell with its vent slots and a carry handle, the dark inside, the wire door
-# swung wide, a LIVE ANIMAL sticker with its two arrows up. Where dogs go when
-# dogs fly.
+# The airline dog crate, side on, its open front to the right at `mouth`:
+# the off-white shell over its cobalt tray, the seam bolted round with wing
+# nuts, rows of vent holes, a wire window and a carry handle, a LIVE ANIMAL
+# sticker. The front is the jaw: the dark inside framed in the tray's blue,
+# the wire door hinged at the bottom and flapping open and shut. Where dogs
+# go when dogs fly. The walk's crate (entities/aeroport_threat.gd) from above.
 static func crate(c: CanvasItem, mouth: Vector2, k: float, t: float) -> void:
-	var r := Rect2(mouth + Vector2(-130, -62) * k, Vector2(130, 112) * k)
-	c.draw_colored_polygon(IntroKit.rrect(r.grow(4.0 * k), 16.0 * k), INK)
-	c.draw_colored_polygon(IntroKit.rrect(r, 13.0 * k), Color(0.74, 0.76, 0.80))
-	c.draw_rect(Rect2(r.position + Vector2(0, 50) * k, Vector2(130, 8) * k), Color(0.52, 0.55, 0.60))
-	c.draw_colored_polygon(IntroKit.rrect(Rect2(r.position + Vector2(36, -16) * k, Vector2(54, 20) * k), 8.0 * k), INK)
-	for i in range(4):
-		c.draw_colored_polygon(IntroKit.rrect(Rect2(r.position + Vector2(14.0 + float(i) * 20.0, 12.0) * k, Vector2(12, 26) * k), 4.0 * k), Color(0.20, 0.22, 0.26))
-	# the sticker
-	c.draw_rect(Rect2(r.position + Vector2(18, 66) * k, Vector2(70, 34) * k), BEACON)
+	var r := Rect2(mouth + Vector2(-150, -70) * k, Vector2(150, 120) * k)
+	var seam := r.position.y + 62.0 * k
+	# the shell and the tray, one outline round both
+	c.draw_colored_polygon(IntroKit.rrect(r.grow(5.0 * k), 22.0 * k), INK)
+	c.draw_colored_polygon(IntroKit.rrect(r, 18.0 * k), Threat.CRATE_TOP)
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(r.position.x, seam, r.size.x, r.end.y - seam), 14.0 * k), Threat.CRATE_TRAY)
+	c.draw_rect(Rect2(r.position.x, seam + 24.0 * k, r.size.x, r.end.y - seam - 30.0 * k), Threat.CRATE_TRAY_DK)
+	# the shell's light along its top, its shade down the back
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(r.position + Vector2(14, 6) * k, Vector2(110, 8) * k), 4.0 * k), Color(1, 1, 1, 0.55))
+	c.draw_rect(Rect2(r.position.x + 4.0 * k, r.position.y + 20.0 * k, 10.0 * k, seam - r.position.y - 22.0 * k), Threat.CRATE_TOP_SHADE)
+	# the seam's lip and the wing nuts bolted through it
+	c.draw_line(Vector2(r.position.x, seam), Vector2(r.end.x, seam), INK, 4.0 * k)
+	for i in range(6):
+		var wn := Vector2(r.position.x + (14.0 + float(i) * 24.0) * k, seam)
+		c.draw_circle(wn, 6.0 * k, INK)
+		c.draw_circle(wn, 4.2 * k, Threat.CRATE_WIRE)
+		c.draw_line(wn + Vector2(-8, -3) * k, wn + Vector2(8, 3) * k, INK, 3.0 * k)
+	# the carry handle on top
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(r.position + Vector2(44, -18) * k, Vector2(56, 22) * k), 9.0 * k), INK)
+	c.draw_colored_polygon(IntroKit.rrect(Rect2(r.position + Vector2(50, -12) * k, Vector2(44, 10) * k), 5.0 * k), Threat.CRATE_TOP_SHADE)
+	# vent holes, two rows, and the wire window behind them
+	for row in range(2):
+		for i in range(6):
+			c.draw_colored_polygon(IntroKit.rrect(Rect2(r.position + Vector2(20.0 + float(i) * 15.0, 22.0 + float(row) * 13.0) * k,
+				Vector2(9, 6) * k), 3.0 * k), Threat.CRATE_TRAY_DK)
+	var win := Rect2(r.position + Vector2(112, 18) * k, Vector2(22, 34) * k)
+	c.draw_rect(win.grow(2.0 * k), INK)
+	c.draw_rect(win, Threat.CRATE_THROAT)
+	for i in range(1, 4):
+		c.draw_line(win.position + Vector2(win.size.x * float(i) / 4.0, 0), win.position + Vector2(win.size.x * float(i) / 4.0, win.size.y), Threat.CRATE_WIRE, 2.0 * k)
+	c.draw_line(win.position + Vector2(0, win.size.y * 0.5), win.position + Vector2(win.size.x, win.size.y * 0.5), Threat.CRATE_WIRE, 2.0 * k)
+	# the sticker on the tray
+	c.draw_rect(Rect2(r.position + Vector2(24, 72) * k, Vector2(64, 30) * k), BEACON)
 	for i in range(2):
-		var ap := r.position + Vector2(36.0 + float(i) * 34.0, 84.0) * k
-		c.draw_line(ap + Vector2(0, 10) * k, ap + Vector2(0, -6) * k, INK, 5.0 * k)
-		c.draw_colored_polygon(PackedVector2Array([ap + Vector2(-8, -4) * k, ap + Vector2(8, -4) * k, ap + Vector2(0, -14) * k]), INK)
-	# the mouth, and the dark in it
-	c.draw_colored_polygon(MillieSide.ellipse(mouth + Vector2(-6, -6) * k, Vector2(20, 56) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(mouth + Vector2(-8, -6) * k, Vector2(14, 48) * k), Color(0.03, 0.03, 0.05))
-	# the door, swinging on its hinge
-	var sw := 0.5 + sin(t * 7.0) * 0.35
-	var hinge := mouth + Vector2(-2, -62) * k
-	var tip := hinge + Vector2.from_angle(-sw) * 100.0 * k
-	var down := Vector2.from_angle(-sw).orthogonal() * 16.0 * k
-	c.draw_line(hinge, tip, INK, 7.0 * k)
+		var ap := r.position + Vector2(40.0 + float(i) * 30.0, 88.0) * k
+		c.draw_line(ap + Vector2(0, 9) * k, ap + Vector2(0, -5) * k, INK, 5.0 * k)
+		c.draw_colored_polygon(PackedVector2Array([ap + Vector2(-7, -3) * k, ap + Vector2(7, -3) * k, ap + Vector2(0, -12) * k]), INK)
+	# the front, turned a little toward us: its panel in shell and tray, the
+	# opening dark inside a blue lip, and the wire door hinged along its foot,
+	# chomping open and shut
+	var fd := Vector2(44.0, 12.0) * k
+	var f0 := Vector2(mouth.x, r.position.y + 10.0 * k)
+	var f3 := Vector2(mouth.x, r.end.y - 6.0 * k)
+	var f1 := f0 + fd
+	var f2 := f3 + fd * Vector2(1.0, 0.5)
+	c.draw_colored_polygon(PackedVector2Array([f0 - Vector2(4, 4) * k, f1 + Vector2(4, -4) * k, f2 + Vector2(4, 4) * k, f3 + Vector2(-4, 4) * k]), INK)
+	c.draw_colored_polygon(PackedVector2Array([f0, f1, f2, f3]), Threat.CRATE_TOP_SHADE)
+	var fs0 := Vector2(mouth.x, seam)
+	var fs1 := fs0 + Vector2(fd.x, fd.y * 0.8)
+	c.draw_colored_polygon(PackedVector2Array([fs0, fs1, f2, f3]), Threat.CRATE_TRAY_DK)
+	var o0 := f0.lerp(f2, 0.14)
+	var o1 := f1.lerp(f3, 0.14)
+	var o2 := f2.lerp(f0, 0.10)
+	var o3 := f3.lerp(f1, 0.10)
+	c.draw_colored_polygon(PackedVector2Array([o0, o1, o2, o3]), Threat.CRATE_TRAY)
+	c.draw_colored_polygon(PackedVector2Array([o0.lerp(o2, 0.10), o1.lerp(o3, 0.10), o2.lerp(o0, 0.08), o3.lerp(o1, 0.08)]), Threat.CRATE_THROAT)
+	var sw := 0.12 + 0.72 * absf(sin(t * 6.0))
+	var h0 := o3.lerp(o1, 0.08)
+	var h1 := o2.lerp(o0, 0.08)
+	var lift := Vector2(sin(sw) * 96.0, -cos(sw) * 96.0) * k * Vector2(1.0, (o0.distance_to(o3)) / (96.0 * k))
+	var t0 := h0 + lift
+	var t1 := h1 + lift
+	var frame := PackedVector2Array([h0, h1, t1, t0, h0])
+	c.draw_polyline(frame, INK, 9.0 * k)
+	c.draw_polyline(frame, Threat.CRATE_WIRE, 4.5 * k)
 	for i in range(1, 6):
-		var q := hinge.lerp(tip, float(i) / 5.0)
-		c.draw_line(q - down * 0.2, q + down * 3.0 * (1.0 - absf(float(i) - 3.0) / 6.0), Color(0.84, 0.86, 0.90), 3.0 * k)
+		var f := float(i) / 6.0
+		c.draw_line(h0.lerp(h1, f), t0.lerp(t1, f), Threat.CRATE_WIRE, 2.6 * k)
+	c.draw_line(h0.lerp(t0, 0.5), h1.lerp(t1, 0.5), Threat.CRATE_WIRE, 2.6 * k)
+	# the bar ends past the door's top rail, like teeth
+	var tooth := lift.normalized() * 13.0 * k
+	for i in range(4):
+		var b0: Vector2 = t0.lerp(t1, (float(i) + 0.5) / 4.0)
+		c.draw_line(b0, b0 + tooth, INK, 6.0 * k)
+		c.draw_line(b0, b0 + tooth * 0.85, Threat.CRATE_WIRE, 3.0 * k)
+
+
+# where a hand grips the crate's carry handle, its open front at `mouth`
+static func crate_handle(mouth: Vector2, k: float) -> Vector2:
+	return mouth + Vector2(-150.0 + 72.0, -70.0 - 7.0) * k
 
 
 static func _net(c: CanvasItem, hand: Vector2, t: float, k: float) -> void:
@@ -566,8 +624,9 @@ static func _title(c: CanvasItem, t: float) -> void:
 	var bob := sin(t * 18.0) * 5.0
 	var mouth := Vector2(470.0 + d * 70.0, 500.0 + bob)
 	crate(c, mouth, 3.6, t)
-	c.draw_circle(mouth + Vector2(-330.0, -160.0), 46.0, INK)
-	c.draw_circle(mouth + Vector2(-330.0, -160.0), 40.0, Color(0.96, 0.96, 0.94))
+	var grip := crate_handle(mouth, 3.6)
+	c.draw_circle(grip, 34.0, INK)
+	c.draw_circle(grip, 28.0, Color(0.96, 0.96, 0.94))
 	# the net, swung in over the word
 	var hoop := Vector2(1010.0 - d * 40.0, 150.0 + sin(d * 6.0) * 20.0)
 	c.draw_line(Vector2(380.0 + d * 50.0, 60.0), hoop, INK, 16.0)

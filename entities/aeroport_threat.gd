@@ -383,6 +383,16 @@ static func _case(b: ShapeBatch, p: Vector2, dir: float, col: Color, k: float) -
 # line's anchor and `w` its half width, for what they are snagged in while
 # jammed (`snag`, `snag_k` 1 just stuck, 0 about to pull free). The film draws
 # the same five side on (intro/film_aeroport.gd).
+# The airline dog crate, film and walk alike: an off-white shell over a cobalt
+# tray, wing nuts round the seam, a wire door. Every dog knows what it is.
+const CRATE_TOP := Color(0.93, 0.91, 0.86)
+const CRATE_TOP_SHADE := Color(0.76, 0.74, 0.70)
+const CRATE_TRAY := Color(0.16, 0.34, 0.66)
+const CRATE_TRAY_DK := Color(0.09, 0.20, 0.42)
+const CRATE_WIRE := Color(0.80, 0.83, 0.88)
+const CRATE_THROAT := Color(0.03, 0.03, 0.05)
+
+
 static func paint_squad(b: ShapeBatch, spots: Array[Vector2], held: Array[bool], belts: Array[bool], o: Vector2, w: float,
 		t: float, snag := 0, snag_k := 0.0) -> void:
 	var n := spots.size()
@@ -474,26 +484,46 @@ static func _officer(b: ShapeBatch, pos: Vector2, skin: Color, vest: bool, whist
 static func _item(b: ShapeBatch, at: Vector2, item: String, seed: float, t: float) -> void:
 	match item:
 		"crate":
-			# the travel crate, door open, mouth toward you: where dogs go
-			# when dogs fly
+			# the airline crate, its open front toward you: the cobalt tray's
+			# rim round the off-white shell, vent holes, the dark inside, and
+			# the wire door flapping open off its hinge like a jaw
 			var r := Rect2(at.x - 28.0, at.y - 4.0, 56.0, 46.0)
-			b.rect(Rect2(r.position + Vector2(4.0, 6.0), r.size), Color(0.04, 0.05, 0.08, 0.22))
-			b.rect(r, Color(0.52, 0.55, 0.60))
-			b.rect(r.grow(-3.0), Color(0.74, 0.76, 0.80))
+			b.rect(Rect2(r.position + Vector2(4.0, 6.0), r.size), Color(0.04, 0.05, 0.08, 0.24))
+			b.rect(r.grow(1.5), Color(0.08, 0.08, 0.10))
+			b.rect(r, CRATE_TRAY)
+			b.rect(r.grow(-4.0), CRATE_TOP)
+			b.rect(Rect2(r.position.x + 4.0, r.position.y + 4.0, r.size.x - 8.0, 3.0), Color(1.0, 1.0, 1.0, 0.5))
+			b.rect(Rect2(r.position.x + 4.0, r.end.y - 22.0, r.size.x - 8.0, 2.0), CRATE_TOP_SHADE)
+			# the wing nuts round the seam
 			for k in range(4):
-				b.rect(Rect2(r.position.x + 8.0 + float(k) * 11.0, r.position.y + 6.0, 6.0, 3.0), Color(0.30, 0.32, 0.36))
-			b.rect(Rect2(r.position.x + 5.0, r.end.y - 16.0, r.size.x - 10.0, 16.0), Color(0.06, 0.06, 0.08))
-			# the wire door, swinging
-			var sw := sin(t * 5.0 + seed) * 0.5 + 0.9
-			var hinge := Vector2(r.end.x - 4.0, r.end.y)
-			var tip := hinge + Vector2.from_angle(PI * 0.5 - sw) * 40.0
-			b.line(hinge, tip, Color(0.84, 0.86, 0.90), 4.0)
-			for k in range(1, 4):
-				var q := hinge.lerp(tip, float(k) / 4.0)
-				b.line(q + Vector2(-3.0, -3.0), q + Vector2(3.0, 3.0), Color(0.60, 0.62, 0.66), 1.4)
-			# its sticker
-			b.rect(Rect2(r.position.x + 16.0, r.position.y + 14.0, 24.0, 12.0), BEACON_AMBER)
-			b.rect(Rect2(r.position.x + 20.0, r.position.y + 18.0, 16.0, 4.0), Color(0.10, 0.10, 0.12))
+				var wn := Vector2(r.position.x + 6.0 + float(k) * 14.6, r.position.y + 2.0)
+				b.circle(wn, 2.2, CRATE_WIRE)
+			# vent holes in two rows
+			for row in range(2):
+				for k in range(5):
+					b.rect(Rect2(r.position.x + 9.0 + float(k) * 8.4, r.position.y + 9.0 + float(row) * 5.0, 5.0, 2.4), CRATE_TRAY_DK)
+			# the open front, dark inside
+			var mouth := Rect2(r.position.x + 6.0, r.end.y - 19.0, r.size.x - 12.0, 17.0)
+			b.rect(mouth.grow(1.5), CRATE_TRAY_DK)
+			b.rect(mouth, CRATE_THROAT)
+			# the wire door off its bottom hinge, flapping: a frame and bars
+			var sw := 0.55 + 0.45 * absf(sin(t * 5.0 + seed))
+			var drop := 6.0 + 22.0 * sw
+			var d0 := Vector2(mouth.position.x, mouth.end.y)
+			var d1 := Vector2(mouth.end.x, mouth.end.y)
+			var e0 := d0 + Vector2(-2.0, drop)
+			var e1 := d1 + Vector2(2.0, drop)
+			for seg: Array in [[d0, e0], [d1, e1], [e0, e1]]:
+				b.line(seg[0], seg[1], Color(0.08, 0.08, 0.10), 4.0)
+			b.line(d0, e0, CRATE_WIRE, 2.0)
+			b.line(d1, e1, CRATE_WIRE, 2.0)
+			b.line(e0, e1, CRATE_WIRE, 2.4)
+			for k in range(1, 7):
+				var f := float(k) / 7.0
+				b.line(d0.lerp(d1, f), e0.lerp(e1, f), Color(CRATE_WIRE, 0.85), 1.4)
+			# the LIVE ANIMAL sticker
+			b.rect(Rect2(r.position.x + 18.0, r.position.y + 20.0, 20.0, 8.0), BEACON_AMBER)
+			b.rect(Rect2(r.position.x + 22.0, r.position.y + 23.0, 12.0, 2.0), Color(0.10, 0.10, 0.12))
 		"wand":
 			# the detector wand, sweeping, bleeping red
 			var a := PI * 0.5 + sin(t * 6.0 + seed) * 0.6
