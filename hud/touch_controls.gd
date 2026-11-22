@@ -35,6 +35,17 @@ const MENU_X := 264.0
 # GRAB appears this close to the carry item, a little before the 28 px the
 # grab itself needs, so the button is up before she arrives
 const GRAB_REACH := 90.0
+# the stick's full reach, in px of drag
+const STICK_REACH := 90.0
+# In a menu the stick is a d-pad: one direction at a time, the axis it is
+# pulled along most, pressed once it is pulled past MENU_PRESS of its reach.
+# It lets go under MENU_RELEASE, so the next pull is a new step and a thumb
+# wobbling at the line does not step twice.
+const MENU_PRESS := 0.5
+const MENU_RELEASE := 0.3
+const MOVES: Array[String] = ["move_left", "move_right", "move_up", "move_down"]
+# the direction the stick holds in a menu (zero: none)
+var _menu_dir := Vector2i.ZERO
 
 
 func _ready() -> void:
@@ -144,20 +155,50 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventScreenDrag:
 		var d := event as InputEventScreenDrag
 		if d.index == stick_id:
-			stick_vec = ((d.position - stick_origin) / 90.0).limit_length(1.0)
+			stick_vec = ((d.position - stick_origin) / STICK_REACH).limit_length(1.0)
 			_feed_move()
 			queue_redraw()
 
 
+# Feeds the move actions from the stick. A direction is pressed only while the
+# stick points that way: Input.action_press at strength zero still counts as
+# pressed, and pressing all four on touch-down made every tap in a menu step
+# the same way (the menus check down before up, right before left) and left
+# nothing for a drag to press again.
 func _feed_move() -> void:
 	if stick_id == -1:
-		for a in ["move_left", "move_right", "move_up", "move_down"]:
+		_menu_dir = Vector2i.ZERO
+		for a in MOVES:
 			Input.action_release(a)
 		return
-	Input.action_press("move_right", maxf(stick_vec.x, 0.0))
-	Input.action_press("move_left", maxf(-stick_vec.x, 0.0))
-	Input.action_press("move_down", maxf(stick_vec.y, 0.0))
-	Input.action_press("move_up", maxf(-stick_vec.y, 0.0))
+	if _walking():
+		# analog, as a gamepad's stick: the dog applies the deadzone
+		_menu_dir = Vector2i.ZERO
+		_set_move("move_right", stick_vec.x)
+		_set_move("move_left", -stick_vec.x)
+		_set_move("move_down", stick_vec.y)
+		_set_move("move_up", -stick_vec.y)
+		return
+	var dir := _menu_dir
+	if dir != Vector2i.ZERO and stick_vec.dot(Vector2(dir)) < MENU_RELEASE:
+		dir = Vector2i.ZERO
+	if dir == Vector2i.ZERO and stick_vec.length() >= MENU_PRESS:
+		if absf(stick_vec.x) >= absf(stick_vec.y):
+			dir = Vector2i(int(signf(stick_vec.x)), 0)
+		else:
+			dir = Vector2i(0, int(signf(stick_vec.y)))
+	_menu_dir = dir
+	_set_move("move_right", 1.0 if dir.x > 0 else 0.0)
+	_set_move("move_left", 1.0 if dir.x < 0 else 0.0)
+	_set_move("move_down", 1.0 if dir.y > 0 else 0.0)
+	_set_move("move_up", 1.0 if dir.y < 0 else 0.0)
+
+
+func _set_move(action: String, strength: float) -> void:
+	if strength > 0.0:
+		Input.action_press(action, minf(strength, 1.0))
+	elif Input.is_action_pressed(action):
+		Input.action_release(action)
 
 
 func _walking() -> bool:
