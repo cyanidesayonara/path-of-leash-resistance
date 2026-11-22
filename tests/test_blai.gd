@@ -153,7 +153,7 @@ func _run() -> void:
 	# --- 1. registration ---
 	_check(game.LEVELS.find("blai") == game.LEVELS.find("diagonal") + 1, "in LEVELS right after La Diagonal")
 	_check(game.CAROUSEL.find("blai") == game.CAROUSEL.find("diagonal") + 1, "in CAROUSEL right after La Diagonal")
-	_check(int(game.STAR_GATE["blai"]) == int(game.STAR_GATE["aigues"]), "opens at Les Aigües' star gate")
+	_check(int(game.STAR_GATE["blai"]) > int(game.STAR_GATE["diagonal"]), "opens after La Diagonal's star gate")
 	_check(String(game.CHASE_GATE.get("blai", "")) == String(game.CHASE_GATE["diagonal"]), "in La Diagonal's chase tier")
 	_check(String(game.LEVEL_NAMES["blai"]) == "Carrer de Blai", "named Carrer de Blai")
 	_check(game.LEVEL_SUBTITLES.has("blai") and game.LEVEL_SUBTITLES_CA.has("blai") and game.LEVEL_SUBTITLES_ES.has("blai"),

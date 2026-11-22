@@ -58,7 +58,7 @@ func _run() -> void:
 	var mont_idx: int = game.CAROUSEL.find("montserrat")
 	_check(mont_idx >= 0 and mont_idx + 1 < game.CAROUSEL.size() and game.CAROUSEL[mont_idx + 1] == "encants",
 		"CAROUSEL places encants right after montserrat")
-	_check(int(game.STAR_GATE.get("encants", -1)) == 50, "STAR_GATE encants == 50")
+	_check(int(game.STAR_GATE.get("encants", -1)) == 49, "STAR_GATE encants == 49")
 	_check(String(game.CHASE_GATE.get("encants", "")) == String(game.CHASE_GATE.get("scrap", "")),
 		"CHASE_GATE encants matches scrap")
 	_check(game.CAMPAIGN_SKY.get("encants", []) == ["rain", "day"], "CAMPAIGN_SKY encants == [rain, day]")

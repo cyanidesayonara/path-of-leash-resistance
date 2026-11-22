@@ -62,8 +62,8 @@ func _run() -> void:
 	_check(game.LEVELS.has("montserrat"), "in LEVELS")
 	var ci: int = game.CAROUSEL.find("montserrat")
 	_check(ci != -1 and ci > game.CAROUSEL.find("aeroport"), "in CAROUSEL after aeroport")
-	_check(int(game.STAR_GATE["montserrat"]) == 52, "opens at 52 stars")
-	_check(String(game.CHASE_GATE.get("montserrat", "")) == "aeroport", "after L'Aeroport")
+	_check(int(game.STAR_GATE["montserrat"]) == 48, "opens at 48 stars")
+	_check(String(game.CHASE_GATE.get("montserrat", "")) == "molina", "after La Molina")
 	_check(String(game.LEVEL_NAMES["montserrat"]) == "Montserrat", "named Montserrat")
 	_check(game.CAMPAIGN_SKY["montserrat"] == ["clear", "day"], "a clear day in the mountains")
 

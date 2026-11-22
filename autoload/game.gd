@@ -138,71 +138,65 @@ const LEVEL_SUBTITLES := {
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "blai": 39, "aigues": 39, "gracia": 40, "horta": 41, "molina": 42, "port": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "aeroport": 47, "site": 47, "ronda": 47, "encants": 50, "tarragona": 50, "vic": 50, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53, "atraccions": 47}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "carmel": 31, "cremada": 33, "station": 35, "reial": 36, "forum": 37, "aigues": 38, "aeroport": 39, "port": 39, "diagonal": 40, "blai": 41, "horta": 42, "molina": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "atraccions": 47, "site": 47, "ronda": 47, "partit": 47, "montserrat": 48, "encants": 49, "tarragona": 50, "vic": 50, "scrap": 50, "gracia": 52, "raval": 53}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
 const CHASE_GATE := {
-	# Tier 2 (Walks after La Neteja, the first chase)
 	"oldtown": "neteja",
 	"montjuic": "neteja",
 	"market": "neteja",
 	"rain": "neteja",
 	"besos": "neteja",
-	# Tier 3 (Walks after El Besòs)
+	"ciutadella": "besos",
 	"llevant": "besos",
 	"eixample": "besos",
-	"diagonal": "boars",
-	"blai": "boars",
 	"tibidabo": "besos",
 	"vet": "besos",
-	# Tier 4 (Walks after El Veterinari)
 	"sarria": "vet",
 	"trail": "vet",
 	"angels": "vet",
 	"spook": "vet",
 	"boars": "vet",
-	# Tier 5 (Walks after Els Senglars)
 	"guell": "boars",
 	"superilla": "boars",
 	"metro": "boars",
-	"station": "boars",
 	"carmel": "boars",
-	"reial": "boars",
-	"forum": "boars",
-	"aigues": "boars",
-	"horta": "boars",
-	"port": "boars",
-	"espanya": "boars",
-	"santpau": "boars",
-	"poble": "boars",
-	# the fifth chase, Badalona's Nit del Dimoni
 	"cremada": "boars",
-	# the sixth chase, Festa de Gràcia
-	"gracia": "cremada",
-	"sitges": "cremada",
-	"atraccions": "cremada",
-	# the seventh chase, Barcelona-El Prat Terminal 1
-	"aeroport": "gracia",
-	# the snow chase, La Molina's piste
+	"station": "cremada",
+	"reial": "cremada",
+	"forum": "cremada",
+	"aigues": "cremada",
+	"aeroport": "cremada",
+	"port": "aeroport",
+	"diagonal": "aeroport",
+	"blai": "aeroport",
+	"horta": "aeroport",
 	"molina": "aeroport",
-	# the eighth chase, Montserrat mountain trail
-	"montserrat": "aeroport",
-	# the first statue boss, after the second chase
-	"ciutadella": "besos",
-	"site": "boars",
-	"ronda": "boars",
-	"tarragona": "boars",
-	"partit": "boars",
-	"scrap": "boars",
-	"encants": "boars",
-	"vic": "boars",
-	# The Grand Finale (Rambla del Raval - Boss Arena)
+	"espanya": "molina",
+	"santpau": "molina",
+	"poble": "molina",
+	"sitges": "molina",
+	"atraccions": "molina",
+	"site": "molina",
+	"ronda": "molina",
+	"partit": "molina",
+	"montserrat": "molina",
+	"encants": "montserrat",
+	"tarragona": "montserrat",
+	"vic": "montserrat",
+	"scrap": "montserrat",
+	"gracia": "montserrat",
 	"raval": "gracia",
 }
 # The order and gates before the November 2026 chase-spacing reshuffle: a save
 # made under them keeps every walk they had opened (_grandfather_from).
-const GATES_VERSION := 4
+# The order and gates before the walks took the roadmap's order (bosses at
+# 11, 21, 31, 41 and 51, a chase every fifth walk): a save made under them
+# keeps every walk they had opened (_grandfather_from).
+const GATES_VERSION := 5
+const V4_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "blai": 39, "aigues": 39, "gracia": 40, "horta": 41, "molina": 42, "port": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "aeroport": 47, "site": 47, "ronda": 47, "encants": 50, "tarragona": 50, "vic": 50, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53, "atraccions": 47}
+const V4_CHASE_GATE := {"oldtown": "neteja", "montjuic": "neteja", "market": "neteja", "rain": "neteja", "besos": "neteja", "llevant": "besos", "eixample": "besos", "diagonal": "boars", "blai": "boars", "tibidabo": "besos", "vet": "besos", "sarria": "vet", "trail": "vet", "angels": "vet", "spook": "vet", "boars": "vet", "guell": "boars", "superilla": "boars", "metro": "boars", "station": "boars", "carmel": "boars", "reial": "boars", "forum": "boars", "aigues": "boars", "horta": "boars", "port": "boars", "espanya": "boars", "santpau": "boars", "poble": "boars", "cremada": "boars", "gracia": "cremada", "sitges": "cremada", "atraccions": "cremada", "aeroport": "gracia", "molina": "aeroport", "montserrat": "aeroport", "ciutadella": "besos", "site": "boars", "ronda": "boars", "tarragona": "boars", "partit": "boars", "scrap": "boars", "encants": "boars", "vic": "boars", "raval": "gracia"}
 const V3_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "poble": 46, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "aeroport": 51, "montserrat": 52, "raval": 53}
 const V3_CHASE_GATE := {"oldtown": "neteja", "montjuic": "neteja", "market": "neteja", "rain": "neteja", "besos": "neteja", "llevant": "besos", "eixample": "besos", "diagonal": "boars", "tibidabo": "besos", "vet": "besos", "trail": "vet", "angels": "vet", "spook": "vet", "boars": "vet", "guell": "boars", "superilla": "boars", "station": "boars", "carmel": "boars", "reial": "boars", "forum": "boars", "aigues": "boars", "horta": "boars", "port": "boars", "espanya": "boars", "poble": "boars", "cremada": "boars", "aeroport": "cremada", "montserrat": "aeroport", "ciutadella": "besos", "site": "boars", "partit": "boars", "scrap": "boars", "raval": "gracia"}
 # The order and gates of 1.69 (version 2): Els Búnquers and La Superilla came
@@ -292,7 +286,7 @@ const CAMPAIGN_SKY := {
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "station", "carmel", "reial", "cremada", "forum", "diagonal", "blai", "aigues", "gracia", "horta", "molina", "port", "espanya", "santpau", "poble", "sitges", "atraccions", "aeroport", "site", "ronda", "partit", "scrap", "montserrat", "encants", "tarragona", "vic", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "carmel", "cremada", "station", "reial", "forum", "aigues", "aeroport", "port", "diagonal", "blai", "horta", "molina", "espanya", "santpau", "poble", "sitges", "atraccions", "site", "ronda", "partit", "montserrat", "encants", "tarragona", "vic", "scrap", "gracia", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -1574,6 +1568,8 @@ func load_records() -> void:
 			_grandfather_from(V2_STAR_GATE, V2_CHASE_GATE)
 		if gv < 4:
 			_grandfather_from(V3_STAR_GATE, V3_CHASE_GATE)
+		if gv < 5:
+			_grandfather_from(V4_STAR_GATE, V4_CHASE_GATE)
 	else:
 		_grandfather_chase_gates()
 	# a dog saved while only browsed (locked) is not the player's dog; checked

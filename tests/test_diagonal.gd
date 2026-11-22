@@ -53,9 +53,9 @@ func _run() -> void:
 	# --- 1. registration ---
 	_check(game.LEVELS.has("diagonal"), "in LEVELS")
 	var ci: int = game.CAROUSEL.find("diagonal")
-	_check(ci == game.CAROUSEL.find("forum") + 1, "in CAROUSEL right after El Fòrum, where the avenue ends")
+	_check(ci == game.CAROUSEL.find("port") + 1, "in CAROUSEL right after El Port, opening chapter four")
 	_check(game.STAR_GATE.has("diagonal"), "has a star gate")
-	_check(String(game.CHASE_GATE.get("diagonal", "")) == "boars", "in Els Senglars' tier, with El Fòrum")
+	_check(String(game.CHASE_GATE.get("diagonal", "")) == "aeroport", "in L'Aeroport's tier, with El Port")
 	_check(String(game.LEVEL_NAMES["diagonal"]) == "La Diagonal", "named La Diagonal")
 	_check(game.LEVEL_SUBTITLES_CA.has("diagonal") and game.LEVEL_SUBTITLES_ES.has("diagonal"), "glossed in Catalan and Spanish")
 	_check(game.CAMPAIGN_SKY["diagonal"] == ["clear", "day"], "a clear day")

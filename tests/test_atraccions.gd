@@ -51,7 +51,7 @@ func _run() -> void:
 	var ci: int = game.CAROUSEL.find("atraccions")
 	_check(ci != -1 and ci == game.CAROUSEL.find("sitges") + 1, "in CAROUSEL straight after Sitges")
 	_check(int(game.STAR_GATE["atraccions"]) == 47, "opens at 47 stars")
-	_check(String(game.CHASE_GATE.get("atraccions", "")) == "cremada", "same chase gate as Sitges")
+	_check(String(game.CHASE_GATE.get("atraccions", "")) == String(game.CHASE_GATE.get("sitges", "")), "same chase gate as Sitges")
 	_check(String(game.LEVEL_NAMES["atraccions"]) == "Les Atraccions", "named Les Atraccions")
 	_check(game.CAMPAIGN_SKY["atraccions"] == ["clear", "day"], "bright day campaign sky")
 	_check(String(game.LEVEL_SUBTITLES.get("atraccions", "")).length() <= game.GLOSS_MAX, "EN gloss fits")
