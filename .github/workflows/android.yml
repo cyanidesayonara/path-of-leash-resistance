@@ -38,7 +38,11 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # the runner has an SDK already; the action's default packages
+      # include "tools", which the SDK no longer has
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Install Android SDK components
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"

@@ -1,6 +1,6 @@
 # Android & Google Play Release Guide
 
-Path of Leash Resistance ships for Android (`com.santtunykanen.pathofleashresistance`) using Godot 4.7's GL Compatibility renderer, gradle AAB builds (`targetSdkVersion = 35`, `minSdkVersion = 24`), safe-area HUD/touch inset layout, Android Back navigation, and pause-on-background handling.
+Path of Leash Resistance ships for Android (`com.santtunykanen.pathofleashresistance`) using Godot 4.7's GL Compatibility renderer, gradle AAB builds (`targetSdkVersion = 36`, `minSdkVersion = 24`), safe-area HUD/touch inset layout, Android Back navigation, and pause-on-background handling.
 
 ## Signing Keys & GitHub Secrets
 

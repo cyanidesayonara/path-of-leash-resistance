@@ -31,7 +31,7 @@ func _run() -> void:
 	var cfg := FileAccess.get_file_as_string("res://export_presets.cfg")
 	_check("[preset.2]" in cfg and 'platform="Android"' in cfg, "Android export preset present")
 	_check('package/unique_name="com.santtunykanen.pathofleashresistance"' in cfg, "Android package ID present")
-	_check('gradle_build/target_sdk="35"' in cfg, "Android targetSdk 35 set")
+	_check('gradle_build/target_sdk="36"' in cfg, "Android targetSdk 36 set (Google Play's floor since August 2026)")
 	var fg := Image.load_from_file(ProjectSettings.globalize_path("res://store/android/icon_foreground.png"))
 	var bg := Image.load_from_file(ProjectSettings.globalize_path("res://store/android/icon_background.png"))
 	_check(fg != null and fg.get_width() == 432 and fg.get_height() == 432, "foreground adaptive icon is 432x432")
