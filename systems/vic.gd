@@ -24,7 +24,7 @@ extends RefCounted
 # No chase, no boss.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -623,6 +623,8 @@ const COAT_COLS: Array[Color] = [Color(0.18, 0.26, 0.40), Color(0.44, 0.22, 0.18
 const WINTER_TOPS: Array[Color] = [Color(0.20, 0.26, 0.38), Color(0.46, 0.24, 0.20), Color(0.30, 0.36, 0.30), Color(0.62, 0.52, 0.38), Color(0.24, 0.24, 0.27), Color(0.52, 0.30, 0.42), Color(0.70, 0.66, 0.58)]
 const BLOOMS: Array[Color] = [Color(0.90, 0.24, 0.30), Color(0.96, 0.84, 0.30), Color(0.94, 0.94, 0.96), Color(0.70, 0.40, 0.80)]
 const BREAD := Color(0.80, 0.56, 0.28)
+const TARP := Color(0.30, 0.40, 0.46)
+const LANTERN_R := 120.0
 const HATS: Array[Color] = [Color(0.70, 0.20, 0.20), Color(0.22, 0.30, 0.50), Color(0.86, 0.84, 0.78), Color(0.30, 0.42, 0.30)]
 
 static var _nodes: Array = []
@@ -1071,25 +1073,136 @@ static func _precinct(b: ShapeBatch, lo: float, hi: float) -> void:
 			b.line(Vector2(fx, fy), Vector2(fx, fy + 26.0), Color(0.50, 0.47, 0.42, 0.45), 1.0)
 			fx += 38.0
 		fy += 26.0
-	# the bishop's palace: a long block with a hipped roof round its own court
-	var pal := Rect2(1110.0, y0, FAR_R - 1110.0, y1 - y0)
-	var tile: Color = ROOF_TILES[2]
-	b.rect(pal, tile.darkened(0.08))
-	b.quad(pal.position, Vector2(pal.end.x, pal.position.y), Vector2(pal.end.x, pal.position.y + 60.0), Vector2(pal.position.x + 60.0, pal.position.y + 60.0), tile.lightened(0.12))
-	b.quad(pal.position, Vector2(pal.position.x + 60.0, pal.position.y + 60.0), Vector2(pal.position.x + 60.0, pal.end.y - 60.0), Vector2(pal.position.x, pal.end.y), tile.lightened(0.06))
-	b.quad(Vector2(pal.position.x, pal.end.y), Vector2(pal.position.x + 60.0, pal.end.y - 60.0), Vector2(pal.end.x, pal.end.y - 60.0), pal.end, tile.darkened(0.16))
-	var court := Rect2(pal.position.x + 60.0, pal.position.y + 60.0, pal.size.x - 60.0, pal.size.y - 120.0)
-	b.rect(court, LIMESTONE)
-	b.rect(Rect2(court.position, Vector2(court.size.x, 14.0)), Color(0.05, 0.05, 0.10, _shade_a(0.24)))
-	b.rect(Rect2(court.position, Vector2(14.0, court.size.y)), Color(0.05, 0.05, 0.10, _shade_a(0.24)))
-	b.line(pal.position + Vector2(60.0, 60.0), Vector2(pal.end.x, pal.position.y + 60.0), tile.lightened(0.24), 2.0)
-	b.line(pal.position + Vector2(60.0, 60.0), Vector2(pal.position.x + 60.0, pal.end.y - 60.0), tile.lightened(0.24), 2.0)
-	b.line(Vector2(pal.position.x + 60.0, pal.end.y - 60.0), Vector2(pal.end.x, pal.end.y - 60.0), tile.lightened(0.18), 2.0)
-	if _frosty():
-		b.quad(Vector2(pal.position.x, pal.end.y), Vector2(pal.position.x + 60.0, pal.end.y - 60.0), Vector2(pal.end.x, pal.end.y - 60.0), pal.end, RIME)
-	# the palace's shadow on the court
-	b.rect(Rect2(1110.0 - 2.0, y0, 2.0, y1 - y0), Color(0.10, 0.08, 0.08, 0.6))
+	# the bishop's palace: three wings round its own court, each roofed in
+	# Catalan tile with a ridge down its middle and hips at the corners
+	_palace(b, Rect2(1110.0, y0, FAR_R - 1110.0, y1 - y0))
 	_cloister(b)
+
+
+const PAL_WING := 64.0       # the palace's wings, eave to court
+const PAL_TILE := 6.0       # the spacing of the tile channels down a slope
+const PAL_DRAW_R := 1420.0  # past this the camera never looks: no tile detail
+
+
+# The bishop's palace from above. Every wing has an outer slope down to the
+# street and an inner one down to the court, lit or shaded by which way it
+# faces; the tiles run down each slope in channels, the ridges and hips are
+# capped in a lighter course, and chimneys stand on the ridges. North-facing
+# slopes keep the frost on a fog morning.
+static func _palace(b: ShapeBatch, pal: Rect2) -> void:
+	var w := PAL_WING
+	var h := w * 0.5
+	var x0 := pal.position.x
+	var x1 := pal.end.x
+	var y0 := pal.position.y
+	var y1 := pal.end.y
+	var tile: Color = ROOF_TILES[2]
+	var frosty := _frosty()
+	# its foot along the precinct court
+	b.rect(Rect2(x0 - 2.0, y0, 2.0, y1 - y0), Color(0.10, 0.08, 0.08, 0.6))
+	var court := Rect2(x0 + w, y0 + w, x1 - x0 - w, y1 - y0 - w * 2.0)
+	b.rect(court, LIMESTONE)
+	var cf := court.position.y + 6.0
+	while cf < court.end.y:
+		b.line(Vector2(court.position.x, cf), Vector2(minf(court.end.x, PAL_DRAW_R), cf), Color(0.56, 0.52, 0.46, 0.40), 1.0)
+		cf += 24.0
+	# a well in the court, its iron hoop over it
+	var wp := Vector2(court.position.x + 92.0, court.get_center().y)
+	b.circle(wp + Shade.light * 6.0, 15.0, Color(0.04, 0.05, 0.08, _shade_a(0.22)))
+	b.circle(wp, 14.0, STONE_DARK)
+	b.circle(wp, 11.0, STONE_LIT)
+	b.circle(wp, 8.0, Color(0.10, 0.12, 0.14))
+	b.line(wp + Vector2(-12.0, 0.0), wp + Vector2(12.0, 0.0), Color(0.16, 0.16, 0.18), 1.6)
+	# orange trees in terracotta pots along the court's west walk
+	for oy: float in [-110.0, 110.0]:
+		var op := Vector2(court.position.x + 34.0, court.get_center().y + oy)
+		b.circle(op + Shade.light * 9.0, 17.0, Color(0.04, 0.05, 0.08, _shade_a(0.24)))
+		b.circle(op, 11.0, TERRACOTTA)
+		b.circle(op, 15.0, Color(0.16, 0.30, 0.16))
+		b.circle(op + Vector2(-3.0, -3.0), 10.0, Color(0.24, 0.42, 0.22))
+		b.circle(op + Vector2(-5.0, -5.0), 4.5, Color(0.34, 0.52, 0.28))
+		for q in range(5):
+			b.circle(op + Vector2.from_angle(float(q) * 1.3 + oy) * 8.5, 1.9, Color(0.96, 0.56, 0.12))
+	# the court's eaves cast onto its flags
+	b.band(PackedVector2Array([court.position, Vector2(court.end.x, court.position.y),
+		court.position + Vector2(0.0, 18.0), Vector2(court.end.x, court.position.y + 18.0)]), 2,
+		Color(0.04, 0.05, 0.08, _shade_a(0.30)), PackedFloat32Array([1.0, 0.0]), PackedFloat32Array([1.0, 1.0]))
+	b.band(PackedVector2Array([court.position, court.position + Vector2(18.0, 0.0),
+		Vector2(court.position.x, court.end.y), Vector2(court.position.x + 18.0, court.end.y)]), 2,
+		Color(0.04, 0.05, 0.08, _shade_a(0.26)), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([1.0, 0.0]))
+	# the six slopes: [quad, outward normal, channels run along x?]
+	var slopes: Array = [
+		[[Vector2(x0, y0), Vector2(x1, y0), Vector2(x1, y0 + h), Vector2(x0 + h, y0 + h)], Vector2.UP],
+		[[Vector2(x0 + h, y0 + h), Vector2(x1, y0 + h), Vector2(x1, y0 + w), Vector2(x0 + w, y0 + w)], Vector2.DOWN],
+		[[Vector2(x0, y0), Vector2(x0 + h, y0 + h), Vector2(x0 + h, y1 - h), Vector2(x0, y1)], Vector2.LEFT],
+		[[Vector2(x0 + h, y0 + h), Vector2(x0 + w, y0 + w), Vector2(x0 + w, y1 - w), Vector2(x0 + h, y1 - h)], Vector2.RIGHT],
+		[[Vector2(x0, y1), Vector2(x0 + h, y1 - h), Vector2(x1, y1 - h), Vector2(x1, y1)], Vector2.DOWN],
+		[[Vector2(x0 + h, y1 - h), Vector2(x0 + w, y1 - w), Vector2(x1, y1 - w), Vector2(x1, y1 - h)], Vector2.UP],
+	]
+	var sun := -Shade.light.normalized()
+	for sl: Array in slopes:
+		var q: Array = sl[0]
+		var n: Vector2 = sl[1]
+		var lit := n.dot(sun)
+		var col := tile.lightened(0.16 * lit) if lit > 0.0 else tile.darkened(-0.22 * lit)
+		b.quad(q[0], q[1], q[2], q[3], col)
+		if frosty and n.y < 0.0:
+			b.quad(q[0], q[1], q[2], q[3], Color(RIME.r, RIME.g, RIME.b, 0.34))
+	# the tile channels, down each slope from ridge to eave, clipped at the hips
+	var gap := tile.darkened(0.34)
+	var crest := tile.lightened(0.22)
+	var xr := minf(x1, PAL_DRAW_R)
+	var x := x0 + PAL_TILE * 0.5
+	while x < xr:
+		# north and south wings: channels run up and down
+		var d := minf(x - x0, h)
+		b.line(Vector2(x, y0 + h - d), Vector2(x, y0 + h), gap, 1.2)
+		b.line(Vector2(x + 2.0, y0 + h - d), Vector2(x + 2.0, y0 + h), Color(crest.r, crest.g, crest.b, 0.5), 1.0)
+		b.line(Vector2(x, y1 - h), Vector2(x, y1 - h + d), gap, 1.2)
+		b.line(Vector2(x + 2.0, y1 - h), Vector2(x + 2.0, y1 - h + d), Color(crest.r, crest.g, crest.b, 0.5), 1.0)
+		if x > x0 + w:
+			b.line(Vector2(x, y0 + h), Vector2(x, y0 + w), gap, 1.2)
+			b.line(Vector2(x, y1 - w), Vector2(x, y1 - h), gap, 1.2)
+		x += PAL_TILE
+	var y := y0 + PAL_TILE * 0.5
+	while y < y1:
+		# the west wing: channels run across
+		var d := minf(minf(y - y0, y1 - y), h)
+		b.line(Vector2(x0 + h - d, y), Vector2(x0 + h, y), gap, 1.2)
+		b.line(Vector2(x0 + h - d, y + 2.0), Vector2(x0 + h, y + 2.0), Color(crest.r, crest.g, crest.b, 0.5), 1.0)
+		if y > y0 + w and y < y1 - w:
+			b.line(Vector2(x0 + h, y), Vector2(x0 + w, y), gap, 1.2)
+		y += PAL_TILE
+	# the eaves' drip course, then ridge and hip caps
+	b.line(Vector2(x0, y0 + 1.0), Vector2(xr, y0 + 1.0), tile.darkened(0.45), 2.0)
+	b.line(Vector2(x0 + 1.0, y0), Vector2(x0 + 1.0, y1), tile.darkened(0.45), 2.0)
+	b.line(Vector2(x0, y1 - 1.0), Vector2(xr, y1 - 1.0), tile.darkened(0.45), 2.0)
+	var cap := tile.lightened(0.30)
+	for seg: Array in [
+		[Vector2(x0 + h, y0 + h), Vector2(xr, y0 + h)], [Vector2(x0 + h, y1 - h), Vector2(xr, y1 - h)],
+		[Vector2(x0 + h, y0 + h), Vector2(x0 + h, y1 - h)],
+		[Vector2(x0, y0), Vector2(x0 + h, y0 + h)], [Vector2(x0, y1), Vector2(x0 + h, y1 - h)],
+		[Vector2(x0 + w, y0 + w), Vector2(x0 + h, y0 + h)], [Vector2(x0 + w, y1 - w), Vector2(x0 + h, y1 - h)],
+	]:
+		var a: Vector2 = seg[0]
+		var z: Vector2 = seg[1]
+		b.line(a + Vector2(1.0, 1.5), z + Vector2(1.0, 1.5), Color(0.10, 0.06, 0.05, 0.35), 4.0)
+		b.line(a, z, cap, 3.6)
+		b.line(a + Vector2(-0.8, -0.8), z + Vector2(-0.8, -0.8), cap.lightened(0.25), 1.0)
+	# chimneys on the ridges, each with its cap and its shadow down the slope
+	for cp: Vector2 in [Vector2(x0 + h, y0 + 120.0), Vector2(x0 + h, y1 - 150.0), Vector2(x0 + 200.0, y0 + h), Vector2(x0 + 230.0, y1 - h)]:
+		var cr := Rect2(cp - Vector2(7.0, 7.0), Vector2(14.0, 14.0))
+		_sweep_shadow(b, cr, Shade.light * 14.0, Color(0.04, 0.04, 0.06, _shade_a(0.32)))
+		b.rect(cr, Color(0.80, 0.74, 0.64))
+		b.rect(Rect2(cr.position, Vector2(14.0, 3.0)), Color(0.90, 0.85, 0.76))
+		b.rect(cr.grow(-3.5), Color(0.14, 0.12, 0.11))
+		b.rect(Rect2(cr.position.x - 1.5, cr.get_center().y - 1.5, 17.0, 3.0), tile.darkened(0.1))
+	# a skylight over the west wing's stair, its glass catching the sky
+	var sk := Rect2(x0 + h + 6.0, y0 + 200.0, 16.0, 26.0)
+	b.rect(sk.grow(1.5), Color(0.30, 0.28, 0.26))
+	b.rect(sk, Color(0.56, 0.64, 0.70))
+	b.rect(Rect2(sk.position, Vector2(sk.size.x, 6.0)), Color(0.82, 0.88, 0.92))
+	b.line(Vector2(sk.get_center().x, sk.position.y), Vector2(sk.get_center().x, sk.end.y), Color(0.30, 0.28, 0.26), 1.2)
 
 
 static func _cloister(b: ShapeBatch) -> void:
@@ -1463,7 +1576,8 @@ static func draw_cross_section(_m: Node2D, wc: ShapeBatch, _top: float, _bottom:
 		_ramp(wc, maxf(lo, RAMP_END - 60.0), minf(hi, BRIDGE_Y1))
 	# the corridor's own shade: the west row's houses throw it across the paving
 	_west_shade(wc, lo, hi)
-	if lo < MARKET_END + 40.0 and hi > STREET_END - 40.0:
+	# the market's span (MARKET_END north, STREET_END south) overlapping the view
+	if lo < STREET_END + 40.0 and hi > MARKET_END - 40.0:
 		_porticoes(wc, maxf(lo, MARKET_END), minf(hi, STREET_END))
 		for i in range(STALLS.size()):
 			var s: Vector2 = STALLS[i]
@@ -1838,6 +1952,9 @@ static func _stall(wc: ShapeBatch, i: int) -> void:
 				for q in range(6):
 					wc.line(pp, pp + Vector2.from_angle(float(q) * 1.047 + 0.3) * 6.0, Color(0.84, 0.10, 0.14), 3.0)
 				wc.circle(pp, 1.5, Color(0.96, 0.84, 0.30))
+	if Game.hour == "night":
+		# packing up: a tarp pulled over the goods, its far end turned back
+		_stall_tarp(wc, counter, face, s.y)
 	# the awning over the back half, striped from the back down to the front
 	var awn := _xr(xb, xm, s.y - 28.0, 56.0)
 	wc.rect(awn, cloth)
@@ -1874,6 +1991,21 @@ static func _stall(wc: ShapeBatch, i: int) -> void:
 	var cbx := xb - face * 2.0
 	wc.rect(_xr(cbx, cbx - face * 14.0, s.y + 12.0, 14.0), Color(0.62, 0.46, 0.28))
 	wc.rect(_xr(cbx - face * 2.0, cbx - face * 12.0, s.y + 14.0, 10.0), Color(0.40, 0.28, 0.16))
+
+
+static func _stall_tarp(wc: ShapeBatch, counter: Rect2, face: float, y: float) -> void:
+	var tarp := Rect2(counter.position.x - 1.0, counter.position.y - 1.0, counter.size.x + 2.0, counter.size.y - 12.0)
+	wc.rect(Rect2(tarp.position + Vector2(2.0, 3.0), tarp.size), Color(0.04, 0.05, 0.08, 0.22))
+	wc.rect(tarp, TARP)
+	# folds where it sags between the goods
+	for k in range(4):
+		var fy := tarp.position.y + 5.0 + float(k) * (tarp.size.y - 8.0) / 3.0
+		wc.line(Vector2(tarp.position.x + 2.0, fy), Vector2(tarp.end.x - 2.0, fy + 1.5), TARP.darkened(0.22), 1.4)
+		wc.line(Vector2(tarp.position.x + 2.0, fy + 2.0), Vector2(tarp.end.x - 2.0, fy + 3.5), TARP.lightened(0.14), 1.0)
+	# the turned-back hem, and the cord tied off at the trestle
+	wc.rect(Rect2(tarp.position.x, tarp.end.y - 4.0, tarp.size.x, 4.0), TARP.lightened(0.20))
+	var tie := Vector2(counter.end.x if face > 0.0 else counter.position.x, y - 8.0)
+	wc.line(tie, tie + Vector2(face * 5.0, 9.0), Color(0.86, 0.80, 0.62), 1.2)
 
 
 static func counter_col(kind: String, cloth: Color) -> Color:
@@ -2147,10 +2279,18 @@ static func draw_snack(_m: Node2D, wc: ShapeBatch, kp: Vector2) -> void:
 # --- the live pass ------------------------------------------------------------------
 
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	# Redrawn every frame: the market's dozens of figures are mostly small
+	# discs (hands, heads, hair), which at the engine's 64 sides were most of
+	# the walk's per-frame vertices. With lod a disc keeps its rim within
+	# ShapeBatch.LOD_SAG of the true circle, the same picture for far less.
+	_rec_valid()
+	var keep_lod := wc.lod
+	wc.lod = true
 	_draw_glints(wc, vt, vb)
 	_draw_sausage(m, wc, vt, vb)
 	_draw_people(m, wc, vt, vb)
 	_draw_fog_veil(m, wc, vt, vb)
+	wc.lod = keep_lod
 
 
 # the Mèder's surface catching what light the morning has, drifting east
@@ -2184,15 +2324,8 @@ static func _draw_people(_m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> vo
 			var s: Vector2 = STALLS[i]
 			if s.y < vt - 60.0 or s.y > vb + 60.0:
 				continue
-			var face := 1.0 if s.x < CX else -1.0
-			# the stallholder, behind the counter under the awning's edge
-			_folk(wc, s + Vector2(-face * 14.0, -6.0 + float(i % 3) * 6.0), Vector2(face, 0.0), 5100 + i, -1.0, {"arms": NpcFigure.Arms.READY})
-			# customers at the counter, one or two
-			var c1 := s + Vector2(face * 52.0, -12.0 + float(i % 2) * 8.0)
-			_folk(wc, c1, Vector2(-face, 0.1), 5200 + i * 3, -1.0, {"arms": NpcFigure.Arms.READY})
-			_basket(wc, c1 + Vector2(face * 3.0, 9.0))
-			if i % 3 != 2:
-				_folk(wc, s + Vector2(face * 58.0, 18.0), Vector2(-face, -0.3), 5201 + i * 3, -1.0, {})
+			# the stallholder and the customers stand still: drawn once, replayed
+			_cached(wc, ["stall_folk", i], _stall_folk.bind(i))
 		# shoppers working the aisles, up and down past the fountain
 		for k in range(6):
 			var lane_x := 586.0 if k % 2 == 0 else 694.0
@@ -2210,13 +2343,23 @@ static func _draw_people(_m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> vo
 			var ty := -990.0
 			while ty > MARKET_END:
 				if ty > vt - 40.0 and ty < vb + 40.0:
-					for side: float in SIDES:
-						var k := int(absf(ty)) + (0 if side < 0.0 else 7)
-						if _hi(k) % 3 == 0 or _hi(k + 3) % 2 == 0:
-							continue
-						var tx := _edge_x(ty, side) - side * 25.0
-						_folk(wc, Vector2(tx, ty - 34.0 - 14.0), Vector2(0.0, 1.0), 5400 + k, -1.0, {"size": 0.92, "arms": NpcFigure.Arms.READY})
+					_cached(wc, ["cafe_folk", ty], _cafe_folk.bind(ty))
 				ty -= 180.0
+	if not open and vt < STREET_END + 60.0 and vb > MARKET_END - 60.0:
+		# after dark the market is packing up under its lanterns: a stallholder
+		# at every stall with a crate, and at every third a helper carrying
+		# one out to the van
+		for i in range(STALLS.size()):
+			var s: Vector2 = STALLS[i]
+			if s.y < vt - 60.0 or s.y > vb + 60.0:
+				continue
+			var face := 1.0 if s.x < CX else -1.0
+			_cached(wc, ["packer", i], _packer.bind(i))
+			if i % 3 == 0:
+				var sway := sin(t * 1.4 + float(i)) * 3.0
+				var hp := s + Vector2(-face * 54.0, 14.0 + sway)
+				_folk(wc, hp, Vector2(-face, 0.0), 5600 + i, t * 5.0 + float(i), {"arms": NpcFigure.Arms.READY})
+				_crate(wc, hp + Vector2(-face * 10.0, 1.0))
 	if Game.hour != "night":
 		# a neighbour on her step, sweeping, down the old street
 		var np := Vector2(_edge_x(-180.0, 1.0) - 14.0, -180.0)
@@ -2228,12 +2371,47 @@ static func _draw_people(_m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> vo
 		# an old man in his cap on a bench by the cathedral, watching the square
 		var op := Vector2(_edge_x(-2460.0, -1.0) + 22.0, -2460.0)
 		if op.y > vt - 30.0 and op.y < vb + 30.0:
-			_folk(wc, op, Vector2(1.0, 0.0), 5502, -1.0, {"headwear": "cap", "headwear_col": Color(0.28, 0.24, 0.22), "hair_style": "bald"})
-			wc.line(op + Vector2(6.0, 4.0), op + Vector2(14.0, 10.0), Color(0.36, 0.24, 0.14), 1.8)
+			_cached(wc, ["old_man"], _old_man.bind(op))
 		# someone stopped on the bridge, leaning on the parapet over the water
 		var bp := Vector2(CX + BRIDGE_HALF - 12.0, -3830.0)
 		if bp.y > vt - 30.0 and bp.y < vb + 30.0:
-			_folk(wc, bp, Vector2(1.0, 0.0), 5503, -1.0, {"arms": NpcFigure.Arms.READY})
+			_cached(wc, ["leaner"], _folk.bind(bp, Vector2(1.0, 0.0), 5503, -1.0, {"arms": NpcFigure.Arms.READY}))
+
+
+# a stall's stallholder behind the counter and its customers, one or two
+static func _stall_folk(wc: ShapeBatch, i: int) -> void:
+	var s: Vector2 = STALLS[i]
+	var face := 1.0 if s.x < CX else -1.0
+	_folk(wc, s + Vector2(-face * 14.0, -6.0 + float(i % 3) * 6.0), Vector2(face, 0.0), 5100 + i, -1.0, {"arms": NpcFigure.Arms.READY})
+	var c1 := s + Vector2(face * 52.0, -12.0 + float(i % 2) * 8.0)
+	_folk(wc, c1, Vector2(-face, 0.1), 5200 + i * 3, -1.0, {"arms": NpcFigure.Arms.READY})
+	_basket(wc, c1 + Vector2(face * 3.0, 9.0))
+	if i % 3 != 2:
+		_folk(wc, s + Vector2(face * 58.0, 18.0), Vector2(-face, -0.3), 5201 + i * 3, -1.0, {})
+
+
+# after dark, a stall's stallholder turned to the crates with one in hand
+static func _packer(wc: ShapeBatch, i: int) -> void:
+	var s: Vector2 = STALLS[i]
+	var face := 1.0 if s.x < CX else -1.0
+	var sp := s + Vector2(-face * 16.0, -10.0 + float(i % 3) * 8.0)
+	_folk(wc, sp, Vector2(-face, 0.15), 5100 + i, -1.0, {"arms": NpcFigure.Arms.READY})
+	_crate(wc, sp + Vector2(-face * 10.0, 1.0))
+
+
+# the coffee drinkers at one row of the porticoes' tables
+static func _cafe_folk(wc: ShapeBatch, ty: float) -> void:
+	for side: float in SIDES:
+		var k := int(absf(ty)) + (0 if side < 0.0 else 7)
+		if _hi(k) % 3 == 0 or _hi(k + 3) % 2 == 0:
+			continue
+		var tx := _edge_x(ty, side) - side * 25.0
+		_folk(wc, Vector2(tx, ty - 34.0 - 14.0), Vector2(0.0, 1.0), 5400 + k, -1.0, {"size": 0.92, "arms": NpcFigure.Arms.READY})
+
+
+static func _old_man(wc: ShapeBatch, op: Vector2) -> void:
+	_folk(wc, op, Vector2(1.0, 0.0), 5502, -1.0, {"headwear": "cap", "headwear_col": Color(0.28, 0.24, 0.22), "hair_style": "bald"})
+	wc.line(op + Vector2(6.0, 4.0), op + Vector2(14.0, 10.0), Color(0.36, 0.24, 0.14), 1.8)
 
 
 static func _folk(wc: ShapeBatch, p: Vector2, facing: Vector2, key: int, stride: float, o: Dictionary) -> void:
@@ -2244,6 +2422,13 @@ static func _folk(wc: ShapeBatch, p: Vector2, facing: Vector2, key: int, stride:
 		opts["headwear"] = "beanie"
 		opts["headwear_col"] = HATS[(key / 3) % HATS.size()]
 	NpcFigure.person(wc, p, facing, key, stride, opts)
+
+
+# a market crate held in front of whoever carries it
+static func _crate(wc: ShapeBatch, p: Vector2) -> void:
+	wc.rect(Rect2(p - Vector2(6.0, 5.0), Vector2(12.0, 10.0)), Color(0.66, 0.50, 0.30))
+	wc.rect(Rect2(p - Vector2(4.5, 3.5), Vector2(9.0, 7.0)), Color(0.40, 0.28, 0.16))
+	wc.line(p + Vector2(-6.0, 0.0), p + Vector2(6.0, 0.0), Color(0.66, 0.50, 0.30), 1.4)
 
 
 static func _basket(wc: ShapeBatch, p: Vector2) -> void:
@@ -2313,6 +2498,16 @@ static func draw_overhead(_m: Node2D, ci: Object) -> void:
 		return
 	c.glow(TOWER_RECT.get_center() + Vector2(0.0, -40.0), 110.0,
 		Color(FOG_VEIL.r, FOG_VEIL.g, FOG_VEIL.b, fog * 0.35))
+
+
+# the street's lamps, and a lantern hung at the front of every market stall
+# for the stallholders packing up after dark
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	for s: Vector2 in STALLS:
+		var face := 1.0 if s.x < CX else -1.0
+		out.append(Vector3(s.x + face * 2.0, s.y - 24.0, LANTERN_R))
+	return out
 
 
 static func night_fronts(_m: Node2D) -> Array[Dictionary]:
