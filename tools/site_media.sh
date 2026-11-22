@@ -199,7 +199,7 @@ shot port --level=port --shot-y=-2000 --shot-at=260
 shot port-2 --level=port --shot-y=-4200 --shot-at=380
 shot port-3 --level=port --at-freedom --shot-at=380
 
-# Chapter 5 (11 walks)
+# Chapter 5 (14 walks)
 shot espanya --level=espanya --shot-y=-2500 --shot-at=260
 shot espanya-2 --level=espanya --at-freedom --shot-at=260
 shot santpau --level=santpau --shot-y=-2500 --shot-at=260
@@ -208,6 +208,8 @@ shot poble --level=poble --shot-y=-2500 --shot-at=260
 shot poble-2 --level=poble --at-freedom --shot-at=260
 shot sitges --level=sitges --shot-y=-2500 --shot-at=260
 shot sitges-2 --level=sitges --at-freedom --shot-at=260
+shot atraccions --level=atraccions --shot-y=-2500 --shot-at=260
+shot atraccions-2 --level=atraccions --at-freedom --shot-at=260
 shot aeroport --level=aeroport --shot-y=-2500 --shot-at=260
 shot aeroport-2 --level=aeroport --shot-y=-3200 --shot-home --shot-sweeper --shot-at=380
 shot aeroport-3 --level=aeroport --at-freedom --shot-at=260
@@ -217,6 +219,10 @@ shot ronda --level=ronda --shot-y=-2500 --shot-at=260
 shot ronda-2 --level=ronda --at-freedom --shot-at=260
 shot encants --level=encants --shot-y=-2500 --shot-at=260
 shot encants-2 --level=encants --at-freedom --shot-at=260
+shot tarragona --level=tarragona --shot-y=-2500 --shot-at=260
+shot tarragona-2 --level=tarragona --at-freedom --shot-at=260
+shot vic --level=vic --shot-y=-1200 --shot-at=260
+shot vic-2 --level=vic --at-freedom --shot-at=260
 shot partit --level=partit --shot-y=-2500 --shot-at=260
 shot partit-2 --level=partit --at-freedom --shot-at=260
 shot scrap --level=scrap --shot-y=-2500 --shot-at=260

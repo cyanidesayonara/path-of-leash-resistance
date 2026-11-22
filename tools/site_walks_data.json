@@ -5,7 +5,7 @@
     "port",
     "raval"
   ],
-  "carousel_count": 48,
+  "carousel_count": 51,
   "chapters": [
     [
       "tutorial",
@@ -40,9 +40,7 @@
       "carmel",
       "reial",
       "cremada",
-      "forum"
-    ],
-    [
+      "forum",
       "diagonal",
       "blai",
       "aigues",
@@ -56,13 +54,18 @@
       "santpau",
       "poble",
       "sitges",
+      "atraccions",
       "aeroport",
       "site",
-      "ronda",
+      "ronda"
+    ],
+    [
       "partit",
       "scrap",
       "montserrat",
       "encants",
+      "tarragona",
+      "vic",
       "raval"
     ]
   ],
@@ -77,7 +80,7 @@
     "molina",
     "montserrat"
   ],
-  "count": 47,
+  "count": 50,
   "dogs": [
     {
       "accel_mult": 1.0,
@@ -340,7 +343,7 @@
   "walks": {
     "aeroport": {
       "carry_text": "",
-      "chapter": 5,
+      "chapter": 4,
       "chase_gate": "gracia",
       "chase_gate_name": "Festa de Gràcia",
       "chase_warning": "AIRPORT SECURITY! RUN FOR IT!",
@@ -428,7 +431,7 @@
     },
     "aigues": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 3,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -600,6 +603,94 @@
       "prize_text": "Make off with the churro bag on the plaza ledge",
       "sign_material": "wheels",
       "star_gate": 22,
+      "weather": "clear"
+    },
+    "atraccions": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "cremada",
+      "chase_gate_name": "La Cremada",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "yard",
+      "gate_text": "JARDÍ DEL PÍCNIC",
+      "gloss": "Coasters, queues and churros",
+      "gloss_ca": "Muntanyes russes, cues i xurros",
+      "gloss_es": "Montañas rusas, colas y churros",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "dry",
+          "text": "Get your human home mostly dry"
+        },
+        {
+          "id": "flume_dodge",
+          "text": "Pull your human clear of the flume splash"
+        },
+        {
+          "id": "churro_bark",
+          "text": "Beg a churro from the cart"
+        },
+        {
+          "id": "ride_bark",
+          "text": "Bark the carousel into a spin"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch the churro off the picnic grill"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "day",
+      "id": "atraccions",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Les Atraccions",
+      "prize_text": "Snatch the churro off the picnic grill",
+      "sign_material": "stubs",
+      "star_gate": 47,
       "weather": "clear"
     },
     "barri": {
@@ -868,7 +959,7 @@
     },
     "blai": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 3,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -1308,7 +1399,7 @@
     },
     "diagonal": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 3,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -1572,7 +1663,7 @@
     },
     "espanya": {
       "carry_text": "",
-      "chapter": 5,
+      "chapter": 4,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -1748,7 +1839,7 @@
     },
     "gracia": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 3,
       "chase_gate": "cremada",
       "chase_gate_name": "La Cremada",
       "chase_warning": "CORREFOC! RUN FROM THE FIRE DEVILS",
@@ -1924,7 +2015,7 @@
     },
     "horta": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 3,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -2276,7 +2367,7 @@
     },
     "molina": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 3,
       "chase_gate": "aeroport",
       "chase_gate_name": "L'Aeroport",
       "chase_warning": "THE GROOMER'S BRAKE IS OFF! RUN!",
@@ -2892,7 +2983,7 @@
     },
     "poble": {
       "carry_text": "",
-      "chapter": 5,
+      "chapter": 4,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -2980,7 +3071,7 @@
     },
     "port": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 3,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -3332,7 +3423,7 @@
     },
     "ronda": {
       "carry_text": "",
-      "chapter": 5,
+      "chapter": 4,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -3420,7 +3511,7 @@
     },
     "santpau": {
       "carry_text": "",
-      "chapter": 5,
+      "chapter": 4,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -3684,7 +3775,7 @@
     },
     "site": {
       "carry_text": "",
-      "chapter": 5,
+      "chapter": 4,
       "chase_gate": "boars",
       "chase_gate_name": "Els Senglars",
       "chase_warning": "",
@@ -3772,7 +3863,7 @@
     },
     "sitges": {
       "carry_text": "",
-      "chapter": 5,
+      "chapter": 4,
       "chase_gate": "cremada",
       "chase_gate_name": "La Cremada",
       "chase_warning": "",
@@ -4210,6 +4301,94 @@
       "star_gate": 29,
       "weather": "clear"
     },
+    "tarragona": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 190,
+      "clock_text": "3:10",
+      "freedom_kind": "yard",
+      "gate_text": "PLAÇA DE LA SEU",
+      "gloss": "Roman walls above the dusk sea",
+      "gloss_ca": "Muralles romanes al capvespre",
+      "gloss_es": "Murallas romanas al atardecer",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "tarragona_mark",
+          "text": "Mark 3 Roman stones"
+        },
+        {
+          "id": "tarragona_castell",
+          "text": "Steer clear for a casteller crowning"
+        },
+        {
+          "id": "tarragona_balco",
+          "text": "Share the Balcó view with your human"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Swipe the olive bowl off the cathedral steps"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:10)"
+        }
+      ],
+      "hour": "dusk",
+      "id": "tarragona",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Tarragona",
+      "prize_text": "Swipe the olive bowl off the cathedral steps",
+      "sign_material": "tesserae",
+      "star_gate": 50,
+      "weather": "clear"
+    },
     "tibidabo": {
       "carry_text": "",
       "chapter": 2,
@@ -4596,6 +4775,94 @@
       "sign_material": "biscuits",
       "star_gate": 19,
       "weather": "clear"
+    },
+    "vic": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 175,
+      "clock_text": "2:55",
+      "freedom_kind": "clearing",
+      "gate_text": "PRAT DE VIC",
+      "gloss": "Fog, arcades and hanging fuet",
+      "gloss_ca": "Boira, porxos i fuets penjats",
+      "gloss_es": "Niebla, porches y fuet colgado",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "vic_market",
+          "text": "Sniff 3 market stalls"
+        },
+        {
+          "id": "vic_columns",
+          "text": "Mark 4 arcade columns"
+        },
+        {
+          "id": "vic_fuet",
+          "text": "Carry the fuet back to its stall"
+        },
+        {
+          "id": "vic_fog",
+          "text": "Find your human in the fog"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Nab the mató off the cheese stall"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 2:55)"
+        }
+      ],
+      "hour": "morning",
+      "id": "vic",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Vic",
+      "prize_text": "Nab the mató off the cheese stall",
+      "sign_material": "cheeses",
+      "star_gate": 50,
+      "weather": "fog"
     }
   },
   "wardrobe": {
