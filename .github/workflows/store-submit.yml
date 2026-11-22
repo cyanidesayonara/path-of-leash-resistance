@@ -206,9 +206,19 @@ jobs:
             -H "x-ms-version: 2020-04-08" \
             --upload-file upload.zip "$upload_url" -o /dev/null
           echo "Uploaded the package and the listing images ($(du -h upload.zip | cut -f1))."
-          msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" > update-result.json 2>&1 \
-            || { show update-result.json; exit 1; }
-          show update-result.json
+          # --verbose is the only way msstore names a refusal (a bare "Error!"
+          # otherwise), and it can echo the submission with its upload link:
+          # so its output is never shown whole, only the error lines of a
+          # failure, link-free and redacted. The next step reads the draft back.
+          if ! NO_COLOR=1 msstore submission updateMetadata "$PRODUCT_ID" "$(cat metadata.json)" \
+              --verbose > update-result.txt 2>&1; then
+            sed -E 's#https?://[^"[:space:]]*#<link>#g' update-result.txt \
+              | grep -iE 'error|message|code|not supported|invalid|language' \
+              | grep -viE 'blob\.core|(^|[?&[:space:]])(sig|sv|se|sp|sr|skoid|sktid)=' > update-errors.txt || true
+            show update-errors.txt
+            exit 1
+          fi
+          echo "Listing metadata updated."
 
       - name: Read the staged draft back
         if: ${{ inputs.mode == 'update_draft' }}
