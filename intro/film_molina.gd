@@ -231,27 +231,71 @@ static func machine(c: CanvasItem, at: Vector2, k: float, t: float, tilt: float,
 	c.draw_line(p.call(Vector2(10, -60)), p.call(Vector2(70, -40)), Groomer.BLADE_DARK, 10.0 * k)
 	poly.call([Vector2(60, 0), Vector2(70, -110), Vector2(96, -116), Vector2(90, 0)], Groomer.BLADE)
 	poly.call([Vector2(70, -110), Vector2(96, -116), Vector2(100, -104), Vector2(76, -98)], Groomer.BLADE_LIT)
+	# its teeth: a row of steel points along the blade's foot and up its face
+	for i in range(5):
+		var tx := 58.0 + float(i) * 7.6
+		poly.call([Vector2(tx - 1.0, 2), Vector2(tx + 8.0, 2), Vector2(tx + 3.5, 18)], INK)
+		poly.call([Vector2(tx, 2), Vector2(tx + 7.0, 2), Vector2(tx + 3.5, 15)], Groomer.TOOTH)
 	for i in range(4):
-		var tx := 62.0 + float(i) * 7.5
-		poly.call([Vector2(tx, 0), Vector2(tx + 7.0, 0), Vector2(tx + 3.5, 10)], Groomer.TOOTH)
+		var ty := -16.0 - float(i) * 24.0
+		poly.call([Vector2(92, ty), Vector2(92, ty - 12.0), Vector2(108, ty - 6.0)], INK)
+		poly.call([Vector2(92, ty - 1.5), Vector2(92, ty - 10.5), Vector2(105, ty - 6.0)], Groomer.TOOTH)
 	# the berm in front of the blade, spraying when it rolls
-	var hump := (50.0 + sin(t * 6.0) * 8.0) if rolling else 30.0
-	c.draw_circle(p.call(Vector2(120, -20)), hump * k, SNOW_SHADE)
-	c.draw_circle(p.call(Vector2(112, -30)), hump * 0.8 * k, SNOW)
+	# a heap of packed lumps shoved up against the blade, outlined so it reads
+	# as snow being bulldozed and not as a pale disc
+	var hump := (1.0 + sin(t * 6.0) * 0.15) if rolling else 0.6
+	var lumps := [[Vector2(104, -18), 26.0], [Vector2(132, -14), 22.0], [Vector2(112, -46), 24.0],
+		[Vector2(138, -38), 18.0], [Vector2(104, -72), 18.0], [Vector2(124, -64), 16.0]]
+	for lm: Array in lumps:
+		var lc: Vector2 = lm[0]
+		c.draw_circle(p.call(Vector2(96.0 + (lc.x - 96.0) * hump, lc.y * hump)), (float(lm[1]) * hump + 4.0) * k, INK)
+	for i in range(lumps.size()):
+		var lm: Array = lumps[i]
+		var lc: Vector2 = lm[0]
+		var lp: Vector2 = p.call(Vector2(96.0 + (lc.x - 96.0) * hump, lc.y * hump))
+		var lr := float(lm[1]) * hump * k
+		c.draw_circle(lp, lr, SNOW_DEEP if i % 2 == 0 else SNOW_SHADE)
+		c.draw_circle(lp - Vector2(0.25, 0.30) * lr, lr * 0.66, SNOW_SHADE if i % 2 == 0 else SNOW)
+		c.draw_circle(lp - Vector2(0.38, 0.42) * lr, lr * 0.30, SNOW)
 	if rolling:
 		for j in range(6):
 			var f := fposmod(t * 2.6 + float(j) * 0.17, 1.0)
 			c.draw_circle(p.call(Vector2(140 + f * 120.0, -60 - sin(f * PI) * 90.0)), (9.0 - f * 5.0) * k, Color(1, 1, 1, 1.0 - f))
 
 
-# a snowball, turning, shared with the card
+# a snowball, turning, shared with the card: a dark blue rim with packed lumps
+# on it, the deep side down to the right and the lit top, a fir twig and grit
+# rolled into it, the ice glinting, and speed lines off its back
 static func snowball(c: CanvasItem, at: Vector2, r: float, spin: float) -> void:
+	for q in range(4):
+		var y := at.y + (float(q) - 1.5) * r * 0.42
+		var f := fposmod(spin * 0.4 + float(q) * 0.31, 1.0)
+		var x0 := at.x - r * (1.15 + f * 0.4)
+		c.draw_line(Vector2(x0, y), Vector2(x0 - r * (0.7 + 0.4 * float(q % 2)) * (1.0 - f * 0.5), y),
+			Color(Groomer.SNOWBALL_RIM, 0.55 * (1.0 - f)), 3.0)
+	for j in range(7):
+		var a := spin * 0.6 + float(j) * TAU / 7.0
+		c.draw_circle(at + Vector2.from_angle(a) * r * 0.88, r * 0.28 + 4.0, INK)
 	c.draw_circle(at, r + 4.0, INK)
-	c.draw_circle(at, r, SNOW_SHADE)
-	c.draw_circle(at + Vector2(-0.2, -0.26) * r, r * 0.76, SNOW)
-	for d in range(5):
-		var a := spin + float(d) * 1.25
-		c.draw_circle(at + Vector2.from_angle(a) * r * 0.55, r * 0.16, SNOW_SHADE if sin(a) > 0.0 else Color.WHITE)
+	c.draw_circle(at, r, SNOW_DEEP)
+	for j in range(7):
+		var a := spin * 0.6 + float(j) * TAU / 7.0
+		c.draw_circle(at + Vector2.from_angle(a) * r * 0.88, r * 0.28, SNOW_DEEP if cos(a - 0.9) > 0.0 else SNOW_SHADE)
+	c.draw_colored_polygon(MillieSide.ellipse(at - Vector2(0.12, 0.14) * r, Vector2(0.84, 0.82) * r), SNOW_SHADE)
+	c.draw_colored_polygon(MillieSide.ellipse(at - Vector2(0.26, 0.30) * r, Vector2(0.58, 0.54) * r), SNOW)
+	# a fir twig and a bit of grit, turning with it
+	var tw := Vector2.from_angle(spin)
+	c.draw_line(at + tw * r * 0.05, at + tw * r * 0.72, Groomer.SNOWBALL_TWIG, r * 0.09)
+	for n in range(3):
+		var bp := at + tw * r * (0.2 + 0.18 * float(n))
+		c.draw_line(bp, bp + tw.rotated(0.7) * r * 0.16, Groomer.SNOWBALL_TWIG, r * 0.05)
+		c.draw_line(bp, bp + tw.rotated(-0.7) * r * 0.16, Groomer.SNOWBALL_TWIG, r * 0.05)
+	c.draw_circle(at + Vector2.from_angle(spin + 2.4) * r * 0.5, r * 0.09, Groomer.SNOWBALL_GRIT)
+	c.draw_circle(at + Vector2.from_angle(spin + 4.0) * r * 0.36, r * 0.06, Groomer.SNOWBALL_GRIT)
+	# the ice catching the light
+	var gl := at - Vector2(0.40, 0.44) * r
+	c.draw_line(gl - Vector2(r * 0.14, 0.0), gl + Vector2(r * 0.14, 0.0), Color(1, 1, 1), 3.0)
+	c.draw_line(gl - Vector2(0.0, r * 0.14), gl + Vector2(0.0, r * 0.14), Color(1, 1, 1), 3.0)
 
 
 # the card: the slope gone ice-bright behind RUN!, the groomer coming in from

@@ -50,6 +50,11 @@ const EXHAUST := Color(0.20, 0.20, 0.22, 0.30)
 const SNOW := Color(0.96, 0.97, 1.0)
 const SNOW_SHADE := Color(0.74, 0.80, 0.92)
 const SNOW_DEEP := Color(0.58, 0.66, 0.82)
+# a snowball's outline and what it rolls up, film and walk alike: a dark blue
+# rim so it never melts into the piste, fir twigs and grit packed into it
+const SNOWBALL_RIM := Color(0.18, 0.24, 0.40)
+const SNOWBALL_TWIG := Color(0.20, 0.34, 0.24)
+const SNOWBALL_GRIT := Color(0.36, 0.32, 0.30)
 const SHADOW := Color(0.10, 0.14, 0.26, 0.30)
 const TRACK_MARK := Color(0.44, 0.56, 0.86, 0.55)
 
@@ -384,15 +389,26 @@ func _draw() -> void:
 	b.flush()
 
 
-# a snowball rolling: its shadow, a blue-shaded body, the lumps it picks up
+# a snowball rolling: its shadow, a dark blue rim with lumps on it, the deep
+# side down to the right and the lit top, a fir twig and grit rolled into it,
+# and the ice catching the light
 static func _ball(b: ShapeBatch, at: Vector2, r: float, spin: float) -> void:
-	b.circle(at + Vector2(r * 0.25, r * 0.35), r * 1.02, SHADOW)
-	b.circle(at, r, SNOW_SHADE)
-	b.circle(at - Vector2(r * 0.18, r * 0.20), r * 0.82, SNOW)
-	for j in range(4):
-		var a := spin + float(j) * TAU / 4.0
-		var p := at + Vector2(cos(a) * r * 0.55, sin(a) * r * 0.30)
-		b.circle(p, r * 0.18, SNOW_SHADE if sin(a) > 0.0 else SNOW)
+	b.circle(at + Vector2(r * 0.25, r * 0.35), r * 1.06, SHADOW)
+	for j in range(6):
+		var a := spin * 0.6 + float(j) * TAU / 6.0
+		b.circle(at + Vector2.from_angle(a) * r * 0.86, r * 0.30 + 2.0, SNOWBALL_RIM)
+	b.circle(at, r + 2.0, SNOWBALL_RIM)
+	b.circle(at, r, SNOW_DEEP)
+	for j in range(6):
+		var a := spin * 0.6 + float(j) * TAU / 6.0
+		b.circle(at + Vector2.from_angle(a) * r * 0.86, r * 0.30, SNOW_DEEP if cos(a - 0.9) > 0.0 else SNOW_SHADE)
+	b.circle(at - Vector2(r * 0.12, r * 0.14), r * 0.84, SNOW_SHADE)
+	b.circle(at - Vector2(r * 0.24, r * 0.28), r * 0.60, SNOW)
+	var tw := Vector2.from_angle(spin)
+	b.line(at + tw * r * 0.1, at + tw * r * 0.7, SNOWBALL_TWIG, maxf(r * 0.10, 1.5))
+	b.line(at + tw * r * 0.4, at + tw.rotated(0.6) * r * 0.65, SNOWBALL_TWIG, maxf(r * 0.07, 1.2))
+	b.circle(at + Vector2.from_angle(spin + 2.4) * r * 0.5, r * 0.09 + 0.8, SNOWBALL_GRIT)
+	b.circle(at - Vector2(r * 0.40, r * 0.44), r * 0.12 + 0.8, Color(1, 1, 1))
 
 
 # The groomer with its blade's front edge at `c`, `w` either side, seen from
