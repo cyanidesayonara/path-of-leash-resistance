@@ -11,7 +11,7 @@ extends RefCounted
 #
 # No chase, no boss. Campaign sky clear dusk.
 
-const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
+const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_grove", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
 # draw_bollard receives the hydrant Dictionary (main._draw_world), not a Vector2
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -31,9 +31,9 @@ const GATE := -5000.0
 const SHADOW := Color(0.06, 0.05, 0.10, 0.28)
 
 # --- colours: warm dusk stone, saffron sea, deep navy shade -----------------
-const SEA_DEEP := Color(0.10, 0.22, 0.42)
-const SEA_MID := Color(0.18, 0.40, 0.58)
-const SEA_GOLD := Color(0.72, 0.48, 0.28, 0.45)
+const SEA_DEEP := Color(0.14, 0.40, 0.74)
+const SEA_MID := Color(0.20, 0.56, 0.80)
+const SEA_GOLD := Color(0.96, 0.80, 0.62, 0.16)
 const PAVE := Color(0.78, 0.72, 0.62)
 const PAVE_WARM := Color(0.86, 0.76, 0.58)
 const PANOT_INK := Color(0.62, 0.56, 0.46, 0.42)
@@ -158,7 +158,9 @@ const PODIUM := Rect2(560.0, -4980.0, 160.0, 220.0)
 
 
 static func solids(_m: Node2D = null) -> Array[Rect2]:
-	var out: Array[Rect2] = [RAIL_RECT]
+	# Extend the railing solid eastward across the cliff and railway so routes
+	# never imagine a walkable lane behind it, while wrap_rects keeps RAIL_RECT.
+	var out: Array[Rect2] = [Rect2(RAIL_X, RAIL_TOP, 180.0, 1360.0)]
 	# The arena, inside its podium wall: bands that stay within the oval, so
 	# the dog stops at the wall that is drawn rather than at a box round it
 	# (top, height, half width) of each band, down from the oval's centre
@@ -206,10 +208,15 @@ static func build(m: Node2D) -> Array:
 	m.poles.append(MONUMENT + Vector2(18.0, 8.0))
 	m.deco_pole_count = m.poles.size()
 
-	for by: float in [-200.0, -560.0, -1960.0, -2280.0, -2600.0, -2920.0, -3680.0, -4040.0, -4400.0]:
+	for by: float in [-280.0, -560.0, -3680.0, -4040.0, -4400.0]:
 		m.benches.append(Vector2(520.0, by))
 		# on the Balcó the right-hand benches stand back from the railing
 		m.benches.append(Vector2(728.0 if by > BALCO_Y1 else 760.0, by))
+	# Rambla Nova benches sit along the tree/lamp kerb strip, clear of trees,
+	# lamps, bins and the central pedestrian and pair lanes
+	for by: float in [-1970.0, -2260.0, -2740.0]:
+		m.benches.append(Vector2(490.0, by))
+		m.benches.append(Vector2(790.0, by))
 
 	for bp: Vector2 in [
 		Vector2(490.0, -360.0), Vector2(742.0, -820.0), Vector2(490.0, -2100.0),
@@ -220,11 +227,11 @@ static func build(m: Node2D) -> Array:
 	m.fountains.append(Vector2(640.0, -2560.0))
 	m.fountains.append(Vector2(640.0, -4480.0))
 
-	# Pilones / bollards on the Rambla
-	for i in range(6):
-		var py := -1880.0 - float(i) * 160.0
-		m.park_props.append({"pos": Vector2(560.0, py), "kind": "bollard", "dig": false, "solid": true, "mark": true})
-		m.park_props.append({"pos": Vector2(720.0, py), "kind": "bollard", "dig": false, "solid": true, "mark": true})
+	# Pilones / bollards along the Rambla kerbs, well clear of the central
+	# monument and main walking lanes
+	for py: float in [-1880.0, -2080.0, -2280.0, -2480.0]:
+		m.park_props.append({"pos": Vector2(536.0, py), "kind": "bollard", "dig": false, "solid": true, "mark": true})
+		m.park_props.append({"pos": Vector2(744.0, py), "kind": "bollard", "dig": false, "solid": true, "mark": true})
 
 	m.park_props.append({"pos": Vector2(700.0, -480.0), "kind": "planter", "dig": false, "solid": true, "mark": true})
 	m.park_props.append({"pos": Vector2(580.0, -1600.0), "kind": "planter", "dig": false, "solid": true, "mark": true})
@@ -481,7 +488,7 @@ const PALM_LEAF := Color(0.26, 0.42, 0.22)
 const PALM_LIT := Color(0.44, 0.58, 0.30)
 const CYPRESS := Color(0.14, 0.26, 0.16)
 const CYPRESS_LIT := Color(0.26, 0.40, 0.24)
-const SEA_SHALLOW := Color(0.22, 0.56, 0.62)
+const SEA_SHALLOW := Color(0.28, 0.72, 0.82)
 const FOAM := Color(0.94, 0.96, 0.96)
 const SHINGLE := Color(0.66, 0.62, 0.56)
 const BEACH := Color(0.86, 0.78, 0.62)
@@ -1036,20 +1043,33 @@ static func _visitor_rail(wc: ShapeBatch) -> void:
 		y -= 26.0
 
 
+static func _soft_shadow_band(b: ShapeBatch, origin: Vector2, tip: Vector2, half0: float, half1: float, col: Color, three_rows := false) -> void:
+	var span := tip - origin
+	if span.length_squared() < 1.0:
+		return
+	var side := span.normalized().orthogonal()
+	var ts := [0.0, 0.5, 1.0] if three_rows else [0.0, 0.35, 0.72, 1.0]
+	var ra := PackedFloat32Array([0.85, 0.45, 0.0] if three_rows else [0.90, 0.65, 0.30, 0.0])
+	var pts := PackedVector2Array()
+	for t: float in ts:
+		var q := origin.lerp(tip, t)
+		var hw := lerpf(half0, half1, t)
+		pts.append_array(PackedVector2Array([q - side * hw, q - side * hw * 0.48, q + side * hw * 0.48, q + side * hw]))
+	b.band(pts, 4, col, ra, PackedFloat32Array([0.0, 1.0, 1.0, 0.0]))
+
+
 # El Monument als Castellers' idea, our own figures: a human tower in bronze
 # on a stepped plinth, the pinya round its foot and each storey above drawn
 # a little further up the screen, so the tower stands up out of the paving
 static func _draw_monument(wc: ShapeBatch) -> void:
 	var p := MONUMENT
 	var L := Shade.light
-	var tip := p + L * 170.0
-	var side := L.normalized().orthogonal()
-	wc.polygon(PackedVector2Array([p + side * 34.0, p - side * 34.0, tip - side * 10.0, tip + side * 10.0]), Color(0.05, 0.04, 0.10, 0.12))
-	wc.polygon(PackedVector2Array([p + side * 26.0, p - side * 26.0, tip - side * 5.0, tip + side * 5.0]), Color(0.05, 0.04, 0.10, 0.12))
+	wc.glow(p + L * 8.0, 56.0, Color(0.05, 0.04, 0.10, 0.24), 0.55)
+	_soft_shadow_band(wc, p, p + L * 170.0, 38.0, 14.0, Color(0.05, 0.04, 0.10, 0.26))
 	for st: Array in [[46.0, Color(0.66, 0.62, 0.56)], [36.0, Color(0.74, 0.70, 0.64)]]:
 		var hw: float = st[0]
 		var col: Color = st[1]
-		wc.rect(Rect2(p.x - hw + 5.0, p.y - hw + 7.0, hw * 2.0, hw * 2.0), Color(0.05, 0.04, 0.10, 0.25))
+		wc.glow(p + Vector2(4.0, 6.0), hw * 1.4, Color(0.05, 0.04, 0.10, 0.18), 0.55)
 		wc.rect(Rect2(p.x - hw, p.y - hw, hw * 2.0, hw * 2.0), col)
 		wc.rect(Rect2(p.x - hw, p.y - hw, hw * 2.0, 3.0), col.lightened(0.2))
 		wc.rect(Rect2(p.x - hw, p.y - hw, 3.0, hw * 2.0), col.lightened(0.12))
@@ -1087,7 +1107,16 @@ static func _bronze_figure(wc: ShapeBatch, q: Vector2, sc: float, top: bool) -> 
 # with his arm out, and his long shadow down the steps
 static func _draw_podium(wc: ShapeBatch) -> void:
 	var r := PODIUM
-	wc.rect(Rect2(r.position + Vector2(8.0, 12.0), r.size), Color(0.05, 0.04, 0.10, 0.22))
+	var L := Shade.light
+	wc.glow(r.get_center() + Vector2(10.0, 14.0), 135.0, Color(0.05, 0.04, 0.10, 0.24), 0.65)
+	wc.band(PackedVector2Array([
+		Vector2(r.end.x - 2.0, r.position.y + 4.0), Vector2(r.end.x + 18.0, r.position.y + 10.0),
+		Vector2(r.end.x - 2.0, r.end.y), Vector2(r.end.x + 18.0, r.end.y + 16.0),
+	]), 2, Color(0.05, 0.04, 0.10, 0.22), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([1.0, 0.0]))
+	wc.band(PackedVector2Array([
+		Vector2(r.position.x + 4.0, r.end.y - 2.0), Vector2(r.end.x, r.end.y - 2.0),
+		Vector2(r.position.x + 12.0, r.end.y + 20.0), Vector2(r.end.x + 16.0, r.end.y + 20.0),
+	]), 2, Color(0.05, 0.04, 0.10, 0.22), PackedFloat32Array([1.0, 0.0]), PackedFloat32Array([1.0, 1.0]))
 	for k in range(3):
 		var s := r.grow(-float(k) * 11.0)
 		var col := Color(0.70, 0.64, 0.54).lightened(0.05 * float(k))
@@ -1103,10 +1132,7 @@ static func _draw_podium(wc: ShapeBatch) -> void:
 			top.end - Vector2(12.0, 12.0), Vector2(top.position.x + 12.0, top.end.y - 12.0)]:
 		_cypress(wc, cp, 10.0)
 	var c := r.get_center() + Vector2(0.0, 10.0)
-	var L := Shade.light
-	var tip := c + L * 120.0
-	var side := L.normalized().orthogonal()
-	wc.polygon(PackedVector2Array([c + side * 10.0, c - side * 10.0, tip - side * 4.0, tip + side * 4.0]), Color(0.05, 0.04, 0.10, 0.24))
+	_soft_shadow_band(wc, c, c + L * 120.0, 14.0, 7.0, Color(0.05, 0.04, 0.10, 0.24))
 	wc.rect(Rect2(c.x - 15.0, c.y - 15.0, 30.0, 30.0), Color(0.86, 0.82, 0.74))
 	wc.rect(Rect2(c.x - 15.0, c.y + 11.0, 30.0, 4.0), Color(0.60, 0.56, 0.50))
 	wc.rect(Rect2(c.x - 8.0, c.y + 16.0, 16.0, 3.0), BRONZE)
@@ -1139,9 +1165,10 @@ static func _lay_rect(wc: ShapeBatch, r: Rect2, t: float) -> void:
 
 
 static func _cypress(wc: ShapeBatch, p: Vector2, r: float) -> void:
-	# tall and narrow: from above a tight crown, and a long thin shadow
+	# tall and narrow: from above a tight crown, and a long soft feathered shadow
 	var L := Shade.light
-	wc.capsule(p, p + L * r * 5.0, r * 0.6, Color(0.05, 0.04, 0.10, 0.22))
+	wc.glow(p + L * r * 0.6, r * 1.45, Color(0.04, 0.04, 0.08, 0.18), 0.45)
+	_soft_shadow_band(wc, p, p + L * r * 5.2, r * 0.85, r * 0.35, Color(0.04, 0.04, 0.08, 0.28), true)
 	wc.circle(p, r, CYPRESS)
 	wc.circle(p + Vector2(-r * 0.25, -r * 0.3), r * 0.6, CYPRESS_LIT)
 	wc.circle(p + Vector2(-r * 0.35, -r * 0.45), r * 0.25, CYPRESS_LIT.lightened(0.15))
@@ -1198,14 +1225,19 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> v
 # from the shore in soft bands. Static: the surf is draw_live's.
 static func _coast(b: ShapeBatch, lo: float, hi: float) -> void:
 	var y := floorf(lo / 20.0) * 20.0
-	# the sea: deep everywhere, then its shallows laid over the shore side
+	# the sea: luminous deep blue everywhere, then wider shallows and warm sunset
+	# sky reflections laid across the visible water from the shore out
 	b.rect(Rect2(shore_x(hi) - 30.0, lo, 1400.0, hi - lo), SEA_DEEP)
 	var pts := PackedVector2Array()
+	var dusk_pts := PackedVector2Array()
+	var coral_pts := PackedVector2Array()
 	var rows := 0
 	var yy := lo
 	while true:
 		var sx := shore_x(yy)
-		pts.append_array(PackedVector2Array([Vector2(sx - 30.0, yy), Vector2(sx + 30.0, yy), Vector2(sx + 140.0, yy), Vector2(sx + 420.0, yy)]))
+		pts.append_array(PackedVector2Array([Vector2(sx - 8.0, yy), Vector2(sx + 55.0, yy), Vector2(sx + 170.0, yy), Vector2(sx + 360.0, yy)]))
+		dusk_pts.append_array(PackedVector2Array([Vector2(sx + 24.0, yy), Vector2(sx + 120.0, yy), Vector2(sx + 260.0, yy), Vector2(sx + 480.0, yy)]))
+		coral_pts.append_array(PackedVector2Array([Vector2(sx + 70.0, yy), Vector2(sx + 210.0, yy), Vector2(sx + 420.0, yy)]))
 		rows += 1
 		if yy >= hi:
 			break
@@ -1213,12 +1245,15 @@ static func _coast(b: ShapeBatch, lo: float, hi: float) -> void:
 	var ra := PackedFloat32Array()
 	ra.resize(rows)
 	ra.fill(1.0)
-	b.band(pts, 4, SEA_MID, ra, PackedFloat32Array([1.0, 1.0, 0.7, 0.0]))
-	b.band(pts, 4, SEA_SHALLOW, ra, PackedFloat32Array([1.0, 0.8, 0.0, 0.0]))
-	# the evening sky's warmth on the open water, far out
-	var far := PackedVector2Array([Vector2(1150.0, lo), Vector2(1350.0, lo), Vector2(1700.0, lo),
-		Vector2(1150.0, hi), Vector2(1350.0, hi), Vector2(1700.0, hi)])
-	b.band(far, 3, SEA_GOLD, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 0.8, 0.4]))
+	b.band(pts, 4, SEA_MID, ra, PackedFloat32Array([1.0, 1.0, 0.72, 0.0]))
+	b.band(pts, 4, SEA_SHALLOW, ra, PackedFloat32Array([1.0, 0.85, 0.12, 0.0]))
+	var sunset := 1.0 if (Game.hour == "dusk" or Game.hour == "dawn") else (0.18 if Game.hour == "night" else 0.42)
+	b.band(dusk_pts, 4, Color(SEA_GOLD.r, SEA_GOLD.g, SEA_GOLD.b, SEA_GOLD.a * sunset), ra, PackedFloat32Array([0.0, 0.85, 0.60, 0.0]))
+	b.band(coral_pts, 3, Color(0.96, 0.76, 0.60, 0.12 * sunset), ra, PackedFloat32Array([0.0, 0.85, 0.30]))
+	# warm dusk glow continuing out toward the horizon
+	var far := PackedVector2Array([Vector2(1220.0, lo), Vector2(1420.0, lo), Vector2(1750.0, lo),
+		Vector2(1220.0, hi), Vector2(1420.0, hi), Vector2(1750.0, hi)])
+	b.band(far, 3, Color(SEA_GOLD.r, SEA_GOLD.g, SEA_GOLD.b, 0.15 * sunset), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 0.85, 0.45]))
 	while y < hi:
 		var y1 := y + 20.0
 		var r0 := rail_x(y)
@@ -1266,7 +1301,7 @@ static func _coast(b: ShapeBatch, lo: float, hi: float) -> void:
 
 
 static func _pine(b: ShapeBatch, p: Vector2, r: float) -> void:
-	b.circle(p + Shade.light * r * 0.9, r, Color(0.05, 0.04, 0.10, 0.20))
+	b.glow(p + Shade.light * r * 0.9, r * 1.35, Color(0.05, 0.04, 0.10, 0.22), 0.55)
 	b.circle(p, r, Color(0.20, 0.34, 0.20))
 	b.circle(p + Vector2(-r * 0.3, -r * 0.3), r * 0.62, Color(0.30, 0.46, 0.26))
 	b.circle(p + Vector2(r * 0.35, r * 0.2), r * 0.4, Color(0.18, 0.30, 0.18))
@@ -1524,9 +1559,10 @@ static func _ajuntament(b: ShapeBatch, r: Rect2, face: float) -> void:
 		y += 8.0
 	# the turret over the middle, its clock face to the plaça, the flag
 	var t := Rect2(face - 66.0, r.get_center().y - 26.0, 52.0, 52.0)
-	b.rect(Rect2(t.position + L * 30.0, t.size), Color(0.05, 0.04, 0.10, 0.28))
-	b.rect(t, Color(0.90, 0.86, 0.76))
 	var tc := t.get_center()
+	b.glow(tc + L * 18.0, 42.0, Color(0.05, 0.04, 0.10, 0.24), 0.45)
+	_soft_shadow_band(b, tc, tc + L * 54.0, 38.0, 30.0, Color(0.05, 0.04, 0.10, 0.26), true)
+	b.rect(t, Color(0.90, 0.86, 0.76))
 	b.polygon(PackedVector2Array([t.position + Vector2(6, 6), Vector2(t.end.x - 6.0, t.position.y + 6.0), tc]), Color(0.42, 0.44, 0.46))
 	b.polygon(PackedVector2Array([t.position + Vector2(6, 6), tc, Vector2(t.position.x + 6.0, t.end.y - 6.0)]), Color(0.48, 0.50, 0.52))
 	b.polygon(PackedVector2Array([Vector2(t.end.x - 6.0, t.position.y + 6.0), t.end - Vector2(6, 6), tc]), Color(0.32, 0.34, 0.36))
@@ -1634,7 +1670,9 @@ static func _roman_wall(b: ShapeBatch, lo: float, hi: float) -> void:
 	while ty < hi + 100.0:
 		if ty < WALLS_Y0 - 60.0 and ty > WALLS_Y1 + 60.0:
 			var t := Rect2(x0 - 62.0, ty - 38.0, 70.0, 76.0)
-			b.rect(Rect2(t.position + Shade.light * 40.0, t.size), Color(0.05, 0.04, 0.10, 0.22))
+			var tc := t.get_center()
+			b.glow(tc + Shade.light * 20.0, 54.0, Color(0.05, 0.04, 0.10, 0.22), 0.5)
+			_soft_shadow_band(b, tc, tc + Shade.light * 80.0, 50.0, 38.0, Color(0.05, 0.04, 0.10, 0.26))
 			b.rect(t, ROMAN)
 			var tt := t.grow(-7.0)
 			b.rect(tt, Color(0.66, 0.60, 0.50))
@@ -1708,16 +1746,18 @@ static func _surf(b: ShapeBatch, lo: float, hi: float, t: float) -> void:
 		var y1 := y + 24.0
 		var s0 := shore_x(y) + sin(t * 1.7 + y * 0.03) * 5.0
 		var s1 := shore_x(y1) + sin(t * 1.7 + y1 * 0.03) * 5.0
-		b.line(Vector2(s0, y), Vector2(s1, y1), Color(FOAM.r, FOAM.g, FOAM.b, 0.75), 4.0 + 2.0 * sin(t * 1.3 + y * 0.05))
-		var w0 := s0 + 16.0 + 10.0 * sin(t * 0.9 + y * 0.02)
-		var w1 := s1 + 16.0 + 10.0 * sin(t * 0.9 + y1 * 0.02)
-		b.line(Vector2(w0, y), Vector2(w1, y1), Color(1, 1, 1, 0.22), 2.0)
+		b.line(Vector2(s0, y), Vector2(s1, y1), Color(FOAM.r, FOAM.g, FOAM.b, 0.80), 4.2 + 2.0 * sin(t * 1.3 + y * 0.05))
+		var w0 := s0 + 18.0 + 10.0 * sin(t * 0.9 + y * 0.02)
+		var w1 := s1 + 18.0 + 10.0 * sin(t * 0.9 + y1 * 0.02)
+		b.line(Vector2(w0, y), Vector2(w1, y1), Color(0.92, 0.98, 1.0, 0.34), 2.2)
 		y = y1
-	for k in range(16):
+	var glint_col := Color(0.84, 0.92, 1.0, 0.36) if Game.hour == "night" else Color(1.0, 0.88, 0.64, 0.56 if (Game.hour == "dusk" or Game.hour == "dawn") else 0.42)
+	for k in range(20):
 		var gy := lo + fposmod(_h(float(k), 3.0) * (hi - lo) + t * 6.0, hi - lo)
-		var gx := shore_x(gy) + 40.0 + _h(float(k), 5.0) * 260.0
-		var a := 0.5 + 0.5 * sin(t * 3.0 + float(k) * 1.7)
-		b.line(Vector2(gx - 5.0, gy), Vector2(gx + 5.0, gy), Color(1.0, 0.92, 0.76, 0.40 * a), 1.6)
+		var gx := shore_x(gy) + 24.0 + _h(float(k), 5.0) * 280.0
+		var a := 0.45 + 0.55 * sin(t * 2.8 + float(k) * 1.7)
+		var len := 5.0 + _h(float(k), 7.0) * 6.0
+		b.line(Vector2(gx - len, gy), Vector2(gx + len, gy), Color(glint_col.r, glint_col.g, glint_col.b, glint_col.a * a), 2.0)
 
 
 # people at the Balcó's railing looking out to sea; one touches the rail
@@ -1739,7 +1779,7 @@ static func _lookers(b: ShapeBatch, vt: float, vb: float) -> void:
 const STROLLS := [
 	[420.0, -60.0, -760.0, 4200], [640.0, -260.0, -840.0, 4210],
 	[400.0, -1000.0, -1640.0, 4220],
-	[520.0, -1880.0, -2960.0, 4230], [760.0, -1900.0, -2980.0, 4240], [600.0, -2000.0, -2900.0, 4250],
+	[560.0, -1880.0, -2960.0, 4230], [720.0, -1900.0, -2980.0, 4240], [600.0, -2000.0, -2900.0, 4250],
 	[700.0, -2100.0, -2700.0, 4260], [430.0, -1900.0, -2900.0, 4270], [850.0, -1950.0, -2950.0, 4280],
 	[480.0, -3420.0, -4400.0, 4290], [780.0, -3500.0, -4500.0, 4300], [620.0, -4500.0, -4740.0, 4310],
 ]
@@ -1865,6 +1905,42 @@ static func draw_overhead(_m: Node2D, ci: CanvasItem) -> void:
 
 # Pla de la Seu, off the leash: the cathedral's front at the top of its
 # stair, the square laid in old flags, Roman stones and a café's tables
+static func draw_grove(m: Node2D, c: Object, p: Vector2, i: int) -> void:
+	if p.y >= m.GATE_Y:
+		return
+	# Cathedral square holm oaks planted in Mèdol limestone ashlar escocells
+	# with iron grates, never protruding woodland forest roots on stone slabs.
+	var b := ShapeBatch.new()
+	b.lod = true
+	b.glow(p + Shade.light * 7.0, 26.0, Color(0.05, 0.04, 0.10, 0.22), 0.45)
+	b.rect(Rect2(p.x - 19.0, p.y - 19.0, 38.0, 38.0), STONE)
+	b.rect(Rect2(p.x - 19.0, p.y - 19.0, 38.0, 3.0), STONE_LIT)
+	b.rect(Rect2(p.x - 19.0, p.y - 19.0, 3.0, 38.0), STONE_LIT.lerp(STONE, 0.35))
+	b.rect(Rect2(p.x - 19.0, p.y + 16.0, 38.0, 3.0), STONE_DARK)
+	b.rect(Rect2(p.x + 16.0, p.y - 19.0, 3.0, 38.0), STONE_DARK)
+	# ashlar kerb corner joints
+	for s: float in [-1.0, 1.0]:
+		b.line(Vector2(p.x + s * 10.0, p.y - 19.0), Vector2(p.x + s * 10.0, p.y - 14.5), JOINT, 1.1)
+		b.line(Vector2(p.x + s * 10.0, p.y + 14.5), Vector2(p.x + s * 10.0, p.y + 19.0), JOINT, 1.1)
+	b.rect(Rect2(p.x - 14.5, p.y - 14.5, 29.0, 29.0), Color(0.20, 0.17, 0.14))
+	b.rect(Rect2(p.x - 13.0, p.y - 13.0, 26.0, 26.0), Color(0.32, 0.26, 0.19))
+	# cast-iron grate bars and inner collar ring
+	for gi in range(4):
+		var a := float(gi) * PI * 0.25
+		var d := Vector2.from_angle(a) * 12.5
+		b.line(p - d, p + d, Color(0.16, 0.17, 0.19, 0.85), 1.6)
+	b.draw_arc(p, 11.5, 0.0, TAU, 16, Color(0.16, 0.17, 0.19, 0.80), 1.6)
+	b.circle(p, 8.2, Color(0.26, 0.20, 0.14))
+	# scattered fallen leaves / limestone grit varied by tree index
+	for k in range(2):
+		var a := _h(float(i), 11.0 + float(k) * 7.0) * TAU
+		var r := 7.0 + _h(float(i), 19.0 + float(k) * 5.0) * 5.0
+		var col := PLANE_LIT.lerp(STONE_LIT, 0.35) if (i + k) % 2 == 0 else Color(0.56, 0.44, 0.24)
+		b.circle(p + Vector2.from_angle(a) * r, 1.8, col)
+	b.flush(c)
+	m.broadleaf_grove(c, p)
+
+
 static func draw_freedom(m: Node2D, c: Object) -> void:
 	var r: Rect2 = m._freedom_rect()
 	var b := ShapeBatch.new()
@@ -1928,7 +2004,11 @@ static func _cathedral(b: ShapeBatch, r: Rect2) -> void:
 	var L := Shade.light
 	# the nave and aisles' roofs, beyond the front
 	var nave := Rect2(cx - 130.0, top - 300.0, 260.0, 230.0)
-	b.rect(Rect2(nave.position + L * 20.0, nave.size), Color(0.05, 0.04, 0.10, 0.22))
+	b.glow(nave.get_center() + L * 18.0, 185.0, Color(0.05, 0.04, 0.10, 0.22), 0.65)
+	b.band(PackedVector2Array([
+		Vector2(nave.end.x - 2.0, nave.position.y + 4.0), Vector2(nave.end.x + 26.0 * maxf(L.x, 0.2), nave.position.y + 12.0),
+		Vector2(nave.end.x - 2.0, nave.end.y), Vector2(nave.end.x + 26.0 * maxf(L.x, 0.2), nave.end.y),
+	]), 2, Color(0.05, 0.04, 0.10, 0.20), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([1.0, 0.0]))
 	b.rect(Rect2(nave.position.x, nave.position.y, 70.0, nave.size.y), Color(0.60, 0.36, 0.26))
 	b.rect(Rect2(nave.end.x - 70.0, nave.position.y, 70.0, nave.size.y), Color(0.50, 0.30, 0.22))
 	b.rect(Rect2(cx - 60.0, nave.position.y, 60.0, nave.size.y), Color(0.66, 0.40, 0.28))
@@ -1940,7 +2020,8 @@ static func _cathedral(b: ShapeBatch, r: Rect2) -> void:
 		ry += 11.0
 	# the bell tower, octagonal, to the east
 	var bt := Vector2(cx + 190.0, top - 120.0)
-	b.circle(bt + L * 40.0, 34.0, Color(0.05, 0.04, 0.10, 0.22))
+	b.glow(bt + L * 26.0, 48.0, Color(0.05, 0.04, 0.10, 0.22), 0.45)
+	_soft_shadow_band(b, bt, bt + L * 68.0, 38.0, 22.0, Color(0.05, 0.04, 0.10, 0.24))
 	var oct := PackedVector2Array()
 	for k in range(8):
 		oct.append(bt + Vector2.from_angle(TAU * (float(k) + 0.5) / 8.0) * 34.0)
