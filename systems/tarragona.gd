@@ -1756,8 +1756,8 @@ static func _surf(b: ShapeBatch, lo: float, hi: float, t: float) -> void:
 		var gy := lo + fposmod(_h(float(k), 3.0) * (hi - lo) + t * 6.0, hi - lo)
 		var gx := shore_x(gy) + 24.0 + _h(float(k), 5.0) * 280.0
 		var a := 0.45 + 0.55 * sin(t * 2.8 + float(k) * 1.7)
-		var len := 5.0 + _h(float(k), 7.0) * 6.0
-		b.line(Vector2(gx - len, gy), Vector2(gx + len, gy), Color(glint_col.r, glint_col.g, glint_col.b, glint_col.a * a), 2.0)
+		var half_len := 5.0 + _h(float(k), 7.0) * 6.0
+		b.line(Vector2(gx - half_len, gy), Vector2(gx + half_len, gy), Color(glint_col.r, glint_col.g, glint_col.b, glint_col.a * a), 2.0)
 
 
 # people at the Balcó's railing looking out to sea; one touches the rail
@@ -1903,8 +1903,6 @@ static func draw_overhead(_m: Node2D, ci: CanvasItem) -> void:
 	b.flush()
 
 
-# Pla de la Seu, off the leash: the cathedral's front at the top of its
-# stair, the square laid in old flags, Roman stones and a café's tables
 static func draw_grove(m: Node2D, c: Object, p: Vector2, i: int) -> void:
 	if p.y >= m.GATE_Y:
 		return
@@ -1941,6 +1939,8 @@ static func draw_grove(m: Node2D, c: Object, p: Vector2, i: int) -> void:
 	m.broadleaf_grove(c, p)
 
 
+# Pla de la Seu, off the leash: the cathedral's front at the top of its
+# stair, the square laid in old flags, Roman stones and a café's tables
 static func draw_freedom(m: Node2D, c: Object) -> void:
 	var r: Rect2 = m._freedom_rect()
 	var b := ShapeBatch.new()
