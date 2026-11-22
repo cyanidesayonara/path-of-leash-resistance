@@ -45,17 +45,20 @@ sed -i -E "s/^version\/code=.*/version\/code=${code}/; s/^version\/name=.*/versi
 grep -q "^version/code=${code}$" export_presets.cfg
 
 # a gradle build exports through the project's android/ template, which is
-# not committed: install it from the export templates for this export
+# not committed. Godot installs it only alongside an export (the flag alone
+# starts the editor and waits), so it rides on the first one. Every export
+# is time-limited: a hung Godot fails the job instead of eating its timeout.
+install=()
 if [ ! -d android/build ]; then
-  "$GODOT" --headless --path . --install-android-build-template
+  install=(--install-android-build-template)
 fi
-test -d android/build
 
 mkdir -p build/android
-"$GODOT" --headless --path . --export-release "Android" build/android/PathOfLeashResistance.aab
+timeout 1200 "$GODOT" --headless --path . "${install[@]}" --export-release "Android" build/android/PathOfLeashResistance.aab
+test -d android/build
 test -s build/android/PathOfLeashResistance.aab
 # the same build as an APK, to install by hand
 sed -i 's/^gradle_build\/export_format=1/gradle_build\/export_format=0/' export_presets.cfg
-"$GODOT" --headless --path . --export-release "Android" build/android/PathOfLeashResistance.apk
+timeout 1200 "$GODOT" --headless --path . --export-release "Android" build/android/PathOfLeashResistance.apk
 test -s build/android/PathOfLeashResistance.apk
 ls -l build/android
