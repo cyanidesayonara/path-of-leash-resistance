@@ -31,7 +31,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Forty-two walks in and around Barcelona**, each built as its own place, plus a
+- **Fifty walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -42,22 +42,26 @@ you want to go; constant hauling wears their patience down until they say
   near misses.
 - **Dares**: a dare-giver on every walk, each with their own tune. Bark to
   take a dare, then land the tricks before the music runs out.
-- **Eight chases.** A street sweeper careens down a back street at dawn, and
+- **Nine chases.** A street sweeper careens down a back street at dawn, and
   you drag your oblivious human home ahead of it. On El Besòs the river
   comes home with you, in El Veterinari you bolt from the vet's, wild boars
   come down Els Senglars after you, the correfoc's fire devils chase
   you through Gràcia, the Dimoni's rolling firework float pursues you in
-  La Cremada, airport security runs you out of L'Aeroport, and the wild
-  goats come down Montserrat after you.
-- **Five dogs**, each with a knack of their own, opened with stars, and bones
-  to train them.
+  La Cremada, airport security runs you out of L'Aeroport, a runaway snow
+  groomer barrels down La Molina, and the wild goats come down Montserrat
+  after you.
+- **Seven dogs**, each with a knack and a skill goal of her own, opened with
+  stars, with buried finds to sniff out and training to spend on her stats.
 - **Four statue bosses**: El Mamut the stone mammoth in La Ciutadella, Els Lleons the twin bronze lions at El Port, El Drac the mosaic salamander in El Mosaic, and on the Rambla del Raval, El Gat, a fat bronze cat who climbs off his plinth.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
 - **Ground you can feel**: grass and mud slow her but hold scent, sand drags
   at her paws, wet ground and snow make her skid.
-- **Weather and night**: rain, wind and snow on any walk, with everyone
-  dressed for it.
+- **Nine skies and six times of day**: clear, breeze, fog, drizzle, downpour,
+  storm, gale, snow and Sahara dust, from dawn to night, with gusts you can
+  dig in against and everyone dressed for the weather.
+- **In English, Catalan and Spanish**, with screen shake, flashes, text size
+  and controls adjustable.
 - **Other dogs with lives of their own**: they sniff and mark the posts you
   pass and come over to say hello, unless they are the grumpy sort, who
   lunge and bark at the end of the leash. Their owners are people too: on a
@@ -101,14 +105,22 @@ you want to go; constant hauling wears their patience down until they say
 | La Carretera de les Aigües | the hillside hike |
 | Festa de Gràcia | the decorated festival street |
 | El Laberint d'Horta | the cypress maze |
+| La Molina | ski slopes and a runaway groomer |
 | El Port | the fishing wharf |
 | Plaça d'Espanya | the fountain avenue |
+| Sant Pau | the modernista hospital gardens |
 | El Poble Espanyol | the walled village of copied towns |
+| Sitges | whitewashed streets by the sea |
+| Les Atraccions | coasters, queues and churros |
 | L'Aeroport | airport security on your tail |
 | Les Obres | the work site |
+| Camí de Ronda | the cliff path above the coves |
 | Dia de Partit | match day |
 | La Ferralla | the junkyard |
 | Montserrat | the mountain trail, the funicular crossing and the wild goats |
+| Els Encants | flea-market junk under a mirror |
+| Tarragona | Roman walls above the dusk sea |
+| Vic | fog, arcades and hanging fuet |
 | Rambla del Raval | the finale, with El Gat, a bronze cat |
 
 ## Controls
