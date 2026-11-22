@@ -108,5 +108,30 @@ func _check_layer() -> void:
 	sg.rings.clear()
 	_check(layer.refresh(vt, vb, true), "the pass after the last ring clears it")
 	_check(not layer.refresh(vt, vb, true), "and then the layer rests again")
+	_check(m.signs.size() >= 2, "street has multiple signs to test selective repaints")
+	if m.signs.size() >= 2 and not (sg.pieces as Array).is_empty():
+		var sg1: Dictionary = m.signs[1]
+		var vt2 := minf(vt, float(sg1.top))
+		var vb2 := maxf(vb, float(sg1.bottom))
+		layer.refresh(vt2, vb2, true)
+		var e0: Dictionary = layer._paint[0]
+		var e1: Dictionary = layer._paint[1]
+		var vp0: SubViewport = e0.vp
+		var vp1: SubViewport = e1.vp
+		_check(vp0.size.x < layer.MAX_SIDE and vp0.size.x % layer.ALLOC_STEP == 0, "sign SubViewport width is bucketed to ALLOC_STEP")
+		_check((e0.src as Rect2).size.x <= float(vp0.size.x) and (e0.src as Rect2).size.y <= float(vp0.size.y), "sign src rect fits inside its SubViewport")
+		vp0.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		vp1.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		var kept_sz := vp0.size
+		sg.pieces[0].p = (sg.pieces[0].p as Vector2) + Vector2(2.0, 0.0)
+		sg.rev = int(sg.get("rev", 0)) + 1
+		_check(layer.refresh(vt2, vb2, true), "moving one piece refreshes the layer")
+		_check(vp0.render_target_update_mode == SubViewport.UPDATE_ONCE, "the changed sign repaints")
+		_check(vp1.render_target_update_mode == SubViewport.UPDATE_DISABLED, "an unchanged sign in view is not repainted")
+		_check(vp0.size == kept_sz, "a small move inside ALLOC_STEP headroom keeps the SubViewport size")
+		sg.pieces[0].p = (sg.pieces[0].p as Vector2) + Vector2(float(kept_sz.x), 0.0)
+		sg.rev = int(sg.get("rev", 0)) + 1
+		layer.refresh(vt2, vb2, true)
+		_check(vp0.size.x > kept_sz.x and (e0.src as Rect2).size.x <= float(vp0.size.x), "growing past headroom expands the SubViewport")
 	m.queue_free()
 	await process_frame

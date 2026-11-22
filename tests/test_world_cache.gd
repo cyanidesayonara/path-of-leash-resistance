@@ -85,12 +85,18 @@ func _run() -> void:
 	var r0 := AnimClock.reads
 	AnimClock.msec()
 	_check(AnimClock.reads == r0 + 1, "the clock counts a read")
+	var batched := ShapeBatch.new()
+	batched.arc(Vector2.ZERO, 10.0, 0.0, PI, 6, Color.RED, 2.0)
+	batched.ellipse(Vector2(4.0, 5.0), 12.0, 6.0, Color.BLUE)
+	_check(batched._ops.is_empty() and batched._points.size() == 5 * 6 + ShapeBatch.SEGMENTS * 3,
+		"batched arc and ellipse record triangles without adding canvas ops")
 
 	# a cached section: furniture
 	var m := await _load("park")
 	var first := _furniture(m, 0.0)
 	var sc = m._sections["furniture"]
 	_check(not sc.live and sc.rec != null, "park's furniture is cached")
+	_check(sc.rec._ops.is_empty(), "park's cached furniture has no batch-breaking ops")
 	var live := ShapeBatch.new()
 	m._wc = live
 	var y: float = sc.cam
@@ -113,6 +119,20 @@ func _run() -> void:
 	kept = sc.rec
 	_furniture(m, 0.5)
 	_check(sc.rec != kept and not sc.live, "a section records again when its own key changes")
+
+	# a cached section: ground_detail
+	var gd_out := ShapeBatch.new()
+	m._wc = gd_out
+	var gdy: float = m.cam.position.y
+	m._draw_section("ground_detail", [], gdy - 440.0, gdy + 440.0, m._draw_ground_detail)
+	var gd_sc = m._sections.get("ground_detail")
+	_check(gd_sc != null and not gd_sc.live and gd_sc.rec != null and gd_sc.rec._ops.is_empty(),
+		"ground_detail is cached with no batch-breaking ops")
+	var gd_live := ShapeBatch.new()
+	m._wc = gd_live
+	m._draw_ground_detail(gdy - 440.0 - m.SECTION_BAND, gdy + 440.0 + m.SECTION_BAND)
+	_check(gd_out._points == gd_live._points and gd_out._colors == gd_live._colors,
+		"ground_detail replay matches a live draw of the recorded band")
 
 	# the ground canvas
 	var gl: Node2D = m.ground_layer

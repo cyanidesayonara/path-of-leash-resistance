@@ -29,6 +29,9 @@ const SUPERSAMPLE := 2.0
 const PAD := 40.0
 # the largest texture side a sign may take, whatever its extent
 const MAX_SIDE := 4096
+# bucket SubViewport allocations so small rolling-piece bounds growth does not
+# reallocate the offscreen texture every redraw
+const ALLOC_STEP := 128
 
 
 class Painter extends Node2D:
@@ -52,7 +55,7 @@ var _show := true
 # what the last picture showed: rebuild count, then each sign drawn and its
 # rev, then whether any of them was animating
 var _key := PackedInt64Array()
-# per sign index: {"vp": SubViewport, "painter": Painter, "rect": Rect2}
+# per sign index: {"vp": SubViewport, "painter": Painter, "rect": Rect2, "src": Rect2, "rev": int, "light": Vector2, "was_live": bool}
 var _paint := {}
 var _built := -1
 
@@ -72,6 +75,7 @@ func setup(m: Node2D) -> void:
 # the signs show at all; redraws only when that changes the picture, and
 # says whether it did.
 func refresh(vt: float, vb: float, show: bool) -> bool:
+	var now := AnimClock.msec() / 1000.0
 	var key := PackedInt64Array()
 	key.append(int(main.signs_built))
 	var live := false
@@ -85,7 +89,7 @@ func refresh(vt: float, vb: float, show: bool) -> bool:
 			key.append(i)
 			key.append(int(sg.get("rev", 0)))
 			shown.append(i)
-			live = live or WorldSign.animated(sg, AnimClock.msec() / 1000.0)
+			live = live or WorldSign.animated(sg, now)
 	key.append(1 if live else 0)
 	if not live and key == _key:
 		return false
@@ -93,7 +97,7 @@ func refresh(vt: float, vb: float, show: bool) -> bool:
 	_vt = vt
 	_vb = vb
 	_show = show
-	_repaint(shown)
+	_repaint(shown, now)
 	queue_redraw()
 	return true
 
@@ -120,8 +124,8 @@ static func extent(sg: Dictionary) -> Rect2:
 	return r
 
 
-# paint every shown sign into its texture, sized to where its pieces lie now
-func _repaint(shown: Array[int]) -> void:
+# paint every shown sign whose picture changed into its texture
+func _repaint(shown: Array[int], now: float) -> void:
 	if int(main.signs_built) != _built:
 		_built = int(main.signs_built)
 		for k: int in _paint:
@@ -130,11 +134,19 @@ func _repaint(shown: Array[int]) -> void:
 	var signs: Array[Dictionary] = main.signs
 	for i: int in shown:
 		var sg: Dictionary = signs[i]
+		var rev := int(sg.get("rev", 0))
+		var sg_live := WorldSign.animated(sg, now)
+		var e: Dictionary = _paint.get(i, {})
+		if not e.is_empty() and not sg_live and not bool(e.get("was_live", false)) and int(e.get("rev", -1)) == rev and e.get("light", Vector2.INF) == Shade.light:
+			continue
 		var r := extent(sg)
 		if r.size.x <= 0.0:
 			continue
 		var px := Vector2i(mini(ceili(r.size.x * SUPERSAMPLE), MAX_SIDE), mini(ceili(r.size.y * SUPERSAMPLE), MAX_SIDE))
-		var e: Dictionary = _paint.get(i, {})
+		var alloc := Vector2i(
+			mini(((px.x + ALLOC_STEP - 1) / ALLOC_STEP) * ALLOC_STEP, MAX_SIDE),
+			mini(((px.y + ALLOC_STEP - 1) / ALLOC_STEP) * ALLOC_STEP, MAX_SIDE),
+		)
 		if e.is_empty():
 			var vp := SubViewport.new()
 			vp.transparent_bg = true
@@ -146,8 +158,8 @@ func _repaint(shown: Array[int]) -> void:
 			e = {"vp": vp, "painter": painter}
 			_paint[i] = e
 		var vp: SubViewport = e.vp
-		if vp.size != px:
-			vp.size = px
+		if vp.size.x < px.x or vp.size.y < px.y:
+			vp.size = Vector2i(maxi(vp.size.x, alloc.x), maxi(vp.size.y, alloc.y))
 		var painter: Painter = e.painter
 		var k := Vector2(float(px.x) / r.size.x, float(px.y) / r.size.y)
 		painter.scale = k
@@ -157,6 +169,10 @@ func _repaint(shown: Array[int]) -> void:
 		painter.queue_redraw()
 		vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 		e.rect = r
+		e.src = Rect2(Vector2.ZERO, Vector2(px))
+		e.rev = rev
+		e.light = Shade.light
+		e.was_live = sg_live
 
 
 func _draw() -> void:
@@ -168,4 +184,4 @@ func _draw() -> void:
 			continue
 		if not main.sign_shown(main.signs[i], _vt, _vb):
 			continue
-		draw_texture_rect((e.vp as SubViewport).get_texture(), e.rect, false)
+		draw_texture_rect_region((e.vp as SubViewport).get_texture(), e.rect, e.src, Color.WHITE, false)
