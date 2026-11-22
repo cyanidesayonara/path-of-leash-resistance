@@ -2652,6 +2652,8 @@ func _draw_scents() -> void:
 	var shown := 0
 	# every mote and bloom is one draw call (systems/shape_batch.gd)
 	var puffs := ShapeBatch.new()
+	if _wc != null:
+		puffs.lod = _wc.lod
 	for src in _scent_sources():
 		if shown >= 6:
 			break  # keep the draw cost bounded on busy walks
@@ -2698,8 +2700,12 @@ const SHADOW_COL := Color(0.05, 0.05, 0.08)
 func contact_shadow(c: Object, at: Vector2, r: float, h: float, a := 0.24) -> void:
 	# for things that sit ON the ground: a squashed ellipse, pushed away from
 	# the light by however tall the thing is
+	var col := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a)
+	if c is ShapeBatch:
+		c.ellipse(at + Shade.light * h, r * 1.15, r * 0.5, col)
+		return
 	c.draw_set_transform(at + Shade.light * h, 0.0, Vector2(1.15, 0.5))
-	c.draw_circle(Vector2.ZERO, r, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a))
+	c.draw_circle(Vector2.ZERO, r, col)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -2714,9 +2720,13 @@ func cast_shadow(c: Object, at: Vector2, w: float, h: float, a := 0.20) -> void:
 			tip - side * w * 0.62, tip + side * w * 0.62,
 		]),
 		Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a))
-	c.draw_set_transform(at + Shade.light * (w * 0.5), 0.0, Vector2(1.2, 0.55))
-	c.draw_circle(Vector2.ZERO, w * 1.15, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a * 0.9))
-	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var fcol := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, a * 0.9)
+	if c is ShapeBatch:
+		c.ellipse(at + Shade.light * (w * 0.5), w * 1.15 * 1.2, w * 1.15 * 0.55, fcol)
+	else:
+		c.draw_set_transform(at + Shade.light * (w * 0.5), 0.0, Vector2(1.2, 0.55))
+		c.draw_circle(Vector2.ZERO, w * 1.15, fcol)
+		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 const BROADLEAF_LOBES: Array[Vector2] = [
@@ -2740,8 +2750,12 @@ func _draw_broadleaf(c: Object, p: Vector2, scale: float) -> void:
 # the trunk so the tree stands up
 func _broadleaf_ground(c: Object, p: Vector2, scale: float) -> void:
 	var r := 34.0 * scale
+	var col := Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.17)
+	if c is ShapeBatch:
+		c.ellipse(p + Shade.light * (46.0 * scale), r * 1.02 * 1.1, r * 1.02 * 0.55, col)
+		return
 	c.draw_set_transform(p + Shade.light * (46.0 * scale), 0.0, Vector2(1.1, 0.55))
-	c.draw_circle(Vector2.ZERO, r * 1.02, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.17))
+	c.draw_circle(Vector2.ZERO, r * 1.02, col)
 	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
@@ -3044,6 +3058,8 @@ func pole_tree(i: int) -> int:
 func _draw_tree_ground(c: Object, p: Vector2, i: int, kind: int) -> void:
 	_draw_tree_ground_only(c, p, i, kind)
 	var b := ShapeBatch.new()
+	if _wc != null:
+		b.lod = _wc.lod
 	_tree_trunk(b, p, i, kind)
 	b.flush(c)
 
@@ -4539,6 +4555,8 @@ const STALL_CULL := 120.0
 
 func _draw_rambla_stall(st: Vector2, kind: String, i: int) -> void:
 	var b := ShapeBatch.new()
+	if _wc != null:
+		b.lod = _wc.lod
 	var r := Rect2(st.x - 48.0, st.y - 28.0, 96.0, 56.0)
 	Rambla.draw_rambla_stall(self, b, st, kind, i)
 	if kind == "icecream" and not Outdoors.icecream_open(Game.weather, Game.hour):
@@ -4576,6 +4594,8 @@ func _draw_pingpong(st: Vector2) -> void:
 	var r := Rect2(st.x - 44.0, st.y - 24.0, 88.0, 48.0)
 	contact_shadow(_wc, st, 44.0, 8.0, 0.22)
 	var b := ShapeBatch.new()
+	if _wc != null:
+		b.lod = _wc.lod
 	b.rect(r, Color(0.36, 0.48, 0.44))
 	b.rect(r.grow(-1.5), Color(0.92, 0.92, 0.88))
 	b.rect(r.grow(-3.0), Color(0.42, 0.56, 0.50))
@@ -5004,6 +5024,8 @@ const THRESH_GAP := 120.0        # the way through the kerb
 
 func _draw_threshold() -> void:
 	var b := ShapeBatch.new()
+	if _wc != null:
+		b.lod = _wc.lod
 	if walk_mod != null and walk_mod.has_method("draw_threshold"):
 		walk_mod.draw_threshold(self, b)
 		b.flush(_wc)
@@ -5069,6 +5091,8 @@ func _draw_threshold() -> void:
 # two leaves swung open everywhere else. Same mouth, gate_l to gate_r.
 func _draw_gate() -> void:
 	var b := ShapeBatch.new()
+	if _wc != null:
+		b.lod = _wc.lod
 	if walk_mod != null and walk_mod.has_method("draw_gate"):
 		# a way in that is no gate at all (the door of L'Aeroport's jet)
 		walk_mod.draw_gate(self, b)
@@ -6253,7 +6277,10 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 				var rq := PackedVector2Array([p + dir * 17.0 + o * 6.0, p + dir * 9.0 - o * 11.0,
 					p - dir * 8.0 - o * 10.0, p - dir * 16.0 - o * 2.0, p - dir * 10.0 + o * 11.0, p + dir * 6.0 + o * 12.0])
 				_wc.draw_colored_polygon(rq, Color(0.22, 0.22, 0.24, 0.12))
-				_wc.draw_polyline(PackedVector2Array([rq[4], rq[5], rq[0], rq[1]]), Color(0.18, 0.18, 0.20, 0.22), 1.1)
+				var seam_col := Color(0.18, 0.18, 0.20, 0.22)
+				_wc.draw_line(rq[4], rq[5], seam_col, 1.1)
+				_wc.draw_line(rq[5], rq[0], seam_col, 1.1)
+				_wc.draw_line(rq[0], rq[1], seam_col, 1.1)
 			_:
 				# a bit of litter: a leaf or a scrap of paper
 				var c: Color = litter[int(d.sz) % litter.size()]
@@ -9924,9 +9951,13 @@ const PILONA_EDGE := Color(0.07, 0.07, 0.07)
 
 func _draw_pilona(c: Object, p: Vector2, done: bool) -> void:
 	if done:
-		c.draw_set_transform(p + Vector2(3.0, 5.0), 0.0, Vector2(1.25, 0.8))
-		c.draw_circle(Vector2.ZERO, 15.0, Color(0.30, 0.27, 0.12, 0.30))
-		c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		var mcol := Color(0.30, 0.27, 0.12, 0.30)
+		if c is ShapeBatch:
+			c.ellipse(p + Vector2(3.0, 5.0), 15.0 * 1.25, 15.0 * 0.8, mcol)
+		else:
+			c.draw_set_transform(p + Vector2(3.0, 5.0), 0.0, Vector2(1.25, 0.8))
+			c.draw_circle(Vector2.ZERO, 15.0, mcol)
+			c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	cast_shadow(c, p, 8.0, 24.0)
 	# the base it is bolted into the paving with
 	c.draw_circle(p + Vector2(0, 2), 10.5, PILONA_EDGE)
@@ -9937,7 +9968,10 @@ func _draw_pilona(c: Object, p: Vector2, done: bool) -> void:
 	c.draw_circle(p - Shade.SUN * 1.2, 6.4, PILONA_IRON.lightened(0.18))
 	# a rim of light on the lit side of the barrel, so it reads on night paving
 	var lit := (-Shade.SUN).angle()
-	c.draw_arc(p, 7.4, lit - 1.1, lit + 1.1, 10, Color(0.70, 0.68, 0.62, 0.75), 1.4)
+	if c is ShapeBatch:
+		c.arc(p, 7.4, lit - 1.1, lit + 1.1, 10, Color(0.70, 0.68, 0.62, 0.75), 1.4)
+	else:
+		c.draw_arc(p, 7.4, lit - 1.1, lit + 1.1, 10, Color(0.70, 0.68, 0.62, 0.75), 1.4)
 	c.draw_circle(p, 5.2, PILONA_EDGE)
 	# the domed head, lit on one side
 	var head := PILONA_IRON.lightened(0.08) if not done else PILONA_IRON.darkened(0.1)
@@ -10396,6 +10430,8 @@ func _draw_ground_marks(vt: float, vb: float) -> void:
 	if ground_marks.is_empty():
 		return
 	var b := ShapeBatch.new()
+	if _wc != null:
+		b.lod = _wc.lod
 	var i := 0
 	while i < ground_marks.size():
 		var m: Dictionary = ground_marks[i]
@@ -12603,6 +12639,7 @@ func _draw() -> void:
 	# canvas: runs of shapes become one draw call, same pixels
 	# (systems/shape_batch.gd), and anything else passes straight through.
 	_wc = ShapeBatch.new(self)
+	_wc.lod = true
 	_draw_world()
 	_wc.flush()
 	if _draw_cost_on:
@@ -12684,6 +12721,8 @@ func _rot_pad() -> float:
 func _draw_ground(top: float, bottom: float, ctop: float, vt: float, vb: float) -> void:
 	if not _ground_live and ground_layer != null and _ground_key.is_empty():
 		var rec := ShapeBatch.new()
+		if _wc != null:
+			rec.lod = _wc.lod
 		var keep := _wc
 		_wc = rec
 		var reads := AnimClock.reads
@@ -12724,10 +12763,12 @@ func _draw_section(sec: String, key: Array, vt: float, vb: float, draw: Callable
 	if sc.live:
 		draw.call(vt, vb)
 		return
-	var full := [Game.weather, Game.hour, detour_active, tutorial_mode] + key
+	var want_lod := _wc.lod if _wc != null else false
+	var full := [Game.weather, Game.hour, detour_active, tutorial_mode, want_lod] + key
 	var cy: float = cam.position.y
 	if sc.rec == null or full != sc.key or absf(cy - sc.cam) > SECTION_BAND:
 		var rec := ShapeBatch.new()
+		rec.lod = want_lod
 		var keep := _wc
 		_wc = rec
 		var reads := AnimClock.reads
@@ -12788,7 +12829,7 @@ func _draw_furniture(vt: float, vb: float) -> void:
 		# cup and a highlight disc on it, read as a face looking up at you.)
 		_wc.draw_circle(tb + Vector2(0.6, 0.8), 14.0, Color(0.20, 0.20, 0.22))
 		_wc.draw_circle(tb + Vector2(-0.3, -0.3), 12.4, Color(0.90, 0.88, 0.84))
-		_wc.draw_arc(tb + Vector2(-0.3, -0.3), 12.4, PI * 0.1, PI * 0.9, 8, Color(0.74, 0.72, 0.68), 2.0)
+		_wc.arc(tb + Vector2(-0.3, -0.3), 12.4, PI * 0.1, PI * 0.9, 8, Color(0.74, 0.72, 0.68), 2.0)
 		_wc.draw_line(tb + Vector2(-6, -2), tb + Vector2(2, 5), Color(0.78, 0.76, 0.74, 0.7), 1.0)
 		# a coffee in a small cup on its saucer, the handle out to the side
 		var cup := tb + Vector2(4.5, -4)
@@ -12798,17 +12839,19 @@ func _draw_furniture(vt: float, vb: float) -> void:
 		# then whatever else they ordered: a croissant, or a glass of water
 		if int(absf(tb.x * 0.13 + tb.y * 0.07)) % 2 == 0:
 			var cr := tb + Vector2(-4.0, 4.0)
-			_wc.draw_arc(cr, 3.2, PI * 0.1, PI * 1.1, 7, Color(0.70, 0.44, 0.16), 3.6)
-			_wc.draw_arc(cr, 3.2, PI * 0.3, PI * 0.9, 5, Color(0.90, 0.66, 0.30), 1.6)
+			_wc.arc(cr, 3.2, PI * 0.1, PI * 1.1, 7, Color(0.70, 0.44, 0.16), 3.6)
+			_wc.arc(cr, 3.2, PI * 0.3, PI * 0.9, 5, Color(0.90, 0.66, 0.30), 1.6)
 		else:
 			var gl := tb + Vector2(-4.0, 4.5)
 			_wc.draw_circle(gl, 2.8, Color(0.60, 0.76, 0.84, 0.8))
-			_wc.draw_arc(gl, 2.8, PI * 1.1, PI * 1.6, 5, Color(1, 1, 1, 0.9), 1.0)
+			_wc.arc(gl, 2.8, PI * 1.1, PI * 1.6, 5, Color(1, 1, 1, 0.9), 1.0)
 		_wc.draw_rect(Rect2(tb.x - 8.0, tb.y - 6.0, 5.0, 3.0), Color(0.92, 0.82, 0.56))
 	# the beach terraces' canopies and the parasols over the tables are
 	# overhead (draw_overhead_piece); here only the shade a parasol casts
 	if parasols_up():
 		for pa in parasols:
+			if pa.y < vt - PARASOL_R - 30.0 or pa.y > vb + PARASOL_R + 30.0:
+				continue
 			_wc.circle(pa + Shade.light * 16.0, PARASOL_R * 0.92, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
 	# benches
 	# benches: three slats on cast-iron ends, each slat a soft plank lit on
@@ -12834,24 +12877,26 @@ func _draw_furniture(vt: float, vb: float) -> void:
 				_wc.draw_circle(Vector2(b.x + bx, b.y + ey), 0.9, Color(0.20, 0.18, 0.16))
 	# terrace chairs: round seats, four legs, a hint of backrest
 	for ch in chairs:
+		if ch.y < vt - 25.0 or ch.y > vb + 25.0:
+			continue
 		var seat: Vector2 = ch
 		if terrace_kick > 0.0 and lvl == "partit" and ch.distance_to(Partit.DECK.get_center()) < 220.0:
 			seat += Vector2(-8.0 * sin(terrace_kick * 14.0), 0.0)
 		for lg in [Vector2(-5, -5), Vector2(5, -5), Vector2(-5, 5), Vector2(5, 5)]:
 			_wc.draw_circle(seat + lg, 1.5, Color(0.35, 0.27, 0.18))
 		_wc.draw_circle(seat, 6.5, Color(0.58, 0.44, 0.3))
-		_wc.draw_arc(seat, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
+		_wc.arc(seat, 6.5, PI * 1.15, PI * 1.85, 8, Color(0.4, 0.3, 0.2), 3.0)
 	# fountains: where the tank refills
 	for f in fountains:
 		if lvl == "trail":
 			break     # El Bosc drinks from the stream, which draws itself
+		if f.y < vt - 80.0 or f.y > vb + 80.0:
+			continue
 		if rambla():
 			_draw_canaletes(f)
 			continue
 		if lvl == "reial":
 			continue      # the Three Graces fountain draws with Plaça Reial
-		if f.y < vt - 40.0 or f.y > vb + 40.0:
-			continue
 		if walk_mod != null and walk_mod.has_method("draw_fountain"):
 			walk_mod.draw_fountain(self, f)
 			continue
@@ -13238,8 +13283,8 @@ func _draw_world() -> void:
 		_wc.draw_circle(m + Shade.light * 5.0, 15.0, Color(0.05, 0.05, 0.07))
 		# the lit rim on the light side, which is what makes it a hole and
 		# not a disc
-		_wc.draw_arc(m, 19.5, PI * 0.95, PI * 1.95, 16, Color(0.55, 0.53, 0.50), 2.4)
-		_wc.draw_arc(m, 19.5, PI * 0.0, PI * 0.6, 12, Color(0.16, 0.16, 0.18), 2.0)
+		_wc.arc(m, 19.5, PI * 0.95, PI * 1.95, 16, Color(0.55, 0.53, 0.50), 2.4)
+		_wc.arc(m, 19.5, PI * 0.0, PI * 0.6, 12, Color(0.16, 0.16, 0.18), 2.0)
 		# rungs going down, just visible
 		for ri in range(2):
 			_wc.draw_line(m + Vector2(-6.0, 2.0 + float(ri) * 7.0), m + Vector2(6.0, 2.0 + float(ri) * 7.0),
@@ -13405,7 +13450,7 @@ func _draw_world() -> void:
 	elif conveyor_zone.size.y > 0.0 and conveyor_zone.end.y > vt and conveyor_zone.position.y < vb:
 		_draw_travelator(vt, vb)
 	_dprof("furniture")
-	_draw_ground_detail(vt, vb)
+	_draw_section("ground_detail", [], vt, vb, _draw_ground_detail)
 	_dprof("ground detail")
 	_draw_ground_marks(vt, vb)
 	_dprof("ground marks")
@@ -13478,6 +13523,8 @@ func _draw_world() -> void:
 		_wc.draw_rect(zr, Color(zc.r, zc.g, zc.b, 0.85), false, 2.0)
 	_dprof("dents, prints, zones")
 	var fb := ShapeBatch.new()
+	if _wc != null:
+		fb.lod = _wc.lod
 	BuriedFinds.draw(self, fb, vt, vb)
 	fb.flush(_wc)
 	_draw_scents()

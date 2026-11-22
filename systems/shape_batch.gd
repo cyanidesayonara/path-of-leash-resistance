@@ -135,6 +135,25 @@ func circle(pos: Vector2, radius: float, color: Color) -> void:
 	_colors.append_array(_fan_fill)
 
 
+# Axis-aligned filled ellipse, batched with no draw_set_transform flush.
+func ellipse(pos: Vector2, rx: float, ry: float, color: Color) -> void:
+	if lod:
+		var n := lod_sides(maxf(rx, ry))
+		if n < SEGMENTS:
+			var fan: PackedVector2Array = _lod_fans.get(n, PackedVector2Array())
+			if fan.is_empty():
+				fan = _build_fan(n)
+				_lod_fans[n] = fan
+			_points.append_array(Transform2D(Vector2(rx, 0.0), Vector2(0.0, ry), pos) * fan)
+			_add_colors(color, n * 3)
+			return
+	if _unit_fan.is_empty():
+		_build_unit()
+	_points.append_array(Transform2D(Vector2(rx, 0.0), Vector2(0.0, ry), pos) * _unit_fan)
+	_fan_fill.fill(color)
+	_colors.append_array(_fan_fill)
+
+
 # Same placement as circle(), eight sides instead of 64. A crowd of these stays
 # one draw call and does not spend the frame building full circles.
 func coarse(pos: Vector2, radius: float, color: Color) -> void:
@@ -222,6 +241,21 @@ func capsule(a: Vector2, b: Vector2, r: float, color: Color) -> void:
 		line(a, b, color, r * 2.0)
 	circle(a, r, color)
 	circle(b, r, color)
+
+
+# An open stroked arc built from batched line segments (no batch break).
+func arc(center: Vector2, radius: float, start_angle: float, end_angle: float,
+		point_count: int, color: Color, width: float) -> void:
+	if point_count < 2:
+		return
+	var steps := point_count - 1
+	var span := end_angle - start_angle
+	var prev := center + Vector2(cos(start_angle), sin(start_angle)) * radius
+	for i in range(1, point_count):
+		var a := start_angle + span * (float(i) / float(steps))
+		var cur := center + Vector2(cos(a), sin(a)) * radius
+		line(prev, cur, color, width)
+		prev = cur
 
 
 # draw_colored_polygon(points, color)

@@ -28,5 +28,6 @@ func _draw() -> void:
 	if main == null or not on:
 		return
 	var b := ShapeBatch.new(self)
+	b.lod = true
 	main.draw_ground_onto(b, vt, vb)
 	b.flush()
