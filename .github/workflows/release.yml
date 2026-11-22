@@ -276,12 +276,16 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # the runner has an SDK already; the action's default packages
+      # include "tools", which the SDK no longer has
       - uses: android-actions/setup-android@v3
         if: steps.check.outputs.enabled == 'true'
+        with:
+          packages: platform-tools
 
       - name: Install Android SDK components
         if: steps.check.outputs.enabled == 'true'
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;28.1.13356709"
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
       - name: Download Godot + export templates
         if: steps.check.outputs.enabled == 'true'
@@ -303,6 +307,8 @@ jobs:
           ./Godot_v4.7-stable_linux.x86_64 --headless --path . --script res://tools/bake_music.gd
           bash tools/stamp_version.sh
 
+      # tools/android_export.sh is the same export android.yml proves on
+      # every pull request that touches it, there with a throwaway key
       - name: Export signed AAB and sideload APK
         if: steps.check.outputs.enabled == 'true'
         env:
@@ -312,33 +318,10 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > /tmp/upload.keystore
-          # Derive numeric monotonic versionCode from tag (v1.74 -> 107400)
-          VER="${TAG#v}"
-          IFS=. read -r MAJ MIN PAT <<< "${VER}.0"
-          PAT_NUM="${PAT%%[^0-9]*}"
-          export VCODE=$(( MAJ * 10000 + MIN * 100 + ${PAT_NUM:-0} ))
-          python3 - <<PY
-          import os, re
-          txt = open("export_presets.cfg", "r", encoding="utf-8").read()
-          txt = re.sub(r'version/code=\d+', f'version/code={os.environ["VCODE"]}', txt)
-          txt = re.sub(r'version/name="[^"]*"', f'version/name="{os.environ["TAG"].lstrip("v")}"', txt)
-          extra = (
-              f'\nkeystore/release="/tmp/upload.keystore"'
-              f'\nkeystore/release_user="{os.environ["ANDROID_KEY_ALIAS"]}"'
-              f'\nkeystore/release_password="{os.environ["ANDROID_KEY_PASSWORD"]}"\n'
-          )
-          open("export_presets.cfg", "w", encoding="utf-8").write(txt + extra)
-          PY
-          mkdir -p build/android
-          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Android" build/android/PathOfLeashResistance.aab
-          test -s build/android/PathOfLeashResistance.aab
-          # Restore AAB preset and produce sideload APK too
-          sed -i 's/gradle_build\/export_format=1/gradle_build\/export_format=0/' export_presets.cfg
-          ./Godot_v4.7-stable_linux.x86_64 --headless --path . --export-release "Android" build/android/PathOfLeashResistance.apk
-          test -s build/android/PathOfLeashResistance.apk
-          git checkout -- export_presets.cfg
-          rm -f /tmp/upload.keystore
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/upload.keystore"
+          trap 'rm -f "$ANDROID_KEYSTORE_PATH"' EXIT
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$ANDROID_KEYSTORE_PATH"
+          GODOT="$PWD/Godot_v4.7-stable_linux.x86_64" bash tools/android_export.sh
 
       - name: Attach Android bundles to GitHub release
         if: steps.check.outputs.enabled == 'true'
