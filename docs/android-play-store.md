@@ -12,7 +12,7 @@ keytool -genkeypair -v -keystore upload.keystore -alias upload \
 base64 -w0 upload.keystore
 ```
 
-Add these GitHub repository secrets under **Settings > Secrets and variables > Actions**:
+Add these as secrets of the `google-play` environment (**Settings > Environments**, deploying from `v*` tags and `main`; see `docs/release-secrets.md`, which also says how to check them with `credentials.yml` without publishing):
 
 | Secret | Value | Required |
 |---|---|---|

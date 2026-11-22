@@ -14,8 +14,11 @@
 # Ported from Stemma's partner-center-submit.yml (same seller account). See
 # docs/MICROSOFT_STORE.md, step 7.
 #
-# Secrets (repo settings): PARTNER_CENTER_TENANT_ID, PARTNER_CENTER_SELLER_ID,
-# PARTNER_CENTER_CLIENT_ID, PARTNER_CENTER_CLIENT_SECRET.
+# Secrets: PARTNER_CENTER_TENANT_ID, PARTNER_CENTER_SELLER_ID,
+# PARTNER_CENTER_CLIENT_ID and PARTNER_CENTER_CLIENT_SECRET, in the `store`
+# environment, which deploys from main only (docs/release-secrets.md). Run it
+# from main; from any other branch the job is skipped. Inputs and secrets reach
+# the scripts only through env:, never written into a run: script.
 
 name: Store submit (manual)
 
@@ -35,12 +38,29 @@ on:
 env:
   PRODUCT_ID: 9P5D14V8RBQX     # the Store ID (public; Partner Center > Product identity)
   TAG: ${{ inputs.tag }}
+  MODE: ${{ inputs.mode }}
+
+permissions:
+  contents: read
 
 jobs:
   submit:
+    # the environment's own rule allows main only; this says so here too
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment: store
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
+      # the tag names a release and a git ref, and nothing else
+      - name: Check the tag
+        run: |
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v[0-9]+(\.[0-9]+){1,2}$ ]]; then
+            echo "The tag must look like v1.76, got: $TAG"
+            exit 1
+          fi
+          echo "Store submit: $MODE for $TAG"
+
       - uses: actions/checkout@v5
 
       # The images show the build players get: rendered from the tag, beside
@@ -94,7 +114,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "*.msix" --dir pkg
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "*.msix" --dir pkg
           ls -lh pkg
 
       - name: Linux credential storage for msstore
@@ -110,14 +130,27 @@ jobs:
 
       - uses: microsoft/setup-msstore-cli@v1
 
+      # mode configure ends after this step: a credentials check that
+      # changes nothing in Partner Center
       - name: Configure Store credentials
+        env:
+          PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+          PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+          PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+          PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
         run: |
           set -euo pipefail
+          for v in PARTNER_CENTER_TENANT_ID PARTNER_CENTER_SELLER_ID PARTNER_CENTER_CLIENT_ID PARTNER_CENTER_CLIENT_SECRET; do
+            if [ -z "${!v}" ]; then
+              echo "$v is not set in the store environment."
+              exit 1
+            fi
+          done
           msstore reconfigure \
-            --tenantId "${{ secrets.PARTNER_CENTER_TENANT_ID }}" \
-            --sellerId "${{ secrets.PARTNER_CENTER_SELLER_ID }}" \
-            --clientId "${{ secrets.PARTNER_CENTER_CLIENT_ID }}" \
-            --clientSecret "${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}"
+            --tenantId "$PARTNER_CENTER_TENANT_ID" \
+            --sellerId "$PARTNER_CENTER_SELLER_ID" \
+            --clientId "$PARTNER_CENTER_CLIENT_ID" \
+            --clientSecret "$PARTNER_CENTER_CLIENT_SECRET"
           msstore info
 
       # A draft's FileUploadUrl is a write-capable Azure blob SAS link: anyone

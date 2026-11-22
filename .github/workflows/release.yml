@@ -8,14 +8,16 @@ name: Release to itch.io
 # gate is only skipped if the operator explicitly ticks skip_ci_gate, which is
 # for when the GATE itself is broken - otherwise a flaky CI run on an
 # already-pushed tag would leave no way to publish but deleting the tag.
+# Every job here runs on a v* tag only: dispatched from a branch, it skips.
 #
-# One-time setup needed:
-#   1. Get an API key from https://itch.io/user/settings/api-keys
-#   2. Add it to the repo as a secret named BUTLER_API_KEY
-#      (Settings > Secrets and variables > Actions > New repository secret)
-# After that: `git tag v1.53 && git push --tags` publishes (once CI is green
-# for the tagged SHA). When this workflow finishes, pages.yml puts the tag's
-# web build on the website at /play (docs/website.md).
+# Secrets live in environments, never the repository (docs/release-secrets.md):
+# BUTLER_API_KEY in `itch` (the publish job), the Android signing key and the
+# Play service account in `google-play` (the android job). Each environment
+# deploys from v* tags (and main, for credentials.yml's check) only. Secrets
+# reach scripts through env:, never written into a run: script.
+# `git tag v1.76 && git push --tags` publishes (once CI is green for the
+# tagged SHA). When this workflow finishes, pages.yml puts the tag's web build
+# on the website at /play (docs/website.md).
 
 on:
   push:
@@ -29,6 +31,8 @@ on:
 
 jobs:
   publish:
+    if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
+    environment: itch
     runs-on: ubuntu-latest
     timeout-minutes: 50
     # the default token is read-only, so creating a GitHub release 403s
@@ -162,7 +166,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${BUTLER_API_KEY}" ]; then
-            echo "BUTLER_API_KEY secret is required for production release."
+            echo "BUTLER_API_KEY (itch environment) is required for production release."
             echo "Refusing to skip itch upload with a successful exit."
             exit 1
           fi
@@ -170,11 +174,8 @@ jobs:
           unzip -q butler.zip
           chmod +x butler
           ./butler -V
-          # a tag push names the version; a manual run from a branch does not
+          # the job runs on a v* tag only, so the tag names the version
           VERSION="${GITHUB_REF_NAME}"
-          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
-            VERSION="manual-${GITHUB_SHA:0:7}"
-          fi
           echo "Publishing userversion ${VERSION}"
           ./butler push build/web \
             cyanidesayonara/path-of-leash-resistance:html5 \
@@ -204,7 +205,7 @@ jobs:
   # publish, so a Store packaging failure can never hold back itch.
   msix:
     needs: publish
-    if: ${{ github.ref_type == 'tag' }}
+    if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
     runs-on: windows-latest
     timeout-minutes: 20
     permissions:
@@ -235,11 +236,12 @@ jobs:
         run: gh release upload $env:GITHUB_REF_NAME (Get-ChildItem build/msix/*.msix).FullName --repo $env:GITHUB_REPOSITORY --clobber
 
   # Android AAB + APK build for Google Play Closed Testing / GitHub release.
-  # Runs only on version tags when ANDROID_KEYSTORE_BASE64 is configured;
-  # skips gracefully until signing secrets are provisioned.
+  # Runs only on version tags when ANDROID_KEYSTORE_BASE64 is configured in
+  # the google-play environment; skips gracefully until it is.
   android:
     needs: publish
-    if: ${{ github.ref_type == 'tag' }}
+    if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
+    environment: google-play
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:

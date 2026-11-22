@@ -210,11 +210,12 @@ workflow) puts a release's MSIX, the whole listing text, the screenshots and the
 Store logos into a Partner Center **draft**, then commits it when asked. Ported from Stemma's workflow,
 which works with the same seller account.
 
-One-time setup, in this repo's Settings > Secrets and variables > Actions,
-with the same values as Stemma's secrets of the same names (GitHub never
-shows a saved secret again, so copy them from wherever you keep them, or make
-a new client secret for the Entra app in the Azure portal and update both
-repos):
+One-time setup: the `store` environment (Settings > Environments, deploying
+from `main` only; docs/release-secrets.md), with these environment secrets,
+the same values as Stemma's of the same names (GitHub never shows a saved
+secret again, so copy them from wherever you keep them, or make a new client
+secret for the Entra app in the Azure portal and update both repos). Run the
+workflow from `main`; mode `configure` checks them and changes nothing:
 
 - `PARTNER_CENTER_TENANT_ID`
 - `PARTNER_CENTER_SELLER_ID`
