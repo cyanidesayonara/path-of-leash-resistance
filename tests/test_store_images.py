@@ -225,6 +225,26 @@ class StoreImages(unittest.TestCase):
                                         languages={"en-US", "ca-ES", "es-ES"})
         self.assertEqual(sorted(sub["Listings"]), ["ca-ES", "en-us", "es-ES"])
 
+    def test_listings_are_added_only_in_languages_the_store_has_ingested(self):
+        md = (ROOT / "store" / "listing.md").read_text(encoding="utf-8")
+        by_lang = {lang: store_listing.fields(md, lang) for lang in store_listing.CHECK_LANGS}
+        all_three = {"en-US", "ca-ES", "es-ES"}
+        # v1.76: the published 1.75 package (en-us only) is PendingDelete and
+        # 1.76, declaring ca-es and es-es, is not ingested yet
+        sub = draft()
+        sub["ApplicationPackages"][0]["Languages"] = ["en-us"]
+        sub["ApplicationPackages"][1]["Languages"] = ["en-us", "ca-es", "es-es"]
+        self.assertEqual(store_listing.ingested_languages(sub), {"en-US"})
+        store_listing.update_submission(sub, by_lang, verbose=False, languages=all_three,
+                                        store_languages=store_listing.ingested_languages(sub))
+        self.assertEqual(list(sub["Listings"]), ["en-us"])
+        # the next release: the package that declares them is ingested
+        sub = draft()
+        sub["ApplicationPackages"][0]["Languages"] = ["en-us", "ca-es", "es-es"]
+        store_listing.update_submission(sub, by_lang, verbose=False, languages=all_three,
+                                        store_languages=store_listing.ingested_languages(sub))
+        self.assertEqual(sorted(sub["Listings"]), ["ca-ES", "en-us", "es-ES"])
+
     def test_redact_drops_the_upload_link_from_json_and_from_wrapped_log_lines(self):
         sig = "SECRET%3D"
         raw = ("info: Submission properly configured. FileUploadUrl https://ingestion\n"

@@ -136,8 +136,26 @@ def submission(raw: str) -> dict:
     return json.loads(raw[start:end + 1])
 
 
+def ingested_languages(sub: dict) -> set:
+    """The listing languages of the packages the Store has already ingested
+    (an Id, so not this run's PendingUpload; the published package is
+    PendingDelete in a draft that replaces it). The Store refuses a new
+    listing in any other language ("Language codes: ca-ES|es-ES not
+    supported", v1.76): a package's new languages can be listed only in the
+    submission after the one that ships it."""
+    langs = set()
+    for package in sub.get("ApplicationPackages") or []:
+        if not package.get("Id") or package.get("FileStatus") == "PendingUpload":
+            continue
+        for code in package.get("Languages") or []:
+            lang = lang_for_listing_key(code)
+            if lang:
+                langs.add(lang)
+    return langs
+
+
 def update_submission(sub: dict, by_lang: dict, verbose: bool = True,
-                      languages=None) -> dict:
+                      languages=None, store_languages=None) -> dict:
     listings = sub.get("Listings")
     if not isinstance(listings, dict) or not listings:
         raise SystemExit("submission JSON has no Listings")
@@ -186,6 +204,12 @@ def update_submission(sub: dict, by_lang: dict, verbose: bool = True,
         if languages is not None and target not in languages:
             if verbose:
                 print(f"note: not adding {target}: the package does not declare it")
+            continue
+        if store_languages is not None and target not in store_languages:
+            if verbose:
+                print(f"note: not adding {target} yet: no package the Store has "
+                      "ingested declares it; the next submission after this "
+                      "package is published adds it")
             continue
         cloned_entry = {"BaseListing": copy.deepcopy(template_base)}
         if "PlatformOverrides" in template_entry and not template_entry["PlatformOverrides"]:
@@ -270,7 +294,7 @@ def manifest_languages(path: str) -> set:
 
 
 def _run_update(sub_path: str, listing_path: str, out_path: str, verbose: bool = True,
-                languages=None) -> dict:
+                languages=None, gate_on_store: bool = False) -> dict:
     md = open(listing_path, encoding="utf-8").read()
     by_lang = {}
     all_problems = []
@@ -282,7 +306,11 @@ def _run_update(sub_path: str, listing_path: str, out_path: str, verbose: bool =
     if all_problems:
         raise SystemExit("\n".join(all_problems))
     sub = submission(open(sub_path, encoding="utf-8").read())
-    update_submission(sub, by_lang, verbose=verbose, languages=languages)
+    store_languages = ingested_languages(sub) if gate_on_store else None
+    if store_languages is not None and verbose:
+        print(f"ingested package languages: {', '.join(sorted(store_languages)) or 'none reported'}")
+    update_submission(sub, by_lang, verbose=verbose, languages=languages,
+                      store_languages=store_languages)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(sub, f, indent=2, ensure_ascii=False)
     return by_lang
@@ -317,7 +345,8 @@ def main() -> int:
         print(f"package languages: {', '.join(sorted(languages))}")
     elif len(sys.argv) != 4:
         raise SystemExit("usage: store_listing.py SUBMISSION.json LISTING.md OUT.json [--manifest APPXMANIFEST]")
-    by_lang = _run_update(sub_path, listing_path, out_path, verbose=True, languages=languages)
+    by_lang = _run_update(sub_path, listing_path, out_path, verbose=True, languages=languages,
+                          gate_on_store=True)
     out = json.load(open(out_path, encoding="utf-8"))
     print(f"Listing text set for {', '.join(out['Listings'])}:")
     for lang, vals in by_lang.items():
