@@ -155,6 +155,7 @@ static func _surge(c: CanvasItem, x: float, t: float, level: float, crest := CRE
 		return
 	var top := level - crest
 	var l := crest / LIP
+	_looming(c, x, top, l)
 	var pts := PackedVector2Array()
 	var left := x - 2600.0
 	pts.append(Vector2(left, BANK + 600.0))
@@ -173,7 +174,8 @@ static func _surge(c: CanvasItem, x: float, t: float, level: float, crest := CRE
 	c.draw_colored_polygon(PackedVector2Array([Vector2(x - 200.0 * l, level - crest * 0.25), Vector2(x - 10.0 * l, top + 24.0 * l),
 		Vector2(x + 50.0 * l, top + 40.0 * l), Vector2(x + 48.0 * l, top + crest * 0.5), Vector2(x + 78.0 * l, level + 14.0),
 		Vector2(x - 200.0 * l, level + 24.0)]), WATER)
-	c.draw_colored_polygon(MillieSide.ellipse(Vector2(x + 40.0 * l, top + 46.0 * l), Vector2(16.0, 22.0) * l), DEEP.darkened(0.35))
+	_barrel(c, x, top, l, level)
+	_tumbling(c, x, t, level, crest, l)
 	for k in range(6):
 		var sx := x - 150.0 * l + float(k) * 34.0 * l
 		c.draw_line(Vector2(sx, level - crest * 0.1 - float(k) * 24.0 * l), Vector2(sx + 40.0 * l, level + 10.0), PALE.darkened(0.1), 3.0)
@@ -249,6 +251,60 @@ static func _surge(c: CanvasItem, x: float, t: float, level: float, crest := CRE
 	c.draw_colored_polygon(PackedVector2Array([duck + Vector2(29, -20), duck + Vector2(42, -16), duck + Vector2(29, -13)]),
 		Color(0.96, 0.74, 0.20))
 	c.draw_circle(duck + Vector2(23, -21), 2.0, INK)
+
+
+# The shade the crest throws ahead of itself: dark at the face, gone a few
+# body lengths on, over the wall, the path and whoever is on it. It darkens
+# as the surge closes on the pair, so the light goes before the water comes.
+static func _looming(c: CanvasItem, x: float, top: float, l: float) -> void:
+	var from := x + 80.0 * l
+	var reach := 240.0 * l
+	var a := 0.5
+	var y0 := WALL_TOP - 30.0
+	var y1 := BANK + 30.0
+	c.draw_polygon(PackedVector2Array([Vector2(from, y0), Vector2(from + reach, y0 + 30.0),
+		Vector2(from + reach * 0.8, y1), Vector2(from, y1)]),
+		PackedColorArray([Color(0.02, 0.06, 0.09, a), Color(0.02, 0.06, 0.09, 0.0),
+		Color(0.02, 0.06, 0.09, 0.0), Color(0.02, 0.06, 0.09, a)]))
+
+
+# The hollow under the curl: the dark of the barrel between the face and the
+# sheet pouring off the lip, deepest at the back, its far side lit where the
+# sheet falls. A hollow the water wraps round, never a hole in it.
+static func _barrel(c: CanvasItem, x: float, top: float, l: float, _level: float) -> void:
+	var o := Vector2(x, top)
+	var pocket := PackedVector2Array([o + Vector2(52.0, 34.0) * l, o + Vector2(70.0, 43.0) * l, o + Vector2(86.0, 53.0) * l,
+		o + Vector2(84.0, 68.0) * l, o + Vector2(72.0, 80.0) * l, o + Vector2(58.0, 76.0) * l, o + Vector2(49.0, 58.0) * l])
+	c.draw_colored_polygon(pocket, DEEP.darkened(0.4))
+	# deepest at the back of the curl, easing to the face's own dark below
+	c.draw_polygon(PackedVector2Array([o + Vector2(54.0, 38.0) * l, o + Vector2(74.0, 48.0) * l,
+		o + Vector2(70.0, 70.0) * l, o + Vector2(54.0, 62.0) * l]),
+		PackedColorArray([Color(0.0, 0.03, 0.05, 0.75), Color(0.0, 0.03, 0.05, 0.35),
+		Color(0.0, 0.03, 0.05, 0.0), Color(0.0, 0.03, 0.05, 0.0)]))
+	# the sheet falling off the lip closes the pocket, lit on its outside
+	c.draw_polyline(PackedVector2Array([o + Vector2(86.0, 53.0) * l, o + Vector2(86.0, 64.0) * l,
+		o + Vector2(80.0, 76.0) * l]), Color(PALE, 0.75), 4.0 * sqrt(l))
+
+
+# What the surge has already taken off the plain, rolling over in its face:
+# a park bench and a litter bin, half under, turning as the water turns them.
+static func _tumbling(c: CanvasItem, x: float, t: float, level: float, crest: float, l: float) -> void:
+	var wood := Color(0.52, 0.36, 0.20)
+	var iron := Color(0.12, 0.14, 0.16)
+	var bx := x - 70.0 * l
+	var bench := Vector2(bx, _surface(bx, x, t, level, crest) + 74.0 * l)
+	c.draw_set_transform(bench, t * 2.2 + 0.6, Vector2.ONE * sqrt(l))
+	for k in range(3):
+		c.draw_rect(Rect2(-46.0, -14.0 + float(k) * 9.0, 92.0, 6.0), wood)
+	c.draw_rect(Rect2(-40.0, -18.0, 5.0, 40.0), iron)
+	c.draw_rect(Rect2(35.0, -18.0, 5.0, 40.0), iron)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var nx := x - 170.0 * l
+	var bin := Vector2(nx, _surface(nx, x, t, level, crest) + 50.0 * l)
+	c.draw_set_transform(bin, -t * 3.1, Vector2.ONE * sqrt(l))
+	c.draw_rect(Rect2(-14.0, -20.0, 28.0, 40.0), Color(0.24, 0.40, 0.30))
+	c.draw_rect(Rect2(-16.0, -22.0, 32.0, 6.0), iron)
+	c.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 # the surge's surface at px: the body's level, rising in the last stretch to

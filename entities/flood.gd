@@ -40,6 +40,13 @@ const DUCK_HEAD := Color(0.16, 0.36, 0.22)
 const DUCK_BILL := Color(0.96, 0.74, 0.20)
 const BRANCH_BROWN := Color(0.32, 0.22, 0.12)
 const LEAF := Color(0.36, 0.50, 0.24)
+const BENCH_WOOD := Color(0.52, 0.36, 0.20)
+const BENCH_IRON := Color(0.12, 0.14, 0.16)
+const BIN_GREEN := Color(0.24, 0.40, 0.30)
+# the shade the wall throws ahead of itself, as in the film: this far past the
+# wash, dark at the wash and gone at the end
+const SHADE_REACH := 170.0
+const SHADE := Color(0.02, 0.06, 0.09, 0.32)
 
 var main: Node2D
 var speed := 128.0
@@ -240,6 +247,9 @@ func _draw() -> void:
 		var ry := -WALL_H - 40.0 - fposmod(heading * 0.6 + float(r) * 60.0, 220.0)
 		_wavy(b, left, right, ry, 5.0, PALE_DEEP, 3.0)
 	b.rect(Rect2(left, 0.0, w, SHALLOW_LEAD), SHALLOW)
+	b.band(PackedVector2Array([Vector2(left, SHALLOW_LEAD), Vector2(right, SHALLOW_LEAD),
+		Vector2(left, SHALLOW_LEAD + SHADE_REACH), Vector2(right, SHALLOW_LEAD + SHADE_REACH)]), 2, SHADE,
+		PackedFloat32Array([1.0, 0.0]))
 	# the wash out ahead of the wall: a scalloped foam edge that runs and draws back
 	var run := sin(rumble * 3.0) * 6.0
 	b.rect(Rect2(left, SHALLOW_LEAD - 8.0 + run, w, 6.0), FOAM)
@@ -271,12 +281,14 @@ func _draw() -> void:
 		for k in range(10):
 			var fx := left + float(k) * (right - left) / 9.0 + sin(rumble * 10.0 + float(k) * 1.5) * 12.0
 			b.circle(Vector2(fx, 2.0), 8.0 + sin(rumble * 7.0 + float(k)) * 3.0, Color(1.0, 1.0, 1.0, 0.85))
-	# what the river carries, as in the film: a traffic cone, a duck, sticks
-	for i in range(4):
-		var along := fmod(heading + float(i) * 140.0, DEBRIS_SPAN)
+	# what the river carries, as in the film: a traffic cone, a duck, sticks,
+	# and a park bench and a litter bin it took off the plain, turning over
+	for i in range(6):
+		var along := fmod(heading + float(i) * DEBRIS_SPAN / 6.0, DEBRIS_SPAN)
 		var dx := sin(heading * 0.02 + float(i) * 1.7) * half * 0.45
-		var at := Vector2(dx, SHALLOW_LEAD * 0.2 + along * 0.55)
-		match i % 4:
+		# in the wash, where the water is carrying it, never out on the dry
+		var at := Vector2(dx, SHALLOW_LEAD * (0.15 + 0.7 * along / DEBRIS_SPAN))
+		match i:
 			0:
 				b.polygon(PackedVector2Array([at + Vector2(-12, -6), at + Vector2(12, 0), at + Vector2(-12, 6)]), CONE_ORANGE)
 				b.rect(Rect2(at.x - 5.0, at.y - 4.0, 3.0, 8.0), FOAM)
@@ -285,6 +297,16 @@ func _draw() -> void:
 				b.circle(at - Vector2(5, 0), 5.5, DUCK_BODY)
 				b.circle(at + Vector2(7, -3), 4.5, DUCK_HEAD)
 				b.polygon(PackedVector2Array([at + Vector2(10, -4), at + Vector2(15, -3), at + Vector2(10, -1)]), DUCK_BILL)
+			3:
+				var turn := rumble * 1.8 + float(i)
+				for k in range(3):
+					_turned_rect(b, at, Vector2(0.0, -7.0 + float(k) * 6.0), Vector2(32.0, 4.0), turn, BENCH_WOOD)
+				_turned_rect(b, at, Vector2(-13.0, 0.0), Vector2(3.0, 20.0), turn, BENCH_IRON)
+				_turned_rect(b, at, Vector2(13.0, 0.0), Vector2(3.0, 20.0), turn, BENCH_IRON)
+			5:
+				var roll := -rumble * 2.4 + float(i)
+				_turned_rect(b, at, Vector2.ZERO, Vector2(10.0, 16.0), roll, BIN_GREEN)
+				_turned_rect(b, at, Vector2(0.0, -8.0), Vector2(12.0, 3.0), roll, BENCH_IRON)
 			_:
 				b.line(at - Vector2(9, 2), at + Vector2(9, 2), BRANCH_BROWN, 4.0)
 	# the branch that can trip either of them, leaves and all
@@ -347,6 +369,15 @@ func _wall(b: ShapeBatch, left: float, right: float) -> void:
 # the crest's height over the foot at x: lumps that roll along as it comes
 func _crest(x: float) -> float:
 	return -WALL_H + sin(x * 0.011 + rumble * 0.9) * 18.0 + sin(x * 0.033 - rumble * 1.7) * 7.0
+
+
+# a rect of `size` centred `off` from `at`, the whole turned by `angle` about `at`
+func _turned_rect(b: ShapeBatch, at: Vector2, off: Vector2, size: Vector2, angle: float, col: Color) -> void:
+	var h := size * 0.5
+	var pts := PackedVector2Array()
+	for q: Vector2 in [Vector2(-h.x, -h.y), Vector2(h.x, -h.y), Vector2(h.x, h.y), Vector2(-h.x, h.y)]:
+		pts.append(at + (off + q).rotated(angle))
+	b.polygon(pts, col)
 
 
 # a wavy stroke across the water at y
