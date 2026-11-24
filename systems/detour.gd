@@ -484,6 +484,7 @@ static func draw_overhead(m: Node2D, c: CanvasItem) -> void:
 
 # El Gòtic's plaça sits in the same roofscape as the alleys
 static func draw_freedom(m: Node2D, c: Object) -> void:
+	m._draw_freedom_beyond(c)
 	Gotic.draw_roofs_round_placa(m, c)
 	m._draw_placa(c)
 

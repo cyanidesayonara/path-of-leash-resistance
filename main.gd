@@ -65,6 +65,7 @@ var detour_layer: Node2D = null
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
 var shot_zoom_set := false
+const CityRoofs := preload("res://world/city_roofs.gd")
 const CamTricks := preload("res://systems/cam_tricks.gd")
 const Ach := preload("res://systems/achievements.gd")
 var arena_zoom_mult := 1.0
@@ -2184,7 +2185,7 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 			# the works compound behind the Heras fence (world/obres.gd)
 			Obres.draw_yard_module(self, c, r, side, k)
 		"rain":
-			_draw_diluvi_roofs(c, r, side, k, inner_x)
+			_city_module(c, inner_x, side, r)
 			_draw_edge_awning(c, r, side, k, inner_x)
 			_draw_doorway(c, inner_x, side, r.position.y + 168.0, Color(0.48, 0.30, 0.22))
 		"scrap":
@@ -2204,32 +2205,17 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 			for d in range(5):
 				c.draw_circle(Vector2(fx, r.position.y + float(d) * 46.0), 3.0, Color(0.42, 0.44, 0.45))
 		_:
-			# the default city block, seen from the air: a flat felt roof
-			# with the usual clutter, and an awning that genuinely projects
-			# out over the pavement
-			var felt := Color(0.34, 0.33, 0.35).lightened(lit * 0.11)
-			c.draw_rect(r, felt)
-			# gravel ballast, in patches rather than a uniform fill
-			for gi in range(9):
-				var gx2 := r.position.x + fmod(float(gi) * 37.0 + float(k) * 11.0, r.size.x)
-				var gy2 := r.position.y + fmod(float(gi) * 61.0 + float(k) * 23.0, r.size.y)
-				c.draw_circle(Vector2(gx2, gy2), 9.0 + float(gi % 3) * 4.0, felt.lightened(0.09))
-			# an air-conditioning unit with a cast shadow, and roof vents
-			var ac_p := Vector2(inner_x + side * 44.0, r.position.y + 58.0)
-			c.draw_rect(Rect2(ac_p.x + 6.0, ac_p.y + 6.0, 30.0, 24.0), Color(0.05, 0.04, 0.07, 0.28))
-			c.draw_rect(Rect2(ac_p.x - 15.0, ac_p.y - 12.0, 30.0, 24.0), Color(0.62, 0.63, 0.65))
-			c.draw_rect(Rect2(ac_p.x - 11.0, ac_p.y - 8.0, 22.0, 16.0), Color(0.47, 0.49, 0.52))
-			for vi in range(2):
-				var vp := Vector2(inner_x + side * 22.0, r.position.y + 128.0 + float(vi) * 34.0)
-				c.draw_circle(vp, 7.0, Color(0.52, 0.53, 0.55))
-				c.draw_circle(vp, 4.0, Color(0.24, 0.25, 0.27))
-			# a rooflight: from above this is the window that makes sense
-			if k % 3 == 0:
-				var sk := Rect2(inner_x + side * 66.0, r.position.y + 96.0, 34.0, 46.0)
-				c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.lamp_glow() > 0.0 else Color(0.62, 0.72, 0.78, 0.8))
-				c.draw_rect(sk, felt.darkened(0.35), false, 3.0)
+			# the city's own rooftops, out to the edge of the screen
+			_city_module(c, inner_x, side, r)
 			_draw_edge_awning(c, r, side, k, inner_x)
-			_draw_doorway(c, inner_x, side, r.position.y + 168.0, felt)
+			_draw_doorway(c, inner_x, side, r.position.y + 168.0, Color(0.50, 0.42, 0.36))
+
+
+func _city_module(c: Object, inner_x: float, side: float, r: Rect2) -> void:
+	var b: ShapeBatch = c if c is ShapeBatch else ShapeBatch.new(c)
+	CityRoofs.kept_module(b, inner_x, side, 520.0, r.position.y, r.end.y, int(absf(r.position.y) / 220.0) * 2 + (1 if side > 0.0 else 0))
+	if not (c is ShapeBatch):
+		b.flush()
 
 
 # the awning: projects over the pavement, so it reads correctly from
@@ -2244,120 +2230,6 @@ func _draw_edge_awning(c: Object, r: Rect2, side: float, k: int, inner_x: float)
 	for st in range(4):
 		c.draw_line(Vector2(aw_x + 7.0 * float(st), r.position.y + 40.0),
 			Vector2(aw_x + 7.0 * float(st), r.position.y + 112.0), ac.lightened(0.30), 3.0)
-
-
-# EL DILUVI's roofs, wet: from the gutter at the street out to the edge of the
-# view, a pitched pantile roof or a flat terrat (tiled, parapeted, a water
-# tank or two on it, rain standing in the low corner), then the next block
-# behind it. The gutters along the eaves run with water; the downpipes come
-# down at the party walls.
-func _draw_diluvi_roofs(c: Object, r: Rect2, side: float, k: int, inner_x: float) -> void:
-	var out := side                  # away from the street
-	var lit := fmod(float(k) * 0.37, 1.0)
-	var y0 := r.position.y
-	var h := r.size.y
-	# the front block and the one behind it: alternate kinds, so a pantile
-	# roof never sits beside another of the same lot
-	var front_pitched := (k % 3) != 1
-	_diluvi_roof_lot(c, _diluvi_span(inner_x, out, 0.0, 150.0, y0, h), out, k, lit, front_pitched, true)
-	_diluvi_roof_lot(c, _diluvi_span(inner_x, out, 150.0, 420.0, y0, h), out, k + 5, lit * 0.7, not front_pitched, false)
-	# the party wall between this module and the next: a low brick coping
-	var pw := _diluvi_span(inner_x, out, 0.0, 420.0, y0, h)
-	c.draw_rect(Rect2(pw.position.x, y0 - 3.0, pw.size.x, 6.0), Color(0.46, 0.34, 0.28))
-	c.draw_rect(Rect2(pw.position.x, y0 - 3.0, pw.size.x, 2.0), Color(0.58, 0.46, 0.38))
-	c.draw_rect(Rect2(pw.position.x, y0 + 3.0, pw.size.x, 5.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.22))
-	# the street gutter along the eave, brimming, and its downpipe at the
-	# party wall
-	var gx := inner_x + out * 4.0
-	c.draw_rect(Rect2(gx - 4.0, y0, 8.0, h), Color(0.50, 0.53, 0.56))
-	c.draw_rect(Rect2(gx - 2.5, y0, 5.0, h), Color(0.40, 0.52, 0.64))
-	var wy := y0 + fmod(float(k) * 17.0, 30.0)
-	while wy < y0 + h - 12.0:
-		c.draw_line(Vector2(gx, wy), Vector2(gx, wy + 10.0), Color(0.78, 0.86, 0.94, 0.7), 1.5)
-		wy += 26.0
-	c.draw_circle(Vector2(gx, y0 + 8.0), 5.0, Color(0.56, 0.58, 0.60))
-	c.draw_circle(Vector2(gx, y0 + 8.0), 3.0, Color(0.22, 0.26, 0.30))
-
-
-# the strip of a roof module from d0 to d1 out from the street
-static func _diluvi_span(inner_x: float, out: float, d0: float, d1: float, y0: float, h: float) -> Rect2:
-	var a := inner_x + out * d0
-	var z := inner_x + out * d1
-	return Rect2(minf(a, z), y0, absf(z - a), h)
-
-
-# one roof lot of El Diluvi's blocks: `out` points away from the street
-func _diluvi_roof_lot(c: Object, lot: Rect2, out: float, k: int, lit: float, pitched: bool, front: bool) -> void:
-	if pitched:
-		# pantiles, wet and dark, the courses running down the slope to the
-		# eave each side of the ridge, a sheen where the rain sheets off
-		var tile: Color = [Color(0.50, 0.28, 0.20), Color(0.56, 0.32, 0.22), Color(0.46, 0.27, 0.21)][k % 3]
-		tile = tile.lightened(lit * 0.06)
-		c.draw_rect(lot, tile)
-		var ridge := lot.get_center().x
-		# the slope facing away from the light is the darker one
-		c.draw_rect(Rect2(ridge, lot.position.y, lot.end.x - ridge, lot.size.y), tile.darkened(0.12))
-		var ty := lot.position.y + 4.0
-		while ty < lot.end.y:
-			c.draw_line(Vector2(lot.position.x + 2.0, ty), Vector2(lot.end.x - 2.0, ty), tile.darkened(0.30), 2.0)
-			c.draw_line(Vector2(lot.position.x + 2.0, ty + 3.0), Vector2(lot.end.x - 2.0, ty + 3.0), tile.lightened(0.12), 1.0)
-			ty += 9.0
-		c.draw_rect(Rect2(ridge - 4.0, lot.position.y, 8.0, lot.size.y), tile.lightened(0.16))
-		c.draw_rect(Rect2(ridge - 1.0, lot.position.y, 2.0, lot.size.y), tile.darkened(0.20))
-		for si in range(3):
-			var sy := lot.position.y + 30.0 + float((k * 7 + si * 61) % int(maxf(lot.size.y - 60.0, 1.0)))
-			c.draw_rect(Rect2(lot.position.x + 6.0, sy, lot.size.x - 12.0, 3.0), Color(0.80, 0.86, 0.94, 0.12))
-		# a chimney, or a skylight let into the slope
-		if k % 2 == 0:
-			var cp := Vector2(ridge + out * 22.0, lot.position.y + 60.0 + float(k % 4) * 24.0)
-			c.draw_rect(Rect2(cp + Vector2(-9.0, -9.0) + Shade.light * 8.0, Vector2(18, 18)), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.3))
-			c.draw_rect(Rect2(cp - Vector2(9, 9), Vector2(18, 18)), Color(0.58, 0.44, 0.36))
-			c.draw_rect(Rect2(cp - Vector2(9, 9), Vector2(18, 4)), Color(0.68, 0.56, 0.48))
-			c.draw_circle(cp, 4.0, Color(0.16, 0.14, 0.14))
-		elif front:
-			var sk := Rect2(ridge - out * 44.0 - 13.0, lot.position.y + 120.0, 26.0, 36.0)
-			c.draw_rect(sk.grow(3.0), tile.darkened(0.35))
-			c.draw_rect(sk, Color(0.88, 0.83, 0.52, 0.85) if Game.lamp_glow() > 0.0 else Color(0.46, 0.56, 0.64))
-			c.draw_rect(Rect2(sk.position.x + 3.0, sk.position.y + 3.0, 6.0, sk.size.y - 6.0), Color(1, 1, 1, 0.16))
-		return
-	# a terrat: pale tiles inside a parapet, puddled after the rain
-	var flag := Color(0.62, 0.56, 0.50).lightened(lit * 0.05)
-	c.draw_rect(lot, flag.darkened(0.35))
-	var floor_r := lot.grow(-6.0)
-	c.draw_rect(floor_r, flag)
-	var gx := floor_r.position.x + 18.0
-	while gx < floor_r.end.x:
-		c.draw_line(Vector2(gx, floor_r.position.y), Vector2(gx, floor_r.end.y), flag.darkened(0.12), 1.0)
-		gx += 18.0
-	var gy := floor_r.position.y + 18.0
-	while gy < floor_r.end.y:
-		c.draw_line(Vector2(floor_r.position.x, gy), Vector2(floor_r.end.x, gy), flag.darkened(0.12), 1.0)
-		gy += 18.0
-	# the parapet's shadow on the light side
-	c.draw_rect(Rect2(floor_r.position.x, floor_r.position.y, floor_r.size.x, 8.0), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.16))
-	c.draw_rect(Rect2(floor_r.position.x, floor_r.position.y, 8.0, floor_r.size.y), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.14))
-	# rain standing round the roof drain in the low corner
-	var low := Vector2(floor_r.end.x - 34.0 if out > 0.0 else floor_r.position.x + 34.0, floor_r.end.y - 34.0)
-	c.draw_colored_polygon(ellipse_pts(low, 30.0, 18.0, 12), Color(0.40, 0.50, 0.60, 0.55))
-	c.draw_colored_polygon(ellipse_pts(low + Vector2(-6.0, -4.0), 12.0, 6.0, 8), Color(0.80, 0.88, 0.96, 0.25))
-	c.draw_circle(low, 3.0, Color(0.20, 0.20, 0.22))
-	# the water tanks: drums on a frame, lids on
-	var tanks := 2 if front else 1 + k % 2
-	for ti in range(tanks):
-		var tp := Vector2(lot.get_center().x + (float(ti) - float(tanks - 1) * 0.5) * 40.0,
-			lot.position.y + 46.0 + float((k * 29) % 50))
-		c.draw_circle(tp + Shade.light * 10.0, 16.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.30))
-		c.draw_rect(Rect2(tp - Vector2(17, 17), Vector2(34, 34)), Color(0.36, 0.34, 0.32))
-		c.draw_circle(tp, 15.0, Color(0.80, 0.80, 0.78))
-		c.draw_circle(tp - Shade.light * 3.0, 11.0, Color(0.90, 0.90, 0.88))
-		c.draw_circle(tp, 6.0, Color(0.56, 0.58, 0.60))
-		c.draw_circle(tp - Shade.light * 1.0, 4.0, Color(0.70, 0.72, 0.74))
-	# the stair head: a little hut with its door onto the roof
-	if front and k % 2 == 1:
-		var sh := Rect2(lot.get_center().x - 18.0, lot.end.y - 70.0, 36.0, 44.0)
-		c.draw_rect(Rect2(sh.position + Shade.light * 9.0, sh.size), Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.28))
-		c.draw_rect(sh, Color(0.70, 0.64, 0.56))
-		c.draw_rect(Rect2(sh.position.x, sh.position.y, sh.size.x, 5.0), Color(0.80, 0.75, 0.68))
 
 
 func _build_verge() -> void:
@@ -4950,18 +4822,40 @@ func _draw_freedom_beyond(c: Object) -> void:
 	var b := ShapeBatch.new()
 	match freedom_kind:
 		"yard":
-			# a clipped hedge along the fence, then a row of trees in grass
-			b.rect(Rect2(-400.0, top - 34.0, 2100.0, 30.0), Color(0.20, 0.34, 0.20))
+			# a clipped hedge along the fence; behind it, in the city, a
+			# street's pavement with its trees and the roofs across it, and
+			# elsewhere a wood of trees of every size
+			if built:
+				b.rect(Rect2(-400.0, top - 150.0, 2100.0, 130.0), Color(0.66, 0.63, 0.57))
+				var jx := -400.0
+				while jx < 1700.0:
+					b.line(Vector2(jx, top - 150.0), Vector2(jx, top - 20.0), Color(0.56, 0.53, 0.48), 1.2)
+					jx += 34.0
+				b.rect(Rect2(-400.0, top - 94.0, 2100.0, 1.2), Color(0.56, 0.53, 0.48))
+				CityRoofs.quarter(b, Rect2(-400.0, top - 900.0, 2100.0, 750.0), 71)
+				b.rect(Rect2(-400.0, top - 150.0, 2100.0, 14.0), Color(0.05, 0.04, 0.08, 0.26))
+			else:
+				b.rect(Rect2(-400.0, top - 900.0, 2100.0, 880.0), Color(0.24, 0.37, 0.22))
+			var rows := 1 if built else 5
+			for row in range(rows):
+				var tx := -380.0 + 70.0 * float(row % 2)
+				var k := row * 40
+				while tx < 1700.0:
+					var rr := (26.0 if built else 34.0) + 22.0 * fmod(absf(sin(float(k) * 12.99) * 43758.5), 1.0)
+					var tp := Vector2(tx, top - 82.0 - float(row) * 92.0 + 22.0 * sin(float(k) * 2.3))
+					b.circle(tp + Shade.light * rr * 0.4, rr, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.24))
+					b.circle(tp, rr, Color(0.20, 0.35, 0.20).lightened(0.05 * float(k % 3)))
+					for q in range(6):
+						b.circle(tp + Vector2.from_angle(float(q) * TAU / 6.0 + float(k)) * rr * 0.55, rr * 0.48, Color(0.25, 0.42, 0.24).lightened(0.04 * float((q + k) % 4)))
+					b.circle(tp - Shade.light * rr * 0.34, rr * 0.36, Color(0.38, 0.55, 0.32))
+					tx += (150.0 if built else 92.0) + 36.0 * fmod(absf(sin(float(k) * 78.2) * 9631.7), 1.0)
+					k += 1
+			b.rect(Rect2(-400.0, top - 34.0, 2100.0, 30.0), Color(0.18, 0.30, 0.18))
 			var hx := -380.0
 			while hx < 1700.0:
 				b.circle(Vector2(hx, top - 19.0), 17.0, Color(0.24, 0.40, 0.23))
-				b.circle(Vector2(hx - 5.0, top - 24.0), 8.0, Color(0.32, 0.48, 0.28))
-				hx += 26.0
-			for k in range(12):
-				var tp := Vector2(-300.0 + float(k) * 170.0 + fmod(float(k) * 53.0, 60.0), top - 150.0 - fmod(float(k) * 97.0, 120.0))
-				b.circle(tp + Shade.light * 18.0, 52.0, Color(SHADOW_COL.r, SHADOW_COL.g, SHADOW_COL.b, 0.2))
-				b.circle(tp, 50.0, Color(0.22, 0.36, 0.21))
-				b.circle(tp - Shade.light * 14.0, 30.0, Color(0.30, 0.46, 0.27))
+				b.circle(Vector2(hx - 5.0, top - 24.0), 8.0, Color(0.34, 0.51, 0.30))
+				hx += 24.0
 		"lot":
 			# a block wall along the fence, and the backs of sheds behind it
 			b.rect(Rect2(-400.0, top - 26.0, 2100.0, 22.0), Color(0.52, 0.50, 0.46))
@@ -4999,23 +4893,11 @@ func _draw_freedom_beyond(c: Object) -> void:
 						b.circle(Vector2(cx, cy) - Shade.light * rr * 0.3, rr * 0.55, Color(0.23 - dk, 0.38 - dk, 0.21 - dk))
 					cx += 110.0
 		"placa":
-			# the houses' roofs behind their fronts: terracotta in ridged rows
-			var rx := -380.0
-			var k := 0
-			while rx < 1700.0:
-				var w := 150.0
-				var roof := Rect2(rx, top - 300.0, w - 4.0, 254.0)
-				var tile := [Color(0.66, 0.36, 0.24), Color(0.60, 0.32, 0.22), Color(0.70, 0.42, 0.28)][k % 3] as Color
-				b.rect(roof, tile)
-				var ty := roof.position.y + 6.0
-				while ty < roof.end.y:
-					b.line(Vector2(roof.position.x, ty), Vector2(roof.end.x, ty), tile.darkened(0.2), 2.0)
-					ty += 10.0
-				b.line(Vector2(roof.get_center().x, roof.position.y), Vector2(roof.get_center().x, roof.end.y), tile.lightened(0.15), 3.0)
-				if k % 3 == 1:
-					b.rect(Rect2(roof.position.x + 24.0, roof.position.y + 60.0, 18.0, 18.0), Color(0.50, 0.44, 0.40))
-				rx += w
-				k += 1
+			# the town's roofs behind the houses' fronts
+			CityRoofs.quarter(b, Rect2(-400.0, top - 700.0, 2100.0, 654.0), 83)
+			if lvl == "oldtown" or lvl == "neteja" or lvl == "spook":
+				CityRoofs.quarter(b, Rect2(-400.0, top - 46.0, r.position.x - 40.0 + 400.0, r.size.y + 16.0), 91)
+				CityRoofs.quarter(b, Rect2(r.end.x + 40.0, top - 46.0, 1660.0 - r.end.x, r.size.y + 16.0), 97)
 		"beach":
 			# the sea and the sand both go on: no edge on the coast
 			b.rect(Rect2(-400.0, top - 2000.0, BEACH_SEA_R + 400.0, 1960.0), BEACH_SEA_DEEP)
