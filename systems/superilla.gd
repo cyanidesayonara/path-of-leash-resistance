@@ -21,6 +21,7 @@ extends RefCounted
 #   gliding along the green cycle lane, ringing a cheerful bell ("ding-ding!").
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const CityRoofs := preload("res://world/city_roofs.gd")
 const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "on_bark", "surface", "tick", "tree_kind"]
 
 
@@ -390,6 +391,8 @@ static func _draw_poblenou_block(b: ShapeBatch, r: Rect2, side: float, k: int) -
 				gx += 28.0
 			b.line(Vector2(bay_x0, sky_r.end.y), Vector2(bay_x0 + bay_w, sky_r.end.y), BRICK_DARK, 2.5)
 			by += bay_h
+		# the block behind the mill
+		CityRoofs.kept_module(b, inner_x + side * (face + 222.0), side, maxf(roof_r.size.x - 220.0, 60.0), r.position.y, r.end.y, 1100 + k * 2)
 		# Brick pilaster buttresses along the cornice
 		var py := roof_r.position.y + 12.0
 		while py < roof_r.end.y - 10.0:
@@ -398,6 +401,7 @@ static func _draw_poblenou_block(b: ShapeBatch, r: Rect2, side: float, k: int) -
 	else:
 		# Modern 22@ Poblenou design loft: zinc & Corten roof, solar array, rooftop terrace
 		b.rect(roof_r, STUDIO_ZINC)
+		CityRoofs.kept_module(b, inner_x + side * (face + 164.0), side, maxf(roof_r.size.x - 162.0, 60.0), r.position.y, r.end.y, 1101 + k * 2)
 		var ter_x := (inner_x - face - 150.0) if side < 0.0 else (inner_x + face + 12.0)
 		var ter_r := Rect2(ter_x, roof_r.position.y + 14.0, 138.0, roof_r.size.y - 28.0)
 		b.rect(ter_r, CORTEN_STEEL)

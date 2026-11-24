@@ -8,6 +8,7 @@ extends RefCounted
 # down onto Platja de la Fragata off the leash.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const CityRoofs := preload("res://world/city_roofs.gd")
 const HOOKS := ["draw_bin", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "takes_prints", "tick", "tree_kind"]
 
 
@@ -716,14 +717,7 @@ static func draw_edge_layer(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> 
 			var y0 := plot_y
 			var y1 := plot_y + 150.0
 			if y1 > -4680.0 and not (y1 > CHURCH_RECT.position.y - 30.0 and y0 < CHURCH_RECT.end.y + 30.0):
-				var tile: Color = HOUSE_TILES[idx % HOUSE_TILES.size()]
-				var depth := 220.0 + _h(float(idx), 5.0) * 80.0
-				b.rect(Rect2(EAST_WALL + 4.0, y0 + 2.0, depth, 146.0), tile)
-				# Barrel-tile light & shadow flutes
-				for rx in range(6):
-					var lx := EAST_WALL + 16.0 + float(rx) * 34.0
-					b.rect(Rect2(lx, y0 + 3.0, 8.0, 144.0), tile.lightened(0.08))
-					b.line(Vector2(lx + 16.0, y0 + 4.0), Vector2(lx + 16.0, y1 - 4.0), tile.darkened(0.16), 2.0)
+				CityRoofs.kept_module(b, EAST_WALL + 6.0, 1.0, 460.0, y0, y1, 1500 + idx, "white")
 				# Whitewash terrace parapets + chimney pot
 				b.rect(Rect2(EAST_WALL - 8.0, y0 + 2.0, 14.0, 146.0), WHITEWASH)
 				b.rect(Rect2(EAST_WALL - 14.0, y0 + 6.0, 8.0, 138.0), SHADOW)
