@@ -120,8 +120,8 @@ static func tick(m: Node2D, delta: float) -> void:
 		want_zoom = frame.y
 		want_lean = frame.x
 	# the fight's lean hands over to and from the walk's own with no jump
-	if not arena_active and m.walk_mod != null and m.walk_mod.has_method("cam_lean"):
-		want_lean = float(m.walk_mod.cam_lean(m))
+	if not arena_active:
+		want_lean = float(m.walk_lean)
 	m.fight_lean = lerpf(float(m.fight_lean), want_lean, 1.0 - exp(-LEAN_RATE * dt))
 	m.arena_zoom_mult = lerpf(float(m.arena_zoom_mult), want_zoom, 1.0 - exp(-ZOOM_RATE * dt))
 	if not is_equal_approx(float(m.arena_zoom_mult), float(m._arena_zoom_applied)):

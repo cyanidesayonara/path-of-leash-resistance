@@ -70,6 +70,7 @@ const Ach := preload("res://systems/achievements.gd")
 var arena_zoom_mult := 1.0
 var _arena_zoom_applied := 1.0
 var fight_lean := 0.0
+var walk_lean := 0.0
 var cam_tilt_t := 0.0
 var _cam_tilt_dir := 1.0
 var _cam_tilt_base_rot := 0.0
@@ -7379,6 +7380,7 @@ func _process(_delta: float) -> void:
 	# a walk's set piece can lean the camera toward itself (El Gat's wake)
 	# and a fight leans it to keep the boss in the picture (cam_tricks.gd)
 	if walk_mod != null and walk_mod.has_method("cam_lean") and phase != "freedom":
+		walk_lean = walk_mod.cam_lean(self)
 		target_y += fight_lean
 	var cx_want := _cam_x()
 	# SPIKE: on a turned camera a step off the path is a step across the
