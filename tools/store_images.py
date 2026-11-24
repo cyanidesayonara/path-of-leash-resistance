@@ -243,6 +243,28 @@ def pending_package(submission: dict) -> str:
                      "msstore publish --noCommit first")
 
 
+def keep_package(submission: dict, tag: str) -> list[str]:
+    """Make *submission* a listing-only draft: whatever package an earlier
+    update_draft staged is dropped, and the published one it was to replace
+    is kept as it is. Returns what is wrong, if this tag's package is not the
+    published one."""
+    kept = []
+    for package in submission.get("ApplicationPackages") or []:
+        if not package.get("Id") or package.get("FileStatus") == "PendingUpload":
+            continue
+        if package.get("FileStatus") == "PendingDelete":
+            package = {**package, "FileStatus": "Uploaded"}
+        kept.append(package)
+    submission["ApplicationPackages"] = kept
+    want = f"PathOfLeashResistance-{package_version(tag)}.msix"
+    have = [p.get("FileName") for p in kept]
+    if have != [want]:
+        return [f"The published package is {have or 'none'}, not {want}: "
+                "update_listing changes only the listing of the release that "
+                "is in the Store."]
+    return []
+
+
 def stage(submission: dict, draft: dict,
           images: list[tuple[str, Path, str]]) -> dict:
     """Return *submission* with every listing's images replaced. *draft* is
@@ -258,11 +280,12 @@ def stage(submission: dict, draft: dict,
     return submission
 
 
-def write_zip(path: Path, msix: Path, package_name: str,
+def write_zip(path: Path, msix: Path | None, package_name: str,
               images: list[tuple[str, Path, str]]) -> None:
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
         # the MSIX is already compressed, and so are PNGs
-        archive.write(msix, package_name, compress_type=zipfile.ZIP_STORED)
+        if msix is not None:
+            archive.write(msix, package_name, compress_type=zipfile.ZIP_STORED)
         for name, local, _kind in images:
             archive.write(local, name, compress_type=zipfile.ZIP_STORED)
 
@@ -347,20 +370,22 @@ def cmd_stage(args) -> int:
     draft = _read_json(args.draft)
     sub = json.loads(Path(args.submission).read_text(encoding="utf-8"))
     images = listing_images(Path(args.images))
-    package = pending_package(sub)
-    if package != Path(args.msix).name:
-        raise SystemExit(f"the draft's pending package is {package}, not "
-                         f"{Path(args.msix).name}: the draft is for another version")
+    package = ""
+    if args.msix:
+        package = pending_package(sub)
+        if package != Path(args.msix).name:
+            raise SystemExit(f"the draft's pending package is {package}, not "
+                             f"{Path(args.msix).name}: the draft is for another version")
     stage(sub, draft, images)
     Path(args.submission).write_text(json.dumps(sub, indent=2, ensure_ascii=False) + "\n",
                                      encoding="utf-8", newline="\n")
-    write_zip(Path(args.zip), Path(args.msix), package, images)
+    write_zip(Path(args.zip), Path(args.msix) if args.msix else None, package, images)
     retired = sum(i["FileStatus"] == "PendingDelete"
                   for lst in sub["Listings"].values()
                   for i in lst["BaseListing"]["Images"])
     print(f"Staged {len(images)} images in {', '.join(sub['Listings'])} "
           f"({retired} current images marked PendingDelete); {args.zip} holds "
-          f"{package} and the images")
+          f"{package + ' and ' if package else ''}the images")
     return 0
 
 
@@ -461,7 +486,10 @@ def check_submit(status: str, draft: dict, tag: str, whats_new: str) -> list[str
     want = f"PathOfLeashResistance-{package_version(tag)}.msix"
     pending = [p.get("FileName") for p in draft.get("ApplicationPackages") or []
                if p.get("FileStatus") == "PendingUpload"]
-    if pending != [want]:
+    # a listing-only draft (update_listing) keeps the published package
+    kept = [p.get("FileName") for p in draft.get("ApplicationPackages") or []
+            if p.get("FileStatus") == "Uploaded"]
+    if pending != [want] and not (not pending and kept == [want]):
         problems.append(f"The draft's pending package is {pending or 'none'}, "
                         f"not {want}. Run update_draft with {tag} first.")
     listings = draft.get("Listings") or {}
@@ -505,7 +533,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--draft", type=Path, required=True)
     s.add_argument("--submission", type=Path, required=True)
     s.add_argument("--images", type=Path, required=True)
-    s.add_argument("--msix", type=Path, required=True)
+    s.add_argument("--msix", type=Path, help="left out, the draft keeps its package")
+    k = sub.add_parser("keep-package")
+    k.add_argument("submission", type=Path)
+    k.add_argument("--tag", required=True)
     s.add_argument("--zip", type=Path, required=True)
     u = sub.add_parser("upload-url")
     u.add_argument("draft", type=Path)
@@ -534,6 +565,15 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if problems else 0
     if args.cmd == "stage":
         return cmd_stage(args)
+    if args.cmd == "keep-package":
+        import json
+        kept = _read_json(args.submission)
+        problems = keep_package(kept, args.tag)
+        for problem in problems:
+            print(f"::error::{problem}")
+        Path(args.submission).write_text(json.dumps(kept, indent=2, ensure_ascii=False) + "\n",
+                                         encoding="utf-8", newline="\n")
+        return 1 if problems else 0
     if args.cmd == "upload-url":
         url = _read_json(args.draft).get("FileUploadUrl")
         if not url and args.masks:
