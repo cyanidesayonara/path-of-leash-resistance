@@ -11,7 +11,7 @@ its own way of fighting, and its own wake film.
 | 11 | El Mamut, the stone mammoth (1907) | La Ciutadella, by the boating lake | 1.72 |
 | 21 | El Drac, the mosaic dragon of the Park Güell steps | El Mosaic | 1.73 |
 | 31 | Els Lleons, the bronze lions at the foot of the Columbus column (1888) | El Port | 1.73 |
-| 41 | La Lleona, the Romanesque stone lioness on her column | Girona | the fight; films to come |
+| 41 | La Lleona, the Romanesque stone lioness on her column | Girona | shipped |
 | 51 | El Gat, the Raval's fat bronze cat | Rambla del Raval | shipped |
 
 Only the stone, bronze and tile of the real statues are drawn, as cartoons of our own:
@@ -107,6 +107,9 @@ The danger is being seen, so the fight is about what stands between her and the 
   boop, and a nose at her tail is the kiss the town's iron steps are for. A planter
   hides the dog once and crumbles.
 - **Last stand:** on her column, raking. Three legs tied and she slides down; a bark.
+- **Films:** the square in the rain at dusk. Two gold eyes open, the stone head turns,
+  and a pigeon she looks at falls out of the air as a stone one. Settled, she climbs
+  back up, the sun comes out, and the dog kisses her where all Girona does.
 
 ### El Gat (Rambla del Raval): the finale, an ambush from above
 
