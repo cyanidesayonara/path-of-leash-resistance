@@ -65,6 +65,7 @@ var detour_layer: Node2D = null
 # where --shot-cam points the camera (INF: follow the pair as usual)
 var shot_cam := Vector2(INF, INF)
 var shot_zoom_set := false
+const Woods := preload("res://world/woods.gd")
 const CamTricks := preload("res://systems/cam_tricks.gd")
 const Ach := preload("res://systems/achievements.gd")
 var arena_zoom_mult := 1.0
@@ -344,7 +345,7 @@ var lvl := "street":
 # draw_grove, draw_yard, draw_log_prop, draw_van, draw_top and idle_status;
 # El Gat's urgent_status (outranks the walk's own banners), hush_banner
 # (clears it under his title card) and cam_lean;
-# El Bosc's draw_scenery, draw_path_edges, draw_snack and draw_trough_prop;
+# El Bosc's draw_wood_layer, draw_scenery, draw_path_edges, draw_snack and draw_trough_prop;
 # L'Estacio's draw_freedom_beyond and draw_freedom_ground; and El Barri's
 # draw_gate_fence, draw_fountain and draw_performer; and Passeig Maritim's
 # draw_cross_section, takes_prints and draw_bin, and its kite flyer's tick,
@@ -2370,6 +2371,9 @@ func draw_verge_onto(c: Object, vt: float, vb: float) -> void:
 	# before it was moved off it (see edgelayer.gd) - putting picnics into the
 	# 30-times-a-second draw is exactly how a walk starts to stutter.
 	_draw_grass_detail(c, vt, vb)
+	# a wood beside the walk (world/woods.gd)
+	if walk_mod != null and walk_mod.has_method("draw_wood_layer"):
+		walk_mod.draw_wood_layer(self, c, vt, vb)
 	# Les Obres' Heras fence stands on the building line, so it goes on this
 	# canvas, above the sidewalk its feet and shadow lie on
 	if lvl == "site":
@@ -3171,7 +3175,16 @@ func draw_tree_crown(b: ShapeBatch, t: Dictionary, faded := false) -> void:
 	var trunk := not faded
 	match int(t["kind"]):
 		TREE_OAK: _broadleaf_crown(b, p, 1.0, trunk)
-		TREE_FOREST: _forest_crown(b, p, int(t["i"]), trunk)
+		TREE_FOREST:
+			if lvl == "molina":
+				Woods.crown(b, Woods.K.SNOW_FIR, p, 40.0, int(p.x) + int(p.y))
+			else:
+				# holm oak or stone pine, as the wood beside it (world/woods.gd)
+				var holm := int(t["i"]) % 3 == 1
+				Woods.crown(b, Woods.K.HOLM if holm else Woods.K.PINE, p, 33.0 if holm else 42.0, int(absf(p.x) + absf(p.y)))
+				if trunk:
+					b.circle(p, 5.2, Color(0.20, 0.14, 0.10))
+					b.circle(p - Vector2(1, 1), 3.4, Color(0.40, 0.29, 0.20))
 		TREE_PALM: _palm_crown(b, p, trunk)
 		TREE_STREET: _broadleaf_crown(b, p, 0.72, trunk)
 		TREE_PIT: _broadleaf_crown(b, p, 0.8, trunk)
@@ -4858,7 +4871,7 @@ func draw_freedom_onto(c: Object) -> void:
 	var surround := Color(0.27, 0.4, 0.27)
 	match freedom_kind:
 		"beach": surround = Color(0.80, 0.74, 0.59)
-		"clearing": surround = Color(0.20, 0.30, 0.19)
+		"clearing": surround = (Woods.LOOKS[Woods.look(lvl)] as Dictionary).floor
 		"lot": surround = Color(0.32, 0.31, 0.29)
 		"placa": surround = Color(0.36, 0.32, 0.30)
 	if lvl == "rain":
@@ -4981,23 +4994,13 @@ func _draw_freedom_beyond(c: Object) -> void:
 				sx += w
 				k += 1
 		"clearing":
-			# the wood goes on: canopy over canopy, darker the deeper in (on
-			# El Mosaic's hilltop, the dusty olive of pine and holm oak)
-			var dry := lvl == "guell"
-			for row in range(4):
-				var cy := top - 40.0 - float(row) * 95.0
-				var cx := -380.0 + float(row % 2) * 60.0
-				while cx < 1700.0:
-					var rr := 54.0 + fmod(absf(cx) * 0.37 + float(row) * 13.0, 22.0)
-					var dk := 0.06 * float(row)
-					b.circle(Vector2(cx, cy) + Shade.light * 16.0, rr, Color(0.08, 0.12, 0.08, 0.3))
-					if dry:
-						b.circle(Vector2(cx, cy), rr, Color(0.30 - dk, 0.34 - dk, 0.20 - dk))
-						b.circle(Vector2(cx, cy) - Shade.light * rr * 0.3, rr * 0.55, Color(0.38 - dk, 0.42 - dk, 0.25 - dk))
-					else:
-						b.circle(Vector2(cx, cy), rr, Color(0.17 - dk, 0.30 - dk, 0.17 - dk))
-						b.circle(Vector2(cx, cy) - Shade.light * rr * 0.3, rr * 0.55, Color(0.23 - dk, 0.38 - dk, 0.21 - dk))
-					cx += 110.0
+			# the wood goes on, behind it and down both sides (world/woods.gd)
+			var wood := Woods.look(lvl)
+			var all := Rect2(-400.0, top - 620.0, 2100.0, r.size.y + 590.0)
+			Woods.ground(b, Rect2(all.position, Vector2(2100.0, 620.0)), wood, 5)
+			Woods.ground(b, Rect2(-400.0, top, r.position.x + 400.0, r.size.y - 30.0), wood, 7)
+			Woods.ground(b, Rect2(r.end.x, top, 1700.0 - r.end.x, r.size.y - 30.0), wood, 9)
+			Woods.trees(b, all, wood, 11, 66.0, r)
 		"placa":
 			# the houses' roofs behind their fronts: terracotta in ridged rows
 			var rx := -380.0
@@ -5415,8 +5418,11 @@ func _draw_clearing(c: Object) -> void:
 	if walk_mod != null and walk_mod.has_method("draw_clearing"):
 		walk_mod.draw_clearing(self, c, r)
 		return
-	c.draw_rect(r, Color(0.30, 0.42, 0.26))
-	_worn_patch(c, r.get_center(), 170.0, Color(0.40, 0.36, 0.26, 0.55))   # trodden earth
+	var wood := Woods.look(lvl)
+	var b := ShapeBatch.new(c if not (c is ShapeBatch) else null)
+	b.lod = true
+	Woods.clearing(b, r, wood)
+	b.flush(c)
 	# Sixteen, not forty. Forty of these cost 5.7ms of a 9ms frame, measured -
 	# a ring of trees does not read forty times better than a ring of sixteen.
 	# The ring of trees is not drawn here any more. It was decoration you could
