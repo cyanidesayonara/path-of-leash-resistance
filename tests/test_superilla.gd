@@ -109,7 +109,6 @@ func _run() -> void:
 	var game: Node = root.get_node("Game")
 	game.persist = false
 	game.free_play = false
-	game.gate_open.clear()
 	game.records = {}
 	var goals_mod: GDScript = load("res://systems/goals.gd")
 	var th_mod: GDScript = load("res://systems/tony_hawk.gd")
@@ -120,10 +119,8 @@ func _run() -> void:
 	var saved_persist: bool = game.persist
 	var saved_free_play: bool = game.free_play
 	var saved_records: Dictionary = game.records.duplicate(true)
-	var saved_open: Array[String] = game.gate_open.duplicate()
 	game.persist = false
 	game.free_play = false
-	game.gate_open.clear()
 	game.records = {}
 	for lv: String in game.LEVELS:
 		game.records[lv] = game._default_level_record()
@@ -243,7 +240,6 @@ func _run() -> void:
 	_check(true, "Superilla draw methods executed successfully")
 
 	game.records = saved_records
-	game.gate_open = saved_open
 	game.free_play = saved_free_play
 	game.persist = saved_persist
 

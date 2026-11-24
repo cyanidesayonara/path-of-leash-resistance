@@ -36,15 +36,12 @@ func _run() -> void:
 	game.free_play = false
 	var saved_records: Dictionary = game.records.duplicate(true)
 	var saved_bones: int = game.total_bones
-	var saved_open: Array[String] = game.gate_open.duplicate()
-	game.gate_open.clear()
 
 	# 1. Fresh state: verify chase gate requirements
 	game.records = {}
 	for lv in game.LEVELS:
 		game.records[lv] = game._default_level_record()
 
-	_check(game.GATES_VERSION == 5, "gates version is 5")
 	_check(game.chase_gate_needed("barri") == "", "barri has no chase gate")
 	_check(game.chase_gate_needed("neteja") == "", "neteja, the first chase, has no chase gate")
 	_check(game.chase_gate_needed("besos") == "neteja", "besos requires neteja completed")
@@ -103,97 +100,7 @@ func _run() -> void:
 	_check(game.has_completed("gracia"), "gracia completed")
 	_check(game.is_unlocked("raval"), "raval unlocks directly when gracia is beaten regardless of stars")
 
-	# 7. A save from before the gates keeps the gated walks it had open by
-	# stars or had walked, but never one of the walks that came with the gates
-	game.records = {}
-	for lv in game.LEVELS:
-		game.records[lv] = game._default_level_record()
-	game.records["barri"].stars = 3
-	game.records["street"].stars = 3
-	game.records["park"].stars = 3
-	game.records["beach"].stars = 3
-	game.records["rain"].stars = 3
-	game.records["market"].stars = 2
-	game.records["montjuic"].bones = 12
-	game.gate_open.clear()
-	game._grandfather_chase_gates()
-	_check(game.is_unlocked("market") and game.is_unlocked("rain"), "an old save at 17 stars keeps market and rain open")
-	_check(game.chase_gate_needed("montjuic") == "", "an old save that walked montjuic keeps it")
-	_check(game.chase_gate_needed("vet") == "besos", "an old save below the vet's stars is still gated there")
-	_check(not game.gate_open.has("gracia") and not game.gate_open.has("raval"), "new walks are never grandfathered")
-
-	# 8. A save from before the reshuffle keeps every walk the old order had
-	# open, stars and all, and nothing the old order still had shut
-	game.gate_open.clear()
-	game.records = {}
-	for lv in game.LEVELS:
-		game.records[lv] = game._default_level_record()
-	for lv: String in ["barri", "street", "park", "beach", "rain", "market"]:
-		game.records[lv].stars = 3
-	game.records["oldtown"].stars = 1
-	game.records["besos"].bones = 9
-	game._grandfather_reorder()
-	_check(game.is_unlocked("rain") and game.is_unlocked("market") and game.is_unlocked("oldtown"),
-		"rain, market and El Gotic stay open at 19 stars though they now follow La Neteja")
-	_check(game.is_unlocked("trail") and game.is_unlocked("station"), "the trail and L'Estacio stay open by their old stars")
-	_check(game.is_unlocked("besos"), "a walked El Besos stays open")
-	_check(not game.is_unlocked("montjuic"), "montjuic needed La Neteja before too: still shut")
-	_check(not game.is_unlocked("horta"), "horta was shut before and is shut now")
-	game.gate_open.clear()
-
-	# 9. A save from 1.69 keeps the walks that order had open: La Superilla
-	# came after Gràcia then and needs Els Senglars now
-	game.gate_open.clear()
-	game.records = {}
-	for lv in game.LEVELS:
-		game.records[lv] = game._default_level_record()
-	var filled := 0
-	for lv: String in game.LEVELS:
-		if filled >= 15:
-			break
-		game.records[lv].stars = 3
-		filled += 1
-	game.records["gracia"].bones = 9
-	_check(not game.is_unlocked("superilla"), "without the old save's rules, La Superilla waits for Els Senglars")
-	game._grandfather_from(game.V2_STAR_GATE, game.V2_CHASE_GATE)
-	_check(game.is_unlocked("superilla"), "a 1.69 save with 45 stars and Gràcia walked keeps La Superilla open")
-	game.gate_open.clear()
-
-	# 9b. A save from v3 keeps Festa de Gràcia open at 50 stars and L'Aeroport
-	# open at 51 stars with La Cremada completed
-	game.records = {}
-	for lv in game.LEVELS:
-		game.records[lv] = game._default_level_record()
-	for i: int in range(16):
-		game.records[game.LEVELS[i]].stars = 3
-	game.records[game.LEVELS[16]].stars = 2
-	_check(not game.is_unlocked("gracia"), "without grandfathering, Gracia waits for Montserrat")
-	game._grandfather_from(game.V3_STAR_GATE, game.V3_CHASE_GATE)
-	_check(game.is_unlocked("gracia"), "a v3 save with 50 stars keeps Festa de Gracia open")
-	_check(not game.is_unlocked("aeroport"), "a v3 save with 50 stars without La Cremada keeps L'Aeroport shut")
-	game.gate_open.clear()
-	game.records[game.LEVELS[16]].stars = 3
-	game.records["cremada"].bones = 9
-	_check(game.is_unlocked("aeroport"), "with La Cremada walked, L'Aeroport is open under the roadmap order")
-	game._grandfather_from(game.V3_STAR_GATE, game.V3_CHASE_GATE)
-	_check(game.is_unlocked("aeroport"), "a v3 save with 51 stars and La Cremada completed keeps L'Aeroport open")
-	game.gate_open.clear()
-
-	# 9b. A save from before the roadmap order keeps what its gates had open:
-	# Festa de Gracia at 40 stars after La Cremada, though it now closes the
-	# chase run at walk 50 behind Montserrat
-	for lv in game.LEVELS:
-		game.records[lv] = game._default_level_record()
-	for i: int in range(14):
-		game.records[game.LEVELS[i]].stars = 3
-	game.records["cremada"].bones = 9
-	_check(not game.is_unlocked("gracia"), "under the roadmap order, Gracia waits for Montserrat")
-	game._grandfather_from(game.V4_STAR_GATE, game.V4_CHASE_GATE)
-	_check(game.is_unlocked("gracia"), "a v4 save with 42 stars and La Cremada walked keeps Festa de Gracia open")
-	_check(not game.is_unlocked("montserrat"), "a v4 save below Montserrat's old 52 stars keeps it shut")
-	game.gate_open.clear()
-
-	# 10. Free play mode opens all walks
+	# 7. Free play mode opens all walks
 	game.records = {}
 	for lv in game.LEVELS:
 		game.records[lv] = game._default_level_record()
@@ -207,7 +114,6 @@ func _run() -> void:
 	game.free_play = false
 	game.records = saved_records
 	game.total_bones = saved_bones
-	game.gate_open.assign(saved_open)
 	dummy_main.queue_free()
 
 	if failures.is_empty():

@@ -64,8 +64,8 @@ Bench: Vallvidrera's funicular. El Delta stays rejected.
 
 Applied to `Game.CAROUSEL` on 2026-11-23 (gates version 5), with walk 41 left
 for Girona, which landed with La Lleona on 2026-11-24 (#702 to #704). Les Atraccions'
-mascot chase and film, the tenth chase, followed the same day. Next: the lock and
-the save reset.
+mascot chase and film, the tenth chase, followed the same day, and the save
+reset with it.
 
 New walks in bold; (C) chase, (B) boss.
 
@@ -86,12 +86,12 @@ Bosc in rain, Les Obres at dawn, La Diagonal at dusk.
 
 ### Saves
 
-Once the campaign content is locked, progress resets: one save-version bump
-that starts everyone fresh, instead of more gate grandfathering (Santtu,
+Progress resets with the finished campaign (`Game.SAVE_VERSION`, landed
+2026-11-24): one save-version bump that starts everyone fresh, instead of more gate grandfathering (Santtu,
 2026-11-16). Nothing earned is kept, the wardrobe and trained stats included: a
-clean fresh game (Santtu, 2026-11-24). Settings (controls, language) survive. It
-waits for the campaign to be ready; the old gate tables and grandfathering go
-with it.
+clean fresh game (Santtu, 2026-11-24). Settings (controls, language) survive. The
+old gate tables and grandfathering went with it. The old file is kept beside the
+new one (`records_before_campaign.cfg`).
 
 ## Release train
 

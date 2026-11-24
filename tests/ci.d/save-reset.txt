@@ -1,0 +1,3 @@
+# The save reset
+# cost 10
+--headless --path . --script res://tests/test_save_reset.gd

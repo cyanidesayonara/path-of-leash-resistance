@@ -63,7 +63,6 @@ func _run() -> void:
 	_check(int(game.STAR_GATE.get("girona", -1)) == 47, "STAR_GATE girona == 47")
 	_check(String(game.CHASE_GATE.get("girona", "")) == "atraccions", "CHASE_GATE girona == atraccions")
 	_check(game.CAMPAIGN_SKY.get("girona", []) == ["rain", "dusk"], "CAMPAIGN_SKY girona == [rain, dusk]")
-	_check(game.WALKS_SINCE_GATES.has("girona"), "WALKS_SINCE_GATES includes girona")
 	_check(String(game.LEVEL_NAMES.get("girona", "")) == "Girona", "LEVEL_NAMES girona")
 	_check(String(game.LEVEL_SUBTITLES.get("girona", "")).length() > 0, "LEVEL_SUBTITLES girona")
 	_check(String(game.LEVEL_SUBTITLES_CA.get("girona", "")).length() > 0, "LEVEL_SUBTITLES_CA girona")

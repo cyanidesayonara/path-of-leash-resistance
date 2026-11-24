@@ -1577,7 +1577,8 @@ func on_back_request() -> void:
 
 
 func on_app_paused(force_mobile := false) -> void:
-	if Game.persist:
+	# an old save is replaced by something the player does, never by looking away
+	if Game.persist and not Game.fresh_start:
 		Game.save_records()
 	var mobile := force_mobile or OS.has_feature("android") or OS.has_feature("mobile") \
 		or DisplayServer.is_touchscreen_available()

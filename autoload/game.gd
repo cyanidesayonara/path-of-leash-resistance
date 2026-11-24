@@ -192,22 +192,6 @@ const CHASE_GATE := {
 	"gracia": "montserrat",
 	"raval": "gracia",
 }
-# The order and gates before the November 2026 chase-spacing reshuffle: a save
-# made under them keeps every walk they had opened (_grandfather_from).
-# The order and gates before the walks took the roadmap's order (bosses at
-# 11, 21, 31, 41 and 51, a chase every fifth walk): a save made under them
-# keeps every walk they had opened (_grandfather_from).
-const GATES_VERSION := 5
-const V4_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "blai": 39, "aigues": 39, "gracia": 40, "horta": 41, "molina": 42, "port": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "aeroport": 47, "site": 47, "ronda": 47, "encants": 50, "tarragona": 50, "vic": 50, "partit": 48, "scrap": 49, "montserrat": 52, "raval": 53, "atraccions": 47}
-const V4_CHASE_GATE := {"oldtown": "neteja", "montjuic": "neteja", "market": "neteja", "rain": "neteja", "besos": "neteja", "llevant": "besos", "eixample": "besos", "diagonal": "boars", "blai": "boars", "tibidabo": "besos", "vet": "besos", "sarria": "vet", "trail": "vet", "angels": "vet", "spook": "vet", "boars": "vet", "guell": "boars", "superilla": "boars", "metro": "boars", "station": "boars", "carmel": "boars", "reial": "boars", "forum": "boars", "aigues": "boars", "horta": "boars", "port": "boars", "espanya": "boars", "santpau": "boars", "poble": "boars", "cremada": "boars", "gracia": "cremada", "sitges": "cremada", "atraccions": "cremada", "aeroport": "gracia", "molina": "aeroport", "montserrat": "aeroport", "ciutadella": "besos", "site": "boars", "ronda": "boars", "tarragona": "boars", "partit": "boars", "scrap": "boars", "encants": "boars", "vic": "boars", "raval": "gracia"}
-const V3_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "station": 31, "carmel": 33, "reial": 35, "cremada": 36, "forum": 37, "diagonal": 38, "aigues": 39, "horta": 41, "port": 43, "espanya": 45, "poble": 46, "site": 47, "partit": 48, "scrap": 49, "gracia": 50, "aeroport": 51, "montserrat": 52, "raval": 53}
-const V3_CHASE_GATE := {"oldtown": "neteja", "montjuic": "neteja", "market": "neteja", "rain": "neteja", "besos": "neteja", "llevant": "besos", "eixample": "besos", "diagonal": "boars", "tibidabo": "besos", "vet": "besos", "trail": "vet", "angels": "vet", "spook": "vet", "boars": "vet", "guell": "boars", "superilla": "boars", "station": "boars", "carmel": "boars", "reial": "boars", "forum": "boars", "aigues": "boars", "horta": "boars", "port": "boars", "espanya": "boars", "poble": "boars", "cremada": "boars", "aeroport": "cremada", "montserrat": "aeroport", "ciutadella": "besos", "site": "boars", "partit": "boars", "scrap": "boars", "raval": "gracia"}
-# The order and gates of 1.69 (version 2): Els Búnquers and La Superilla came
-# after Gràcia then. A save from it keeps every walk they had open.
-const V2_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "llevant": 15, "tibidabo": 17, "vet": 19, "trail": 21, "spook": 23, "boars": 25, "guell": 27, "station": 29, "reial": 31, "aigues": 33, "horta": 35, "port": 37, "site": 39, "partit": 40, "scrap": 41, "gracia": 42, "carmel": 43, "superilla": 44, "forum": 45, "espanya": 46, "raval": 47}
-const V2_CHASE_GATE := {"oldtown": "neteja", "montjuic": "neteja", "market": "neteja", "rain": "neteja", "besos": "neteja", "llevant": "besos", "tibidabo": "besos", "vet": "besos", "trail": "vet", "spook": "vet", "boars": "vet", "guell": "boars", "station": "boars", "reial": "boars", "aigues": "boars", "horta": "boars", "port": "boars", "site": "boars", "partit": "boars", "scrap": "boars", "gracia": "boars", "carmel": "gracia", "superilla": "gracia", "forum": "gracia", "espanya": "gracia", "raval": "gracia"}
-const OLD_STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "rain": 4, "market": 7, "oldtown": 9, "trail": 11, "station": 13, "besos": 14, "site": 15, "spook": 17, "scrap": 19, "guell": 21, "neteja": 23, "montjuic": 25, "partit": 27, "port": 29, "reial": 31, "vet": 33, "tibidabo": 35, "aigues": 37, "horta": 39, "llevant": 40, "boars": 41, "gracia": 42, "raval": 44}
-const OLD_CHASE_GATE := {"site": "besos", "spook": "besos", "scrap": "besos", "guell": "besos", "boars": "besos", "montjuic": "neteja", "partit": "neteja", "port": "neteja", "reial": "neteja", "vet": "neteja", "tibidabo": "vet", "aigues": "vet", "horta": "vet", "llevant": "vet", "gracia": "vet"}
 
 # The four kinds of weather the rules read (Game.weather): who is out, slick
 # paving, ice, puddles. Each sky the player can pick (SKIES) is one of these
@@ -477,6 +461,12 @@ const DOG_KEYS: Array[String] = ["millie", "pipa", "mochi", "bruna", "tito", "pe
 const DEFAULT_DOG := "millie"
 
 const SAVE_PATH := "user://records.cfg"
+# The save's version. A save from an older one starts the campaign again: its
+# settings are kept and everything earned is not (_start_fresh). Version 1 is
+# the finished 51-walk campaign; saves before it carry no version.
+const SAVE_VERSION := 1
+# settings kept in that section that belong to the old campaign, not the player
+const FRESH_SETTINGS := ["ask_tutorial", "free_play"]
 const DEFAULT_OWNED := {"collar:red": true, "bandana:none": true, "coat:millie": true}
 const DEFAULT_COLLAR := "red"
 const DEFAULT_BANDANA := "none"
@@ -486,6 +476,10 @@ const DEFAULT_VOL_SFX := 0.9
 const DEFAULT_VOL_MUSIC := 0.55
 
 var save_path := SAVE_PATH
+# This run's save is from before the campaign and has been set aside in memory.
+# Nothing is written on load: the file is replaced, and the old one kept beside
+# it (old_save_path), at the first real save. Until then the main menu says so.
+var fresh_start := false
 # false for the autowalk bot: it runs from a blank save and never writes one,
 # so its walk does not depend on (or change) whoever last played here
 var persist := true
@@ -704,12 +698,6 @@ const LEVEL_SUBTITLES_ES := {
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.
 var agility_best := 0.0
-# gated walks this save keeps open whatever CHASE_GATE says (see
-# _grandfather_chase_gates)
-var gate_open: Array[String] = []
-# the walks that arrived with the chase gates: no save predates them, so
-# none is grandfathered past its gate
-const WALKS_SINCE_GATES: Array[String] = ["llevant", "angels", "boars", "gracia", "carmel", "superilla", "forum", "espanya", "raval", "eixample", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "molina", "diagonal", "metro", "sarria", "blai", "santpau", "sitges", "ronda", "atraccions", "encants", "tarragona", "vic", "girona"]
 # The goal card is a big block of text in the corner of a game whose whole
 # point is the mess in the middle. Collapsed it is one line; the player
 # decides, and the choice sticks.
@@ -1382,6 +1370,11 @@ func _ready() -> void:
 	Engine.max_physics_steps_per_frame = MAX_PHYSICS_STEPS
 	persist = not ("--autowalk" in OS.get_cmdline_user_args())
 	load_records()
+	# a screenshot shows this profile and never changes it, its --lang and the
+	# like included (the window losing focus saves: main.on_app_paused)
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--shot"):
+			persist = false
 	# lets CI and local smoke tests exercise any level/weather:
 	#   godot --headless --path . -- --level=park --weather=snow
 	for arg in OS.get_cmdline_user_args():
@@ -1475,7 +1468,7 @@ func _reset_persisted_state() -> void:
 	walks_lost = 0
 	tips_seen = []
 	agility_best = 0.0
-	gate_open = []
+	fresh_start = false
 	dog_upgrades = {}
 	training = {}
 	finds_found = {}
@@ -1492,6 +1485,8 @@ func load_records() -> void:
 	var cf := ConfigFile.new()
 	if cf.load(save_path) != OK:
 		return
+	if int(cf.get_value("global", "save_version", 0)) < SAVE_VERSION:
+		_start_fresh(cf)
 	for lv in LEVELS:
 		var record := _default_level_record()
 		var gl: Array = cf.get_value(lv, "goals", [])
@@ -1503,26 +1498,10 @@ func load_records() -> void:
 		record.goals = gl
 		records[lv] = record
 	total_bones = int(cf.get_value("global", "total_bones", 0))
-	var ol: Array = cf.get_value("cosmetics", "owned", ["red", "none"])
 	owned = {}
-	for k in ol:
-		var legacy_key := String(k)
-		if ":" in legacy_key:
-			owned[legacy_key] = true
-			continue
-		var matched := false
-		if COLLARS.has(legacy_key):
-			owned[ownership_id("collar", legacy_key)] = true
-			matched = true
-		if BANDANAS.has(legacy_key):
-			owned[ownership_id("bandana", legacy_key)] = true
-			matched = true
-		if COATS.has(legacy_key):
-			owned[ownership_id("coat", legacy_key)] = true
-			matched = true
-		if not matched:
-			owned[legacy_key] = true
-	# the freebies are always owned, however old the save file is
+	for k in Array(cf.get_value("cosmetics", "owned", [])):
+		owned[String(k)] = true
+	# the freebies are always owned
 	owned[ownership_id("collar", "red")] = true
 	owned[ownership_id("bandana", "none")] = true
 	owned[ownership_id("coat", "millie")] = true
@@ -1566,19 +1545,6 @@ func load_records() -> void:
 	dogs_walked.assign(Array(cf.get_value("achievements", "dogs_walked", PackedStringArray())))
 	gallery_bones.assign(Array(cf.get_value("achievements", "gallery_bones", PackedStringArray())))
 	agility_best = maxf(0.0, float(cf.get_value("freedom", "agility_best", 0.0)))
-	if cf.has_section_key("global", "gate_open"):
-		gate_open.assign(Array(cf.get_value("global", "gate_open", PackedStringArray())))
-		var gv := int(cf.get_value("global", "gates_version", 1))
-		if gv < 2:
-			_grandfather_from(OLD_STAR_GATE, OLD_CHASE_GATE)
-		if gv < 3:
-			_grandfather_from(V2_STAR_GATE, V2_CHASE_GATE)
-		if gv < 4:
-			_grandfather_from(V3_STAR_GATE, V3_CHASE_GATE)
-		if gv < 5:
-			_grandfather_from(V4_STAR_GATE, V4_CHASE_GATE)
-	else:
-		_grandfather_chase_gates()
 	# a dog saved while only browsed (locked) is not the player's dog; checked
 	# last, once the stars that unlock dogs are loaded
 	if not is_dog_unlocked(dog):
@@ -1598,41 +1564,32 @@ func load_records() -> void:
 			cur._apply_ui_scale()
 
 
-# A save from before the chase gates keeps every gated walk it had already
-# opened by stars or already walked: an update must never lock a walk away.
-func _grandfather_chase_gates() -> void:
-	var stars_now := total_stars()
-	for lv: String in CHASE_GATE:
-		if lv in WALKS_SINCE_GATES:
-			continue
-		var r: Dictionary = records.get(lv, {})
-		var walked := int(r.get("bones", 0)) > 0 or float(r.get("time", 0.0)) > 0.0
-		if walked or stars_now >= int(STAR_GATE.get(lv, 0)):
-			gate_open.append(lv)
+# What is left of a save from before the campaign: the player's settings, and
+# nothing that was earned. A save with nothing in it but settings is no loss,
+# so it says nothing.
+func _start_fresh(cf: ConfigFile) -> void:
+	for section: String in cf.get_sections():
+		if section != "settings":
+			fresh_start = fresh_start or section == "global" or LEVELS.has(section)
+			cf.erase_section(section)
+	for k: String in FRESH_SETTINGS:
+		if cf.has_section_key("settings", k):
+			cf.erase_section_key("settings", k)
 
 
-# A save from before the reshuffle keeps every walk that was open under the
-# old order and gates, so no walk it could play is locked away.
-func _grandfather_reorder() -> void:
-	_grandfather_from(OLD_STAR_GATE, OLD_CHASE_GATE)
-
-
-# Keeps open every walk that was open under an older order's gates (star and
-# chase tables), so an update never locks away a walk a save could play.
-func _grandfather_from(star: Dictionary, chase: Dictionary) -> void:
-	var stars_now := total_stars()
-	for lv: String in CHASE_GATE:
-		if gate_open.has(lv) or lv == "raval" or not star.has(lv):
-			continue
-		var old_req: String = String(chase.get(lv, ""))
-		var chased := old_req == "" or has_completed(old_req)
-		if has_completed(lv) or (chased and stars_now >= int(star.get(lv, 0))):
-			gate_open.append(lv)
+# where a save set aside by _start_fresh is kept
+func old_save_path() -> String:
+	return save_path.get_basename() + "_before_campaign." + save_path.get_extension()
 
 
 func save_records() -> void:
 	if not persist:
 		return
+	if fresh_start:
+		# the first save since: the old file is kept beside the new one, once
+		if FileAccess.file_exists(save_path) and not FileAccess.file_exists(old_save_path()):
+			DirAccess.copy_absolute(save_path, old_save_path())
+		fresh_start = false
 	var cf := ConfigFile.new()
 	for lv in LEVELS:
 		if not records.has(lv):
@@ -1675,8 +1632,7 @@ func save_records() -> void:
 	cf.set_value("achievements", "dogs_walked", PackedStringArray(dogs_walked))
 	cf.set_value("achievements", "gallery_bones", PackedStringArray(gallery_bones))
 	cf.set_value("freedom", "agility_best", agility_best)
-	cf.set_value("global", "gate_open", PackedStringArray(gate_open))
-	cf.set_value("global", "gates_version", GATES_VERSION)
+	cf.set_value("global", "save_version", SAVE_VERSION)
 	cf.save(save_path)
 
 
@@ -1759,7 +1715,7 @@ func has_completed(lv: String) -> bool:
 
 
 func chase_gate_needed(lv: String) -> String:
-	if free_play or lv == "tutorial" or not CHASE_GATE.has(lv) or gate_open.has(lv):
+	if free_play or lv == "tutorial" or not CHASE_GATE.has(lv):
 		return ""
 	var req: String = String(CHASE_GATE[lv])
 	return "" if has_completed(req) else req
@@ -1770,9 +1726,6 @@ func is_unlocked(lv: String) -> bool:
 		return true  # the tutorial is always open, and free play opens all walks
 	if lv == "raval":
 		return has_completed("gracia")
-	# kept open by an older save: it was open by stars then
-	if gate_open.has(lv):
-		return true
 	if chase_gate_needed(lv) != "":
 		return false
 	return total_stars() >= int(STAR_GATE.get(lv, 0))

@@ -62,7 +62,6 @@ func _run() -> void:
 	_check(String(game.CHASE_GATE.get("encants", "")) == String(game.CHASE_GATE.get("scrap", "")),
 		"CHASE_GATE encants matches scrap")
 	_check(game.CAMPAIGN_SKY.get("encants", []) == ["rain", "day"], "CAMPAIGN_SKY encants == [rain, day]")
-	_check(game.WALKS_SINCE_GATES.has("encants"), "WALKS_SINCE_GATES includes encants")
 	_check(String(game.LEVEL_NAMES.get("encants", "")) == "Els Encants", "LEVEL_NAMES encants")
 	_check(String(game.LEVEL_SUBTITLES.get("encants", "")).length() > 0, "LEVEL_SUBTITLES encants")
 	_check(String(game.LEVEL_SUBTITLES_CA.get("encants", "")).length() > 0, "LEVEL_SUBTITLES_CA encants")
