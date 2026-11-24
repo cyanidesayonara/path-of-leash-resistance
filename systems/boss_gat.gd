@@ -32,7 +32,8 @@ extends RefCounted
 #   into the plaça.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "night_fronts", "on_bark", "surface", "tick", "urgent_status"]
+const CityRoofs := preload("res://world/city_roofs.gd")
+const HOOKS := ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hush_banner", "idle_status", "night_fronts", "night_lights", "on_bark", "surface", "tick", "urgent_status"]
 
 
 const NightFronts := preload("res://world/night_fronts.gd")
@@ -1796,12 +1797,80 @@ static func surface(m: Node2D, p: Vector2) -> int:
 	return -1
 
 
+# The two one-way streets the rambla runs between, their parked scooters and
+# containers, and the Raval's houses across them
+static func _draw_streets(b: ShapeBatch, vt: float, vb: float) -> void:
+	var lo := maxf(vt - 80.0, -5200.0)
+	var hi := minf(vb + 80.0, 400.0)
+	if hi <= lo:
+		return
+	for side: float in [-1.0, 1.0]:
+		var e := CORRIDOR_L - 30.0 if side < 0.0 else CORRIDOR_R + 30.0
+		var x := func(a: float, z: float) -> Rect2: return Rect2(minf(e + side * a, e + side * z), lo, absf(z - a), hi - lo)
+		b.rect(x.call(0.0, 7.0), Color(0.72, 0.70, 0.66))
+		b.rect(x.call(7.0, 112.0), Color(0.25, 0.25, 0.28))
+		b.rect(x.call(7.0, 16.0), Color(0.05, 0.04, 0.08, 0.22))
+		b.rect(x.call(76.0, 77.5), Color(0.86, 0.84, 0.78, 0.55))
+		b.rect(x.call(112.0, 118.0), Color(0.72, 0.70, 0.66))
+		b.rect(x.call(118.0, 160.0), PANOT_TILE)
+		b.rect(x.call(150.0, 160.0), Color(0.05, 0.04, 0.08, 0.20))
+		var y := floorf(lo / 22.0) * 22.0
+		while y < hi:
+			b.line(Vector2(e + side * 118.0, y), Vector2(e + side * 160.0, y), PANOT_LINE, 1.0)
+			y += 22.0
+		y = floorf(lo / 40.0) * 40.0
+		while y < hi:
+			var k := int(absf(y) / 40.0) * 2 + (1 if side > 0.0 else 0)
+			var h := fposmod(sin(float(k) * 12.99) * 43758.5, 1.0)
+			var p := Vector2(e + side * 94.0, y + 20.0)
+			if k % 23 < 5:
+				# the containers, one colour for each
+				if k % 23 < 4:
+					var cc: Color = [Color(0.22, 0.46, 0.72), Color(0.90, 0.74, 0.20), Color(0.28, 0.52, 0.32), Color(0.46, 0.34, 0.24)][k % 4]
+					b.rect(Rect2(p - Vector2(13, 17) + Shade.light * 6.0, Vector2(26, 34)), SHADOW)
+					b.rect(Rect2(p - Vector2(13, 17), Vector2(26, 34)), cc.darkened(0.25))
+					b.rect(Rect2(p - Vector2(11, 15), Vector2(22, 24)), cc)
+			elif h < 0.62:
+				# a scooter, nose to the kerb
+				var sc: Color = [Color(0.72, 0.20, 0.20), Color(0.86, 0.86, 0.84), Color(0.16, 0.17, 0.20), Color(0.30, 0.50, 0.62)][int(h * 40.0) % 4]
+				b.capsule(p - Vector2(14, 0) + Shade.light * 4.0, p + Vector2(14, 0) + Shade.light * 4.0, 5.0, SHADOW)
+				b.capsule(p - Vector2(15, 0), p + Vector2(15, 0), 3.0, Color(0.10, 0.10, 0.12))
+				b.capsule(p - Vector2(8, 0), p + Vector2(7, 0), 5.0, sc)
+				b.rect(Rect2(p - Vector2(5, 4), Vector2(10, 8)), Color(0.12, 0.12, 0.14))
+				b.line(p + Vector2(-side * 10.0, -7), p + Vector2(-side * 10.0, 7), Color(0.20, 0.20, 0.22), 2.4)
+			y += 40.0
+		# the houses: a strip of front, then their roofs
+		var f := e + side * 160.0
+		y = floorf(lo / 220.0) * 220.0
+		while y < hi:
+			var k := int(absf(y) / 220.0) * 2 + (1 if side > 0.0 else 0)
+			var wall: Color = [Color(0.72, 0.54, 0.40), Color(0.76, 0.66, 0.50), Color(0.62, 0.48, 0.44), Color(0.70, 0.60, 0.56)][k % 4]
+			b.rect(Rect2(minf(f, f + side * 22.0), y, 22.0, 220.0), wall.darkened(0.30))
+			b.rect(Rect2(minf(f + side * 16.0, f + side * 22.0), y, 6.0, 220.0), wall.lightened(0.10))
+			for w in range(5):
+				b.rect(Rect2(minf(f + side * 5.0, f + side * 13.0), y + 16.0 + 42.0 * float(w), 8.0, 16.0),
+					Color(1.0, 0.80, 0.48) if (k * 3 + w) % 4 != 0 and Game.lamp_glow() > 0.05 else Color(0.24, 0.26, 0.32))
+			CityRoofs.kept_module(b, f + side * 22.0, side, 420.0, y, y + 220.0, 700 + k)
+			y += 220.0
+
+
 static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float = 0.0) -> void:
 	if m.lvl != "raval":
 		return
 
-	# 1. Main promenade granite flagstones
+	_draw_streets(b, vt, vb)
+	# 1. Main promenade granite flagstones, laid in courses, no two quite alike
 	b.rect(Rect2(CORRIDOR_L, -5200.0, CORRIDOR_R - CORRIDOR_L, 5600.0), STONE_PLAZA)
+	var sy := floorf(maxf(vt - 60.0, -5200.0) / 48.0) * 48.0
+	while sy < minf(vb + 60.0, 400.0):
+		var row := int(absf(sy) / 48.0)
+		var sx := CORRIDOR_L + (32.0 if row % 2 == 0 else 0.0)
+		while sx < CORRIDOR_R - 1.0:
+			var w := minf(64.0, CORRIDOR_R - sx)
+			var h := fposmod(sin(float(row * 71) + sx * 0.37) * 43758.5, 1.0)
+			b.rect(Rect2(sx + 0.8, sy + 0.8, w - 1.6, 46.4), STONE_PLAZA.darkened(0.07 * h) if h > 0.35 else STONE_PLAZA.lightened(0.07 * (1.0 - h)))
+			sx += 64.0
+		sy += 48.0
 
 	# 2. Flanking terracotta borders and panots pavement bands
 	b.rect(Rect2(CORRIDOR_L - 30.0, -5200.0, 30.0, 5600.0), BAND_TERRACOTTA)
@@ -1894,6 +1963,18 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 			b.line(p + dir * 8.0, p + dir * (52.0 + sin(float(i) * 2.3) * 8.0), PALM_LEAF.darkened(0.25), 1.5)
 		b.circle(p, 9.0, PALM_BARK)
 		b.circle(p + Vector2(-2.0, -2.0), 5.0, PALM_TRUNK)
+	# a lamp on a wire between every pair of palms
+	for y: float in _strung():
+		var sag := PackedVector2Array()
+		for i in range(13):
+			var u := float(i) / 12.0
+			sag.append(Vector2(lerpf(400.0, 880.0, u), y + 16.0 * sin(u * PI)))
+		for i in range(12):
+			b.line(sag[i], sag[i + 1], Color(0.12, 0.12, 0.15), 1.6)
+		for i in [3, 6, 9]:
+			var lp: Vector2 = sag[i]
+			b.circle(lp, 8.5 if i == 6 else 5.0, Color(0.14, 0.14, 0.17))
+			b.circle(lp, 6.5 if i == 6 else 3.6, Color(1.0, 0.92, 0.72))
 	b.flush()
 
 
@@ -2434,8 +2515,30 @@ func draw_toppled_gat(c: ShapeBatch, at: Vector2, t: float) -> void:
 
 # The street after dark (world/night_fronts.gd): this walk draws its own
 # edges, so it says where its lit doorways and shopfronts are.
+# the lamps strung down the middle of the rambla, and the walk's own
+static func night_lights(m: Node2D) -> Array[Vector3]:
+	var out: Array[Vector3] = m.street_night_lights()
+	for y: float in _strung():
+		out.append(Vector3(640.0, y, 240.0))
+	return out
+
+
+static func _strung() -> Array[float]:
+	var out: Array[float] = []
+	var y := 100.0
+	while y > -4300.0:
+		out.append(y)
+		y -= 400.0
+	return out
+
+
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
-	var out := NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 190.0, 0.0, 1)
+	# the bars and shops are the houses' across each street
+	var out: Array[Dictionary] = []
+	for f: Dictionary in NightFronts.along_edges(m, float(m.START_Y), float(m.GATE_Y), 190.0, 0.0, 1):
+		var at: Vector2 = f.at
+		f.at = Vector2(130.0 if at.x < 640.0 else 1150.0, at.y)
+		out.append(f)
 	# the yarn stalls are lit like a shopfront, into the rambla; a key with no
 	# lit window up behind, as a stall has no upstairs
 	for bp: Vector2 in YARN_BASKETS:
