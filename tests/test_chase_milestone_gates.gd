@@ -51,7 +51,7 @@ func _run() -> void:
 	_check(game.chase_gate_needed("market") == "neteja", "market requires neteja completed")
 	_check(game.chase_gate_needed("vet") == "besos", "vet requires besos completed")
 	_check(game.chase_gate_needed("spook") == "vet", "spook requires vet completed")
-	_check(game.chase_gate_needed("site") == "molina", "site requires molina completed")
+	_check(game.chase_gate_needed("site") == "atraccions", "site requires atraccions completed")
 	_check(game.chase_gate_needed("gracia") == "montserrat", "gracia requires montserrat completed")
 	_check(game.chase_gate_needed("aeroport") == "cremada", "aeroport requires cremada completed")
 	_check(game.chase_gate_needed("raval") == "gracia", "raval requires gracia completed")

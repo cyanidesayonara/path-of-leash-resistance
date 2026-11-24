@@ -214,6 +214,11 @@ CHASE_FILMS = {
         "ca": ("Una trepitjaneu desbocada baixa per la pista darrere seu.", "La Molina: la trepitjaneu desbocada"),
         "es": ("Una pisanieves desbocada baja por la pista tras ellos.", "La Molina: la pisanieves desbocada"),
     }),
+    "atraccions": ("mascots", {
+        "en": ("Five grinning theme park mascots step off their stage and come for a hug.", "Les Atraccions: the mascots"),
+        "ca": ("Cinc mascotes somrients baixen de l'escenari a buscar una abraçada.", "Les Atraccions: les mascotes"),
+        "es": ("Cinco mascotas sonrientes bajan del escenario a por un abrazo.", "Les Atraccions: las mascotas"),
+    }),
     "montserrat": ("montserrat", {
         "en": ("Mountain goats come leaping down the rocks after the dog.", "Montserrat: the mountain goats"),
         "ca": ("Les cabres baixen saltant per les roques darrere el gos.", "Montserrat: les cabres de muntanya"),

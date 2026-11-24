@@ -14,6 +14,7 @@ const WALKS := [
 	["aeroport", "res://entities/aeroport_threat.gd", true],
 	["vet", "res://entities/vet_threat.gd", true],
 	["boars", "res://entities/boar_threat.gd", false],
+	["atraccions", "res://entities/mascot_threat.gd", true],
 	["gracia", "res://entities/correfoc_threat.gd", true],
 ]
 

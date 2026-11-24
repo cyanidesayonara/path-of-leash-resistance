@@ -3,7 +3,9 @@ extends RefCounted
 
 # WALK: LES ATRACCIONS (an original theme park on the Costa Daurada)
 # Bright day. Through the gates, past invented lands, off-leash on the picnic
-# lawn. No chase yet: the mascots come later.
+# lawn. The way home is a chase: the park's mascots want a hug
+# (entities/mascot_threat.gd). They stop for a ride on the carousel and for the
+# Canyon's queue (CHASE_JAMS, home_chase.MASCOT_BANDS).
 #
 # Up the walk: the ticket gates and welcome arch; Cala del Corsari (white
 # fishing village, harbour pool, pirate-ship swing); Canyon del Sol (boardwalk
@@ -200,6 +202,8 @@ const BALLOON_SPOTS: Array[Vector2] = [
 ]
 const CAROUSEL := Vector2(PATH_L + 110.0, -3600.0)
 const CAROUSEL_R := 56.0
+# what the mascots stop for on the way home: the carousel, the Canyon's queue
+const CHASE_JAMS: Array[Vector2] = [Vector2(PATH_L + 110.0, -3640.0), Vector2(433.0, -1850.0)]
 
 
 static func solids(_m: Node2D = null) -> Array[Rect2]:
@@ -223,6 +227,8 @@ static func wrap_rects(_m: Node2D = null) -> Array[Rect2]:
 static func build(m: Node2D) -> Array:
 	m.gate_text = "JARDÍ DEL PÍCNIC"
 	m.chase_jams.clear()
+	for j: Vector2 in CHASE_JAMS:
+		m.chase_jams.append(j)
 	m.stalls.clear()
 	m.stall_kinds.clear()
 	m.astands = Array([], TYPE_VECTOR2, &"", null)
@@ -267,6 +273,8 @@ static func build(m: Node2D) -> Array:
 	m.atraccions_flume_dodges = 0
 	m.atraccions_churro_barked = false
 	m.atraccions_carousel_spins = 0
+	m.atraccions_flop_dodges = 0
+	m.atraccions_flop_hits = 0
 	return [marks, snacks]
 
 

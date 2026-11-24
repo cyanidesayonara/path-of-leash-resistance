@@ -31,6 +31,7 @@ const SCENES := {
 	"mamut_win": "res://intro/film_mamut_win.gd",
 	"drac": "res://intro/film_drac.gd",
 	"drac_win": "res://intro/film_drac_win.gd",
+	"mascots": "res://intro/film_mascots.gd",
 	"lleona": "res://intro/film_lleona.gd",
 	"lleona_win": "res://intro/film_lleona_win.gd",
 }

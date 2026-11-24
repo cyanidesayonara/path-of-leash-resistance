@@ -80,6 +80,7 @@
     "cremada",
     "aeroport",
     "molina",
+    "atraccions",
     "montserrat"
   ],
   "count": 51,
@@ -612,7 +613,7 @@
       "chapter": 4,
       "chase_gate": "molina",
       "chase_gate_name": "La Molina",
-      "chase_warning": "",
+      "chase_warning": "THE MASCOTS WANT A HUG! RUN!",
       "clock_target": 185,
       "clock_text": "3:05",
       "freedom_kind": "yard",
@@ -634,16 +635,8 @@
           "text": "Get the phone home without a scratch"
         },
         {
-          "id": "paws",
-          "text": "Get yourself home without a bump"
-        },
-        {
           "id": "bag",
           "text": "Get your business bagged"
-        },
-        {
-          "id": "fetch",
-          "text": "Bring the ball back 3 times"
         },
         {
           "id": "dry",
@@ -652,6 +645,14 @@
         {
           "id": "flume_dodge",
           "text": "Pull your human clear of the flume splash"
+        },
+        {
+          "id": "flop_dodge",
+          "text": "Dodge 3 mascot belly flops"
+        },
+        {
+          "id": "mascot_clean",
+          "text": "Get home without a mascot flopping on you"
         },
         {
           "id": "churro_bark",
@@ -685,9 +686,9 @@
       "hour": "day",
       "id": "atraccions",
       "is_boss": false,
-      "is_chase": false,
+      "is_chase": true,
       "is_tutorial": false,
-      "kind": "walk",
+      "kind": "chase",
       "lessons": [],
       "name": "Les Atraccions",
       "prize_text": "Snatch the churro off the picnic grill",
@@ -1842,8 +1843,8 @@
     "girona": {
       "carry_text": "",
       "chapter": 4,
-      "chase_gate": "molina",
-      "chase_gate_name": "La Molina",
+      "chase_gate": "atraccions",
+      "chase_gate_name": "Les Atraccions",
       "chase_warning": "",
       "clock_target": 195,
       "clock_text": "3:15",
@@ -2634,8 +2635,8 @@
     "montserrat": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "molina",
-      "chase_gate_name": "La Molina",
+      "chase_gate": "atraccions",
+      "chase_gate_name": "Les Atraccions",
       "chase_warning": "WILD GOATS! WATCH FOR BOULDERS",
       "clock_target": 185,
       "clock_text": "3:05",
@@ -2986,8 +2987,8 @@
     "partit": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "molina",
-      "chase_gate_name": "La Molina",
+      "chase_gate": "atraccions",
+      "chase_gate_name": "Les Atraccions",
       "chase_warning": "",
       "clock_target": 175,
       "clock_text": "2:55",
@@ -3514,8 +3515,8 @@
     "ronda": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "molina",
-      "chase_gate_name": "La Molina",
+      "chase_gate": "atraccions",
+      "chase_gate_name": "Les Atraccions",
       "chase_warning": "",
       "clock_target": 185,
       "clock_text": "3:05",
@@ -3866,8 +3867,8 @@
     "site": {
       "carry_text": "",
       "chapter": 5,
-      "chase_gate": "molina",
-      "chase_gate_name": "La Molina",
+      "chase_gate": "atraccions",
+      "chase_gate_name": "Les Atraccions",
       "chase_warning": "",
       "clock_target": 170,
       "clock_text": "2:50",

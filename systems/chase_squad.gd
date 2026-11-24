@@ -87,6 +87,19 @@ func _gather(m: Node2D, y: float) -> void:
 				_blockers.append(bl)
 
 
+# Everyone straight to their places: a continue has moved the line, and it is
+# held through the countdown without a tick to bring them back.
+func reseat(m: Node2D, anchor: Vector2) -> void:
+	_band = Vector2(INF, -INF)
+	_gather(m, anchor.y)
+	for i in range(members.size()):
+		var mb: Dictionary = members[i]
+		mb["pos"] = _resolve(m, target(i, anchor))
+		mb["vel"] = Vector2.ZERO
+		for k: String in ["stuck_t", "lag", "slip_t", "clamber_t"]:
+			mb[k] = 0.0
+
+
 # Each member a frame closer to its slot. `line_speed` is how fast the
 # anchor is going (px/s, down the walk); 0 while the threat is jammed.
 func tick(m: Node2D, delta: float, anchor: Vector2, line_speed: float) -> void:

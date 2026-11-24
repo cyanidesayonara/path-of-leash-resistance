@@ -850,6 +850,8 @@ var atraccions_flume: Dictionary = {}
 var atraccions_flume_dodges := 0
 var atraccions_churro_barked := false
 var atraccions_carousel_spins := 0
+var atraccions_flop_dodges := 0
+var atraccions_flop_hits := 0
 # Els Senglars (systems/boars.gd) and Festa de Gràcia (systems/gracia.gd)
 var boar_mud_splashes := 0
 var boar_mud_cd := 0.0

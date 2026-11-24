@@ -85,6 +85,7 @@ const CREMADA_FILM := "res://intro/film_cremada.gd"
 const AEROPORT_FILM := "res://intro/film_aeroport.gd"
 const MONTSERRAT_FILM := "res://intro/film_montserrat.gd"
 const MOLINA_FILM := "res://intro/film_molina.gd"
+const MASCOT_FILM := "res://intro/film_mascots.gd"
 # La Neteja's dumpster jams, by depth (world/level_build.gd NETEJA_JAMS):
 # the first the way home meets, then the later one, the midpoint
 const NETEJA_BANDS := [
@@ -134,6 +135,13 @@ const AEROPORT_BANDS := [
 const MOLINA_BANDS := [
 	{"id": "rack", "kind": "respite", "jam_y": -3300.0, "checkpoint": true},
 	{"id": "midpoint", "kind": "respite", "jam_y": -1900.0, "checkpoint": true},
+]
+
+# Les Atraccions: the mascots cannot pass the carousel without a ride, then
+# they come to the Canyon's queue, and they always queue
+const MASCOT_BANDS := [
+	{"id": "carousel", "kind": "respite", "jam_y": -3640.0, "checkpoint": true},
+	{"id": "midpoint", "kind": "respite", "jam_y": -1850.0, "checkpoint": true},
 ]
 
 # Montserrat: the goat wedges its horns in the mel i mató cheese stall,
@@ -246,6 +254,18 @@ You will smell of fireworks for a week.",
 				"caught_human": "GROOMED\n\nYour human is now part of the piste.\nVery smooth. Corduroy finish.",
 				"caught_dog": "PACKED IN SNOW\n\nThe blade scooped you up with the berm.\nYou came out at the bottom as a snowdog.",
 			}
+		"mascots":
+			return {
+				"kind": "mascots", "speed": 134.0, "flee": false,
+				"warning": "THE MASCOTS WANT A HUG! RUN!",
+				"freed": "WHEE!", "freed_sfx": "whoop", "caught_shout": "GROUP HUG!",
+				"jammed": "OOH!", "jammed_sfx": "chime", "jammed_shout": "THE MASCOTS STOPPED!",
+				"jammed_banner": "THEY CAN'T RESIST A RIDE OR A QUEUE! BREATHE", "run_banner": "RUN! WATCH FOR BELLY FLOPS",
+				"warning_banner": "THE MASCOTS ARE COMING! HEAD FOR THE GATES", "hold_banner": "THEY'RE STILL BUSY! GO  %d",
+				"flop_banner": "BELLY FLOP! STEP OUT OF THE LANE",
+				"caught_human": "GROUP HUG\n\nFive of them, and not one let go.\nYour human is in the souvenir photo.",
+				"caught_dog": "SOUVENIR PHOTO\n\nThe big foam dog held you up for the camera.\nYou are a fridge magnet now.",
+			}
 		"vet":
 			return {
 				"kind": "vet", "speed": CHASE_SPEED, "flee": false,
@@ -336,6 +356,13 @@ static func profile_for(level: String) -> Dictionary:
 		gr["bands"] = MOLINA_BANDS.duplicate(true)
 		gr["film"] = MOLINA_FILM
 		return gr
+	if level == "atraccions":
+		var mc := kind_behavior("mascots")
+		mc["id"] = "atraccions"
+		mc["script"] = "res://entities/mascot_threat.gd"
+		mc["bands"] = MASCOT_BANDS.duplicate(true)
+		mc["film"] = MASCOT_FILM
+		return mc
 	if level == "montserrat":
 		var g := kind_behavior("goat")
 		g["id"] = "montserrat"
@@ -621,6 +648,8 @@ static func banner(m: Node2D) -> String:
 		return _line(m, "suitcase_banner", "chase_suitcase")
 	if sweeper.has_method("snowball_warning") and bool(sweeper.call("snowball_warning")):
 		return _line(m, "snowball_banner", "chase_snowball")
+	if sweeper.has_method("flop_warning") and bool(sweeper.call("flop_warning")):
+		return _line(m, "flop_banner", "chase_flop")
 	if sweeper.has_method("boulder_warning") and bool(sweeper.call("boulder_warning")):
 		return _line(m, "boulder_banner", "chase_boulder")
 	return _line(m, "run_banner", "chase_run")
@@ -647,6 +676,12 @@ static func continue_run(m: Node2D) -> void:
 	var snap: Dictionary = m.chase_checkpoint
 	ChaseCheckpoint.restore(m, snap)
 	clear_catch_pose(m)
+	var sweeper: Node2D = m.chase_sweeper
+	if sweeper != null and "squad" in sweeper:
+		# a line on foot goes back to its places with the machine's numbers
+		sweeper.squad.reseat(m, Vector2(sweeper.cx + sweeper.sway, sweeper.front_y))
+		if sweeper.has_method("continued"):
+			sweeper.continued()
 	m.msg_label.visible = false
 	m.dim.visible = false
 	m.feed.clear()

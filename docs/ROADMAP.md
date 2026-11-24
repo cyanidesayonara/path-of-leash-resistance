@@ -63,9 +63,9 @@ Bench: Vallvidrera's funicular. El Delta stays rejected.
 ### The order
 
 Applied to `Game.CAROUSEL` on 2026-11-23 (gates version 5), with walk 41 left
-for Girona, which landed with La Lleona on 2026-11-24 (#702 to #704). Still to come before
-the lock and the save reset: Les Atraccions' chase and its film (walk 40, the
-tenth chase).
+for Girona, which landed with La Lleona on 2026-11-24 (#702 to #704). Les Atraccions'
+mascot chase and film, the tenth chase, followed the same day. Next: the lock and
+the save reset.
 
 New walks in bold; (C) chase, (B) boss.
 

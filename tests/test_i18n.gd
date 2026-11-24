@@ -47,7 +47,7 @@ const WALK_TABLES := [
 	["res://entities/challenger.gd", "LAST"], ["res://entities/challenger.gd", "TAKE"],
 	["res://entities/challenger.gd", "GET_READY"], ["res://entities/challenger.gd", "LINES"],
 	["res://entities/challenger.gd", "NAMES"], ["res://entities/correfoc_threat.gd", "HELD_LINES"],
-	["res://entities/human.gd", "MUTTERS"], ["res://entities/vet_threat.gd", "HELD_LINES"],
+	["res://entities/human.gd", "MUTTERS"], ["res://entities/vet_threat.gd", "HELD_LINES"], ["res://entities/mascot_threat.gd", "HELD_LINES"],
 	["res://entities/otherpair.gd", "NAMES"], ["res://entities/freedog.gd", "NAMES"],
 	["res://systems/agility.gd", "MEDALS"], ["res://systems/blai.gd", "BEG_LINES"],
 	["res://systems/boss_gat.gd", "CHEERS"], ["res://systems/boss_gat.gd", "GASPS"],
