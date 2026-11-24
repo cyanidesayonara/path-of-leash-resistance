@@ -8,6 +8,7 @@ extends RefCounted
 # "barri" there too), so every hook here also runs in the tutorial.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const CityRoofs := preload("res://world/city_roofs.gd")
 const HOOKS := ["draw_edge_layer", "draw_fountain", "draw_freedom_ground", "draw_gate_fence", "draw_live", "draw_overhead", "draw_performer", "draw_threshold", "grass_blocked", "night_fronts", "night_lights", "surface", "tree_kind"]
 
 
@@ -1589,57 +1590,14 @@ static func _terrats(b: ShapeBatch, x0: float, side: float, top: float, bot: flo
 
 
 static func _terrat_roof(b: ShapeBatch, x0: float, side: float, y0: float, y1: float, k: int) -> void:
-	var depth := y1 - y0
-	var r := Rect2(x0 if side > 0.0 else x0 - 520.0, y0, 520.0, depth)
-	var face: float = x0 + side * 6.0
-	b.rect(r, PARAPET)
-	var inner := r.grow(-6.0)
-	if inner.size.y <= 2.0:
-		return
-	var tile := TERRAT.lerp(Color(0.66, 0.44, 0.34), _h1(k, 2.0))
-	b.rect(inner, tile)
-	var gx := inner.position.x + 14.0
-	while gx < inner.end.x:
-		b.line(Vector2(gx, inner.position.y), Vector2(gx, inner.end.y), tile.darkened(0.12), 1.0)
-		gx += 14.0
-	# the party wall to the next building, and the parapet cap at the end
-	b.rect(Rect2(r.position.x, r.end.y - 3.0, r.size.x, 6.0), PARAPET.darkened(0.15))
-	b.rect(Rect2(r.position.x, r.position.y, r.size.x, 3.0), PARAPET.darkened(0.10))
-	if depth < 44.0:
-		return
-	# water tank or staircase caseta near the street front
-	var tx := face + side * (40.0 + _h1(k, 3.0) * 60.0)
-	if k % 3 == 0 and depth >= 56.0:
-		b.rect(Rect2(tx - 16.0, y0 + 14.0, 32.0, 28.0), Color(0.84, 0.80, 0.72))
-		b.rect(Rect2(tx - 12.0, y0 + 18.0, 24.0, 20.0), tile.darkened(0.08))
-	else:
-		b.circle(Vector2(tx, y0 + depth * 0.5) + Vector2(4, 6), 12.0, Color(0, 0, 0, 0.22))
-		b.circle(Vector2(tx, y0 + depth * 0.5), 12.0, Color(0.84, 0.84, 0.82))
-		b.circle(Vector2(tx, y0 + depth * 0.5), 5.0, Color(0.60, 0.62, 0.64))
-	if depth >= 48.0:
-		var sx := face + side * (120.0 + _h1(k, 4.0) * 80.0)
-		b.rect(Rect2(sx - 14.0, y0 + 14.0, 28.0, 20.0), Color(0.46, 0.62, 0.70))
-		b.line(Vector2(sx - 14.0, y0 + 24.0), Vector2(sx + 14.0, y0 + 24.0), Color(0.86, 0.90, 0.92), 1.4)
-	# chimney pots on every second roof
-	if k % 2 == 1 and depth > 86.0:
-		for ci in range(2):
-			b.circle(Vector2(face + side * (22.0 + float(ci) * 10.0), y1 - 16.0), 3.2, Color(0.76, 0.44, 0.30))
-	if _h1(k, 5.0) > 0.5:
-		var lx := face + side * 30.0
-		b.line(Vector2(lx, y0 + 12.0), Vector2(lx, y1 - 12.0), Color(0.82, 0.82, 0.80), 1.0)
-		var cy := y0 + 18.0
-		var ci := 0
-		while cy < y1 - 18.0:
-			b.rect(Rect2(lx - 5.0, cy, 10.0, 8.0), WASHING[(k + ci) % WASHING.size()])
-			cy += 16.0
-			ci += 1
-	else:
-		for pk in range(3):
-			var pp := Vector2(face + side * 12.0, y0 + 14.0 + float(pk) * 16.0)
-			if pp.y < y1 - 8.0:
-				b.circle(pp, 5.0, Color(0.62, 0.36, 0.24))
-				b.circle(pp, 3.6, Color(0.30, 0.52, 0.26))
-				b.circle(pp + Vector2(1, -1), 1.6, Color(0.90, 0.24, 0.30))
+	# a house on the street, the yard behind, a house on the next street
+	# (world/city_roofs.gd)
+	var d := [150.0, 226.0, 372.0, 520.0]
+	var at := func(a: float, z: float) -> Rect2: return Rect2(minf(x0 + side * a, x0 + side * z), y0, absf(z - a), y1 - y0)
+	CityRoofs.house(b, at.call(0.0, d[0]), k * 5 + 1)
+	CityRoofs._yard(b, at.call(d[0], d[1]), k * 5 + 2)
+	CityRoofs.house(b, at.call(d[1], d[2]), k * 5 + 3)
+	CityRoofs.house(b, at.call(d[2], d[3]), k * 5 + 4)
 
 
 # The side street's mouth, opening between the roofs: panot pavements along

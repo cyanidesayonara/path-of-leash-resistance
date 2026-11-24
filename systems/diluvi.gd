@@ -9,6 +9,7 @@ extends RefCounted
 # stay in main: they are the walk's rules, not its picture.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const CityRoofs := preload("res://world/city_roofs.gd")
 const HOOKS := [
 	"draw_column",
 	"draw_edge_layer",
@@ -33,7 +34,6 @@ const PILLAR_STONE := Color(0.58, 0.53, 0.47)
 
 # street geometry constants matching main.gd and LevelBuild
 const EDGE_MOD := 220.0
-const EDGE_DEPTH := 78.0
 const EDGE_INSET := 27.0
 const DOOR_OFFSET := 168.0
 const GUTTER_W := 10.0
@@ -529,14 +529,10 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 			for side: float in [-1.0, 1.0]:
 				var line: Vector2 = m.frontage(clampf((m_top + m_bot) * 0.5, y_min + 1.0, y_max - 1.0))
 				var inner: float = (line.x - EDGE_INSET) if side < 0.0 else (line.y + EDGE_INSET)
-				var x0: float = inner - EDGE_DEPTH if side < 0.0 else inner
 				var k := k_base + (0 if side < 0.0 else 7)
 				for seg: Vector2 in spans:
-					var sh := seg.y - seg.x
-					if sh >= 165.0:
-						m._draw_diluvi_roofs(b, Rect2(x0, seg.x, EDGE_DEPTH, sh), side, k, inner)
-					elif sh >= 8.0:
-						_draw_corner_roof(m, b, inner, side, seg.x, sh, k)
+					if seg.y - seg.x >= 8.0:
+						CityRoofs.kept_module(b, inner, side, 447.0, seg.x, seg.y, 500 + k)
 				var dy := my + DOOR_OFFSET
 				if dy in door_ys:
 					m._draw_doorway(b, inner, side, dy, Color(0.48, 0.30, 0.22))
@@ -579,51 +575,6 @@ static func _subtract_crossings(m: Node2D, y0: float, y1: float) -> Array[Vector
 	return segs
 
 
-# Clipped roof corner where a module is shortened by a cross-street or the
-# south apartment facade so skylights or chimneys never overhang the road.
-static func _draw_corner_roof(m: Node2D, b: ShapeBatch, inner_x: float, out: float, y0: float, h: float, k: int) -> void:
-	var front_pitched := (k % 3) != 1
-	for is_front: bool in [true, false]:
-		var d0 := 0.0 if is_front else 150.0
-		var d1 := 150.0 if is_front else 420.0
-		var a := inner_x + out * d0
-		var z := inner_x + out * d1
-		var lot := Rect2(minf(a, z), y0, absf(z - a), h)
-		var pitched := front_pitched if is_front else (not front_pitched)
-		if pitched:
-			var tile: Color = [Color(0.50, 0.28, 0.20), Color(0.56, 0.32, 0.22), Color(0.46, 0.27, 0.21)][k % 3]
-			b.rect(lot, tile)
-			var ridge := lot.get_center().x
-			b.rect(Rect2(ridge, lot.position.y, lot.end.x - ridge, lot.size.y), tile.darkened(0.12))
-			var ty := lot.position.y + 4.0
-			while ty < lot.end.y - 2.0:
-				b.line(Vector2(lot.position.x + 2.0, ty), Vector2(lot.end.x - 2.0, ty), tile.darkened(0.30), 2.0)
-				ty += 9.0
-			b.rect(Rect2(ridge - 4.0, lot.position.y, 8.0, lot.size.y), tile.lightened(0.16))
-			b.rect(Rect2(ridge - 1.0, lot.position.y, 2.0, lot.size.y), tile.darkened(0.20))
-		else:
-			var flag := Color(0.62, 0.56, 0.50)
-			b.rect(lot, flag.darkened(0.35))
-			var floor_r := lot.grow(-6.0)
-			if floor_r.size.y > 2.0:
-				b.rect(floor_r, flag)
-				var gx := floor_r.position.x + 18.0
-				while gx < floor_r.end.x:
-					b.line(Vector2(gx, floor_r.position.y), Vector2(gx, floor_r.end.y), flag.darkened(0.12), 1.0)
-					gx += 18.0
-				var gy := floor_r.position.y + 18.0
-				while gy < floor_r.end.y:
-					b.line(Vector2(floor_r.position.x, gy), Vector2(floor_r.end.x, gy), flag.darkened(0.12), 1.0)
-					gy += 18.0
-	var gx_eave := inner_x + out * 4.0
-	b.rect(Rect2(gx_eave - 4.0, y0, 8.0, h), Color(0.50, 0.53, 0.56))
-	b.rect(Rect2(gx_eave - 2.5, y0, 5.0, h), Color(0.40, 0.52, 0.64))
-	if h > 16.0:
-		b.circle(Vector2(gx_eave, y0 + 8.0), 5.0, Color(0.56, 0.58, 0.60))
-		b.circle(Vector2(gx_eave, y0 + 8.0), 3.0, Color(0.22, 0.26, 0.30))
-
-
-# Lit doorways for world/light_layer.gd matching draw_edge_layer's exact doors.
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var y_min: float = float(m.GATE_Y) - 20.0

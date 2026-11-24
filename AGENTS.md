@@ -417,6 +417,12 @@ GODOT=godot/Godot_v4.7-stable_win64.exe bash tools/surface_map.sh [OUT] [LEVEL..
 SURF_DUMP=1 GODOT=godot/Godot_v4.7-stable_win64.exe bash tools/surface_map.sh [OUT] [LEVEL...]
 ```
 
+A whole walk as one sheet, start line to past the far fence with the
+interface off, to go over it square by square (needs Pillow):
+```
+GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/walk_strip.sh OUT LEVEL...
+```
+
 Level inventory (what each walk contains: props by kind, patches, hazards,
 goals) and the design brief every walk is being rebuilt to,
 `docs/LEVEL_DESIGN.md`:

@@ -9,6 +9,7 @@ extends RefCounted
 # beach freedom kind, which other walks share, so it stays in main.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const CityRoofs := preload("res://world/city_roofs.gd")
 const HOOKS := ["draw_bin", "draw_cross_section", "draw_edge_layer", "draw_espigo", "draw_freedom", "draw_gate", "draw_live", "draw_overhead", "draw_parasol", "draw_threshold", "on_bark", "surface", "takes_prints", "tick"]
 
 
@@ -326,7 +327,6 @@ static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 			if ky >= vis_lo:
 				b.line(Vector2(1188.0, ky), Vector2(1196.0, ky), Color(0.52, 0.48, 0.42), 1.2)
 			ky += 36.0
-	var roofs := [Color(0.76, 0.70, 0.62), Color(0.66, 0.44, 0.34), Color(0.62, 0.62, 0.60), Color(0.82, 0.78, 0.70)]
 	var y: float = m.START_Y + 560.0
 	var k := 0
 	while y > m.GATE_Y - 40.0:
@@ -344,39 +344,7 @@ static func _roofs(m: Node2D, vt: float, vb: float) -> void:
 					b.rect(alley, Color(0.52, 0.49, 0.44))
 					b.line(Vector2(1190.0, alley.get_center().y), Vector2(1340.0, alley.get_center().y), Color(0.42, 0.40, 0.36), 1.5)
 				var r := Rect2(1194.0, r_top, 422.0, r_bot - r_top)
-				var col: Color = roofs[k % roofs.size()]
-				b.rect(Rect2(r.position + Shade.light * 8.0, r.size), sh)
-				b.rect(r, col.darkened(0.25))
-				b.rect(r.grow(-5.0), col)
-				# lit seaward parapet coping
-				b.rect(Rect2(r.position.x, r.position.y, 4.0, r.size.y), col.lightened(0.14))
-				# the tiles of a roof terrace, in a grid
-				var gy := r.position.y + 18.0
-				while gy < r.end.y - 6.0:
-					b.line(Vector2(r.position.x + 5.0, gy), Vector2(r.position.x + 120.0, gy), col.darkened(0.08), 1.0)
-					gy += 18.0
-				var hut := Rect2(r.position.x + 26.0 + fmod(float(k) * 29.0, 40.0), r.position.y + 20.0 + fmod(float(k) * 43.0, maxf(1.0, r.size.y - 80.0)), 34.0, 28.0)
-				if hut.end.y < r.end.y - 6.0:
-					b.rect(Rect2(hut.position + Shade.light * 8.0, hut.size), sh)
-					b.rect(hut, Color(0.70, 0.66, 0.60))
-					b.rect(Rect2(hut.position, Vector2(hut.size.x, 5.0)), Color(0.80, 0.76, 0.70))
-				if k % 2 == 0:
-					var tank := Vector2(r.position.x + 82.0, hut.end.y + 22.0)
-					if tank.y < r.end.y - 14.0:
-						b.circle(tank + Shade.light * 6.0, 10.0, sh)
-						b.circle(tank, 10.0, Color(0.30, 0.30, 0.32))
-						b.circle(tank + Vector2(-2.0, -2.0), 5.0, Color(0.44, 0.44, 0.46))
-				if k % 3 == 1 and r.size.y > 60.0:
-					# a washing line across the terrace, things pegged on it
-					var wy := r.end.y - 20.0
-					b.line(Vector2(r.position.x + 12.0, wy), Vector2(r.position.x + 110.0, wy), Color(0.86, 0.86, 0.84, 0.8), 1.0)
-					for p in range(4):
-						var wc := [Color(0.92, 0.92, 0.90), Color(0.40, 0.56, 0.78), Color(0.86, 0.46, 0.40)][(p + k) % 3] as Color
-						b.rect(Rect2(r.position.x + 20.0 + float(p) * 22.0, wy, 12.0, 8.0), wc)
-				elif k % 3 == 2 and r.size.y > 70.0:
-					b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0) + Shade.light * 10.0, 20.0, Color(m.SHADOW_COL.r, m.SHADOW_COL.g, m.SHADOW_COL.b, 0.2))
-					b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 20.0, Color(0.88, 0.56, 0.30))
-					b.circle(Vector2(r.position.x + 70.0, r.end.y - 40.0), 3.0, Color(0.40, 0.34, 0.28))
+				CityRoofs.kept_module(b, r.position.x, 1.0, r.size.x, r.position.y, r.end.y, 300 + k)
 		y = top
 		k += 1
 	b.flush(m._wc)

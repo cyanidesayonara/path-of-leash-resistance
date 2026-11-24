@@ -59,6 +59,7 @@ const WASHING: Array[Color] = [
 	Color(0.92, 0.92, 0.94), Color(0.36, 0.52, 0.78), Color(0.86, 0.40, 0.36),
 	Color(0.96, 0.82, 0.30), Color(0.40, 0.66, 0.44),
 ]
+const CityRoofs := preload("res://world/city_roofs.gd")
 const METRO_RED := Color(0.80, 0.12, 0.14)
 const GLASS := Color(0.60, 0.76, 0.86, 0.55)
 const RAIL := Color(0.24, 0.26, 0.30)
@@ -110,48 +111,14 @@ static func _block(b: ShapeBatch, m: Node2D, front: float, wall: Color, roof: Co
 		b.rect(Rect2(gap_l, front, gap_r - gap_l, FACE + CAP), wall.darkened(0.62))
 
 
-# Roof clutter on a flat terrat: tile joints, a water tank, chimneys, a
-# skylight, an aerial and a line of washing, all clear of the portal.
-static func _terrat(b: ShapeBatch, m: Node2D, front: float, roof: Color, c: Vector2) -> void:
+# The roofs behind it, the city's own (world/city_roofs.gd), with the stair's
+# pane over the portal.
+static func _terrat(b: ShapeBatch, m: Node2D, front: float, _roof: Color, c: Vector2) -> void:
 	var top := front + FACE + CAP
 	var bottom: float = float(m.START_Y) + DEEP
-	var joint := roof.darkened(0.12)
-	var y := top + 22.0
-	while y < bottom:
-		b.line(Vector2(LEFT, y), Vector2(RIGHT, y), joint, 1.0)
-		y += 22.0
-	var x := floorf(LEFT / 22.0) * 22.0
-	while x < RIGHT:
-		b.line(Vector2(x, top), Vector2(x, bottom), joint, 1.0)
-		x += 22.0
-	# party walls between the neighbouring buildings
-	for px: float in [c.x - 330.0, c.x + 300.0, c.x - 690.0, c.x + 660.0]:
-		b.rect(Rect2(px - 3.0, top, 6.0, bottom - top), roof.darkened(0.25))
-	# the water tank, its shadow and its lid
-	var tank := Vector2(c.x + 170.0, top + 70.0)
-	b.circle(tank - LIGHT * 10.0, 26.0, SHADOW)
-	b.circle(tank, 24.0, Color(0.70, 0.72, 0.74))
-	b.circle(tank, 9.0, Color(0.56, 0.58, 0.60))
-	# chimneys, each with its shadow
-	for cp: Vector2 in [Vector2(c.x - 140.0, top + 40.0), Vector2(c.x + 60.0, top + 120.0), Vector2(c.x - 420.0, top + 90.0), Vector2(c.x + 430.0, top + 50.0)]:
-		b.rect(Rect2(cp + Vector2(5.0, 6.0), Vector2(22.0, 16.0)), SHADOW)
-		b.rect(Rect2(cp, Vector2(22.0, 16.0)), roof.darkened(0.35))
-		b.rect(Rect2(cp + Vector2(5.0, 4.0), Vector2(12.0, 8.0)), Color(0.16, 0.14, 0.14))
-	# a skylight over the stairwell, behind the portal
-	b.rect(Rect2(c.x - 24.0, top + 46.0, 48.0, 30.0), roof.darkened(0.3))
+	CityRoofs.quarter(b, Rect2(LEFT, top, RIGHT - LEFT, bottom - top), 37 + String(m.lvl).hash() % 97)
+	b.rect(Rect2(c.x - 24.0, top + 46.0, 48.0, 30.0), Color(0.36, 0.28, 0.25))
 	b.rect(Rect2(c.x - 20.0, top + 50.0, 40.0, 22.0), GLASS)
-	# an aerial
-	var ae := Vector2(c.x + 250.0, top + 150.0)
-	b.line(ae, ae + Vector2(0.0, -26.0), RAIL, 2.0)
-	for k in range(3):
-		b.line(ae + Vector2(-12.0, -8.0 - k * 7.0), ae + Vector2(12.0, -8.0 - k * 7.0), RAIL, 1.5)
-	# the washing, pegged out across the terrat
-	var wa := Vector2(c.x - 260.0, top + 120.0)
-	var wb := Vector2(c.x - 90.0, top + 110.0)
-	b.line(wa, wb, Color(0.86, 0.86, 0.84), 1.2)
-	for k in range(6):
-		var p := wa.lerp(wb, (float(k) + 0.6) / 6.6)
-		b.rect(Rect2(p.x - 7.0, p.y, 14.0, 10.0 + float(k % 3) * 4.0), WASHING[k % WASHING.size()])
 
 
 # Along a block's front: shop awnings over the pavement and balconies with a
