@@ -3,6 +3,7 @@
     "ciutadella",
     "guell",
     "port",
+    "girona",
     "raval"
   ],
   "carousel_count": 52,
@@ -1873,14 +1874,6 @@
           "text": "Get your business bagged"
         },
         {
-          "id": "fetch",
-          "text": "Bring the ball back 3 times"
-        },
-        {
-          "id": "drink",
-          "text": "Have a good long drink"
-        },
-        {
           "id": "girona_houses",
           "text": "Sniff 3 Onyar fronts"
         },
@@ -1889,8 +1882,16 @@
           "text": "Stay dry through the steps cascade"
         },
         {
-          "id": "girona_lleona",
-          "text": "Bark at La Lleona on her column"
+          "id": "lleona_hide",
+          "text": "Hide from the lioness's gaze 2 times"
+        },
+        {
+          "id": "lleona_kiss",
+          "text": "Kiss the lioness behind"
+        },
+        {
+          "id": "lleona_trip",
+          "text": "Trip or drench the lioness"
         },
         {
           "id": "combo",
@@ -1915,10 +1916,10 @@
       ],
       "hour": "dusk",
       "id": "girona",
-      "is_boss": false,
+      "is_boss": true,
       "is_chase": false,
       "is_tutorial": false,
-      "kind": "walk",
+      "kind": "boss",
       "lessons": [],
       "name": "Girona",
       "prize_text": "Nab the xuixo off the bakery tray",

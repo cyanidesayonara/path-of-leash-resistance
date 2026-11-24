@@ -1,6 +1,6 @@
 extends SceneTree
 
-# Verifies all 24 in-game achievements (systems/achievements.gd):
+# Verifies all 25 in-game achievements (systems/achievements.gd):
 # - Every feat unlocks from the real event hook that owns it, once (never twice)
 # - Tutorial mode, autowalk, free_play and free_walk never unlock achievements
 # - Every unlock pushes one localized toast through EventFeed (no English literal)
@@ -97,7 +97,7 @@ func _run() -> void:
 	main.feed.toasts.clear()
 
 	# 1. Table & I18n coverage
-	_check(Ach.FEATS.size() == 24, "24 achievements defined (%d)" % Ach.FEATS.size())
+	_check(Ach.FEATS.size() == 25, "25 achievements defined (%d)" % Ach.FEATS.size())
 	var seen_ids := {}
 	for f: Dictionary in Ach.FEATS:
 		var id := String(f.id)
@@ -166,10 +166,11 @@ func _run() -> void:
 	main.challenge_giver = null
 	giver.free()
 
-	# 5. Four statue bosses + all_bosses
+	# 5. Five statue bosses + all_bosses
 	var BossMamutCls: GDScript = load("res://systems/boss_mamut.gd")
 	var BossDracCls: GDScript = load("res://systems/boss_drac.gd")
 	var BossLleonsCls: GDScript = load("res://systems/boss_lleons.gd")
+	var BossLleonaCls: GDScript = load("res://systems/boss_lleona.gd")
 	var BossGatCls: GDScript = load("res://systems/boss_gat.gd")
 
 	var mamut = BossMamutCls.new()
@@ -192,6 +193,13 @@ func _run() -> void:
 	main.lvl = "port"
 	lleons.transition_to(BossLleonsCls.State.CONTENT)
 	_check(Ach.has("boss_lleons") and not Ach.has("all_bosses"), "settling Els Lleons unlocks boss_lleons")
+
+	var lleona = BossLleonaCls.new()
+	lleona.main = main
+	lleona.win_film_shown = true
+	main.lvl = "girona"
+	lleona.transition_to(BossLleonaCls.State.CONTENT)
+	_check(Ach.has("boss_lleona") and not Ach.has("all_bosses"), "settling La Lleona unlocks boss_lleona")
 
 	var gat = BossGatCls.new()
 	gat.main = main
@@ -274,8 +282,8 @@ func _run() -> void:
 	_check(Ach.has("all_dogs") and game.dogs_walked.size() == game.DOG_KEYS.size(), "walking every dog unlocks all_dogs")
 
 	# 11. Full count and final dog-pack toast check
-	_check(Ach.unlocked_count() == 24 and game.achievements.size() == 24,
-		"all 24 achievements unlocked (%d / %d)" % [Ach.unlocked_count(), game.achievements.size()])
+	_check(Ach.unlocked_count() == 25 and game.achievements.size() == 25,
+		"all 25 achievements unlocked (%d / %d)" % [Ach.unlocked_count(), game.achievements.size()])
 	_check(not main.feed.toasts.is_empty() and String(main.feed.toasts[-1].title) == I18n.t("toast_achievement")
 		and String(main.feed.toasts[-1].text) == I18n.t("ach_all_dogs_name"),
 		"final achievement toast sits in EventFeed.toasts")
@@ -286,7 +294,7 @@ func _run() -> void:
 	_check(game.achievements.is_empty() and game.dogs_walked.is_empty() and game.gallery_bones.is_empty(),
 		"_reset_persisted_state clears achievement arrays")
 	game.load_records()
-	_check(game.achievements.size() == 24 and game.dogs_walked.size() == game.DOG_KEYS.size() and game.gallery_bones.size() == 4,
+	_check(game.achievements.size() == 25 and game.dogs_walked.size() == game.DOG_KEYS.size() and game.gallery_bones.size() == 4,
 		"save/load restores achievements (%d), dogs_walked (%d), gallery_bones (%d)" % [
 			game.achievements.size(), game.dogs_walked.size(), game.gallery_bones.size()])
 

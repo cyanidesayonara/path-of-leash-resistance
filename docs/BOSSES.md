@@ -1,8 +1,8 @@
 # The statue bosses
 
-Four of the campaign's 41 walks are boss walks, at 11, 21, 31 and 41 (docs/ROADMAP.md).
-Each boss is a statue of an animal that really stands in Barcelona, in public-domain
-art only, waking up because a dog went past. They share one grammar, so a player who
+Five of the campaign's 51 walks are boss walks, at 11, 21, 31, 41 and 51 (docs/ROADMAP.md).
+Each boss is a statue of an animal that really stands in Barcelona or
+in Girona, in public-domain art only, waking up because a dog went past. They share one grammar, so a player who
 has fought one knows how to read the next. Each one has its own signature moves and
 its own way of fighting, and its own wake film.
 
@@ -11,7 +11,8 @@ its own way of fighting, and its own wake film.
 | 11 | El Mamut, the stone mammoth (1907) | La Ciutadella, by the boating lake | 1.72 |
 | 21 | El Drac, the mosaic dragon of the Park Güell steps | El Mosaic | 1.73 |
 | 31 | Els Lleons, the bronze lions at the foot of the Columbus column (1888) | El Port | 1.73 |
-| 41 | El Gat, the Raval's fat bronze cat | Rambla del Raval | shipped |
+| 41 | La Lleona, the Romanesque stone lioness on her column | Girona | the fight; films to come |
+| 51 | El Gat, the Raval's fat bronze cat | Rambla del Raval | shipped |
 
 Only the stone, bronze and tile of the real statues are drawn, as cartoons of our own:
 never a copy of a modern copyrighted sculpture.
@@ -91,6 +92,21 @@ A pair, so the fight is about where both of them are.
   each and they sit. A boop on each nose.
 - **Film:** the harbour at dusk under the column. One lion yawns, the other blinks,
   and they look at each other, then at her.
+
+### La Lleona (Girona): she fights by looking
+
+The danger is being seen, so the fight is about what stands between her and the dog.
+- **Claw rake:** a sector close in front of her.
+- **Flagstone ripple:** she claws the paving and a row of slabs runs down a lane.
+- **Part two, the stone gaze:** she bounds to a perch on the square's edge, her eyes
+  glint, and a beam sweeps the square. Seen, the dog is stone for a moment. Behind the
+  column or a planter she is not seen: that wears La Lleona down most and leaves her
+  dazed. Your human is never touched by it, since they never look up from the phone.
+- **Counters:** a taut leash across her bound trips her, the Basílica's rain spout
+  blinds her if she is led under it, your human bowls her, a bark on her nose is a
+  boop, and a nose at her tail is the kiss the town's iron steps are for. A planter
+  hides the dog once and crumbles.
+- **Last stand:** on her column, raking. Three legs tied and she slides down; a bark.
 
 ### El Gat (Rambla del Raval): the finale, an ambush from above
 

@@ -24,7 +24,7 @@ const SOFT_WEAR := true
 const OVERHEAD_FOLLOWS_CAMERA := true
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "idle_status", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
+const HOOKS := ["cam_lean", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "hush_banner", "idle_status", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind", "urgent_status"]
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
@@ -33,6 +33,7 @@ const Panot := preload("res://world/panot.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
+const BossLleona := preload("res://systems/boss_lleona.gd")
 const NpcFigure := preload("res://entities/npc_figure.gd")
 
 const CX := 640.0
@@ -109,7 +110,6 @@ const PRIZE_TEXT := "nab the xuixo off the bakery tray"
 
 const LLEONA_COL := Vector2(640.0, -3320.0)
 const LLEONA_PLINTH := Rect2(618.0, -3342.0, 44.0, 44.0)
-const LLEONA_BARK_R := 210.0
 
 const RAMBLA_QUAY := Rect2(372.0, RAMBLA_END, 36.0, START - RAMBLA_END)
 const RAMBLA_EAST_WALL := Rect2(872.0, RAMBLA_END, 60.0, START - RAMBLA_END)
@@ -238,6 +238,8 @@ static func solids(_m: Node2D = null) -> Array[Rect2]:
 		PLACA_PARAPET_L,
 		PLACA_WALL_R,
 		LLEONA_PLINTH,
+		BossLleona.PLANTERS[0],
+		BossLleona.PLANTERS[1],
 		MURALLES_WALL_L,
 		MURALLES_WALL_R,
 	]
@@ -326,8 +328,18 @@ static func build(m: Node2D) -> Array:
 	}
 	m.girona_steps_saved = 0
 	m.girona_houses_sniffed = {}
-	m.girona_lleona_barked = false
-	m.girona_lleona_glint_t = 0.0
+	m.lleona_dodges = 0
+	m.lleona_hides = 0
+	m.lleona_tripped = false
+	m.lleona_blinded = false
+	m.lleona_bowled = false
+	m.lleona_booped = false
+	m.lleona_kissed = false
+	m.lleona_sat = false
+	m.lleona_settled = false
+	var lleona := BossLleona.new()
+	lleona.setup(m)
+	m.lleona = lleona
 
 	for c: Vector2 in ARCADE_COLS:
 		m.poles.append(c)
@@ -349,8 +361,9 @@ static func build(m: Node2D) -> Array:
 
 	m.benches = Array([
 		Vector2(446.0, -280.0), Vector2(446.0, -580.0),
-		Vector2(400.0, -3140.0), Vector2(880.0, -3140.0),
-		Vector2(880.0, -3520.0), Vector2(440.0, -4320.0),
+		# clear of La Lleona's square, where they would only snag the leash
+		Vector2(400.0, -2860.0), Vector2(400.0, -3760.0),
+		Vector2(880.0, -3760.0), Vector2(440.0, -4320.0),
 		Vector2(840.0, -4480.0),
 	], TYPE_VECTOR2, &"", null)
 
@@ -381,12 +394,12 @@ static func build(m: Node2D) -> Array:
 # --- live gameplay ------------------------------------------------------------
 
 static func tick(m: Node2D, delta: float) -> void:
-	if float(m.get("girona_lleona_glint_t")) > 0.0:
-		m.girona_lleona_glint_t = maxf(0.0, float(m.girona_lleona_glint_t) - delta)
 	if m.phase == "freedom" or m.get("frozen") == true:
 		return
 	var dp: Vector2 = m.dog.global_position
 	var hp: Vector2 = m.human.global_position
+	if m.lleona != null:
+		m.lleona.tick_state(delta)
 	_tick_house_sniffs(m, dp)
 	_tick_spout(m, delta, dp, hp)
 
@@ -475,6 +488,19 @@ static func _award_steps_save(m: Node2D, st: Dictionary, hp: Vector2) -> void:
 	_sfx(m, "star", 1.05)
 
 
+# the whole of what she asks of the dog, over the bladder and the reel
+static func urgent_status(m: Node2D) -> String:
+	return m.lleona.status() if m.lleona != null else ""
+
+
+static func hush_banner(m: Node2D) -> bool:
+	return m.lleona != null and m.lleona.hush_banner()
+
+
+static func cam_lean(m: Node2D) -> float:
+	return m.lleona.lean if m.lleona != null else 0.0
+
+
 static func idle_status(m: Node2D) -> String:
 	var st: Dictionary = m.girona_spout if m.get("girona_spout") is Dictionary else {}
 	var state := String(st.get("state", "idle"))
@@ -487,21 +513,14 @@ static func idle_status(m: Node2D) -> String:
 
 static func on_bark(m: Node2D, pos: Vector2 = Vector2.ZERO) -> bool:
 	var p: Vector2 = pos if pos != Vector2.ZERO else m.dog.global_position
+	if m.lleona != null and m.lleona.on_bark_action(p):
+		return true
 	var acted := false
 	for i in range(HOUSE_SNIFFS.size()):
 		if not m.girona_houses_sniffed.has(i) and p.distance_to(HOUSE_SNIFFS[i]) < 78.0:
 			m.girona_houses_sniffed[i] = true
 			m.award_points(1, I18n.t("w_onyar_scent_1"))
 			acted = true
-	if not bool(m.get("girona_lleona_barked")) and p.distance_to(LLEONA_COL) < LLEONA_BARK_R:
-		m.girona_lleona_barked = true
-		m.girona_lleona_glint_t = 2.4
-		m.award_points(3, I18n.t("w_lioness_bark_3"))
-		m.float_text(LLEONA_COL + Vector2(0.0, -36.0), I18n.t("w_rumble"), Color(0.96, 0.90, 0.72))
-		m.float_text(m.human.global_position + Vector2(0.0, -34.0), I18n.t("w_did_that_statue_just_twitch"), Color(0.96, 0.94, 0.88), m.POP_SAY)
-		m.feed.say(I18n.t("w_la_lleona_blinks_on_her_column"), EventFeed.Tone.GOOD)
-		_sfx(m, "bell", 0.72)
-		acted = true
 	return acted
 
 
@@ -906,7 +925,7 @@ static func _draw_steps_ground(wc: ShapeBatch) -> void:
 
 static func _draw_placa_ground(wc: ShapeBatch) -> void:
 	# Plaça de Sant Feliu centrepiece: La Lleona's plinth, iron kissing-steps,
-	# fluted limestone column, and the sculpted lioness clinging to the shaft!
+	# fluted limestone column (the lioness on it is drawn by systems/boss_lleona.gd)
 	var pl := LLEONA_PLINTH
 	_sweep_shadow(wc, pl, Shade.light * 18.0, SHADOW)
 	wc.rect(pl.grow(6.0), LIMESTONE_DK)
@@ -923,13 +942,6 @@ static func _draw_placa_ground(wc: ShapeBatch) -> void:
 	wc.circle(c, 16.0, LIMESTONE_DK)
 	wc.circle(c, 13.5, LIMESTONE)
 	wc.circle(c + Vector2(-2.5, -2.5), 7.0, LIMESTONE_LIT)
-	# Sculpted stone La Lleona de Girona clinging to the column
-	wc.capsule(c + Vector2(-8.0, 6.0), c + Vector2(6.0, -4.0), 7.5, Color(0.76, 0.72, 0.64))
-	wc.circle(c + Vector2(7.0, -7.0), 6.0, Color(0.82, 0.78, 0.68))
-	# Lioness ears + stone tail curled down the shaft
-	wc.circle(c + Vector2(5.0, -12.0), 2.5, LIMESTONE_DK)
-	wc.circle(c + Vector2(10.0, -10.5), 2.5, LIMESTONE_DK)
-	wc.line(c + Vector2(-7.0, 6.0), c + Vector2(-13.0, 13.0), LIMESTONE_DK, 2.6)
 
 
 static func _draw_wet_sheen(_m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
@@ -955,12 +967,13 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	_draw_onyar_glints(wc, vt, vb, t)
 	_draw_steps_cascade(m, wc, vt, vb, t)
 	_draw_house_sniff_prompts(m, wc, vt, vb)
-	_draw_lleona_glint(m, wc, vt, vb, t)
-	_draw_townsfolk(wc, vt, vb)
+	_draw_townsfolk(m, wc, vt, vb)
+	if m.lleona != null and LLEONA_COL.y > vt - 760.0 and LLEONA_COL.y < vb + 760.0:
+		m.lleona.draw(wc, vt, vb, t)
 	wc.lod = keep_lod
 
 
-static func _draw_townsfolk(wc: ShapeBatch, vt: float, vb: float) -> void:
+static func _draw_townsfolk(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	# Dusk walkers & visitors: bakery browser, bridge gazer, tourist at La Lleona's steps
 	var folk: Array = [
 		[Vector2(832.0, -490.0), Vector2(-1.0, 0.0), 4101, Color(0.24, 0.34, 0.48), false],
@@ -972,6 +985,9 @@ static func _draw_townsfolk(wc: ShapeBatch, vt: float, vb: float) -> void:
 		var f: Array = folk[i]
 		var p: Vector2 = f[0]
 		if p.y < vt - 40.0 or p.y > vb + 40.0:
+			continue
+		# the tourist at the kissing steps does not stay for the fight
+		if i == 3 and m.lleona != null and m.lleona.in_fight():
 			continue
 		_cached(wc, ["folk", i], _folk_one.bind(p, f[1], int(f[2]), f[3], bool(f[4])))
 
@@ -1041,17 +1057,6 @@ static func _draw_house_sniff_prompts(m: Node2D, wc: ShapeBatch, vt: float, vb: 
 		wc.glow(p, 16.0, Color(col.r, col.g, col.b, 0.22))
 		for k in range(4):
 			wc.circle(p + Vector2.from_angle(TAU * float(k) / 4.0) * 5.0, 2.2, col)
-
-
-static func _draw_lleona_glint(m: Node2D, wc: ShapeBatch, vt: float, vb: float, t: float) -> void:
-	if LLEONA_COL.y < vt - 60.0 or LLEONA_COL.y > vb + 60.0:
-		return
-	var glint_t := float(m.get("girona_lleona_glint_t"))
-	if glint_t > 0.0:
-		var pulse := 0.5 + 0.5 * sin(t * 14.0)
-		wc.glow(LLEONA_COL, 34.0 + pulse * 10.0, Color(1.0, 0.84, 0.34, 0.35 * clampf(glint_t, 0.0, 1.0)))
-		wc.circle(LLEONA_COL + Vector2(5.0, -8.0), 2.0, Color(1.0, 0.86, 0.24))
-		wc.circle(LLEONA_COL + Vector2(9.0, -7.0), 2.0, Color(1.0, 0.86, 0.24))
 
 
 # --- overhead: Eiffel red iron bridge arches + dusk lamp pools ---------------

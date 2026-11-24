@@ -7,7 +7,7 @@ extends RefCounted
 
 const Kit := preload("res://hud/ui_kit.gd")
 
-const BOSS_FEATS: Array[String] = ["boss_mamut", "boss_drac", "boss_lleons", "boss_gat"]
+const BOSS_FEATS: Array[String] = ["boss_mamut", "boss_drac", "boss_lleons", "boss_lleona", "boss_gat"]
 const GALLERY_BONES: Array[String] = ["somni", "estel", "colom", "drac"]
 
 const FEATS: Array[Dictionary] = [
@@ -20,6 +20,7 @@ const FEATS: Array[Dictionary] = [
 	{"id": "boss_mamut", "name": "ach_boss_mamut_name", "hint": "ach_boss_mamut_hint"},
 	{"id": "boss_drac", "name": "ach_boss_drac_name", "hint": "ach_boss_drac_hint"},
 	{"id": "boss_lleons", "name": "ach_boss_lleons_name", "hint": "ach_boss_lleons_hint"},
+	{"id": "boss_lleona", "name": "ach_boss_lleona_name", "hint": "ach_boss_lleona_hint"},
 	{"id": "boss_gat", "name": "ach_boss_gat_name", "hint": "ach_boss_gat_hint"},
 	{"id": "all_bosses", "name": "ach_all_bosses_name", "hint": "ach_all_bosses_hint"},
 	{"id": "first_chase", "name": "ach_first_chase_name", "hint": "ach_first_chase_hint"},

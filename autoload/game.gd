@@ -1839,7 +1839,7 @@ func star_str(n: int) -> String:
 # longest run between bosses is halved until there are CHAPTERS of them (the
 # five chapter achievements), so adding a walk never makes a sixth chapter.
 # Derived, so it follows the carousel's order.
-const BOSS_WALKS: Array[String] = ["ciutadella", "guell", "port", "raval"]
+const BOSS_WALKS: Array[String] = ["ciutadella", "guell", "port", "girona", "raval"]
 const CHASE_WALKS: Array[String] = ["neteja", "besos", "vet", "boars", "gracia", "cremada", "aeroport", "molina",
 	"montserrat"]
 const CHAPTERS := 5

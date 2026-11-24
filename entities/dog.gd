@@ -7,6 +7,10 @@ const SPEED := 330.0
 const ACCEL := 2400.0
 const Surfaces := preload("res://world/surfaces.gd")
 
+# what she is recoloured to as stone: shadow to light, by her own colours' value
+const STONE_LO := Color(0.66, 0.64, 0.60)
+const STONE_HI := Color(0.94, 0.92, 0.86)
+
 var planted := false
 # dug in and being hauled anyway: set by main when the leash drags a planted
 # dog along, 1.0 on the frame it happens and fading; skid_dir is which way
@@ -59,6 +63,7 @@ const DRAW_SCALE := {"ratonero bodeguero": 0.84}
 const MARK_WHITE := Color(0.93, 0.91, 0.87)
 const MARK_TAN := Color(0.74, 0.52, 0.30)
 var tumble_t := 0.0
+var stone_t := 0.0   # turned to stone by La Lleona: rooted and braced
 # riding a loose tile (ride()): time left, of, and the carried velocity
 var ride_t := 0.0
 var ride_time := 0.0
@@ -293,6 +298,12 @@ func tick(delta: float) -> void:
 	prev_hop = hop
 	bark_anim = maxf(0.0, bark_anim - delta)
 	hole_cd = maxf(0.0, hole_cd - delta)
+	if stone_t > 0.0:
+		stone_t -= delta
+		planted = true
+		input_active = false
+		velocity = Vector2.ZERO
+		return
 	if squat_t > 0.0:
 		# answering nature's call: immobile and braced, come what may
 		squat_t -= delta
@@ -469,6 +480,18 @@ func knocked(dir: Vector2, cause: String) -> void:
 	main.float_text(global_position, I18n.t("w_yipe"), Color(1, 0.8, 0.6))
 
 
+# a statue for `secs`: she neither moves nor can be moved, and it is a hit
+func petrify(secs: float) -> void:
+	if stone_t > 0.0:
+		return
+	tumble_t = 0.0
+	rotation = 0.0
+	ride_t = 0.0
+	stone_t = secs
+	velocity = Vector2.ZERO
+	main.on_dog_hit("gaze")
+
+
 func fall_in(center: Vector2) -> void:
 	# open holes are open holes, dogs included
 	if tumble_t > 0.0 or hole_cd > 0.0:
@@ -590,6 +613,12 @@ func _draw() -> void:
 	_quirk_pose(AnimClock.msec() / 1000.0)
 	_draw_xf()
 	_draw_shapes()
+	if stone_t > 0.0:
+		# a black dog cannot be tinted to stone, so her colours are remapped
+		for i in range(_b._colors.size()):
+			var c: Color = _b._colors[i]
+			if c.a > 0.5:
+				_b._colors[i] = Color(STONE_LO.lerp(STONE_HI, c.get_luminance()), c.a)
 	_b.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	_b.flush()
 

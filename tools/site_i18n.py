@@ -158,18 +158,21 @@ BOSS = {
         "ciutadella": ("El Mamut", "The life-size stone mammoth by Parc de la Ciutadella's cascada steps off its plinth. Wrap it up or bait its charge into the boating lake."),
         "guell": ("El Drac", "The trencadís mosaic dragon holds the grand stairway. Wind the leash round the stone columns, dodge the tail sweep, and trip the beast on the tiles."),
         "port": ("Els Lleons", "Twin bronze harbor lions guard Columbus's column along the wharf. Lead their pincer charge round the iron mooring bollards and into one another."),
+        "girona": ("La Lleona", "Girona's stone lioness climbs down off her column and looks for you. Hide from her gaze, lead her under the rain spout, and kiss her where the whole town does."),
         "raval": ("El Gat", "Rambla del Raval's plump bronze cat prowls beneath the palms, scattering pigeons and leaping across awnings until you fling your human straight into him."),
     },
     "ca": {
         "ciutadella": ("El Mamut", "El mamut de pedra de mida real que hi ha vora la cascada del Parc de la Ciutadella baixa del pedestal. Embolica'l o fes que carregui dret cap a l'estany de les barques."),
         "guell": ("El Drac", "El drac de trencadís guarda l'escalinata. Enrotlla la corretja a les columnes de pedra, esquiva el cop de cua i fes-lo ensopegar a les rajoles."),
         "port": ("Els Lleons", "Dos lleons de bronze guarden la columna de Colom al moll. Porta'ls a envestir-te en pinça al voltant dels norais de ferro i que xoquin entre ells."),
+        "girona": ("La Lleona", "La lleona de pedra de Girona baixa de la columna i et busca. Amaga't de la seva mirada, porta-la sota la gàrgola i fes-li el petó que li fa tota la ciutat."),
         "raval": ("El Gat", "El gat de bronze gras de la Rambla del Raval ronda sota les palmeres, espanta els coloms i salta d'un tendal a l'altre fins que hi llances el teu humà a sobre."),
     },
     "es": {
         "ciutadella": ("El Mamut", "El mamut de piedra a tamaño real junto a la cascada del Parc de la Ciutadella baja de su pedestal. Enróllalo o haz que cargue directo al estanque de las barcas."),
         "guell": ("El Drac", "El dragón de trencadís guarda la escalinata. Enrolla la correa en las columnas de piedra, esquiva el coletazo y hazle tropezar en las baldosas."),
         "port": ("Els Lleons", "Dos leones de bronce guardan la columna de Colón en el muelle. Llévalos a embestirte en pinza alrededor de los noráis de hierro y que choquen entre ellos."),
+        "girona": ("La Lleona", "La leona de piedra de Girona baja de su columna y te busca. Escóndete de su mirada, llévala bajo la gárgola y dale el beso que le da toda la ciudad."),
         "raval": ("El Gat", "El gato de bronce gordo de la Rambla del Raval ronda bajo las palmeras, espanta a las palomas y salta de toldo en toldo hasta que le lanzas a tu humano encima."),
     },
 }
