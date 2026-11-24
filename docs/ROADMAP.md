@@ -63,9 +63,9 @@ Bench: Vallvidrera's funicular. El Delta stays rejected.
 ### The order
 
 Applied to `Game.CAROUSEL` on 2026-11-23 (gates version 5), with walk 41 left
-for Girona; until it lands the walks between El Port and the Raval are split
-in two chapters by `Game.chapters_of`. Locked, with the save reset, once
-Girona is in.
+for Girona, which landed with La Lleona on 2026-11-24 (#702 to #704). Still to come before
+the lock and the save reset: Les Atraccions' chase and its film (walk 40, the
+tenth chase).
 
 New walks in bold; (C) chase, (B) boss.
 
@@ -88,8 +88,10 @@ Bosc in rain, Les Obres at dawn, La Diagonal at dusk.
 
 Once the campaign content is locked, progress resets: one save-version bump
 that starts everyone fresh, instead of more gate grandfathering (Santtu,
-2026-11-16). Settings (controls, language) survive; whether the wardrobe does
-is Santtu's call at the time.
+2026-11-16). Nothing earned is kept, the wardrobe and trained stats included: a
+clean fresh game (Santtu, 2026-11-24). Settings (controls, language) survive. It
+waits for the campaign to be ready; the old gate tables and grandfathering go
+with it.
 
 ## Release train
 
