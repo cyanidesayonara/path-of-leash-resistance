@@ -7,9 +7,10 @@ extends RefCounted
 # way markers, the forest spring and the bocadillos.
 
 # its off-leash area's worn patch is soft at the edge (main.soft_wear)
+const Woods := preload("res://world/woods.gd")
 const SOFT_WEAR := true
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_threshold", "draw_trough_prop", "grass_blocked", "surface"]
+const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_threshold", "draw_trough_prop", "draw_wood_layer", "grass_blocked", "surface"]
 
 # La Clariana's lawn (main._draw_clearing), let down over the forest floor
 const CLEARING_LAWN := Color(0.30, 0.42, 0.26)
@@ -38,9 +39,10 @@ static func draw_bocadillo(m: Node2D, c: Object, kp: Vector2) -> void:
 # The wood either side of El Bosc's trail, from the wood line outward:
 # undergrowth along the line, then overlapping crowns to the edge of the
 # frame. One batch, and every clump is hashed from its row so it holds still.
-static func _draw_wood(m: Node2D, vt: float, vb: float) -> void:
+# on the verge layer: a wood does not move, and that redraws only on scrolling
+static func draw_wood_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
 	var out: float = m.LevelBuild.TRAIL_WOOD_OUT
-	var b := ShapeBatch.new()
+	var floor_c: Color = (Woods.LOOKS[Woods.look(String(m.lvl))] as Dictionary).floor
 	var step := 56.0
 	# stops at the gate: the clearing beyond has its own ring of trees
 	var sy := maxf(floorf((vt - 80.0) / step) * step, m.GATE_Y + 100.0)
@@ -59,25 +61,19 @@ static func _draw_wood(m: Node2D, vt: float, vb: float) -> void:
 					Vector2(deep.position.x, sy - 14.0), Vector2(deep.end.x, sy - 14.0),
 					Vector2(deep.position.x, sy + 30.0), Vector2(deep.end.x, sy + 30.0),
 					Vector2(deep.position.x, deep.end.y), Vector2(deep.end.x, deep.end.y),
-				]), 2, Color(0.12, 0.20, 0.12), PackedFloat32Array([0.0, 1.0, 1.0]))
+				]), 2, floor_c, PackedFloat32Array([0.0, 1.0, 1.0]))
 			else:
-				b.rect(deep, Color(0.12, 0.20, 0.12))
-			for k in range(5):
-				var h := fmod(absf(sin(float(row * 7 + k) * 12.9898 + side * 3.1) * 43758.5453), 1.0)
-				var cx: float = line + side * (26.0 + float(k) * 60.0 + h * 18.0)
-				var cy := sy + step * 0.5 + (h - 0.5) * 30.0
-				var r := 30.0 + h * 14.0
-				b.circle(Vector2(cx, cy) + Vector2(3, 4), r, Color(0.10, 0.17, 0.10))
-				b.circle(Vector2(cx, cy), r * 0.9, Color(0.17, 0.29, 0.16) if (row + k) % 3 != 0 else Color(0.20, 0.31, 0.15))
-				b.circle(Vector2(cx, cy) - Shade.light * r * 0.35, r * 0.42, Color(0.25, 0.38, 0.20))
-			# undergrowth and a trunk or two right on the line
-			var hu := fmod(absf(sin(float(row) * 78.233 + side) * 43758.5453), 1.0)
-			b.circle(Vector2(line + side * 4.0, sy + hu * step), 13.0 + hu * 6.0, Color(0.19, 0.30, 0.17))
-			b.circle(Vector2(line - side * 6.0, sy + step * 0.5 + hu * 10.0), 9.0, Color(0.23, 0.35, 0.19))
-			if row % 2 == 0:
-				b.circle(Vector2(line + side * 16.0, sy + step * 0.3), 5.5, Color(0.30, 0.22, 0.15))
+				b.rect(deep, floor_c)
 		sy += step
-	b.flush(m._wc)
+	# the trees over all of that floor, or each row's would be cut off by the next
+	sy = maxf(floorf((vt - 120.0) / step) * step, first)
+	while sy < vb + 80.0:
+		var e: Vector2 = m.walk_edges(sy + step * 0.5)
+		var row := int(absf(sy) / step)
+		for side: float in [-1.0, 1.0]:
+			var line: float = (e.x - out) if side < 0.0 else (e.y + out)
+			Woods.kept_row(b, Woods.look(String(m.lvl)), line, side, sy, step, 470.0, row * 2 + (1 if side > 0.0 else 0))
+		sy += step
 
 
 # A fallen trunk: bark with its furrows along it, a pale sawn or broken end
@@ -292,7 +288,6 @@ static func surface(m: Node2D, p: Vector2) -> int:
 
 # the wood, the stream and the fallen logs, after the rest of the ground
 static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
-	_draw_wood(m, vt, vb)
 	_draw_stream(m, vt, vb)
 	for lr: Rect2 in m.LevelBuild.trail_logs(m):
 		if lr.position.y > vt - 60.0 and lr.position.y < vb + 60.0:

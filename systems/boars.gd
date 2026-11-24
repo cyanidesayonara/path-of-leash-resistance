@@ -9,7 +9,7 @@ extends RefCounted
 # dumpsters are where it stops to feed (home_chase.BOAR_BANDS).
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_threshold", "grass_blocked", "tick", "tree_kind"]
+const HOOKS := ["draw_bollard", "draw_live", "draw_path_edges", "draw_scenery", "draw_snack", "draw_threshold", "draw_wood_layer", "grass_blocked", "tick", "tree_kind"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -180,8 +180,11 @@ static func draw_path_edges(m: Node2D, left: PackedVector2Array, right: PackedVe
 	Bosc._draw_edges(m, left, right, col)
 
 
+static func draw_wood_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	Bosc.draw_wood_layer(m, b, vt, vb)
+
+
 static func draw_scenery(m: Node2D, _wc: ShapeBatch, vt: float, vb: float) -> void:
-	Bosc._draw_wood(m, vt, vb)
 	for lr: Rect2 in LOGS:
 		if lr.end.y > vt - 60.0 and lr.position.y < vb + 60.0:
 			Bosc._draw_fallen_log(m, lr)
