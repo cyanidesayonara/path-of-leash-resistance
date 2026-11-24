@@ -4895,7 +4895,7 @@ func _draw_freedom_beyond(c: Object) -> void:
 		"placa":
 			# the town's roofs behind the houses' fronts
 			CityRoofs.quarter(b, Rect2(-400.0, top - 700.0, 2100.0, 654.0), 83)
-			if lvl == "oldtown" or lvl == "neteja" or lvl == "spook":
+			if lvl not in ["market", "port", "montjuic", "partit", "tibidabo", "beach"]:
 				CityRoofs.quarter(b, Rect2(-400.0, top - 46.0, r.position.x - 40.0 + 400.0, r.size.y + 16.0), 91)
 				CityRoofs.quarter(b, Rect2(r.end.x + 40.0, top - 46.0, 1660.0 - r.end.x, r.size.y + 16.0), 97)
 		"beach":

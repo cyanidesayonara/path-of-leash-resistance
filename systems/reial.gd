@@ -10,6 +10,7 @@ extends RefCounted
 # street sellers with goods on a blanket who fold up and run at the whistle.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const CityRoofs := preload("res://world/city_roofs.gd")
 const HOOKS := ["build_layer", "draw_edge_layer", "draw_live", "draw_overhead", "night_fronts", "night_lights", "surface", "tick"]
 
 
@@ -380,6 +381,16 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 	if m.lvl != "reial":
 		return
 	var top := _north_end(m)
+	# the palace blocks behind the arcades: their cornice, then their roofs
+	var ry := floorf(maxf(_vt - 260.0, top) / 220.0) * 220.0
+	while ry < minf(_vb + 60.0, 400.0):
+		var r0 := maxf(ry, top)
+		for side: float in [-1.0, 1.0]:
+			var f := ARCADE_BACK_W if side < 0.0 else ARCADE_BACK_E
+			b.rect(Rect2(minf(f, f + side * 16.0), r0, 16.0, ry + 220.0 - r0), Color(0.80, 0.70, 0.52))
+			b.rect(Rect2(minf(f + side * 12.0, f + side * 16.0), r0, 4.0, ry + 220.0 - r0), Color(0.94, 0.86, 0.68))
+			CityRoofs.kept_module(b, f + side * 16.0, side, 460.0, r0, ry + 220.0, 900 + int(absf(ry) / 220.0) * 2 + (1 if side > 0.0 else 0))
+		ry += 220.0
 	# Arcade portico flooring on the flanks (terracotta tiles)
 	b.rect(Rect2(ARCADE_BACK_W, top, WEST_ARCADE_X - ARCADE_BACK_W, 400.0 - top), ARCADE_TILE)
 	b.rect(Rect2(EAST_ARCADE_X, top, ARCADE_BACK_E - EAST_ARCADE_X, 400.0 - top), ARCADE_TILE)
@@ -396,6 +407,20 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, _vt: float = 0.0, _vb: flo
 	# Panot threshold strips along west and east arcade colonnades
 	b.rect(Rect2(CORRIDOR_L - 4.0, top, 16.0, 380.0 - top), PANOT_BORDER)
 	b.rect(Rect2(CORRIDOR_R - 12.0, top, 16.0, 380.0 - top), PANOT_BORDER)
+
+	# the flags, big and worn, each its own gray, warmed toward the middle
+	var fy := floorf(maxf(_vt - 80.0, top) / 60.0) * 60.0
+	while fy < minf(_vb + 80.0, 380.0):
+		var row := int(absf(fy) / 60.0)
+		var fx := CORRIDOR_L + 12.0 - (40.0 if row % 2 == 0 else 0.0)
+		while fx < CORRIDOR_R - 12.0:
+			var x0 := maxf(fx, CORRIDOR_L + 12.0)
+			var x1 := minf(fx + 80.0, CORRIDOR_R - 12.0)
+			var h := fposmod(sin(float(row * 53) + fx * 0.71) * 43758.5, 1.0)
+			if x1 - x0 > 3.0 and fy > top:
+				b.rect(Rect2(x0 + 0.8, fy + 0.8, x1 - x0 - 1.6, 58.4), STONE_PLAZA.lerp(Color(0.86, 0.78, 0.66), 0.10 + 0.30 * h) if h > 0.4 else STONE_PLAZA.darkened(0.08 * h + 0.02))
+			fx += 80.0
+		fy += 60.0
 
 	# Square flagstone ashlar grid across the royal plaza
 	for gx: float in [430.0, 510.0, 590.0, 690.0, 770.0, 850.0]:
@@ -496,29 +521,52 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	var t: float = AnimClock.msec() / 1000.0
 	# Arcade roof cornice & ochre parapet framing west and east sides of the square
 	var top := _north_end(m)
-	b.rect(Rect2(60.0, top, 180.0, 400.0 - top), ARCADE_ROOF)
-	b.rect(Rect2(232.0, top, 8.0, 400.0 - top), ARCADE_PARAPET)
-	b.rect(Rect2(1040.0, top, 180.0, 400.0 - top), ARCADE_ROOF)
-	b.rect(Rect2(1040.0, top, 8.0, 400.0 - top), ARCADE_PARAPET)
-	# Facade window bays along the arcade roof
-	var wy := -4800.0
-	while wy < 300.0:
-		b.rect(Rect2(150.0, wy - 14.0, 32.0, 28.0), ARCADE_FACADE)
-		b.rect(Rect2(1098.0, wy - 14.0, 32.0, 28.0), ARCADE_FACADE)
-		wy += 200.0
+	# the palace's long roof over each arcade: tiles down its two slopes, a
+	# balustrade along the front, a dormer lit over each bay, chimneys between
+	for side: float in [-1.0, 1.0]:
+		var f := 240.0 if side < 0.0 else 1040.0
+		var x := func(a: float, z: float) -> Rect2: return Rect2(minf(f + side * a, f + side * z), top, absf(z - a), 400.0 - top)
+		b.rect(x.call(8.0, 64.0), ARCADE_ROOF.lightened(0.10 if side > 0.0 else -0.12))
+		b.rect(x.call(64.0, 118.0), ARCADE_ROOF.lightened(-0.12 if side > 0.0 else 0.10))
+		var ty := top + 6.0
+		while ty < 400.0:
+			b.line(Vector2(f + side * 9.0, ty), Vector2(f + side * 117.0, ty), ARCADE_ROOF.darkened(0.24), 1.4)
+			ty += 10.0
+		b.rect(x.call(62.0, 66.0), ARCADE_ROOF.lightened(0.28))
+		b.rect(x.call(-8.0, 8.0), ARCADE_PARAPET)
+		b.rect(x.call(-8.0, -5.0), ARCADE_PARAPET.lightened(0.18))
+		var by := top + 8.0
+		while by < 396.0:
+			b.circle(Vector2(f, by), 2.6, ARCADE_PARAPET.darkened(0.32))
+			by += 13.0
+		var wy := -4800.0
+		while wy < 300.0:
+			var d := Vector2(f + side * 36.0, wy)
+			b.rect(Rect2(d - Vector2(17, 15) + Shade.light * 6.0, Vector2(34, 30)), Color(0.04, 0.03, 0.06, 0.3))
+			b.rect(Rect2(d - Vector2(17, 15), Vector2(34, 30)), ARCADE_FACADE)
+			b.rect(Rect2(d.x - side * 15.0 - 3.0, d.y - 10.0, 6.0, 20.0), Color(1.0, 0.82, 0.50) if int(absf(wy) / 200.0) % 3 != 1 else Color(0.22, 0.22, 0.28))
+			b.line(Vector2(d.x - 17.0, wy), Vector2(d.x + 17.0, wy), ARCADE_ROOF.lightened(0.22), 2.4)
+			var ch := Vector2(f + side * 84.0, wy + 100.0)
+			b.rect(Rect2(ch - Vector2(9, 12) + Shade.light * 7.0, Vector2(18, 24)), Color(0.04, 0.03, 0.06, 0.3))
+			b.rect(Rect2(ch - Vector2(9, 12), Vector2(18, 24)), ARCADE_FACADE.darkened(0.30))
+			for q in range(3):
+				b.circle(ch + Vector2(0.0, -7.0 + 7.0 * float(q)), 2.4, Color(0.14, 0.10, 0.10))
+			wy += 200.0
 
 	# Towering palm fronds overhead
 	for p: Vector2 in PALMS:
-		for i in range(10):
-			var a := float(i) * (TAU / 10.0) + sin(t * 1.5 + p.y * 0.01) * 0.05
-			var leaf_len := 55.0 + sin(float(i) * 2.4) * 8.0
-			var dir := Vector2(cos(a), sin(a))
-			var end_p := p + dir * leaf_len
-			b.line(p, end_p, PALM_LEAF, 4.0)
-			b.line(p, p + dir * leaf_len * 0.7, PALM_LEAF_LIGHT, 2.5)
-			var norm := Vector2(-sin(a), cos(a)) * 5.0
-			b.line(end_p, end_p - norm, PALM_LEAF_LIGHT, 1.5)
-			b.line(end_p, end_p + norm, PALM_LEAF_LIGHT, 1.5)
+		for layer in range(2):
+			var n := 11 if layer == 0 else 8
+			for i in range(n):
+				var a := float(i) * (TAU / float(n)) + sin(t * 1.5 + p.y * 0.01 + float(i)) * 0.04 + p.x * 0.1 + float(layer) * 0.3
+				var ln := (62.0 if layer == 0 else 42.0) + sin(float(i) * 2.4) * 8.0
+				var d := Vector2.from_angle(a)
+				var o := d.orthogonal()
+				var col := PALM_LEAF if layer == 0 else PALM_LEAF_LIGHT
+				b.polygon(PackedVector2Array([p, p + d * ln * 0.35 + o * 7.5, p + d * ln * 0.75 + o * 4.5, p + d * ln, p + d * ln * 0.75 - o * 4.5, p + d * ln * 0.35 - o * 7.5]), col)
+				b.line(p, p + d * ln * 0.9, col.darkened(0.28), 1.4)
+		b.circle(p, 8.0, PALM_TRUNK)
+		b.circle(p - Vector2(1.5, 1.5), 4.6, PALM_BARK)
 	b.flush()
 
 
