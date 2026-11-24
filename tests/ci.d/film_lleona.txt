@@ -1,0 +1,3 @@
+# La Lleona films
+# cost 5
+--headless --path . --script res://tests/test_film_lleona.gd
