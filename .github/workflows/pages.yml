@@ -52,6 +52,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -69,7 +70,7 @@ jobs:
     timeout-minutes: 45
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
 
@@ -178,5 +179,32 @@ jobs:
         with:
           path: _site
 
+      # The upload can finish a moment before GitHub lists it, and deploy-pages
+      # looks once: it found no artifact on 2026-11-24, twice, half a second
+      # after the upload. So wait until it is listed, and try the deploy twice.
+      - name: Wait for the artifact to be listed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 30); do
+            n="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?name=github-pages" --jq '.total_count' || echo 0)"
+            if [ "${n}" != "0" ]; then
+              echo "listed after ${i} tries"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "not listed after a minute; deploying anyway"
+
       - id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Wait before trying the deploy again
+        if: ${{ steps.deployment.outcome == 'failure' }}
+        run: sleep 20
+
+      - id: retry
+        if: ${{ steps.deployment.outcome == 'failure' }}
         uses: actions/deploy-pages@v4
