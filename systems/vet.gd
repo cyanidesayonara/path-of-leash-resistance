@@ -10,9 +10,10 @@ extends RefCounted
 # south while clinic assistants with giant cones of shame give chase!
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_edge_layer", "draw_live", "draw_overhead", "draw_threshold", "on_bark", "surface", "tick"]
+const HOOKS := ["draw_bench", "draw_bin", "draw_bollard", "draw_edge_layer", "draw_live", "draw_overhead", "draw_threshold", "on_bark", "surface", "tick"]
 
 
+const Rooms := preload("res://systems/vet_rooms.gd")
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -20,18 +21,10 @@ const ShapeBatch := preload("res://systems/shape_batch.gd")
 const SHADOW := Color(0.04, 0.05, 0.08, 0.18)
 
 # --- colors ------------------------------------------------------------------
-const LINOLEUM_BASE := Color(0.84, 0.90, 0.88)
-const LINOLEUM_TILE := Color(0.80, 0.87, 0.85)
-const LINOLEUM_LINE := Color(0.72, 0.80, 0.78)
-const LINOLEUM_SHEEN := Color(0.92, 0.96, 0.95, 0.35)
 
-const WALL_TILE := Color(0.90, 0.94, 0.93)
 const WALL_BASEBOARD := Color(0.30, 0.60, 0.55)
 const WALL_TRIM := Color(0.20, 0.45, 0.42)
 
-const CHAIR_BLUE := Color(0.22, 0.45, 0.72)
-const CHAIR_ORANGE := Color(0.88, 0.45, 0.20)
-const CHAIR_FRAME := Color(0.40, 0.42, 0.45)
 
 const SCALE_BASE := Color(0.35, 0.38, 0.42)
 const SCALE_MAT := Color(0.18, 0.20, 0.22)
@@ -97,7 +90,7 @@ const CHAIR_PAIRS: Array[Vector2] = [
 
 # Medicine display cabinets (solid obstacles against walls)
 const CABINET_WEST := Rect2(362.0, -3150.0, 50.0, 110.0)
-const CABINET_EAST := Rect2(908.0, -3150.0, 50.0, 110.0)
+const CABINET_EAST := Rect2(868.0, -3150.0, 50.0, 110.0)
 
 # Consultation doors along walls (portholes)
 const DOORS: Array[Dictionary] = [
@@ -247,7 +240,8 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 	var back: float = m.GATE_Y
 	var top := maxf(vt, back)
 	if top < vb:
-		_draw_floor(b, top, vb)
+		Rooms.draw(b, vt, vb, back)
+		Rooms.floor(b, top, vb)
 	if back >= vt - 40.0 and back <= vb + 40.0:
 		_draw_back_wall(b, back)
 
@@ -306,20 +300,6 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 				b.rect(Rect2(cab.position.x + 22.0, sy - 12.0, 8.0, 10.0), BOTTLE_WHITE)
 				b.rect(Rect2(cab.position.x + 34.0, sy - 15.0, 10.0, 13.0), BOTTLE_BLUE)
 
-	# Tandem clinic waiting chairs
-	for cp: Vector2 in CHAIR_PAIRS:
-		if cp.y < vt - 60.0 or cp.y > vb + 60.0:
-			continue
-		b.rect(Rect2(cp - Vector2(24.0, 14.0), Vector2(48.0, 28.0)).grow(3.0), SHADOW)
-		# tubular steel frame
-		b.line(Vector2(cp.x - 22.0, cp.y), Vector2(cp.x + 22.0, cp.y), CHAIR_FRAME, 3.0)
-		# chair 1 (blue)
-		b.circle(cp - Vector2(11.0, 0.0), 9.0, CHAIR_BLUE)
-		b.circle(cp - Vector2(11.0, 0.0), 6.5, Color(0.28, 0.55, 0.85))
-		# chair 2 (orange)
-		b.circle(cp + Vector2(11.0, 0.0), 9.0, CHAIR_ORANGE)
-		b.circle(cp + Vector2(11.0, 0.0), 6.5, Color(0.95, 0.55, 0.30))
-
 	# Cat carriers on waiting chairs
 	for ccp: Vector2 in CAT_CARRIERS:
 		if ccp.y < vt - 60.0 or ccp.y > vb + 60.0:
@@ -335,41 +315,6 @@ static func draw_edge_layer(m: Node2D, b: ShapeBatch, vt: float = 0.0, vb: float
 		# nervous glowing cat eyes behind grill
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y - 2.0), 1.2, Color(0.95, 0.90, 0.20))
 		b.circle(Vector2(cr.position.x + 5.0, ccp.y + 2.0), 1.2, Color(0.95, 0.90, 0.20))
-
-
-# the linoleum, its sheen and the skirting from `top` down; the last tile
-# column stops at the east wall instead of running on under it
-static func _draw_floor(b: ShapeBatch, top: float, vb: float) -> void:
-	var tile_size := 60.0
-	var y_start := floorf(top / tile_size) * tile_size
-	var y_end := ceilf(vb / tile_size) * tile_size
-
-	var y := y_start
-	while y <= y_end:
-		var row_alt := int(floorf(y / tile_size)) % 2 == 0
-		var y0 := maxf(y, top)
-		var h := y + tile_size - 1.0 - y0
-		if h > 0.0:
-			var x := WALL_L
-			while x < WALL_R:
-				var col_alt := int(floorf((x - WALL_L) / tile_size)) % 2 == 0
-				var c_tile := LINOLEUM_BASE if (row_alt == col_alt) else LINOLEUM_TILE
-				b.rect(Rect2(x, y0, minf(tile_size, WALL_R - x) - 1.0, h), c_tile)
-				x += tile_size
-		if y >= top:
-			b.line(Vector2(WALL_L, y), Vector2(WALL_R, y), LINOLEUM_LINE, 1.2)
-		y += tile_size
-
-	var sheen_y := y_start
-	while sheen_y <= y_end:
-		if sheen_y >= top and int(floorf(sheen_y / 240.0)) % 2 == 0:
-			b.line(Vector2(WALL_L + 60.0, sheen_y), Vector2(WALL_R - 60.0, sheen_y + 40.0), LINOLEUM_SHEEN, 8.0)
-		sheen_y += 120.0
-
-	b.rect(Rect2(WALL_L - 8.0, top, 8.0, vb - top), WALL_BASEBOARD)
-	b.rect(Rect2(WALL_R, top, 8.0, vb - top), WALL_BASEBOARD)
-	b.line(Vector2(WALL_L, top), Vector2(WALL_L, vb), WALL_TRIM, 2.0)
-	b.line(Vector2(WALL_R, top), Vector2(WALL_R, vb), WALL_TRIM, 2.0)
 
 
 # the clinic's back wall along the yard, either side of the door: the
@@ -422,7 +367,33 @@ const BEEP_COLOR := Color(0.25, 0.90, 0.40)
 
 
 # The cone dog moves, so she is drawn on the world pass, not the cached edge.
+# the waiting chairs are what there is to sit on
+static func draw_bench(_m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	Rooms.chairs(wc, p)
+
+
+# a pedal bin, yellow for clinical waste
+static func draw_bin(_m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	Rooms.bin(wc, p)
+
+
+# only marks that have nothing of their own to show are drawn: the rest are
+# the scale, a carrier and a cabinet
+static func draw_bollard(m: Node2D, wc: ShapeBatch, h) -> void:
+	var p: Vector2 = h.pos
+	if p.distance_to(SCALE_POS) > 10.0 and p.distance_to(CAT_CARRIERS[0]) > 10.0 and absf(p.y + 3150.0) > 10.0:
+		# a rubber plant in its pot, every dog's first choice
+		Rooms._plant(wc, p)
+	if not h.done and h.progress > 0.0:
+		wc.draw_arc(p, 26.0, -PI / 2.0, -PI / 2.0 + TAU * h.progress / 0.8, 20, Color(1, 0.95, 0.7), 3.0)
+	elif h.done:
+		wc.ellipse(p + Vector2(5, 13), 11.0, 4.5, Color(0.92, 0.84, 0.40, 0.5))
+
+
 static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
+	for p: Vector2 in IV_POLES:
+		if p.y > vt - 40.0 and p.y < vb + 40.0:
+			Rooms.drip(wc, p)
 	if m.cone_dog != null:
 		m.cone_dog.draw(m, wc, vt, vb)
 

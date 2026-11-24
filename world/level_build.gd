@@ -2350,6 +2350,10 @@ static func build_level_data(m: Node2D) -> void:
 		m.flock_ys.clear()
 		for sp: Vector2 in BossGat.PIGEON_SPOTS:
 			m.flock_ys.append(sp.y)
+	# no pigeons get into the clinic, and no cats out of it
+	if m.lvl == "vet":
+		m.flock_ys.clear()
+		m.cat_y = 1.0e9
 	# Sarrià's pigeons live on the plaça, where the bells put them up
 	if m.lvl == "sarria":
 		m.flock_ys.assign(Sarria.flock_ys())
@@ -4841,6 +4845,7 @@ static func spawn_cones(m: Node2D) -> void:
 			"montserrat": kinds = ["bottle", "can", "sack"]
 			"molina": kinds = ["can", "bottle", "bottle"]
 			"oldtown": kinds = ["sack", "bottle", "can"]
+			"vet": kinds = ["ball", "ball", "bottle"]       # what patients bring
 		# Litter accumulates around whatever produced it, so junk is placed by
 		# AREA rather than sprinkled evenly: crates pile up behind market stalls,
 		# cans and bottles collect around cafe tables and buskers, sacks slump by
@@ -4849,7 +4854,7 @@ static func spawn_cones(m: Node2D) -> void:
 		var zones: Array[Dictionary] = []
 		# El Parc's papereras are emptied every morning: a dropped bottle or
 		# can by them, never bin bags heaped on the gravel
-		var bin_pal: Array = ["bottle", "can", "bottle"] if m.lvl == "park" else ["sack", "sack", "bottle"]
+		var bin_pal: Array = ["ball", "bottle", "ball"] if m.lvl == "vet" else ["bottle", "can", "bottle"] if m.lvl == "park" else ["sack", "sack", "bottle"]
 		for b in m.bins:
 			zones.append({"at": b, "pal": bin_pal})
 		for st in m.stalls:
@@ -4861,7 +4866,7 @@ static func spawn_cones(m: Node2D) -> void:
 		for v in m.vans:
 			zones.append({"at": v, "pal": ["crate", "sack", "can"]})
 		for bn in m.benches:
-			zones.append({"at": bn, "pal": ["can", "bottle", "ball"]})
+			zones.append({"at": bn, "pal": ["ball", "ball", "bottle"] if m.lvl == "vet" else ["can", "bottle", "ball"]})
 		for z in zones:
 			var pal: Array = z.pal
 			for i in range(jr.randi_range(1, 3)):
