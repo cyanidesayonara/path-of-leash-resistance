@@ -114,7 +114,7 @@ shot tutorial --level=tutorial --shot-y=-1800 --shot-at=220
 shot tutorial-2 --level=tutorial --at-freedom --shot-at=260
 shot barri --level=barri --shot-y=-2500 --shot-at=260
 shot barri-2 --level=barri --at-freedom --shot-at=260
-shot street --level=street --shot-y=-2500 --shot-at=260
+shot street --level=street --shot-y=-3340 --shot-at=260
 shot street-2 --level=street --at-freedom --shot-at=260
 shot park --level=park --shot-y=-2600 --shot-at=260
 shot park-2 --level=park --at-freedom --shot-at=260
