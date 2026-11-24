@@ -223,7 +223,7 @@ class StoreImages(unittest.TestCase):
         self.assertEqual(list(sub["Listings"]), ["en-us"])
         store_listing.update_submission(sub, by_lang, verbose=False,
                                         languages={"en-US", "ca-ES", "es-ES"})
-        self.assertEqual(sorted(sub["Listings"]), ["ca-ES", "en-us", "es-ES"])
+        self.assertEqual(sorted(sub["Listings"]), ["ca-es", "en-us", "es-es"])
 
     def test_listings_are_added_only_in_languages_the_store_has_ingested(self):
         md = (ROOT / "store" / "listing.md").read_text(encoding="utf-8")
@@ -250,7 +250,7 @@ class StoreImages(unittest.TestCase):
                          [("PathOfLeashResistance-1.74.0.0.msix", "Uploaded")])
         store_listing.update_submission(sub, by_lang, verbose=False, languages=all_three,
                                         store_languages=store_listing.ingested_languages(sub))
-        self.assertEqual(sorted(sub["Listings"]), ["ca-ES", "en-us", "es-ES"])
+        self.assertEqual(sorted(sub["Listings"]), ["ca-es", "en-us", "es-es"])
 
     def test_a_listing_only_draft_keeps_the_published_package(self):
         self.assertEqual(len(store_images.keep_package(draft(), "v1.75")), 1)
