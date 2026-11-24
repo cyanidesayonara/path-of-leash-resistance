@@ -549,18 +549,6 @@ static func _cached(wc: ShapeBatch, key: Array, fn: Callable) -> void:
 	rec.append_to(wc)
 
 
-static func _outside(b: ShapeBatch, side: float, y0: float, y1: float, col: Color, from := 0.0) -> void:
-	var far := FAR_L if side < 0.0 else FAR_R
-	var y := y0
-	var xa := _edge_x(y, side) + side * from
-	while y < y1:
-		var yn := minf(y + 24.0, y1)
-		var xb := _edge_x(yn, side) + side * from
-		b.quad(Vector2(xa, y), Vector2(far, y), Vector2(far, yn), Vector2(xb, yn), col)
-		xa = xb
-		y = yn
-
-
 static func _corridor(wc: ShapeBatch, y0: float, y1: float, col: Color, inset := 0.0) -> void:
 	var y := y0
 	var ea := _edges_at(y)
