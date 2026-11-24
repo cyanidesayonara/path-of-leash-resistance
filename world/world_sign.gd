@@ -37,6 +37,7 @@ const MATERIALS := {
 	"tibidabo": "bulbs", "aigues": "pinecones", "horta": "topiary", "llevant": "shells", "sitges": "seaglass", "boars": "pipes", "gracia": "tickets", "carmel": "rubble", "superilla": "pingpong", "forum": "solar", "espanya": "cascade", "eixample": "planeballs", "angels": "wheels", "poble": "azulejos", "ciutadella": "feathers", "cremada": "casings", "aeroport": "bagtags", "montserrat": "rosemary", "molina": "snowflakes", "atraccions": "stubs", "raval": "pegs", "tutorial": "balls",
 	"encants": "buttons",
 	"vic": "cheeses",
+	"girona": "petals",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -80,6 +81,7 @@ const FEEL := {
 	"buttons": {"spacing": 0.13, "r": 0.07, "drag": 1.5, "take": 1.1, "roll": true},
 	"tesserae": {"spacing": 0.09, "r": 0.055, "drag": 4.0, "take": 0.9, "spin": 2.0, "align": true},
 	"cheeses": {"spacing": 0.14, "r": 0.075, "drag": 1.2, "take": 1.1, "roll": true},
+	"petals": {"spacing": 0.12, "r": 0.08, "drag": 4.2, "take": 1.15, "spin": 5.5},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
@@ -572,6 +574,8 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_tesserae(c, sign, h, light)
 		"cheeses":
 			_cheeses(c, sign, h)
+		"petals":
+			_petals(c, sign, h)
 		"brollies":
 			_brollies(c, sign, h)
 		"pastries":
@@ -1417,6 +1421,30 @@ static func _cheeses(c: Object, sign: Dictionary, _h: float) -> void:
 		c.draw_circle(p, r * 0.88, rind)
 		c.draw_circle(p - Vector2(r * 0.12, r * 0.12), r * 0.62, paste)
 		c.draw_circle(p - Vector2(r * 0.28, r * 0.28), r * 0.22, paste.lightened(0.2))
+
+
+const PETAL_COLS: Array[Color] = [
+	Color(0.92, 0.34, 0.50), Color(0.96, 0.74, 0.22), Color(0.84, 0.24, 0.26),
+	Color(0.56, 0.40, 0.82), Color(0.94, 0.88, 0.76),
+]
+
+
+static func _petals(c: Object, sign: Dictionary, _h: float) -> void:
+	# Temps de Flors flower petals scattered on the wet dusk stone
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.4, 2.0), float(pc.r) * 1.04, Color(0, 0, 0, 0.28))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var v := float(pc["var"])
+		var ax := Vector2.from_angle(float(pc.rot))
+		var ay := ax.orthogonal()
+		var col := PETAL_COLS[int(v * 97.0) % PETAL_COLS.size()]
+		c.draw_colored_polygon(PackedVector2Array([
+			p - ax * r * 1.15, p + ay * r * 0.65, p + ax * r * 1.15, p - ay * r * 0.65,
+		]), col.darkened(0.22))
+		c.draw_circle(p, r * 0.72, col)
+		c.draw_circle(p - Vector2(r * 0.22, r * 0.22), r * 0.26, col.lightened(0.36))
 
 
 # a croissant's three lobes along its curve, and their bake from the

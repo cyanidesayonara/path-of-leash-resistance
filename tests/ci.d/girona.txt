@@ -1,0 +1,3 @@
+# Girona (Onyar houses, Eiffel bridge, steps cascade and La Lleona in dusk rain)
+# cost 12
+--headless --path . --script res://tests/test_girona.gd

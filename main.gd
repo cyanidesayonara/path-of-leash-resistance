@@ -401,6 +401,7 @@ const WALK_MODULES := {
 	"encants": preload("res://systems/encants.gd"),
 	"tarragona": preload("res://systems/tarragona.gd"),
 	"vic": preload("res://systems/vic.gd"),
+	"girona": preload("res://systems/girona.gd"),
 	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
@@ -800,6 +801,12 @@ var vic_lost := false
 var vic_cols_marked: Dictionary = {}
 var vic_tower_barked := false
 var vic_sniffs: Dictionary = {}
+# Girona: steps cascade, Onyar front sniffs, La Lleona column (systems/girona.gd)
+var girona_spout: Dictionary = {}
+var girona_steps_saved := 0
+var girona_houses_sniffed: Dictionary = {}
+var girona_lleona_barked := false
+var girona_lleona_glint_t := 0.0
 # El Metro: the walk's state (systems/metro.gd), and its goals' tallies
 var metro: RefCounted = null
 var metro_turnstile_slipped := false
@@ -11587,6 +11594,8 @@ const FREEDOM_KINDS := {
 	"tarragona": "yard",
 	# riverside meadow on the Mèder past the Roman bridge
 	"vic": "clearing",
+	# walled garden of Jardins dels Alemanys past Passeig Arqueològic
+	"girona": "clearing",
 	# up the stairs at Sant Gos, into its little square
 	"metro": "placa",
 	# the beach where the Dimoni is burned
