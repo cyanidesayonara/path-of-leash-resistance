@@ -33,6 +33,7 @@ const Panot := preload("res://world/panot.gd")
 const NightFronts := preload("res://world/night_fronts.gd")
 const EventFeed := preload("res://hud/event_feed.gd")
 const AnimClock := preload("res://systems/anim_clock.gd")
+const Art := preload("res://systems/girona_art.gd")
 const BossLleona := preload("res://systems/boss_lleona.gd")
 const NpcFigure := preload("res://entities/npc_figure.gd")
 
@@ -63,14 +64,13 @@ const MURALLES_HALF := 240.0
 const WATER_DEEP := Color(0.07, 0.13, 0.22)
 const WATER_MID := Color(0.11, 0.21, 0.32)
 const WATER_BANK := Color(0.16, 0.26, 0.36)
-const PAVE_DUSK := Color(0.36, 0.36, 0.42)
-const PAVE_LIT := Color(0.46, 0.45, 0.50)
+const PAVE_DUSK := Color(0.52, 0.49, 0.47)
 const STEP_STONE := Color(0.54, 0.52, 0.48)
 const STEP_LIT := Color(0.68, 0.64, 0.56)
 const STEP_DARK := Color(0.32, 0.31, 0.30)
 const FLAG_COLS: Array[Color] = [
-	Color(0.52, 0.50, 0.48), Color(0.48, 0.46, 0.45),
-	Color(0.56, 0.53, 0.50), Color(0.44, 0.43, 0.44),
+	Color(0.62, 0.58, 0.52), Color(0.57, 0.54, 0.49),
+	Color(0.67, 0.62, 0.55), Color(0.53, 0.50, 0.48),
 ]
 const EIFFEL_RED := Color(0.68, 0.16, 0.14)
 const EIFFEL_LIT := Color(0.84, 0.26, 0.22)
@@ -80,8 +80,6 @@ const DECK_WET := Color(0.24, 0.18, 0.14)
 const LIMESTONE := Color(0.66, 0.62, 0.54)
 const LIMESTONE_LIT := Color(0.80, 0.75, 0.66)
 const LIMESTONE_DK := Color(0.42, 0.39, 0.36)
-const ROOF_DARK := Color(0.42, 0.24, 0.19)
-const ROOF_LIT := Color(0.54, 0.32, 0.24)
 const IRON := Color(0.14, 0.15, 0.19)
 const LAMP_WARM := Color(1.0, 0.80, 0.46)
 const GRASS_MOSS := Color(0.24, 0.36, 0.22)
@@ -551,18 +549,6 @@ static func _cached(wc: ShapeBatch, key: Array, fn: Callable) -> void:
 	rec.append_to(wc)
 
 
-static func _outside(b: ShapeBatch, side: float, y0: float, y1: float, col: Color, from := 0.0) -> void:
-	var far := FAR_L if side < 0.0 else FAR_R
-	var y := y0
-	var xa := _edge_x(y, side) + side * from
-	while y < y1:
-		var yn := minf(y + 24.0, y1)
-		var xb := _edge_x(yn, side) + side * from
-		b.quad(Vector2(xa, y), Vector2(far, y), Vector2(far, yn), Vector2(xb, yn), col)
-		xa = xb
-		y = yn
-
-
 static func _corridor(wc: ShapeBatch, y0: float, y1: float, col: Color, inset := 0.0) -> void:
 	var y := y0
 	var ea := _edges_at(y)
@@ -592,205 +578,20 @@ static func draw_edge_layer(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> 
 	if hi > lo:
 		# South Onyar river & hanging facades across from Rambla (260..-940)
 		if hi > BRIDGE_Y0 - 40.0 and lo < START + 760.0:
-			_cached(b, ["onyar_south"], _draw_onyar_south.bind(-1.0e9, 1.0e9))
+			_cached(b, ["onyar_south"], Art.rambla)
 		# River Onyar spanning under Eiffel bridge + coloured house banks (-940..-1560)
 		if hi > BRIDGE_Y1 - 120.0 and lo < BRIDGE_Y0 + 120.0:
-			_cached(b, ["onyar_crossing"], _draw_onyar_crossing)
+			_cached(b, ["onyar_crossing"], Art.crossing)
 		# Barri Vell medieval houses & stone flanks (-1560..-2780)
 		if hi > PLACA_Y0 - 60.0 and lo < BRIDGE_Y1 + 20.0:
-			_cached(b, ["barri_vell"], _draw_barri_vell)
+			_cached(b, ["barri_vell"], Art.barri_vell.bind(_edge_x))
 		# Plaça de Sant Feliu river flank west, Gothic church & bell tower east (-2780..-3820)
 		if hi > MURALLES_Y0 - 60.0 and lo < PLACA_Y0 + 60.0:
-			_cached(b, ["sant_feliu"], _draw_sant_feliu)
+			_cached(b, ["sant_feliu"], Art.sant_feliu)
 		# Muralles & Jardins walls (-3820..-5080)
 		if hi > GATE - 80.0 and lo < PLACA_Y1 + 60.0:
-			_cached(b, ["muralles"], _draw_muralles)
+			_cached(b, ["muralles"], Art.muralles.bind(_edge_x))
 	b.lod = keep_lod
-
-
-static func _draw_onyar_house_row(b: ShapeBatch, x0: float, x1: float, bank_y: float, into_water_dir: float, salt: int) -> void:
-	# Row of narrow coloured Onyar houses overhanging the water along `bank_y`
-	var x := x0
-	var idx := 0
-	var glow := Game.lamp_glow()
-	while x < x1 - 12.0:
-		var w := 48.0 + float(_hi(idx * 17 + salt) % 24)
-		var w_use := minf(w, x1 - x)
-		var col := ONYAR_PIGMENTS[_hi(idx * 13 + salt) % ONYAR_PIGMENTS.size()]
-		var overhang := 18.0 + float(_hi(idx * 7 + salt) % 14)
-		var depth := 98.0
-		var y_water := bank_y + into_water_dir * overhang
-		var y_back := bank_y - into_water_dir * depth
-		var r := Rect2(x, minf(y_water, y_back), w_use - 2.0, absf(y_water - y_back))
-		# Soft water drop shadow under cantilever
-		b.rect(Rect2(r.position.x, bank_y, r.size.x, into_water_dir * (overhang + 10.0)).abs(), Color(0.03, 0.05, 0.10, 0.36))
-		# Facade overhang + pitched terracotta roof
-		b.rect(r, col.darkened(0.08))
-		var roof_r := Rect2(r.position.x, minf(y_back, bank_y), r.size.x, depth)
-		b.rect(roof_r, ROOF_DARK if idx % 2 == 0 else ROOF_LIT)
-		b.line(Vector2(roof_r.position.x, roof_r.get_center().y), Vector2(roof_r.end.x, roof_r.get_center().y), ROOF_LIT.lightened(0.18), 2.5)
-		# Windows on overhanging river face
-		var win_y := y_water - into_water_dir * 12.0
-		var nwin := 2 if w_use > 44.0 else 1
-		for wi in range(nwin):
-			var wx := x + w_use * (0.30 if nwin == 2 and wi == 0 else (0.70 if nwin == 2 else 0.50))
-			var wr := Rect2(wx - 4.5, win_y - 4.0, 9.0, 8.0)
-			var lit := (_hi(idx * 31 + wi + salt) % 3) != 0
-			b.rect(wr.grow(1.2), col.lightened(0.18))
-			b.rect(wr, LAMP_WARM if lit else Color(0.14, 0.16, 0.22))
-			if lit and glow > 0.05:
-				b.glow(Vector2(wx, win_y), 14.0, Color(LAMP_WARM.r, LAMP_WARM.g, LAMP_WARM.b, 0.18 * glow))
-		x += w
-		idx += 1
-
-
-static func _draw_onyar_south(b: ShapeBatch, _lo: float, _hi_y: float) -> void:
-	# West bank: Onyar river and overhanging opposite houses on far western bank
-	b.rect(Rect2(FAR_L, BRIDGE_Y0, 410.0 - FAR_L, (START + 760.0) - BRIDGE_Y0), WATER_DEEP)
-	b.band(PackedVector2Array([
-		Vector2(310.0, BRIDGE_Y0), Vector2(376.0, BRIDGE_Y0),
-		Vector2(310.0, START + 760.0), Vector2(376.0, START + 760.0),
-	]), 2, WATER_BANK, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 1.0]))
-	# Far west bank coloured Onyar houses peeking in along x = -320 .. 190
-	var y := -860.0
-	var k := 0
-	var glow := Game.lamp_glow()
-	while y < START + 720.0:
-		var h := 74.0 + float(_hi(k * 11 + 5) % 28)
-		var pig := ONYAR_PIGMENTS[_hi(k * 19 + 3) % ONYAR_PIGMENTS.size()]
-		var face_x := 178.0 + float(_hi(k * 7 + 2) % 26)
-		# coloured house wall overhanging the river
-		b.rect(Rect2(FAR_L, y, face_x - FAR_L, h - 2.0), ROOF_DARK if k % 2 == 0 else ROOF_LIT)
-		b.rect(Rect2(face_x - 24.0, y, 24.0, h - 2.0), pig)
-		b.rect(Rect2(face_x, y, 8.0, h - 2.0), Color(0.03, 0.05, 0.10, 0.30))
-		# warm window + water reflection hint
-		var wy := y + h * 0.5
-		b.rect(Rect2(face_x - 14.0, wy - 7.0, 8.0, 14.0), LAMP_WARM if k % 3 != 0 else Color(0.14, 0.16, 0.22))
-		if glow > 0.05 and k % 3 != 0:
-			b.glow(Vector2(face_x + 14.0, wy), 20.0, Color(pig.r, pig.g, pig.b, 0.16 * glow))
-		y += h
-		k += 1
-
-	# East side of Rambla: tall painted facades and pitched roofs
-	_outside(b, 1.0, BRIDGE_Y0, START + 760.0, Color(0.20, 0.17, 0.18))
-	y = -740.0
-	k = 0
-	while y < START + 720.0:
-		var h := 88.0 + float(_hi(k * 23 + 9) % 34)
-		var y1 := minf(y + h, START + 740.0)
-		var ex0 := _edge_x(y, 1.0)
-		var ex1 := _edge_x(y1, 1.0)
-		var col := ONYAR_PIGMENTS[_hi(k * 13 + 7) % ONYAR_PIGMENTS.size()]
-		b.quad(Vector2(ex0, y), Vector2(ex0 + 22.0, y), Vector2(ex1 + 22.0, y1), Vector2(ex1, y1), col.darkened(0.10))
-		b.quad(Vector2(ex0 + 22.0, y), Vector2(FAR_R, y), Vector2(FAR_R, y1), Vector2(ex1 + 22.0, y1), ROOF_DARK if k % 2 == 0 else ROOF_LIT)
-		b.line(Vector2(ex0 + 92.0, y), Vector2(ex1 + 92.0, y1), ROOF_LIT.lightened(0.2), 2.5)
-		b.line(Vector2(ex0, y), Vector2(FAR_R, y), Color(0.12, 0.10, 0.12, 0.5), 2.0)
-		var wy := (y + y1) * 0.5
-		var wx := (ex0 + ex1) * 0.5 + 10.0
-		b.rect(Rect2(wx - 4.0, wy - 7.0, 8.0, 14.0), LAMP_WARM if k % 2 == 0 else Color(0.15, 0.17, 0.22))
-		y += h
-		k += 1
-
-
-static func _draw_onyar_crossing(b: ShapeBatch) -> void:
-	# Wide Onyar river flowing east-west across the screen under Eiffel's red iron bridge
-	var top := BRIDGE_Y1
-	var bot := BRIDGE_Y0
-	b.rect(Rect2(FAR_L, top - 16.0, FAR_R - FAR_L, (bot - top) + 32.0), WATER_DEEP)
-	b.band(PackedVector2Array([
-		Vector2(FAR_L, top), Vector2(FAR_R, top),
-		Vector2(FAR_L, top + 90.0), Vector2(FAR_R, top + 90.0),
-		Vector2(FAR_L, bot - 90.0), Vector2(FAR_R, bot - 90.0),
-		Vector2(FAR_L, bot), Vector2(FAR_R, bot),
-	]), 2, WATER_MID, PackedFloat32Array([1.0, 0.0, 0.0, 1.0]))
-	# Stone embankments flanking the bridge abutments
-	for y_bank: float in [bot, top]:
-		var s := 1.0 if y_bank == bot else -1.0
-		b.rect(Rect2(FAR_L, y_bank - (0.0 if s > 0.0 else 14.0), 480.0 - FAR_L, 14.0), LIMESTONE_DK)
-		b.rect(Rect2(800.0, y_bank - (0.0 if s > 0.0 else 14.0), FAR_R - 800.0, 14.0), LIMESTONE_DK)
-	# The famous Cases de l'Onyar lining both banks either side of the bridge!
-	_draw_onyar_house_row(b, FAR_L, 466.0, bot, -1.0, 11)
-	_draw_onyar_house_row(b, 814.0, FAR_R, bot, -1.0, 29)
-	_draw_onyar_house_row(b, FAR_L, 466.0, top, 1.0, 47)
-	_draw_onyar_house_row(b, 814.0, FAR_R, top, 1.0, 71)
-
-
-static func _draw_barri_vell(b: ShapeBatch) -> void:
-	# Medieval stone houses + Temps de Flors balconies flanking the Barri Vell steps
-	var top := PLACA_Y0
-	var bot := BRIDGE_Y1
-	for side: float in SIDES:
-		_outside(b, side, top, bot, Color(0.22, 0.20, 0.21))
-		var y := top
-		var k := 0
-		while y < bot - 20.0:
-			var h := 96.0 + float(_hi(k * 13 + int(side + 3.0)) % 36)
-			var y1 := minf(y + h, bot)
-			var e0 := _edge_x(y, side)
-			var e1 := _edge_x(y1, side)
-			var col := LIMESTONE if k % 3 != 0 else LIMESTONE_DK.lightened(0.08)
-			if side > 0.0:
-				col = col.lightened(0.05)
-			else:
-				col = col.darkened(0.10)
-			b.quad(Vector2(e0, y), Vector2(e0 + side * 22.0, y), Vector2(e1 + side * 22.0, y1), Vector2(e1, y1), col)
-			var far := FAR_L if side < 0.0 else FAR_R
-			b.quad(Vector2(e0 + side * 22.0, y), Vector2(far, y), Vector2(far, y1), Vector2(e1 + side * 22.0, y1), ROOF_DARK if k % 2 == 0 else ROOF_LIT)
-			b.line(Vector2(e0, y), Vector2(far, y), Color(0.14, 0.12, 0.13, 0.45), 2.0)
-			# Flower-decked Temps de Flors stone balconies
-			var wy := (y + y1) * 0.5
-			var wx := (e0 + e1) * 0.5 + side * 9.0
-			b.rect(Rect2(wx - 4.0, wy - 7.0, 8.0, 14.0), LAMP_WARM if (k + int(side)) % 2 == 0 else Color(0.16, 0.18, 0.22))
-			if k % 2 == 0:
-				for fi in range(3):
-					var fcol := FLOWER_COLS[(k + fi) % FLOWER_COLS.size()]
-					b.circle(Vector2(wx - side * 5.0, wy - 6.0 + float(fi) * 6.0), 3.0, fcol)
-			y += h
-			k += 1
-
-
-static func _draw_sant_feliu(b: ShapeBatch) -> void:
-	# West flank: Onyar river below the Sant Feliu parapet
-	b.rect(Rect2(FAR_L, PLACA_Y1 - 20.0, 330.0 - FAR_L, (PLACA_Y0 - PLACA_Y1) + 40.0), WATER_DEEP)
-	b.band(PackedVector2Array([
-		Vector2(240.0, PLACA_Y1), Vector2(312.0, PLACA_Y1),
-		Vector2(240.0, PLACA_Y0), Vector2(312.0, PLACA_Y0),
-	]), 2, WATER_BANK, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 1.0]))
-	b.rect(PLACA_PARAPET_L, LIMESTONE)
-	b.rect(Rect2(PLACA_PARAPET_L.position.x + 2.0, PLACA_PARAPET_L.position.y, 4.0, PLACA_PARAPET_L.size.y), LIMESTONE_LIT)
-
-	# East flank: Basílica de Sant Feliu Gothic nave, buttresses and bell spire
-	_outside(b, 1.0, PLACA_Y1, PLACA_Y0, Color(0.24, 0.22, 0.22))
-	var ch := Rect2(954.0, PLACA_Y1 + 120.0, 420.0, (PLACA_Y0 - PLACA_Y1) - 240.0)
-	_sweep_shadow(b, ch, Shade.light * 36.0, SHADOW)
-	b.rect(ch, LIMESTONE_DK)
-	b.rect(ch.grow(-6.0), ROOF_DARK)
-	b.line(Vector2(ch.position.x + 90.0, ch.position.y), Vector2(ch.position.x + 90.0, ch.end.y), ROOF_LIT.lightened(0.2), 3.0)
-	var by := ch.position.y + 40.0
-	while by < ch.end.y - 30.0:
-		b.rect(Rect2(ch.position.x - 10.0, by, 18.0, 14.0), LIMESTONE_LIT)
-		by += 72.0
-	# Bell tower octagon on south-west corner of basilica
-	var tc := Vector2(1010.0, -3040.0)
-	var oct := PackedVector2Array()
-	for oi in range(8):
-		oct.append(tc + Vector2.from_angle(TAU * (float(oi) + 0.5) / 8.0) * 34.0)
-	b.polygon(oct, LIMESTONE)
-	b.circle(tc, 18.0, Color(0.46, 0.44, 0.44))
-
-
-static func _draw_muralles(b: ShapeBatch) -> void:
-	# City battlements lining Passeig Arqueològic up to the gate
-	for side: float in SIDES:
-		_outside(b, side, GATE - 80.0, PLACA_Y1 + 60.0, GRASS_MOSS.darkened(0.15))
-		var wall := MURALLES_WALL_L if side < 0.0 else MURALLES_WALL_R
-		b.rect(wall, LIMESTONE_DK)
-		b.rect(Rect2(wall.position.x + 5.0, wall.position.y, wall.size.x - 10.0, wall.size.y), LIMESTONE)
-		var wy := wall.position.y + 8.0
-		while wy < wall.end.y - 12.0:
-			var mx := wall.position.x + (wall.size.x - 12.0 if side < 0.0 else 4.0)
-			b.rect(Rect2(mx, wy, 8.0, 16.0), LIMESTONE_LIT)
-			wy += 32.0
 
 
 # --- ground pass: paving, bridge iron deck, steps, square, La Lleona column ---
@@ -826,7 +627,7 @@ static func _draw_pave(wc: ShapeBatch, a: float, z: float) -> void:
 		var ry := floorf(ra / Panot.FLOR) * Panot.FLOR
 		while ry < rz:
 			var e := _edges_at(ry + Panot.FLOR * 0.5)
-			Panot.flor_row(wc, e.x + 2.0, e.y - 2.0, ry, e.x + 2.0, Color(0.18, 0.18, 0.24, 0.28), Color(0.68, 0.72, 0.80, 0.14))
+			Panot.flor_row(wc, e.x + 2.0, e.y - 2.0, ry, e.x + 2.0, Color(0.22, 0.20, 0.22, 0.50), Color(0.84, 0.82, 0.80, 0.26))
 			ry += Panot.FLOR
 	# Quay parapet + east arcade overhang on Rambla
 	var rqa := maxf(a, RAMBLA_END)
@@ -840,7 +641,7 @@ static func _draw_pave(wc: ShapeBatch, a: float, z: float) -> void:
 		]), 2, Color(0.06, 0.06, 0.12, 0.42), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 1.0]))
 	# Stone flagstones in Plaça de Sant Feliu and Passeig Arqueològic
 	var pa := maxf(a, GATE - 40.0)
-	var pz := minf(z, STEPS_Y1)
+	var pz := minf(z, BRIDGE_Y1)
 	if pz > pa:
 		var fy := floorf(pa / 36.0) * 36.0
 		var row := int(fy / 36.0)
@@ -865,6 +666,12 @@ static func _draw_pave(wc: ShapeBatch, a: float, z: float) -> void:
 					col_i += 1
 			fy += 36.0
 			row += 1
+	# a kerb over the paving's sawn ends, and the stone it meets the houses with
+	for zone: Vector2 in [Vector2(GATE, BRIDGE_Y1), Vector2(BRIDGE_Y0, START + 60.0)]:
+		var ka := maxf(a, zone.x)
+		var kz := minf(z, zone.y)
+		if kz > ka:
+			Art.kerbs(wc, ka, kz, _edge_x)
 
 
 static func _draw_bridge_ground(wc: ShapeBatch) -> void:
@@ -911,6 +718,7 @@ static func _draw_steps_ground(wc: ShapeBatch) -> void:
 		wc.rect(Rect2(r.position.x, r.end.y, r.size.x, 2.6), STEP_DARK)
 		y += tread
 		idx += 1
+	Art.step_flowers(wc, _edge_x, STEPS_Y1 + 30.0, STEPS_Y0 - 30.0)
 	# Covered dry side alcoves along west and east margins (clear visual safe zones!)
 	for side: float in SIDES:
 		var ax := (430.0 if side < 0.0 else 772.0)
@@ -926,6 +734,7 @@ static func _draw_steps_ground(wc: ShapeBatch) -> void:
 static func _draw_placa_ground(wc: ShapeBatch) -> void:
 	# Plaça de Sant Feliu centrepiece: La Lleona's plinth, iron kissing-steps,
 	# fluted limestone column (the lioness on it is drawn by systems/boss_lleona.gd)
+	Art.placa_rose(wc, LLEONA_COL)
 	var pl := LLEONA_PLINTH
 	_sweep_shadow(wc, pl, Shade.light * 18.0, SHADOW)
 	wc.rect(pl.grow(6.0), LIMESTONE_DK)
@@ -945,16 +754,20 @@ static func _draw_placa_ground(wc: ShapeBatch) -> void:
 
 
 static func _draw_wet_sheen(_m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
-	# Subtle dusk rain puddle reflections along the stone walk
-	var y := floorf(maxf(lo, GATE) / 220.0) * 220.0
+	# puddles in the low places, when it rains or has just
+	if Game.weather != "rain":
+		return
+	var warm := Game.lamp_glow()
+	var y := floorf(maxf(lo, GATE) / 130.0) * 130.0
 	while y < minf(hi, START):
-		var k := int(absf(y) / 220.0)
-		if k % 2 == 0:
+		var k := int(absf(y) / 130.0)
+		# none on the bridge's planks or the steps, which shed it
+		var shed := (y < BRIDGE_Y0 + 20.0 and y > BRIDGE_Y1 - 20.0) or (y < STEPS_Y0 + 60.0 and y > STEPS_Y1 - 60.0)
+		if not shed and _h(k * 5 + 3) < 0.62:
 			var e := _edges_at(y)
-			var px := lerpf(e.x + 60.0, e.y - 60.0, _h(k * 17 + 9))
-			var col := ONYAR_PIGMENTS[k % ONYAR_PIGMENTS.size()]
-			wc.glow(Vector2(px, y), 24.0, Color(col.r, col.g, col.b, 0.08))
-		y += 220.0
+			var px := lerpf(e.x + 70.0, e.y - 70.0, _h(k * 17 + 9))
+			Art.puddle(wc, Vector2(px, y + 60.0 * _h(k * 3)), 26.0 + 30.0 * _h(k * 7), 10.0 + 9.0 * _h(k * 11), warm)
+		y += 130.0
 
 
 # --- live pass: Onyar water glints, steps cascade, lioness glint, bakery xuixo
@@ -1002,19 +815,27 @@ static func _folk_one(wc: ShapeBatch, p: Vector2, facing: Vector2, key: int, coa
 
 
 static func _draw_onyar_glints(wc: ShapeBatch, vt: float, vb: float, t: float) -> void:
-	if vb < BRIDGE_Y1 - 20.0 or vt > START + 40.0:
-		return
-	# Coloured house reflections + rain-dimple rings on the Onyar under Eiffel bridge
-	if vt < BRIDGE_Y0 + 40.0 and vb > BRIDGE_Y1 - 40.0:
-		for i in range(16):
-			var px := lerpf(FAR_L + 80.0, FAR_R - 80.0, _h(i * 19 + 3))
-			if px > 456.0 and px < 824.0:
+	# the rain on the river: rings opening on all three reaches of it, and the
+	# light moving
+	for reach: Array in [
+			[Rect2(FAR_L, BRIDGE_Y1 + 40.0, FAR_R - FAR_L, BRIDGE_Y0 - BRIDGE_Y1 - 80.0), 46, 3],
+			[Rect2(Art.RIVER_W + 26.0, BRIDGE_Y0, Art.QUAY_X - Art.RIVER_W - 40.0, Art.SOUTH - BRIDGE_Y0), 30, 7],
+			[Rect2(Art.FELIU_W + 26.0, PLACA_Y1 + 60.0, Art.FELIU_E - Art.FELIU_W - 46.0, PLACA_Y0 - PLACA_Y1 - 110.0), 24, 11]]:
+		var r: Rect2 = reach[0]
+		if r.end.y < vt or r.position.y > vb:
+			continue
+		for i in range(int(reach[1])):
+			var salt := i * 19 + int(reach[2])
+			var f := fposmod(t * 0.55 + _h(salt), 1.0)
+			var n := floorf(t * 0.55 + _h(salt))
+			var p := r.position + r.size * Vector2(_h(salt + int(n) * 31), _h(salt * 3 + int(n) * 17))
+			if p.y < vt - 20.0 or p.y > vb + 20.0 or (r.size.x > 900.0 and p.x > 456.0 and p.x < 824.0):
 				continue
-			var y := lerpf(BRIDGE_Y1 + 50.0, BRIDGE_Y0 - 50.0, _h(i * 11 + 7)) + sin(t * 1.4 + float(i)) * 4.0
-			var col := ONYAR_PIGMENTS[i % ONYAR_PIGMENTS.size()]
-			wc.rect(Rect2(px - 10.0, y - 16.0, 20.0, 32.0), Color(col.r, col.g, col.b, 0.14))
-			var ring_r := 4.0 + fposmod(t * 12.0 + _h(i * 5) * 18.0, 14.0)
-			wc.draw_arc(Vector2(px, y), ring_r, 0.0, TAU, 14, Color(0.72, 0.82, 0.94, 0.20), 1.2)
+			if Game.weather == "rain":
+				wc.arc(p, 2.0 + f * 11.0, 0.0, TAU, 14, Color(0.78, 0.88, 0.96, 0.42 * (1.0 - f)), 1.4)
+			elif i % 2 == 0:
+				var d := Vector2(9.0, 0.0) if r.size.x > 900.0 else Vector2(0.0, 9.0)
+				wc.line(p - d, p + d, Color(0.80, 0.88, 0.94, 0.26 * sin(f * PI)), 1.6)
 
 
 static func _draw_steps_cascade(m: Node2D, wc: ShapeBatch, vt: float, vb: float, t: float) -> void:
@@ -1123,7 +944,10 @@ static func night_lights(m: Node2D) -> Array[Vector3]:
 
 static func night_fronts(m: Node2D) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	out.append_array(NightFronts.along_edges(m, START, RAMBLA_END + 60.0, 140.0, 4.0, 41))
+	# the Rambla's are on its arcaded side only: the other is the quay
+	for f: Dictionary in NightFronts.along_edges(m, START, RAMBLA_END + 60.0, 140.0, 4.0, 41):
+		if float(f.dir) < 0.0:
+			out.append(f)
 	out.append_array(NightFronts.along_edges(m, STEPS_Y0, STEPS_Y1 + 60.0, 150.0, 4.0, 43))
 	return out
 
