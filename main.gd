@@ -69,6 +69,7 @@ const CamTricks := preload("res://systems/cam_tricks.gd")
 const Ach := preload("res://systems/achievements.gd")
 var arena_zoom_mult := 1.0
 var _arena_zoom_applied := 1.0
+var fight_lean := 0.0
 var cam_tilt_t := 0.0
 var _cam_tilt_dir := 1.0
 var _cam_tilt_base_rot := 0.0
@@ -1216,8 +1217,6 @@ var shake_t := 0.0
 # global sequence has to stay the simulation's alone. Fixed seed: the shake
 # lands in cam.offset, which get_screen_center_position() includes, and the
 # pair spawner reads that - an unseeded shake made the autowalk vary run to run
-const SHAKE_SEED := 0x5AFE
-var _shake_rng := RandomNumberGenerator.new()
 
 var hud: CanvasLayer
 var panel: Control
@@ -1391,7 +1390,6 @@ func _ready() -> void:
 		MenuFlow.exit_hidden = true
 	if "--free-play" in OS.get_cmdline_user_args():
 		Game.free_play = true
-	_shake_rng.seed = SHAKE_SEED
 	if Game.is_tutorial(Game.level_id):
 		# THE FIRST WALK: El Barri laid out as one station per lesson, calm and
 		# safe by construction - no traffic to dodge, no chase, no other
@@ -7379,8 +7377,9 @@ func _process(_delta: float) -> void:
 	elif phase == "home" and chase_sweeper != null:
 		target_y -= chase_lean
 	# a walk's set piece can lean the camera toward itself (El Gat's wake)
-	if walk_mod != null and walk_mod.has_method("cam_lean"):
-		target_y += walk_mod.cam_lean(self)
+	# and a fight leans it to keep the boss in the picture (cam_tricks.gd)
+	if walk_mod != null and walk_mod.has_method("cam_lean") and phase != "freedom":
+		target_y += fight_lean
 	var cx_want := _cam_x()
 	# SPIKE: on a turned camera a step off the path is a step across the
 	# screen, so the camera follows the pair across as well as along
@@ -7394,7 +7393,7 @@ func _process(_delta: float) -> void:
 		cam.position = shot_cam
 		cam.reset_smoothing()
 	if shake_t > 0.0 and Game.screen_shake:
-		cam.offset = Vector2(_shake_rng.randf_range(-1, 1), _shake_rng.randf_range(-1, 1)) * 9.0 * shake_t
+		cam.offset = CamTricks.shake(AnimClock.msec() * 0.001, shake_t)
 	else:
 		cam.offset = Vector2.ZERO
 	# the world is drawn in world space, so the camera scroll stays smooth
