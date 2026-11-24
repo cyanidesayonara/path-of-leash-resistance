@@ -8,7 +8,7 @@
 # One line per shot: the file name, a colon, then the game's --shot flags
 # (the ones after "--"; --shot, --shot-quit, --shot-out and --seed=1 are
 # added). The framing is the website's (tools/site_media.sh).
-01-street.png: --level=street --shot-y=-2500 --shot-at=260
+01-street.png: --level=street --shot-y=-3340 --shot-at=260
 02-barri-agility.png: --level=barri --at-freedom --shot-at=260
 03-oldtown.png: --level=oldtown --shot-y=-2000 --shot-at=260
 04-neteja-chase.png: --level=neteja --shot-y=-4300 --shot-home --shot-sweeper --shot-at=200

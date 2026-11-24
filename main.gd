@@ -10221,8 +10221,8 @@ func _draw_strips(vt: float, vb: float, grass: Color) -> void:
 				_wc.draw_line(lane_kerb[i], lane_kerb[i + 1], STRIP_KERB, 3.0)
 			var dy := floorf(y0 / 70.0) * 70.0
 			while dy < y1:
-				var mid := (walk_edges(dy).x + frontage(dy).x - ROAD_PAVEMENT) * 0.5 if side < 0.0 \
-					else (walk_edges(dy).y + frontage(dy).y + ROAD_PAVEMENT) * 0.5
+				var mid := (walk_edges(dy).x + frontage(dy).x + ROAD_PAVEMENT) * 0.5 if side < 0.0 \
+					else (walk_edges(dy).y + frontage(dy).y - ROAD_PAVEMENT) * 0.5
 				_wc.draw_line(Vector2(mid, dy), Vector2(mid, dy + 30.0), COL_STRIPE, 2.0)
 				dy += 70.0
 		if kind == "sidewalk":
@@ -13063,12 +13063,10 @@ func _draw_cross_section(top: float, bottom: float, ctop: float, vt: float, vb: 
 # asphalt over the roads it crosses, then across the walk itself the bike
 # path's red, edged in granite, the cyclists' squares either side, give-way
 # teeth facing the riders at the walk's edges, and the round blue bike-lane
-# sign at the corners. On La Rambla the zebras are where the real ones are,
-# on the side road and the bike path beside the promenade. It joins the walk
-# instead of cutting it.
+# sign at the corners. It joins the walk instead of cutting it. La Rambla's
+# junctions, with their zebras, are its own (Rambla.draw_crossing).
 const XING_RED := Color(0.47, 0.30, 0.27)
 const XING_KERB := Color(0.66, 0.63, 0.58)
-const XING_BAR := 26.0           # a zebra bar and its gap
 const ZEBRA_DEPTH := 46.0        # how far along the side road a zebra runs
 const ZEBRA_GAP := 14.0          # between the junction and the zebra
 
@@ -13079,12 +13077,15 @@ func _draw_bike_lanes(vt: float, vb: float) -> void:
 		var ly: float = lane_ys[i]
 		if ly + LANE_HALF + 50.0 < vt or ly - LANE_HALF - 50.0 > vb:
 			continue
+		if lvl == "street":
+			Rambla.draw_crossing(self, _wc, ly)
+			continue
 		var top := ly - LANE_HALF
 		var bot := ly + LANE_HALF
 		_wc.draw_rect(Rect2(-400, top, 2100, LANE_HALF * 2.0), COL_ROAD)
 		# across the walk: the bike path's red, and the street's own bike
 		# lane carried straight through it
-		var red_r := SHOULDER_R if lvl == "street" else sw_r
+		var red_r := sw_r
 		_wc.draw_rect(Rect2(sw_l, top, red_r - sw_l, LANE_HALF * 2.0), XING_RED)
 		# the dashed centre and the edge lines run only over the roads
 		var x := -380.0
@@ -13115,21 +13116,6 @@ func _draw_bike_lanes(vt: float, vb: float) -> void:
 		for gx: float in [sw_l - 70.0, red_r + 40.0]:
 			BikePaint.glyph(_wc, Vector2(gx, ly - 32.0), Vector2.LEFT, xing_col, COL_ROAD)
 			BikePaint.glyph(_wc, Vector2(gx + 30.0, ly + 32.0), Vector2.RIGHT, xing_col, COL_ROAD)
-		# La Rambla: no traffic crosses the promenade itself. Where the cross
-		# street meets the side road and the bike path running beside the
-		# walk, people step off the promenade over a zebra on each, either
-		# side of the junction, with the traffic's stop line behind it
-		if lvl == "street":
-			var white := Color(0.95, 0.94, 0.90, 0.92)
-			for side: float in [-1.0, 1.0]:
-				var z0 := (top - ZEBRA_GAP - ZEBRA_DEPTH) if side < 0.0 else (bot + ZEBRA_GAP)
-				for span: Vector2 in [Vector2(sw_l - 150.0, sw_l - 10.0), Vector2(BLANE_L + 2.0, BLANE_R - 2.0)]:
-					var zx := span.x + 4.0
-					while zx + XING_BAR * 0.5 <= span.y:
-						_wc.draw_rect(Rect2(zx, z0, XING_BAR * 0.5, ZEBRA_DEPTH), white)
-						zx += XING_BAR
-				var stop_y := (z0 - 12.0) if side < 0.0 else (z0 + ZEBRA_DEPTH + 12.0)
-				_wc.draw_rect(Rect2(sw_l - 150.0, stop_y - 3.0, 140.0, 6.0), Color(0.92, 0.90, 0.84, 0.85))
 		# the round blue bike-lane sign on a post at each corner of the walk
 		for corner: Vector2 in [Vector2(sw_l + 14.0, top - 18.0), Vector2(sw_r - 14.0, bot + 18.0)]:
 			_bike_sign(corner)
@@ -13212,9 +13198,14 @@ func _draw_world() -> void:
 			dy -= 64.0
 		var gy := START_Y - 100.0
 		while gy > GATE_Y:
+			# never under a junction's zebra
 			if gy < vb + 40.0 and gy > vt - 40.0:
-				BikePaint.glyph(_wc, Vector2(bl_mid + 20.0, gy), Vector2.UP, bl_line, bl_col)
-				BikePaint.glyph(_wc, Vector2(bl_mid - 20.0, gy - 90.0), Vector2.DOWN, bl_line, bl_col)
+				for g: Array in [[Vector2(bl_mid + 20.0, gy), Vector2.UP], [Vector2(bl_mid - 20.0, gy - 90.0), Vector2.DOWN]]:
+					var clear := true
+					for ly: float in lane_ys:
+						clear = clear and absf((g[0] as Vector2).y - ly) > LANE_HALF + ZEBRA_GAP + ZEBRA_DEPTH + 60.0
+					if clear:
+						BikePaint.glyph(_wc, g[0], g[1], bl_line, bl_col)
 			gy -= 600.0
 		_wc.draw_line(Vector2(BLANE_L, bottom), Vector2(BLANE_L, GATE_Y), COL_SEAM, 3.0)
 		_wc.draw_line(Vector2(BLANE_R, bottom), Vector2(BLANE_R, GATE_Y), COL_SEAM, 2.0)

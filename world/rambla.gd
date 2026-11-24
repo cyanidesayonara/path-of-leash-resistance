@@ -17,6 +17,7 @@ const HOOKS := ["build_layer", "draw_grove", "draw_scenery", "draw_threshold", "
 
 const SHADOW := Color(0.05, 0.05, 0.08, 0.20)
 const Detour := preload("res://systems/detour.gd")
+const BikePaint := preload("res://world/bike_paint.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 
 # Colors
@@ -535,6 +536,131 @@ static func draw_threshold(m: Node2D, b: ShapeBatch) -> void:
 		fx += 24.0
 
 
+# --- the junctions ---------------------------------------------------------------
+
+const XING_PAINT := Color(0.95, 0.94, 0.90, 0.92)
+const XING_GRANITE := Color(0.74, 0.71, 0.66)
+const XING_JOINT := Color(0.40, 0.38, 0.36, 0.55)
+const BOTONS := Color(0.60, 0.40, 0.34)
+
+
+# A cross street meets La Rambla. Its carriageway runs in from both sides and
+# the promenade carries a red raised bike crossing between granite bands. On
+# the side road and on the bike lane alike, a zebra lies either side of the
+# junction: whole bars, centred in the carriageway kerb to kerb, both at the
+# same height up the walk, the lane's own paint cleared from under them, a
+# stop line only for the traffic that comes to it, and the kerb dropped to
+# panots of botons at each end.
+static func draw_crossing(m: Node2D, b: ShapeBatch, ly: float) -> void:
+	var half: float = m.LANE_HALF
+	var top := ly - half
+	var bot := ly + half
+	var road: Color = m.COL_ROAD
+	var lane_red := Color(0.4, 0.31, 0.29)
+	var e: Vector2 = m.walk_edges(ly)
+	var f: Vector2 = m.frontage(ly)
+	var rl: float = f.x + m.ROAD_PAVEMENT
+	var xl: float = e.x
+	var xr: float = m.SHOULDER_R
+	b.rect(Rect2(-400.0, top, 2100.0, half * 2.0), road)
+	# the cross street's own centre line and kerbs, out past the side road
+	for out: Vector2 in [Vector2(-400.0, rl - 34.0), Vector2(xr + 44.0, 1700.0)]:
+		var x := out.x
+		while x + 30.0 <= out.y:
+			b.line(Vector2(x, ly), Vector2(x + 30.0, ly), m.COL_STRIPE, 3.0)
+			x += 66.0
+	for s: float in [-1.0, 1.0]:
+		var ey := ly + s * half
+		for out: Vector2 in [Vector2(-400.0, rl), Vector2(xr, 1700.0)]:
+			b.rect(Rect2(out.x, ey - 2.5, out.y - out.x, 5.0), m.XING_KERB)
+	# the raised crossing: red across the promenade and the bike lane, a ramp's
+	# worth of shade where it lifts off the road
+	b.rect(Rect2(xl, top, xr - xl, half * 2.0), m.XING_RED)
+	b.band(PackedVector2Array([Vector2(xl, top + 12.0), Vector2(xr, top + 12.0), Vector2(xl, ly), Vector2(xr, ly), Vector2(xl, bot - 12.0), Vector2(xr, bot - 12.0)]),
+		2, Color(0.62, 0.38, 0.33), PackedFloat32Array([0.0, 0.42, 0.0]))
+	# granite along both sides of it, set in long stones, where the waves end
+	for s: float in [-1.0, 1.0]:
+		var gy := (top - 8.0) if s < 0.0 else (bot - 10.0)
+		b.rect(Rect2(xl, gy, xr - xl, 18.0), XING_GRANITE)
+		b.rect(Rect2(xl, gy, xr - xl, 2.0), XING_GRANITE.lightened(0.18))
+		b.rect(Rect2(xl, gy + 16.0, xr - xl, 2.0), XING_JOINT)
+		var x := xl + 46.0
+		while x < xr - 4.0:
+			b.line(Vector2(x, gy + 2.0), Vector2(x, gy + 16.0), XING_JOINT, 1.4)
+			x += 46.0
+	# the side road carries on through, past the crossing's end
+	b.rect(Rect2(xl - 3.0, top - 8.0, 5.0, half * 2.0 + 16.0), m.XING_KERB)
+	# the bike crossing's paint: its edge squares, and a centre line between
+	# the two ways
+	for s: float in [-1.0, 1.0]:
+		BikePaint.squares(b, Vector2(xl + 8.0, ly + s * (half - 22.0)), Vector2(xr - 8.0, ly + s * (half - 22.0)), 9.0, XING_PAINT)
+	var dx := xl + 64.0
+	while dx + 26.0 < float(m.BLANE_L) - 30.0:
+		b.line(Vector2(dx, ly), Vector2(dx + 26.0, ly), Color(XING_PAINT, 0.55), 2.4)
+		dx += 60.0
+	# which way each half runs, and give-way teeth on the half that comes in
+	var mid := (xl + float(m.BLANE_L)) * 0.5
+	var pr: float = m.BLANE_L
+	for g: Array in [[xl + 60.0, 1.0], [mid - 20.0, 1.0], [pr - 60.0, -1.0], [mid + 20.0, -1.0]]:
+		BikePaint.glyph(b, Vector2(g[0], ly + float(g[1]) * half * 0.36), Vector2(float(g[1]), 0.0), Color(XING_PAINT, 0.75), m.XING_RED)
+	for edge: Array in [[xl + 20.0, 1.0], [pr - 14.0, -1.0]]:
+		var tx: float = edge[0]
+		var d: float = edge[1]
+		var ty := ly + (9.0 if d > 0.0 else -half + 31.0)
+		for k in range(2):
+			b.polygon(PackedVector2Array([Vector2(tx - d * 7.0, ty + 14.0 * float(k)), Vector2(tx - d * 7.0, ty + 12.0 + 14.0 * float(k)), Vector2(tx + d * 8.0, ty + 6.0 + 14.0 * float(k))]), XING_PAINT)
+	# the zebras
+	for s: float in [-1.0, 1.0]:
+		var za: float = (top - m.ZEBRA_GAP - m.ZEBRA_DEPTH) if s < 0.0 else (bot + m.ZEBRA_GAP)
+		var zb: float = za + m.ZEBRA_DEPTH
+		var ym := (za + zb) * 0.5
+		var we: Vector2 = m.walk_edges(ym)
+		var wl: float = m.frontage(ym).x + m.ROAD_PAVEMENT
+		_zebra(m, b, Vector2(wl, we.x), za, zb, s, road, 14.0)
+		_zebra(m, b, Vector2(m.BLANE_L, m.BLANE_R), za, zb, s, lane_red, 12.0)
+		_botons(b, Rect2(wl - 24.0, za, 20.0, zb - za))
+		_botons(b, Rect2(we.x + 4.0, za, 20.0, zb - za))
+		_botons(b, Rect2(m.BLANE_L - 24.0, za, 20.0, zb - za))
+		_botons(b, Rect2(m.BLANE_R + 4.0, za, 20.0, zb - za))
+	# the round blue sign at the two corners riders come in by
+	m._bike_sign(Vector2(xl + 14.0, top - 18.0))
+	m._bike_sign(Vector2(pr - 14.0, bot + 18.0))
+
+
+# One zebra over the carriageway between two kerbs, from za to zb up the walk,
+# on the `s` side of its junction. An odd number of bars, as wide as near
+# `bar` as fits, with a gap's width bare at each kerb.
+static func _zebra(m: Node2D, b: ShapeBatch, span: Vector2, za: float, zb: float, s: float, ground: Color, bar: float) -> void:
+	var w := span.y - span.x
+	if w < bar * 3.0:
+		return
+	# the lane's own lines stop short of it, as far as the junction on one side
+	# and past the stop line on the other
+	var clear_a: float = za - 26.0 if s < 0.0 else za - m.ZEBRA_GAP + 2.5
+	var clear_b: float = zb + m.ZEBRA_GAP - 2.5 if s < 0.0 else zb + 26.0
+	b.rect(Rect2(span.x + 3.0, clear_a, w - 6.0, clear_b - clear_a), ground)
+	var n := maxi(2, roundi((w / bar - 1.0) * 0.5))
+	var step := w / (float(n) * 2.0 + 1.0)
+	for i in range(n):
+		b.rect(Rect2(span.x + step * (float(i) * 2.0 + 1.0), za, step, zb - za), XING_PAINT)
+	# traffic keeps right: down the left half from the north, up the right
+	# half from the south
+	var sy := za - 14.0 if s < 0.0 else zb + 9.0
+	var x0 := span.x + 5.0 if s < 0.0 else span.x + w * 0.5 + 2.0
+	b.rect(Rect2(x0, sy, w * 0.5 - 7.0, 5.0), Color(XING_PAINT, 0.85))
+
+
+# The raised-dot tiles at a crossing's end, the kerb dropped in front of them
+static func _botons(b: ShapeBatch, r: Rect2) -> void:
+	b.rect(r, BOTONS)
+	var y := r.position.y + 5.0
+	while y < r.end.y - 2.0:
+		for k in range(2):
+			b.circle(Vector2(r.position.x + 5.0 + 10.0 * float(k), y), 2.1, BOTONS.lightened(0.20))
+		y += 9.0
+	b.line(Vector2(r.position.x, r.position.y + r.size.y * 0.5), Vector2(r.end.x, r.position.y + r.size.y * 0.5), Color(0.0, 0.0, 0.0, 0.12), 1.0)
+
+
 static func _draw_drac_forecourt(m: Node2D, b: ShapeBatch) -> void:
 	var dp: Vector2 = m.detour_door_pos
 	var depth: float = m.ZEBRA_DEPTH
@@ -553,12 +679,12 @@ static func _draw_drac_forecourt(m: Node2D, b: ShapeBatch) -> void:
 	# door, sheared with the road where it bends round the plaça, the kerb
 	# dropped flush at both ends, the traffic's stop lines
 	var white := Color(0.95, 0.94, 0.90, 0.92)
-	var bar: float = m.XING_BAR * 0.5
-	var zx := 4.0
-	while zx + bar <= width - 2.0:
+	var n := maxi(2, roundi((width / 14.0 - 1.0) * 0.5))
+	var bar := width / (float(n) * 2.0 + 1.0)
+	for i in range(n):
+		var zx := bar * (float(i) * 2.0 + 1.0)
 		b.quad(Vector2(top_l + zx, z0), Vector2(top_l + zx + bar, z0),
 			Vector2(bot_l + zx + bar, z1), Vector2(bot_l + zx, z1), white)
-		zx += m.XING_BAR
 	for kx: Vector2 in [Vector2(top_l, bot_l), Vector2(e0.x, e1.x)]:
 		b.quad(Vector2(kx.x - 2.0, z0 - 4.0), Vector2(kx.x + 2.0, z0 - 4.0),
 			Vector2(kx.y + 2.0, z1 + 4.0), Vector2(kx.y - 2.0, z1 + 4.0), m.XING_KERB)
