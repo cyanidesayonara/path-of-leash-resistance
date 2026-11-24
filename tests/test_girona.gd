@@ -2,7 +2,7 @@ extends SceneTree
 
 # Regression test for Walk 41 (Girona).
 # Placement, walkability, solids, all 5 zones + Onyar water, cascade telegraph &
-# dry-save/soak paths, Onyar front sniffs, La Lleona column bark, lamps/fronts,
+# dry-save/soak paths, Onyar front sniffs, lamps/fronts,
 # florist dare-giver, petals gate sign, music, and goals.
 
 var checks := 0
@@ -80,7 +80,7 @@ func _run() -> void:
 	_check(Goals.LEVEL_GOAL_IDS.has("girona"), "Goals has girona")
 	var goal_ids: Array = Goals.LEVEL_GOAL_IDS.get("girona", [])
 	_check(goal_ids.size() == 15, "girona has 15 goals (got %d)" % goal_ids.size())
-	_check(goal_ids.has("girona_houses") and goal_ids.has("girona_steps") and goal_ids.has("girona_lleona"),
+	_check(goal_ids.has("girona_houses") and goal_ids.has("girona_steps") and goal_ids.has("lleona_hide"),
 		"girona goal ids include all three signature goals")
 	_check(int(TonyHawk.CLOCK_TARGETS.get("girona", 0)) == 195, "TonyHawk CLOCK_TARGETS girona == 195")
 	_check(TonyHawk.JAMON_POS.has("girona"), "TonyHawk JAMON_POS has girona")
@@ -94,7 +94,7 @@ func _run() -> void:
 	_check(LevelBuild.FREEDOM_PROPS.has("girona"), "FREEDOM_PROPS has girona")
 	_check(LevelBuild.FREEDOM_PROPS.get("girona", []).size() == 12, "FREEDOM_PROPS girona has 12 props")
 	var gsolids: Array = Girona.solids(m)
-	_check(gsolids.size() == 11, "Girona.solids returns 11 solids (got %d)" % gsolids.size())
+	_check(gsolids.size() == 13, "Girona.solids returns 13 solids (got %d)" % gsolids.size())
 	var solid_map: Dictionary = {}
 	for pair in LevelBuild.level_solid_rects(m):
 		solid_map[String(pair[0])] = pair[1]
@@ -154,20 +154,12 @@ func _run() -> void:
 	Girona.tick(m, 2.7)
 	_check(m.girona_steps_saved >= 1, "staying dry on side alcove increments girona_steps_saved")
 
-	# --- Onyar house sniffs & La Lleona column bark ---
+	# --- Onyar house sniffs (La Lleona's fight is tests/test_lleona.gd) ---
 	m.girona_houses_sniffed = {}
 	m.dog.global_position = Girona.HOUSE_SNIFFS[0]
 	m.dog.velocity = Vector2.ZERO
 	Girona.tick(m, 0.05)
 	_check(m.girona_houses_sniffed.has(0), "sniffing HOUSE_SNIFFS[0] records index 0")
-
-	m.girona_lleona_barked = false
-	m.girona_lleona_glint_t = 0.0
-	var barked: bool = Girona.on_bark(m, Girona.LLEONA_COL + Vector2(24.0, 0.0))
-	_check(barked and m.girona_lleona_barked and float(m.girona_lleona_glint_t) > 0.0,
-		"barking near La Lleona triggers glint and flag")
-	var repeat_bark: bool = Girona.on_bark(m, Girona.LLEONA_COL)
-	_check(not repeat_bark, "repeat bark on La Lleona does not re-trigger")
 
 	m.queue_free()
 	await physics_frame

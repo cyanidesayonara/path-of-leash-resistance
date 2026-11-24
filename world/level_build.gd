@@ -2649,6 +2649,9 @@ static func build_level_data(m: Node2D) -> void:
 	if m.lvl == "girona":
 		for r: Rect2 in Girona.wrap_rects(m):
 			add_rope_rect(m, r, false)
+		# La Lleona's legs walk: after the bodies and the radii, as El Mamut's
+		if m.lleona != null:
+			m.lleona.register_legs(m)
 	if m.lvl == "metro":
 		for r: Rect2 in Metro.wrap_rects():
 			add_rope_rect(m, r)

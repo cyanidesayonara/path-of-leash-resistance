@@ -801,12 +801,21 @@ var vic_lost := false
 var vic_cols_marked: Dictionary = {}
 var vic_tower_barked := false
 var vic_sniffs: Dictionary = {}
-# Girona: steps cascade, Onyar front sniffs, La Lleona column (systems/girona.gd)
+# Girona: steps cascade, Onyar front sniffs (systems/girona.gd)
 var girona_spout: Dictionary = {}
 var girona_steps_saved := 0
 var girona_houses_sniffed: Dictionary = {}
-var girona_lleona_barked := false
-var girona_lleona_glint_t := 0.0
+# La Lleona (systems/boss_lleona.gd) and what the goals count of her
+var lleona: RefCounted = null
+var lleona_dodges := 0
+var lleona_hides := 0
+var lleona_tripped := false
+var lleona_blinded := false
+var lleona_bowled := false
+var lleona_booped := false
+var lleona_kissed := false
+var lleona_sat := false
+var lleona_settled := false
 # El Metro: the walk's state (systems/metro.gd), and its goals' tallies
 var metro: RefCounted = null
 var metro_turnstile_slipped := false
@@ -6772,7 +6781,7 @@ func start_challenge(giver: Node2D, target: int, seconds: float, follow_up := fa
 	if challenge.showing():
 		return
 	# no dare card over a boss fight
-	if (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()) or (drac != null and drac.in_fight()) or (lleons != null and lleons.in_fight()):
+	if (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()) or (drac != null and drac.in_fight()) or (lleons != null and lleons.in_fight()) or (lleona != null and lleona.in_fight()):
 		return
 	if challenge_offered and not follow_up:
 		return
@@ -10700,6 +10709,10 @@ func _is_boss_leg(p: Vector2) -> bool:
 		for lp: Vector2 in mamut.leg_poles:
 			if lp.distance_to(p) < 1.0:
 				return true
+	if lleona != null:
+		for lp: Vector2 in lleona.leg_poles:
+			if lp.distance_to(p) < 1.0:
+				return true
 	if lleons != null:
 		for lp: Vector2 in lleons.leg_poles:
 			if lp.distance_to(p) < 1.0:
@@ -11446,7 +11459,7 @@ func _bodily(delta: float) -> void:
 func under_pressure() -> bool:
 	if phase == "home" and chase_active and chase_sweeper != null:
 		return true
-	return (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight())
+	return (boss_gat != null and boss_gat.in_fight()) or (mamut != null and mamut.in_fight()) or (lleona != null and lleona.in_fight())
 
 
 # where she went, left lying because there was no time: for a chaser to step in
@@ -11659,6 +11672,8 @@ func _nearest_markable(pos: Vector2) -> Vector2:
 		if drac != null and drac.is_leg_index(pi):
 			continue
 		if lleons != null and lleons.is_leg_index(pi):
+			continue
+		if lleona != null and lleona.is_leg_index(pi):
 			continue
 		if not marks.has(p):
 			var d := pos.distance_to(p)

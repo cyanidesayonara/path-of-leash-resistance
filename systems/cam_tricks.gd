@@ -15,7 +15,7 @@ const LETTERBOX_RATE := 6.5
 
 
 static func boss_node(m: Node2D) -> Variant:
-	for k: String in ["boss_gat", "mamut", "drac", "lleons"]:
+	for k: String in ["boss_gat", "mamut", "drac", "lleons", "lleona"]:
 		var b: Variant = m.get(k)
 		if b != null:
 			return b
