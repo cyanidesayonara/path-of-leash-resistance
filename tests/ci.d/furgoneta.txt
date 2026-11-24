@@ -1,0 +1,2 @@
+# The Fur-goneta (systems/furgoneta.gd)
+--headless --path . --script res://tests/test_furgoneta.gd

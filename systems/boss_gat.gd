@@ -36,6 +36,7 @@ const HOOKS := ["cam_lean", "draw_edge_layer", "draw_live", "draw_overhead", "hu
 
 
 const NightFronts := preload("res://world/night_fronts.gd")
+const BronzeCat := preload("res://entities/bronze_cat.gd")
 const Clay := preload("res://entities/clay.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
@@ -46,15 +47,9 @@ const Ach := preload("res://systems/achievements.gd")
 const SHADOW := Color(0.04, 0.05, 0.08, 0.24)
 
 # --- Colors ------------------------------------------------------------------
-const BRONZE_BASE := Color(0.30, 0.24, 0.19)
 const BRONZE_DARK := Color(0.17, 0.13, 0.11)
 const BRONZE_LIT := Color(0.46, 0.37, 0.27)
-const BRONZE_SPEC := Color(0.78, 0.64, 0.46, 0.32)
 const EYE_AMBER := Color(0.96, 0.78, 0.18)
-const EYE_CHARGE := Color(1.00, 0.30, 0.12)
-const EYE_PUPIL := Color(0.12, 0.08, 0.06)
-const NOSE_DARK := Color(0.20, 0.15, 0.14)
-const WHISKER_WIRE := Color(0.70, 0.64, 0.54)
 
 const STONE_PLAZA := Color(0.74, 0.72, 0.68)
 const STONE_DARK := Color(0.56, 0.54, 0.50)
@@ -101,6 +96,13 @@ const FILM := "res://intro/film_gat.gd"
 # the victory scene on the plinth (intro/film_plinth.gd), played when El Gat is settled
 const FILM_PLINTH := "res://intro/film_plinth.gd"
 const LEAD := 260.0             # how far ahead of your human he prowls
+const TURN := 2.2                # how fast his bulk comes round, radians a second
+const TURN_ANGRY := 3.2
+const TURN_STRIKE := 5.0         # squaring up to a swat or a pounce he has announced
+const HEAD_TURN := 7.0           # his head leads, as far as his neck lets it
+const NECK := 1.15
+const FACING := 0.35             # he strikes only what is in front of him (a dot product)
+const NEAR := 300.0              # this close, or winding up, he faces her; else where he walks
 const PROWL_SPEED := 110.0
 const CATCH_SPEED := 220.0      # the pair got past him: he hurries ahead again
 const DRIFT_SPEED := 70.0       # sideways, to face the dog
@@ -147,6 +149,8 @@ const ENRAGE_TIME := 1.6
 const ENRAGE_BLAST := 0.55
 # walkers are kept this far from his middle while he is off his plinths
 const BODY_R := 56.0
+const HEAD_R := 38.0
+const STEP_WIDE := 62.0         # he keeps his bulk this far off a bench or a palm
 # the last stand on his plinth: a swat at her this often, this far out
 const LAST_SWAT_EVERY := 2.4
 const LAST_SWAT_REACH := 210.0
@@ -193,6 +197,11 @@ var phase: int = 1
 var main: Node2D = null
 var pos: Vector2 = START_PLINTH
 var face_dir := Vector2.DOWN
+var stance := Vector2.DOWN      # which way his feet are planted
+var look_dir := Vector2.DOWN    # which way his head is
+var gait := 0.0                 # how far he has walked, for his paws
+var gait_from := Vector2.ZERO
+var moved := 0.0                # px/s, eased
 
 var leg_poles: Array[Vector2] = []
 var leg_indices: Array[int] = []
@@ -518,6 +527,9 @@ func setup(m_ref: Node2D) -> void:
 	phase = 1
 	pos = START_PLINTH
 	face_dir = Vector2.DOWN
+	stance = Vector2.DOWN
+	look_dir = Vector2.DOWN
+	gait_from = pos
 	legs_tied = 0
 	leg_touch_t = [-INF, -INF, -INF, -INF]
 	hold_noticed = false
@@ -596,7 +608,7 @@ func update_leg_positions() -> void:
 		for k in range(leg_indices.size()):
 			leg_furniture_indices.append(leash_furn.find(leg_poles[k]))
 	for k in range(4):
-		var target: Vector2 = pos + LEG_OFFSETS[k]
+		var target: Vector2 = pos + LEG_OFFSETS[k].rotated(stance.angle() - PI * 0.5)
 		leg_poles[k] = target
 		if k < leg_indices.size():
 			var idx: int = leg_indices[k]
@@ -652,19 +664,15 @@ func transition_to(new_state: State) -> void:
 			_ensure_card()
 		State.ENRAGE:
 			enraged = true
-			face_dir = _to_dog_dir()
 			Sfx.play("gat_roar", 0.8, -2.0)
 			main.shake_t = maxf(float(main.shake_t), 0.7)
 			gasp = 1.0
 			_crowd_shout(GASPS)
-		State.PROWL:
-			face_dir = Vector2.DOWN
 		State.SWAT:
 			state_t = SWAT_WARN
 			swat_paw_active = 1 - swat_paw_active
 			var to_dog: Vector2 = main.dog.global_position - pos
 			swat_pos = pos + to_dog.limit_length(110.0)
-			face_dir = to_dog.normalized() if to_dog.length() > 1.0 else Vector2.DOWN
 			dust_rings.append({"pos": swat_pos, "r": SWAT_RADIUS, "life": SWAT_WARN, "max_life": SWAT_WARN, "warn": true})
 		State.POUNCE_WARN:
 			state_t = POUNCE_WARN
@@ -675,7 +683,6 @@ func transition_to(new_state: State) -> void:
 			pounce_to = Vector2(clampf(tgt.x, CORRIDOR_L + 60.0, CORRIDOR_R - 60.0),
 				clampf(tgt.y, PEDESTAL_POS.y - 160.0, float(main.START_Y)))
 			pounce_dir = (pounce_to - pos).normalized() if pounce_to.distance_to(pos) > 1.0 else Vector2.DOWN
-			face_dir = pounce_dir
 			dust_rings.append({"pos": pounce_to, "r": POUNCE_R, "life": POUNCE_WARN, "max_life": POUNCE_WARN, "warn": true})
 			gasp = 1.0
 			_crowd_shout(GASPS)
@@ -694,10 +701,6 @@ func transition_to(new_state: State) -> void:
 			bat_cd = 0.0
 			tail_tugged = false
 			Sfx.play("gat_purr", 1.6, -6.0)
-			if yarn_ball >= 0 and yarn_ball < yarn.size():
-				var to_ball: Vector2 = yarn[yarn_ball].p - pos
-				if to_ball.length() > 1.0:
-					face_dir = to_ball.normalized()
 			main.feed.say(I18n.t("w_yarn_his_back_is_turned"), EventFeed.Tone.GOOD)
 		State.STUNNED:
 			state_t = STUN_TIME
@@ -708,12 +711,12 @@ func transition_to(new_state: State) -> void:
 			main.shake_t = maxf(float(main.shake_t), 0.6)
 			_burst(pos + face_dir * 40.0, 14, Color(1.0, 0.9, 0.45), 180.0, 380.0, 2.5, 0.35, true)
 		State.RETREAT:
-			face_dir = (PEDESTAL_POS - pos).normalized() if pos.distance_to(PEDESTAL_POS) > 1.0 else Vector2.DOWN
 			_crowd_shout(CHEERS)
 		State.ROAR:
 			pos = PEDESTAL_POS
-			update_leg_positions()
 			face_dir = Vector2.DOWN
+			stance = Vector2.DOWN
+			update_leg_positions()
 			legs_tied = 0
 			leg_touch_t = [-INF, -INF, -INF, -INF]
 			ls_swat_t = 0.0
@@ -805,6 +808,54 @@ func execute_swat() -> void:
 	_burst(swat_pos, 8, Color(1.0, 0.85, 0.4), 160.0, 320.0, 2.0, 0.25, true)
 
 
+# He goes round a bench, the kiosk or a palm, never through it.
+func _step_wide(delta: float) -> void:
+	var off := Vector2.ZERO
+	for r: Rect2 in main.solid_rects:
+		# not his own two plinths: he lives on them
+		if r.has_point(PEDESTAL_POS) or r.has_point(START_PLINTH):
+			continue
+		var near := pos.clamp(r.position, r.end)
+		var d := pos - near
+		if d.length_squared() < STEP_WIDE * STEP_WIDE:
+			var n := d.normalized() if d.length() > 1.0 else Vector2(signf(640.0 - r.get_center().x), 0.0)
+			off += n * (STEP_WIDE - d.length())
+	for palm: Vector2 in PALMS:
+		var d := pos - palm
+		if d.length_squared() < STEP_WIDE * STEP_WIDE:
+			off += d.normalized() * (STEP_WIDE - d.length())
+	if off != Vector2.ZERO:
+		pos += off.limit_length(PROWL_SPEED * 1.4 * delta)
+		pos.x = clampf(pos.x, CORRIDOR_L + 60.0, CORRIDOR_R - 60.0)
+		pos.y = maxf(pos.y, PEDESTAL_POS.y)
+
+
+# His bulk comes round at `rate`; his feet come with it.
+func _turn(want: Vector2, rate: float, delta: float) -> void:
+	if want.length_squared() < 1.0e-6:
+		return
+	var a := face_dir.angle_to(want)
+	face_dir = face_dir.rotated(clampf(a, -rate * delta, rate * delta)).normalized()
+	if state != State.ROAR:
+		stance = face_dir
+
+
+# His head finds her before the rest of him does.
+func _tick_head(delta: float) -> void:
+	var want := face_dir
+	if state in [State.PROWL, State.ENRAGE, State.ROAR, State.AWAKEN]:
+		want = face_dir.rotated(clampf(face_dir.angle_to(_to_dog_dir()), -NECK, NECK))
+	var a := look_dir.angle_to(want)
+	look_dir = look_dir.rotated(clampf(a, -HEAD_TURN * delta, HEAD_TURN * delta)).normalized()
+	var step := pos.distance_to(gait_from)
+	gait_from = pos
+	if step < 30.0 and hop_z < 8.0:
+		gait += step
+		moved = lerpf(moved, step / maxf(delta, 0.001), minf(delta * 8.0, 1.0))
+	else:
+		moved = 0.0
+
+
 func _to_dog_dir() -> Vector2:
 	var to_dog: Vector2 = main.dog.global_position - pos
 	return to_dog.normalized() if to_dog.length() > 1.0 else Vector2.DOWN
@@ -865,12 +916,18 @@ func _crowd_shout(lines: Array[String]) -> void:
 
 # Keeps a walker out of his body while he is down on the paving.
 func _shove_out(body: Node2D) -> void:
-	var d: Vector2 = body.global_position - pos
+	# his bulk, then his head, which stands out of the front of it
+	_shove_from(body, pos, BODY_R)
+	_shove_from(body, pos + face_dir * 30.0 + look_dir * 22.0, HEAD_R)
+
+
+func _shove_from(body: Node2D, c: Vector2, r_out: float) -> void:
+	var d: Vector2 = body.global_position - c
 	var l := d.length()
-	if l >= BODY_R:
+	if l >= r_out:
 		return
-	var n: Vector2 = d / l if l > 0.5 else Vector2.DOWN
-	var to: Vector2 = pos + n * BODY_R
+	var n: Vector2 = d / l if l > 0.5 else face_dir
+	var to: Vector2 = c + n * r_out
 	# never into a bench, a terrace or a palm trunk: pinned there, she would be stuck
 	for r: Rect2 in main.solid_rects:
 		if r.grow(14.0).has_point(to):
@@ -998,6 +1055,7 @@ func tick_state(delta: float) -> void:
 	var dog_p: Vector2 = main.dog.global_position
 	act_t += delta
 	_tick_market(delta, dog_p)
+	_tick_head(delta)
 
 	match state:
 		State.IDLE:
@@ -1043,7 +1101,7 @@ func tick_state(delta: float) -> void:
 				transition_to(State.PROWL)
 
 		State.ENRAGE:
-			face_dir = face_dir.slerp(_to_dog_dir(), minf(4.0 * delta, 1.0)).normalized()
+			_turn(_to_dog_dir(), TURN_STRIKE, delta)
 			hop_z = sin(clampf(act_t / ENRAGE_TIME, 0.0, 1.0) * PI) * 16.0
 			if act_t - delta < ENRAGE_BLAST and act_t >= ENRAGE_BLAST:
 				main.shake_t = maxf(float(main.shake_t), 1.0)
@@ -1073,6 +1131,16 @@ func tick_state(delta: float) -> void:
 			var want_x := clampf(dog_p.x, CORRIDOR_L + 130.0, CORRIDOR_R - 130.0)
 			if not against:
 				pos.x = move_toward(pos.x, want_x, DRIFT_SPEED * delta)
+			_step_wide(delta)
+			# near, or winding up to spring, he squares up to her; otherwise
+			# he walks the way he is facing
+			var d := dog_p.distance_to(pos)
+			var want := _to_dog_dir()
+			var winding := phase == 2 and pounce_cooldown < 0.7 and d > POUNCE_MIN and d < POUNCE_MAX
+			if d > NEAR and not winding and absf(pos.y - want_y) > 2.0:
+				want = Vector2(clampf((want_x - pos.x) / 160.0, -0.6, 0.6), signf(want_y - pos.y))
+			_turn(want, TURN_ANGRY if phase == 2 else TURN, delta)
+			var faces := face_dir.dot(_to_dog_dir()) > FACING
 			update_leg_positions()
 			yarn_cd -= delta
 			var ball := _yarn_in_reach()
@@ -1081,21 +1149,24 @@ func tick_state(delta: float) -> void:
 				yarn_ball = ball
 				transition_to(State.YARN)
 				return
-			var d := dog_p.distance_to(pos)
-			if d < SWAT_REACH and swat_cooldown <= 0.0:
+			if d < SWAT_REACH and swat_cooldown <= 0.0 and faces:
 				swat_cooldown = SWAT_COOLDOWN
 				transition_to(State.SWAT)
-			elif phase == 2 and pounce_cooldown <= 0.0 and d > POUNCE_MIN and d < POUNCE_MAX:
+			elif phase == 2 and pounce_cooldown <= 0.0 and faces and d > POUNCE_MIN and d < POUNCE_MAX:
 				pounce_cooldown = POUNCE_COOLDOWN
 				transition_to(State.POUNCE_WARN)
 
 		State.SWAT:
+			_turn(swat_pos - pos, TURN_STRIKE, delta)
+			update_leg_positions()
 			state_t -= delta
 			if state_t <= 0.0:
 				execute_swat()
 				transition_to(State.PROWL)
 
 		State.POUNCE_WARN:
+			_turn(pounce_dir, TURN_STRIKE, delta)
+			update_leg_positions()
 			state_t -= delta
 			if state_t <= 0.0:
 				transition_to(State.POUNCE)
@@ -1172,6 +1243,10 @@ func tick_state(delta: float) -> void:
 				transition_to(State.PROWL)
 
 		State.RETREAT:
+			if pos.distance_to(PEDESTAL_POS) > 80.0:
+				_turn(PEDESTAL_POS - pos, TURN_STRIKE, delta)
+			else:
+				_turn(Vector2.DOWN, TURN_STRIKE, delta)
 			pos = pos.move_toward(PEDESTAL_POS, RETREAT_SPEED * delta)
 			update_leg_positions()
 			if pos.distance_to(PEDESTAL_POS) < 1.0:
@@ -1205,7 +1280,8 @@ func tick_state(delta: float) -> void:
 	# autowalk bot cannot fight him and is not held, so he would stand in
 	# its way in the plaça for ever: to the bot he is a ghost.
 	if not main.auto_walk and state in [State.PROWL, State.SWAT, State.POUNCE_WARN, State.SKID,
-			State.STUNNED, State.RETREAT, State.ENRAGE, State.YARN]:
+			State.STUNNED, State.RETREAT, State.ENRAGE, State.YARN] \
+			or (not main.auto_walk and state == State.AWAKEN and act_t >= AWAKEN_TIME - 0.2):
 		_shove_out(main.dog)
 		if not main.human.is_whirling():
 			_shove_out(main.human)
@@ -1301,7 +1377,7 @@ func _tick_yarn_chase(delta: float, dog_p: Vector2) -> void:
 	var bp: Vector2 = yb.p
 	var to_ball := bp - pos
 	if to_ball.length() > 1.0:
-		face_dir = face_dir.slerp(to_ball.normalized(), minf(6.0 * delta, 1.0)).normalized()
+		_turn(to_ball, TURN_STRIKE, delta)
 	if to_ball.length() > YARN_PAW:
 		pos += to_ball.normalized() * minf(YARN_SPEED * delta, to_ball.length() - YARN_PAW)
 	elif bat_cd <= 0.0:
@@ -1338,12 +1414,15 @@ func _unravel(k: int) -> void:
 
 
 func tail_pos() -> Vector2:
-	return pos - face_dir * 80.0 + face_dir.orthogonal() * 30.0
+	return pos - face_dir * 82.0 + face_dir.orthogonal() * 44.0
 
 
 # On his plinth with no fight left, he still swats at her while she ties him.
 func _tick_last_stand(delta: float, dog_p: Vector2) -> void:
-	face_dir = face_dir.slerp(_to_dog_dir(), minf(3.0 * delta, 1.0)).normalized()
+	# his feet are roped where they stand: he turns from the waist, so far
+	var to_dog := _to_dog_dir()
+	var off := clampf(Vector2.DOWN.angle_to(to_dog), -0.9, 0.9)
+	_turn(Vector2.DOWN.rotated(off), TURN_ANGRY, delta)
 	if ls_swat_t > 0.0:
 		ls_swat_t -= delta
 		if ls_swat_t <= 0.0:
@@ -2276,18 +2355,19 @@ func draw_boss_health_bar(c: Object, at: Vector2) -> void:
 	_draw_health_bar_text(c, at)
 
 
-func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
-	Clay.ground_shadow(c, ground, 80.0 - hop_z * 0.3, 62.0 - hop_z * 0.25, 6.0, 0.30)
+func draw_upright_gat(c: ShapeBatch, ground: Vector2, t: float) -> void:
+	Clay.ground_shadow(c, ground, 84.0 - hop_z * 0.3, 66.0 - hop_z * 0.25, 8.0, 0.30)
 	var at := ground - Vector2(0.0, hop_z)
+	var angry := phase == 2 and hp > 0.0
+	var charging := state == State.POUNCE_WARN or state == State.POUNCE
 	# a hit lights his bronze; below half the metal runs hot
-	var hot := 0.12 if phase == 2 and hp > 0.0 else 0.0
-	var _ml := Engine.get_main_loop()
-	var _gm: Node = _ml.root.get_node_or_null("Game") if _ml != null and _ml is SceneTree else null
-	var flashes_on := true if _gm == null else bool(_gm.flashes)
-	var hit_f := flash if flashes_on else 0.0
-	var base := BRONZE_BASE.lerp(Color(0.62, 0.26, 0.14), hot).lerp(Color.WHITE, hit_f * 0.55)
-	var dark := BRONZE_DARK.lerp(Color.WHITE, hit_f * 0.4)
-	var lit := BRONZE_LIT.lerp(Color.WHITE, hit_f * 0.5)
+	var flashes_on := true
+	var loop := Engine.get_main_loop()
+	var game: Node = loop.root.get_node_or_null("Game") if loop is SceneTree else null
+	if game != null:
+		flashes_on = bool(game.flashes)
+	var tint := BronzeCat.BASE.lerp(Color(0.62, 0.22, 0.12), 0.22 if angry else 0.0)
+	tint = tint.lerp(Color.WHITE, (flash if flashes_on else 0.0) * 0.55)
 	# the tumble at the start of a stun turns him a full circle; during an
 	# awning bounce he spins head-over-heels back into the rambla
 	var face := face_dir
@@ -2295,155 +2375,61 @@ func draw_upright_gat(c: Object, ground: Vector2, t: float) -> void:
 		face = face_dir.rotated(TAU * 1.5 * (1.0 - clampf(state_t / BOUNCE_TIME, 0.0, 1.0)))
 	elif spin_t > 0.0:
 		face = face_dir.rotated(TAU * (spin_t / 0.5))
-
+	var paws: Array[Vector2] = []
 	for leg: Vector2 in leg_poles:
-		var lp := leg + (at - pos)
-		Clay.ball(c, lp + Shade.light * 2.0, LEG_RADIUS + 2.0, dark)
-		Clay.ball(c, lp, LEG_RADIUS, base)
-		for toe: float in [-5.0, 0.0, 5.0]:
-			c.draw_circle(lp + Vector2(toe, LEG_RADIUS - 4.0), 2.4, dark)
-
-	# the fat tail, curled round behind him, lashing when he is angry
-	var back := -face
-	var side := face.orthogonal()
-	var angry := phase == 2 and hp > 0.0
-	var keen := angry or state == State.YARN
-	var lash := sin(t * (9.0 if keen else 3.0)) * (12.0 if keen else 4.0)
-	var tail_pts := PackedVector2Array([
-		at + back * 45.0,
-		at + back * 62.0 + side * 14.0,
-		at + back * 74.0 + side * 30.0,
-		at + back * 86.0 + side * (40.0 + lash),
-	])
-	Clay.stroke(c, tail_pts, 20.0, 16.0, dark)
-	Clay.stroke(c, tail_pts, 15.0, 12.0, base)
-	c.draw_circle(tail_pts[tail_pts.size() - 1], 9.0, base)
-
-	# swollen to a monument's volume: the haunches bulge either side behind,
-	# the bulk of him round as a dome, the small head set on its front
-	for sd: float in [-1.0, 1.0]:
-		Clay.ball(c, at + back * 26.0 + side * sd * 46.0, 32.0, base)
-	var body_half := Vector2(74.0, 64.0)
-	Clay.blob(c, at, body_half, face, base)
-	c.draw_colored_polygon(Clay.ellipse_pts(at - Shade.light * 16.0, body_half * 0.5, face), BRONZE_SPEC)
-	c.draw_circle(at - Shade.light * 26.0 + back * 10.0, 9.0, Color(1.0, 0.92, 0.74, 0.35))
-
-	var head_c := at + face * 46.0
-	var head_r := 29.0
-	Clay.ball(c, head_c, head_r, base)
-	Clay.ball(c, head_c + Vector2(-15.0, 8.0), 15.0, base)
-	Clay.ball(c, head_c + Vector2(15.0, 8.0), 15.0, base)
-
-	var ear_droop: float = 6.0 if state == State.STUNNED else (-3.0 if angry else 0.0)
-	for sd: float in [-1.0, 1.0]:
-		var ear_base1 := head_c + Vector2(sd * 10.0, -head_r + 4.0 + ear_droop)
-		var ear_base2 := head_c + Vector2(sd * 24.0, -head_r + 10.0 + ear_droop)
-		var ear_tip := head_c + Vector2(sd * (18.0 + (6.0 if angry else 0.0)), -head_r - 10.0 + ear_droop)
-		c.draw_colored_polygon(PackedVector2Array([ear_base1, ear_tip, ear_base2]), dark)
-		c.draw_colored_polygon(PackedVector2Array([ear_base1.lerp(ear_base2, 0.2), ear_tip.lerp(head_c, 0.25), ear_base2.lerp(ear_base1, 0.2)]), lit)
-
-	var charging := state == State.POUNCE_WARN or state == State.POUNCE
-	var blink: bool = fmod(t + pos.x * 0.01, 4.5) < 0.18 and state != State.ROAR and not charging and not angry
-	var eye_col: Color = EYE_CHARGE if charging or angry or state == State.ENRAGE else EYE_AMBER
+		# a fat cat's walk: opposite corners step together, a foot comes up
+		# and forward while the others carry him
+		var phase_k := sin(gait * 0.07 + (0.0 if paws.size() == 0 or paws.size() == 3 else PI))
+		var step := clampf(moved / 90.0, 0.0, 1.0)
+		paws.append(leg + (at - pos) + stance * phase_k * 9.0 * step - Vector2(0.0, maxf(0.0, phase_k) * 5.0 * step))
 	# a statue's eyes are shut; they open on the wake
 	var open := 1.0
 	if state == State.IDLE:
 		open = 0.0
 	elif state == State.AWAKEN:
 		open = clampf(act_t / 0.5, 0.0, 1.0)
-	for sd: float in [-1.0, 1.0]:
-		var eye_c := head_c + Vector2(sd * 12.0, -4.0)
-		if state == State.PURR:
-			# contented, shut: a soft upturned line each
-			c.draw_line(eye_c + Vector2(-6, 1), eye_c + Vector2(0, -2), EYE_PUPIL, 2.5)
-			c.draw_line(eye_c + Vector2(0, -2), eye_c + Vector2(6, 1), EYE_PUPIL, 2.5)
-		elif state == State.STUNNED:
-			c.draw_line(eye_c - Vector2(4, 4), eye_c + Vector2(4, 4), EYE_PUPIL, 2.2)
-			c.draw_line(eye_c - Vector2(-4, 4), eye_c + Vector2(-4, 4), EYE_PUPIL, 2.2)
-		elif blink or open <= 0.05:
-			c.draw_line(eye_c - Vector2(6, 0), eye_c + Vector2(6, 0), EYE_PUPIL, 2.0)
-		else:
-			if charging or state == State.ENRAGE or (state == State.AWAKEN and act_t < 1.4):
-				# the glow round a lit eye
-				c.draw_circle(eye_c, 11.0, Color(eye_col.r, eye_col.g, eye_col.b, 0.28))
-			c.draw_colored_polygon(Clay.ellipse_pts(eye_c, Vector2(6.5, 6.5 * open), Vector2.RIGHT, 12), eye_col)
-			c.draw_line(eye_c - Vector2(0, 5.0 * open), eye_c + Vector2(0, 5.0 * open), EYE_PUPIL, 2.2)
-			if not (charging or angry or state == State.ENRAGE) and open > 0.3:
-				# a smug half-lidded look, as in his film; it snaps open to pounce
-				var lid := PackedVector2Array()
-				for li in range(9):
-					var la := PI + float(li) / 8.0 * PI
-					lid.append(eye_c + Vector2(cos(la) * 7.5, sin(la) * 7.5 * open))
-				c.draw_colored_polygon(lid, base)
-				c.draw_line(eye_c - Vector2(7.5, 0), eye_c + Vector2(7.5, 0), EYE_PUPIL, 2.0)
-			if angry:
-				# a heavy bronze brow, slanted down to the nose
-				c.draw_line(eye_c + Vector2(sd * 9.0, -12.0), eye_c + Vector2(-sd * 6.0, -6.0), dark, 4.0)
-
-	var nose_c := head_c + Vector2(0.0, 8.0)
-	c.draw_colored_polygon(PackedVector2Array([nose_c + Vector2(-4.5, -3.0), nose_c + Vector2(4.5, -3.0), nose_c + Vector2(0, 2.0)]), NOSE_DARK)
-	c.draw_line(nose_c, nose_c + Vector2(0, 6), NOSE_DARK, 2.0)
-	c.draw_line(nose_c + Vector2(0, 6), nose_c + Vector2(-6, 9), NOSE_DARK, 2.0)
-	c.draw_line(nose_c + Vector2(0, 6), nose_c + Vector2(6, 9), NOSE_DARK, 2.0)
-
-	var w_tw := sin(t * 8.0) * 2.0
-	for sd: float in [-1.0, 1.0]:
-		var wp := head_c + Vector2(sd * 12.0, 10.0)
-		c.draw_line(wp, wp + Vector2(sd * 28.0, -4.0 + w_tw), WHISKER_WIRE, 1.5)
-		c.draw_line(wp, wp + Vector2(sd * 30.0, 2.0), WHISKER_WIRE, 1.5)
-		c.draw_line(wp, wp + Vector2(sd * 26.0, 8.0 - w_tw), WHISKER_WIRE, 1.5)
-
+	elif fmod(t + pos.x * 0.01, 4.5) < 0.18 and state != State.ROAR and not charging and not angry:
+		open = 0.0
+	var mood := ""
+	if state == State.PURR:
+		mood = "purr"
+	elif state == State.STUNNED:
+		mood = "stun"
+	elif angry or charging or state == State.SWAT or state == State.ENRAGE or state == State.ROAR:
+		mood = "cross"
+	var keen := angry or state == State.YARN
+	var look := {
+		"face": face, "look": look_dir if face == face_dir else face, "paws": paws, "tint": tint, "eyes": open, "mood": mood,
+		"hot": charging or angry or state == State.ENRAGE or (state == State.AWAKEN and act_t < 1.4),
+		"swell": 1.0 + (0.06 if mood == "cross" else 0.0) + 0.012 * sin(t * 2.2),
+		"lash": sin(t * (9.0 if keen else 3.0)) * (14.0 if keen else 5.0),
+		"ear": 6.0 if mood == "stun" else (3.0 if mood == "cross" else 0.0),
+	}
 	# the paw goes up during the warning and lands at the ring
 	var paw_t := state_t if state == State.SWAT else (ls_swat_t if state == State.ROAR else 0.0)
 	if paw_t > 0.0:
 		var lift := clampf(paw_t / SWAT_WARN, 0.0, 1.0)
 		var shoulder := at + face.orthogonal() * (34.0 if swat_paw_active == 1 else -34.0)
-		var p_to := swat_pos.lerp(shoulder, lift * 0.6) + Vector2(0, -26.0 * lift)
-		c.draw_line(shoulder, p_to, base, 16.0)
-		Clay.ball(c, p_to, 20.0, lit)
-		# claws out
-		for cl: float in [-7.0, 0.0, 7.0]:
-			var tip := p_to + Vector2(cl, 14.0 + 4.0 * (1.0 - lift))
-			c.draw_line(p_to + Vector2(cl * 0.8, 8.0), tip, Color(0.92, 0.90, 0.84), 2.0)
-
+		look["paw_from"] = shoulder
+		look["paw_to"] = swat_pos.lerp(shoulder, lift * 0.6) + Vector2(0, -26.0 * lift)
+		look["paw_lift"] = lift
+	BronzeCat.top(c, at, look, t)
 	if state == State.STUNNED:
+		var head_c := at + face * 48.0
 		for i in range(4):
 			var star_a := t * 4.5 + float(i) * (TAU / 4.0)
-			var star_p := head_c + Vector2(cos(star_a) * 34.0, sin(star_a) * 14.0 - 18.0)
-			c.draw_circle(star_p, 4.0, STAR_GOLD)
-			c.draw_circle(star_p, 2.0, Color.WHITE)
+			var star_p := head_c + Vector2(cos(star_a) * 38.0, sin(star_a) * 14.0 - 20.0)
+			c.circle(star_p, 4.0, STAR_GOLD)
+			c.circle(star_p, 2.0, Color.WHITE)
 
 
-func draw_toppled_gat(c: Object, at: Vector2, t: float) -> void:
-	Clay.ground_shadow(c, at, 90.0, 50.0, 4.0, 0.32)
-
-	var belly_half := Vector2(68.0, 48.0)
-	Clay.blob(c, at, belly_half, Vector2.RIGHT, BRONZE_BASE)
-	c.draw_colored_polygon(Clay.ellipse_pts(at - Shade.light * 10.0, belly_half * 0.50, Vector2.RIGHT), BRONZE_SPEC)
-
-	for i in range(4):
-		var ang := float(i) * (TAU / 4.0) + PI * 0.25
-		var lp := at + Vector2(cos(ang) * 55.0, sin(ang) * 35.0)
-		Clay.ball(c, lp, LEG_RADIUS * 0.85, BRONZE_DARK)
-
-	var paw_lift := sin(t * 4.0) * 6.0
-	var paw_p := at + Vector2(15.0, -35.0 + paw_lift)
-	c.draw_line(at + Vector2(10.0, -10.0), paw_p, BRONZE_BASE, 12.0)
-	Clay.ball(c, paw_p, 14.0, BRONZE_LIT)
-
+func draw_toppled_gat(c: ShapeBatch, at: Vector2, t: float) -> void:
+	Clay.ground_shadow(c, at, 94.0, 60.0, 6.0, 0.32)
 	var hc := snout_pos + (at - pos)
-	Clay.ball(c, hc, 28.0, BRONZE_BASE)
-	Clay.ball(c, hc + Vector2(-10, 4), 14.0, BRONZE_BASE)
-	c.draw_circle(hc + Vector2(0, 6), 4.5, NOSE_DARK)
-
-	var eye_c := hc + Vector2(4, -8)
-	c.draw_circle(eye_c, 5.5, EYE_AMBER)
-	c.draw_line(eye_c - Vector2(0, 4), eye_c + Vector2(0, 4), EYE_PUPIL, 2.0)
-
+	BronzeCat.toppled(c, at, hc, t)
 	if main.dog.global_position.distance_to(snout_pos) < BOOP_REACH:
 		var pulse := 1.0 + sin(t * 10.0) * 0.15
-		c.draw_circle(hc + Vector2(0, -28.0), 16.0 * pulse, Color(1.0, 0.90, 0.20, 0.75))
-		c.draw_circle(hc + Vector2(0, -28.0), 11.0 * pulse, Color(1.0, 1.0, 1.0, 0.95))
+		_ring(c, hc, 46.0 * pulse, Color(1.0, 0.90, 0.20, 0.9), 4.0, 28)
 
 
 # The street after dark (world/night_fronts.gd): this walk draws its own

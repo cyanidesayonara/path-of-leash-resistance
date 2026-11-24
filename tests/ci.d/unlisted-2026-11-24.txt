@@ -1,0 +1,3 @@
+# tests that were in the repository and never run by CI
+--headless --path . --script res://tests/test_film_mamut_win.gd
+--headless --path . --script res://tests/test_tutorial_flow.gd
