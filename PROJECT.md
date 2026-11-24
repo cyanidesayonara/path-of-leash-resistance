@@ -514,7 +514,7 @@ memorable.
   - Walks stay seeded and deterministic, and the rope stays one solver
     that handles any number of ropes and their snags: that is what both
     co-op and online play would stand on.
-  - Saved records stay versioned (`GATES_VERSION` style), so a second
+  - Saved records stay versioned (`Game.SAVE_VERSION`), so a second
     player's profile can be added without breaking old saves.
 - Swimming (shipped v1.1 in the park pond, expandable): Millie loves
   water and paddles happily; the owner is dragged in to wade reluctantly

@@ -66,7 +66,6 @@ func _run() -> void:
 	_check(String(game.LEVEL_NAMES["sarria"]) == "Sarrià", "named Sarrià")
 	_check(game.LEVEL_SUBTITLES.has("sarria") and game.LEVEL_SUBTITLES_CA.has("sarria") and game.LEVEL_SUBTITLES_ES.has("sarria"), "glossed in English, Catalan and Spanish")
 	_check(game.CAMPAIGN_SKY["sarria"] == ["clear", "dawn"], "a clear dawn")
-	_check(game.WALKS_SINCE_GATES.has("sarria"), "no save predates its gate")
 	var ids: Array = G.LEVEL_GOAL_IDS["sarria"]
 	_check(ids.size() == 15 and ids.has("bells") and ids.has("bread") and ids.has("gardener"), "fifteen goals with the bells', the bakeries' and the gardener's")
 	_check(m.sarria != null, "the walk has its state")

@@ -64,7 +64,6 @@ func _run() -> void:
 	_check(String(game.CHASE_GATE.get("vic", "")) == String(game.CHASE_GATE.get("scrap", "")),
 		"CHASE_GATE vic matches scrap")
 	_check(game.CAMPAIGN_SKY.get("vic", []) == ["fog", "morning"], "CAMPAIGN_SKY vic == [fog, morning]")
-	_check(game.WALKS_SINCE_GATES.has("vic"), "WALKS_SINCE_GATES includes vic")
 	_check(String(game.LEVEL_NAMES.get("vic", "")) == "Vic", "LEVEL_NAMES vic")
 	_check(String(game.LEVEL_SUBTITLES.get("vic", "")) == "Fog, arcades and hanging fuet", "LEVEL_SUBTITLES vic")
 	_check(String(game.LEVEL_SUBTITLES_CA.get("vic", "")).length() > 0, "LEVEL_SUBTITLES_CA vic")

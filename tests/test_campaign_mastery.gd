@@ -38,7 +38,6 @@ func _run() -> void:
 	var saved_persist: bool = game.persist
 	var saved_records: Dictionary = game.records.duplicate(true)
 	var saved_bones: int = game.total_bones
-	var saved_open: Array[String] = game.gate_open.duplicate()
 	var saved_free_play: bool = game.free_play
 	var saved_dog: String = game.dog
 	var saved_dog_upgrades: Dictionary = game.dog_upgrades.duplicate(true)
@@ -122,7 +121,6 @@ func _run() -> void:
 
 	game.records = saved_records
 	game.total_bones = saved_bones
-	game.gate_open = saved_open
 	game.free_play = saved_free_play
 	game.dog = saved_dog
 	game.dog_upgrades = saved_dog_upgrades

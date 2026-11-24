@@ -3,7 +3,6 @@ extends SceneTree
 # Tests Walk: El Poble Espanyol (The walled village of copied towns, systems/poble.gd)
 # - Registration in Game.LEVELS, CAROUSEL (right after espanya), STAR_GATE 46,
 #   CHASE_GATE "boars", CAMPAIGN_SKY ["clear", "day"], LEVEL_NAMES, LEVEL_SUBTITLES (EN/CA/ES),
-#   WALKS_SINCE_GATES
 # - 15 goals in LEVEL_GOAL_IDS ("columns_poble", "workshops", "watering" + 12 shared),
 #   Tony Hawk CLOCK_TARGETS, JAMON_POS
 # - Path shape: open road -> stone gate pinch -> Castilian bend -> Plaza Mayor bulge ->
@@ -165,10 +164,8 @@ func _run() -> void:
 	var saved_persist: bool = game.persist
 	var saved_free_play: bool = game.free_play
 	var saved_records: Dictionary = game.records.duplicate(true)
-	var saved_open: Array[String] = game.gate_open.duplicate()
 	game.persist = false
 	game.free_play = false
-	game.gate_open.clear()
 	game.records = {}
 	for lv: String in game.LEVELS:
 		game.records[lv] = game._default_level_record()
@@ -189,7 +186,6 @@ func _run() -> void:
 	_check(String(game.CHASE_GATE.get("poble", "")) == "molina", "poble gated by molina")
 	var sky: Array = game.CAMPAIGN_SKY.get("poble", [])
 	_check(sky == ["clear", "day"], "CAMPAIGN_SKY['poble'] is ['clear', 'day']")
-	_check(game.WALKS_SINCE_GATES.has("poble"), "WALKS_SINCE_GATES has poble")
 	_check(String(world_sign.MATERIALS.get("poble", "")) == "azulejos", "world_sign material for poble is azulejos")
 
 	# 2. Goals & Tony Hawk checks
@@ -356,7 +352,6 @@ func _run() -> void:
 	_check(true, "Poble draw methods executed without error")
 
 	game.records = saved_records
-	game.gate_open = saved_open
 	game.free_play = saved_free_play
 	game.persist = saved_persist
 

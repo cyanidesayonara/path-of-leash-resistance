@@ -50,20 +50,6 @@ func _finish() -> void:
 		quit(0)
 
 
-func _write_legacy_save() -> void:
-	var config := ConfigFile.new()
-	config.set_value("global", "total_bones", 400)
-	config.set_value(
-		"cosmetics",
-		"owned",
-		["red", "none", "millie", "gold", "navy", "choc", "teal", "future-keepsake"]
-	)
-	config.set_value("cosmetics", "collar", "teal")
-	config.set_value("cosmetics", "bandana", "navy")
-	config.set_value("cosmetics", "coat", "choc")
-	config.save(LEGACY_SAVE)
-
-
 func _initialize() -> void:
 	_cleanup()
 	var game = GameScript.new()
@@ -109,33 +95,4 @@ func _initialize() -> void:
 	reopened.free()
 	game.free()
 
-	_write_legacy_save()
-	var legacy = GameScript.new()
-	legacy.set("save_path", LEGACY_SAVE)
-	legacy.load_records()
-	_check(bool(legacy.call("is_owned", "collar", "gold")), "legacy ambiguous gold grants the gold collar")
-	_check(bool(legacy.call("is_owned", "coat", "gold")), "legacy ambiguous gold grants the gold coat")
-	_check(bool(legacy.call("is_owned", "bandana", "navy")), "legacy unrelated bandana ownership is preserved")
-	_check(bool(legacy.call("is_owned", "coat", "choc")), "legacy unrelated coat ownership is preserved")
-	_check(bool(legacy.call("is_owned", "collar", "teal")), "legacy unrelated collar ownership is preserved")
-	_check(bool(legacy.owned.get("future-keepsake", false)), "unknown legacy ownership is not discarded")
-	_check(
-		legacy.collar == "teal" and legacy.bandana == "navy" and legacy.coat == "choc",
-		"legacy equipped catalog keys remain unchanged"
-	)
-
-	legacy.save_records()
-	var migrated = GameScript.new()
-	migrated.set("save_path", LEGACY_SAVE)
-	migrated.load_records()
-	_check(bool(migrated.call("is_owned", "collar", "gold")), "migrated gold collar remains owned after reload")
-	_check(bool(migrated.call("is_owned", "coat", "gold")), "migrated gold coat remains owned after reload")
-	_check(bool(migrated.owned.get("future-keepsake", false)), "unknown ownership survives migration save")
-	_check(
-		migrated.collar == "teal" and migrated.bandana == "navy" and migrated.coat == "choc",
-		"unrelated equipped items survive migration save"
-	)
-
-	migrated.free()
-	legacy.free()
 	_finish()

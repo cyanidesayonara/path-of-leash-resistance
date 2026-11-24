@@ -95,6 +95,7 @@ static func _fill(key: String, args: Variant) -> String:
 
 const T := {
 	# --- the main menu, the steps, the pause grid -----------------------------
+	"menu_fresh_start": {"en": "All %d walks are in, so every dog starts over. Off you go.", "ca": "Ja hi són els %d passejos: tots els gossos tornen a començar. Som-hi!", "es": "Ya están los %d paseos: todos los perros empiezan de nuevo. ¡Vamos!"},
 	"menu_play": {"en": "PLAY", "ca": "JUGA", "es": "JUGAR"},
 	"menu_tutorial": {"en": "TUTORIAL", "ca": "TUTORIAL", "es": "TUTORIAL"},
 	"menu_shop": {"en": "WARDROBE", "ca": "ARMARI", "es": "ARMARIO"},

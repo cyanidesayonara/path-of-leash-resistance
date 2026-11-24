@@ -186,6 +186,7 @@ func _test_cycle_and_persistence(game: Node) -> void:
 	# Persistence
 	var test_path := "user://test_records_dog.cfg"
 	var cf := ConfigFile.new()
+	cf.set_value("global", "save_version", game.SAVE_VERSION)
 	cf.set_value("player", "dog", "mochi")
 	cf.set_value("settings", "free_play", true)
 	cf.save(test_path)

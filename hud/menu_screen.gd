@@ -219,7 +219,31 @@ func _main(vs: Vector2) -> void:
 			Kit.chevron(self, Vector2(rr.position.x + 22.0, rr.get_center().y), 8.0, acc)
 		draw_string(f, Vector2(rr.position.x + 40.0, rr.get_center().y + float(px) * 0.36), String(labels[i]),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, px, Kit.INK if picked else Kit.INK_SOFT)
+	if Game.fresh_start:
+		_fresh_start(vs, r, bottom)
 	Kit.purse(self, Vector2(vs.x - 40.0, 48.0), Game.total_stars(), Game.total_bones)
+
+
+# a player back from before the campaign, told once why their walks are shut
+# again: under the list, or beside it on a screen with no room there
+func _fresh_start(_vs: Vector2, list: Rect2, bottom: float) -> void:
+	var txt := I18n.t("menu_fresh_start") % (Game.CAROUSEL.size() - 1)
+	var pad := 14.0
+	var size := Vector2(list.size.x, 68.0)
+	var at := Vector2(list.position.x, list.end.y + 12.0)
+	if at.y + size.y > bottom + 16.0:
+		# low enough to leave your human and the leash in view
+		at = Vector2(list.end.x + 16.0, list.position.y + list.size.y * 0.56)
+	var card := Rect2(at, size)
+	Kit.card(self, card, Kit.accent("title"), 12)
+	var body := Kit.body()
+	var px := 16
+	var room := size.x - pad * 2.0
+	while px > 12 and body.get_multiline_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, room, px).y > size.y - pad * 1.5:
+		px -= 1
+	var th := body.get_multiline_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, room, px).y
+	draw_multiline_string(body, card.position + Vector2(pad, (size.y - th) * 0.5 + body.get_ascent(px)), txt,
+		HORIZONTAL_ALIGNMENT_LEFT, room, px, -1, Kit.INK)
 
 
 func _walk(vs: Vector2) -> void:
