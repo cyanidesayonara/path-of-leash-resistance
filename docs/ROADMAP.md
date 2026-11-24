@@ -8,17 +8,16 @@ as issues.
 
 ## Where the game stands
 
-- 39 walks plus the tutorial (v1.74, 2026-11-16). Eight chase walks (La
-  Neteja, El Besòs, El Veterinari, Els Senglars, La Cremada, Festa de Gràcia,
-  L'Aeroport, Montserrat), four statue bosses (El Mamut on La Ciutadella, El
-  Drac in El Mosaic, Els Lleons in El Port, El Gat finale on Rambla del
-  Raval), each with its films, four artsy detours (El Somni, L'Estel, El
-  Colom, El Drac).
-- Five dogs, a wardrobe, a campaign with fixed skies, FREE WALK after a
-  finished walk, four hours of day (dawn, day, dusk, night), weather.
+- The whole campaign, on main since 2026-11-24: 51 walks plus the tutorial, ten
+  chases (every fifth walk, Les Atraccions' mascots the last to land), five
+  statue bosses (El Mamut, El Drac, Els Lleons, La Lleona and El Gat, each with
+  its films), four artsy detours. Progress from before it starts over.
+- Seven dogs with skills and training, a wardrobe, a campaign with fixed skies,
+  FREE WALK after a finished walk, nine skies and six times of day, English,
+  Catalan and Spanish.
 - A signature live event on every walk, true near-miss saves, a story film for
   every chase.
-- Every tag through 1.74 shipped to itch.io and the Microsoft Store; Android
+- Every tag through 1.76 shipped to itch.io and the Microsoft Store; Android
   export groundwork is in, a static site on GitHub Pages is up.
 
 ## The target: the 51-walk campaign
@@ -145,16 +144,21 @@ Sarrià, El Metro, Carrer de Blai; the Trencadís look; El Barri, Plaça Reial
 and L'Estació rebuilt; a dare-giver with a tune on every walk; readable
 dares; the whirl and the leash upgraded.
 
-### 1.75 to 1.78 - The last twelve walks (proposed grouping)
+### 1.76 - Eight walks, two dogs, three languages (tagged 2026-11-22)
 
-Three walks a release, each with its upgrade and live event:
+La Molina (chase and film), Sant Pau, Sitges, Les Atraccions, Camí de Ronda,
+Els Encants, Tarragona and Vic; Perla and Duna; skills, buried finds and
+training; Catalan and Spanish.
 
-- 1.75: Sarrià, El Metro, Carrer de Blai.
-- 1.76: La Molina (chase and film, the snow), Sant Pau, Sitges.
-- 1.77: the theme park (chase and film), Girona with La Lleona (boss, wake and
-  victory films), Camí de Ronda.
-- 1.78: Els Encants, Tarragona, Vic (fog). Then the order is locked, CAROUSEL,
-  STAR_GATE and CHASE_GATE are set to the final 51, and saves reset.
+### 1.77 - The whole campaign (next; Santtu says when)
+
+Girona with La Lleona and her films, Les Atraccions' mascot chase and film, the
+roadmap's order, and the fresh start. Before the tag: Santtu plays what awaits
+acceptance, and the release text PR lands.
+
+### 1.78
+
+Google Play, maybe: it waits on Santtu's developer account.
 
 ### 1.8 - The finishing pass
 
