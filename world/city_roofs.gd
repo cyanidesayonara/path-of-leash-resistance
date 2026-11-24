@@ -32,6 +32,14 @@ static func _h(k: int) -> float:
 	return float(absi(h ^ (h >> 16)) % 100003) / 100003.0
 
 
+# How lit the lamps are, asked of the autoload by its node: a test may load
+# this script before the autoloads have names.
+static func _glow() -> float:
+	var loop := Engine.get_main_loop()
+	var game: Node = (loop as SceneTree).root.get_node_or_null("Game") if loop is SceneTree else null
+	return float(game.lamp_glow()) if game != null else 0.0
+
+
 static func _pick(list: Array[Color], k: int) -> Color:
 	return list[int(_h(k) * float(list.size())) % list.size()]
 
@@ -58,7 +66,7 @@ static var _kept := {}
 
 
 static func kept_module(b: ShapeBatch, inner_x: float, side: float, far: float, y0: float, y1: float, salt: int) -> void:
-	var key := [inner_x, far * side, y0, y1, salt, snappedf(Game.lamp_glow(), 0.1)]
+	var key := [inner_x, far * side, y0, y1, salt, snappedf(_glow(), 0.1)]
 	var rec: ShapeBatch = _kept.get(key)
 	if rec == null:
 		if _kept.size() > 120:
@@ -151,7 +159,7 @@ static func _stack(b: ShapeBatch, p: Vector2) -> void:
 
 
 static func _glass(b: ShapeBatch, r: Rect2, k: int) -> void:
-	var lit := Game.lamp_glow()
+	var lit := _glow()
 	b.rect(Rect2(r.position + Vector2(3, 4), r.size), SHADE)
 	b.rect(r, Color(0.30, 0.32, 0.36))
 	var on := lit > 0.05 and _h(k + 9) < 0.6
@@ -278,7 +286,7 @@ static func _terrat(b: ShapeBatch, r: Rect2, k: int) -> void:
 				b.rect(w.grow(3.0), par)
 				b.rect(w, DARK)
 				b.rect(Rect2(w.position, Vector2(w.size.x, w.size.y * 0.4)), par.darkened(0.55))
-				b.rect(Rect2(w.position + Vector2(5, w.size.y * 0.12), Vector2(5, 6)), Color(0.94, 0.80, 0.50) if Game.lamp_glow() > 0.05 else Color(0.36, 0.42, 0.50))
+				b.rect(Rect2(w.position + Vector2(5, w.size.y * 0.12), Vector2(5, 6)), Color(0.94, 0.80, 0.50) if _glow() > 0.05 else Color(0.36, 0.42, 0.50))
 			_glass(b, Rect2(at.call(0.5, 0.5) - Vector2(8, 8), Vector2(16, 18)), k)
 		_:
 			# a garden, kept by somebody
