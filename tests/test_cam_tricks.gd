@@ -72,8 +72,30 @@ func _run() -> void:
 		CamTricks.tick(m, 0.05)
 	_check(m.cam_tilt_t == 0.0 and is_zero_approx(m.cam.rotation), "dutch tilt returns cleanly to zero (no continuous tilt)")
 
+	# Framing: wherever he is round her, she and he are in the picture, and one
+	# out of reach changes nothing
+	var view := Vector2(1280.0, 720.0)
+	for off: Vector2 in [Vector2(0, -330), Vector2(0, 330), Vector2(300, 0), Vector2(-250, 250), Vector2(40, -60)]:
+		var dog := Vector2(640.0, -1000.0)
+		var human := dog + Vector2(60.0, 170.0)
+		var foe: Array[Vector2] = [dog + off]
+		var fr: Vector2 = CamTricks.fight_frame(dog, human, foe, view, 1.28)
+		var z := 1.28 * fr.y
+		var mid := (dog.y + human.y) * 0.5 - 60.0 + fr.x
+		for p: Vector2 in [dog, human]:
+			var sy := (p.y - mid) * z + 360.0
+			_check(sy > 60.0 and sy < 700.0, "the pair stays in view, boss at %s (%.0f)" % [off, sy])
+		var by := (foe[0].y - mid) * z + 360.0
+		_check(by > 40.0 and by < 690.0, "so does the boss at %s (%.0f)" % [off, by])
+	_check(CamTricks.fight_frame(Vector2.ZERO, Vector2(0, 150), [Vector2(0, -1200)] as Array[Vector2], view, 1.28).x == 0.0, "a boss far off is let go")
+	var jolt := 0.0
+	for i in range(30):
+		jolt = maxf(jolt, (CamTricks.shake(float(i + 1) / 60.0, 1.0) - CamTricks.shake(float(i) / 60.0, 1.0)).length())
+	_check(jolt < 22.0, "the shake is a shudder, not jolts (%.1f px a frame at most)" % jolt)
+
 	# Defeated -> zoom restores to 1.0
 	m.boss_gat.hp = 0.0
+	m.boss_gat.state = m.boss_gat.State.PURR
 	for _i in range(40):
 		CamTricks.tick(m, 0.05)
 	_check(absf(m.cam.zoom.x - zoom0) < 0.002, "camera zoom restores after boss defeat (%.4f vs %.4f)" % [m.cam.zoom.x, zoom0])
