@@ -139,11 +139,11 @@ def submission(raw: str) -> dict:
 def ingested_languages(sub: dict) -> set:
     """The listing languages of the packages this submission keeps: ingested
     (an Id, so not this run's PendingUpload) and not PendingDelete, which is
-    what the published package is in a draft that replaces it. The Store
-    refuses a new listing in any other language ("Language codes: ca-ES|es-ES
-    not supported", v1.76, even with the published package declaring both and
-    only its replacement pending): a new language is added by a draft that
-    keeps the package, the workflow's update_listing."""
+    what the published package is in a draft that replaces it. A new
+    language is only tried in a draft that keeps a package declaring it (the
+    workflow's update_listing). The Store has refused "Language codes:
+    ca-ES|es-ES not supported" in both kinds of draft (v1.76), so this alone
+    was not the reason; the codes' case may be."""
     langs = set()
     for package in sub.get("ApplicationPackages") or []:
         if not package.get("Id") or package.get("FileStatus") in ("PendingUpload", "PendingDelete"):
@@ -219,9 +219,10 @@ def update_submission(sub: dict, by_lang: dict, verbose: bool = True,
             if key in SUBMISSION_LEVEL:
                 continue
             cloned_entry["BaseListing"][key] = v
-        listings[target] = cloned_entry
+        # keyed as the Store keys its own (en-us): lower case
+        listings[target.lower()] = cloned_entry
         if verbose:
-            print(f"note: added {target} listing cloned from {template_key}")
+            print(f"note: added {target.lower()} listing cloned from {template_key}")
 
     for key in SUBMISSION_LEVEL:
         if key not in sub and verbose:
@@ -263,8 +264,8 @@ def selftest(listing_path: str) -> int:
         _run_update(sub_path, listing_path, out_path, verbose=False)
         out = json.load(open(out_path, encoding="utf-8"))
         for lang in CHECK_LANGS:
-            assert lang in out["Listings"], f"missing {lang}"
-            base = out["Listings"][lang]["BaseListing"]
+            assert any(lang_for_listing_key(k) == lang for k in out["Listings"]), f"missing {lang}"
+            base = next(v for k, v in out["Listings"].items() if lang_for_listing_key(k) == lang)["BaseListing"]
             assert base["Title"] == "Path of Leash Resistance"
             assert base["Images"] == [{"ImageType": "Screenshot", "FileName": "shot.png"}]
             for key, v in by_lang[lang].items():
@@ -281,7 +282,7 @@ def selftest(listing_path: str) -> int:
             json.dump(synthetic2, fh)
         _run_update(sub2_path, listing_path, out2_path, verbose=False)
         out2 = json.load(open(out2_path, encoding="utf-8"))
-        assert set(out2["Listings"].keys()) == {"en-US", "ca-es", "es-ES"}
+        assert set(out2["Listings"].keys()) == {"en-US", "ca-es", "es-es"}
         assert out2["Listings"]["ca-es"]["BaseListing"]["Description"] == by_lang["ca-ES"]["Description"]
     print("store listing selftest: OK (synthetic submission cases passed)")
     return 0

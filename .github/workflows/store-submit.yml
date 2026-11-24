@@ -10,8 +10,7 @@
 #   images in its store-listing-images artifact.
 # - update_listing stages the listing alone, for the release already in the
 #   Store: the text as tagged, the same images, and the published package kept.
-#   A listing language the package brought in can only be added this way: the
-#   Store ignores a package that a draft replaces.
+#   A listing language the package brought in is only tried this way.
 # - submit commits that draft, which ingests the package and images and
 #   starts certification. Do not use Partner Center's own Submit button for
 #   an API-staged draft: it does not carry the staged files.

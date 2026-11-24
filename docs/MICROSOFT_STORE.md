@@ -290,8 +290,7 @@ Each release:
    images are ingested and certification starts. Do not click Partner Center's Submit
    button for an API-staged draft; it does not carry the staged package.
    If the package brought in a new listing language, run `update_listing`
-   with the same tag once it is live, and `submit` again: a draft that
-   replaces the package cannot add its languages.
+   with the same tag once it is live, and `submit` again.
 5. When it is live, copy that What's new into "## Past What's new" in
    `store/listing.md` with the date.
 
