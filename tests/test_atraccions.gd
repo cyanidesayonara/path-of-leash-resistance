@@ -58,9 +58,9 @@ func _run() -> void:
 	_check(String(game.LEVEL_SUBTITLES_CA.get("atraccions", "")).length() <= game.GLOSS_MAX_LONG, "CA gloss fits")
 	_check(String(game.LEVEL_SUBTITLES_ES.get("atraccions", "")).length() <= game.GLOSS_MAX_LONG, "ES gloss fits")
 
-	# no chase profile yet (mascots come later)
+	# the chase home (tests/test_mascots.gd)
 	var prof: Dictionary = HC.profile_for("atraccions")
-	_check(prof.is_empty() or String(prof.get("kind", "")) == "", "no HomeChase profile yet")
+	_check(String(prof.get("kind", "")) == "mascots", "its chase is the mascots")
 
 	# 2. goals
 	var goals: Array = G.LEVEL_GOAL_IDS["atraccions"]

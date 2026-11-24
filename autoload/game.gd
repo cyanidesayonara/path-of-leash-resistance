@@ -180,11 +180,11 @@ const CHASE_GATE := {
 	"poble": "molina",
 	"sitges": "molina",
 	"atraccions": "molina",
-	"girona": "molina",
-	"site": "molina",
-	"ronda": "molina",
-	"partit": "molina",
-	"montserrat": "molina",
+	"girona": "atraccions",
+	"site": "atraccions",
+	"ronda": "atraccions",
+	"partit": "atraccions",
+	"montserrat": "atraccions",
 	"encants": "montserrat",
 	"tarragona": "montserrat",
 	"vic": "montserrat",
@@ -1841,7 +1841,7 @@ func star_str(n: int) -> String:
 # Derived, so it follows the carousel's order.
 const BOSS_WALKS: Array[String] = ["ciutadella", "guell", "port", "girona", "raval"]
 const CHASE_WALKS: Array[String] = ["neteja", "besos", "vet", "boars", "gracia", "cremada", "aeroport", "molina",
-	"montserrat"]
+	"atraccions", "montserrat"]
 const CHAPTERS := 5
 # the longest a chapter may run; a guard, held by tests/test_chapters.gd
 const CHAPTER_MAX := 16

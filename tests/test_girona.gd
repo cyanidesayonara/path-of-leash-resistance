@@ -61,7 +61,7 @@ func _run() -> void:
 	_check(game.CAROUSEL[40] == "atraccions" and game.CAROUSEL[42] == "site",
 		"CAROUSEL places girona between atraccions and site")
 	_check(int(game.STAR_GATE.get("girona", -1)) == 47, "STAR_GATE girona == 47")
-	_check(String(game.CHASE_GATE.get("girona", "")) == "molina", "CHASE_GATE girona == molina")
+	_check(String(game.CHASE_GATE.get("girona", "")) == "atraccions", "CHASE_GATE girona == atraccions")
 	_check(game.CAMPAIGN_SKY.get("girona", []) == ["rain", "dusk"], "CAMPAIGN_SKY girona == [rain, dusk]")
 	_check(game.WALKS_SINCE_GATES.has("girona"), "WALKS_SINCE_GATES includes girona")
 	_check(String(game.LEVEL_NAMES.get("girona", "")) == "Girona", "LEVEL_NAMES girona")

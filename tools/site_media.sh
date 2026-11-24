@@ -240,10 +240,10 @@ wait_all
 
 # the hero is the intro's title over the street; then every chase walk's
 # film, past its fade from black so a still of the first frame is not empty.
-# Smaller and fewer colours than the hero, so nine of them fit the budget.
+# Smaller and fewer colours than the hero, so ten of them fit the budget.
 if [ -z "${SHOTS_ONLY:-}" ]; then
   clip hero walkies 12 480 --first=132 --last=179
-  CHASE_FILMS=(sweeper flood vet boars cremada aeroport molina montserrat gracia)
+  CHASE_FILMS=(sweeper flood vet boars cremada aeroport molina mascots montserrat gracia)
   for film in "${CHASE_FILMS[@]}"; do
     clip "${film}" "${film}" 8 320 --first=8 --colors=80
   done

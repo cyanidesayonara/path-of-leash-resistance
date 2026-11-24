@@ -77,6 +77,8 @@ const MAIN_FIELDS := [
 	"aeroport_luggage_dodges", "aeroport_cart_hits",
 	# Montserrat: tumbling boulders dodged and goat hits
 	"montserrat_boulder_dodges", "montserrat_goat_hits",
+	# Les Atraccions: the mascots' flops dodged and taken
+	"atraccions_flop_dodges", "atraccions_flop_hits",
 	# La Molina: snowballs dodged and taken, cannons dodged and taken
 	"molina_snowball_dodges", "molina_snowball_hits", "molina_cannon_dodges", "molina_cannon_hits",
 	# one-run pickups and rewards
