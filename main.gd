@@ -2159,6 +2159,9 @@ func _draw_edge_module(c: Object, r: Rect2, side: float, k: int) -> void:
 				c.draw_rect(Rect2(cp.x - 8.0, cp.y - 9.0, 16.0, 5.0), Color(0.30, 0.19, 0.16))
 				c.draw_rect(Rect2(cp.x + 8.0, cp.y - 5.0, 7.0, 18.0), Color(0.05, 0.04, 0.07, 0.22))
 			_draw_doorway(c, inner_x, side, r.position.y + 156.0, tile)
+			# and the roofs behind the first row (Gotic and the market draw theirs)
+			if lvl == "gracia" or lvl == "cremada" or lvl == "spook":
+				_city_module(c, inner_x + side * 80.0, side, r)
 		"trail", "park":
 			# dense undergrowth and trunks crowding the path
 			for b in range(4):

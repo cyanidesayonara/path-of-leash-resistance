@@ -20,6 +20,7 @@ extends RefCounted
 #   with a 0.8 s "Board!" warning and their runaway board shoots across the plaza.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
+const CityRoofs := preload("res://world/city_roofs.gd")
 const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_grove", "draw_live", "draw_overhead", "draw_snack", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
 
 
@@ -382,67 +383,8 @@ static func _draw_raval_house(b: ShapeBatch, r: Rect2, side: float, k: int) -> v
 		else Rect2(fx + face + 3.0, body.position.y, r.end.x - fx - face - 3.0, body.size.y)
 	if roof.size.x <= 4.0 or roof.size.y <= 4.0:
 		return
-	var kind := int(_h(k * 19 + 5) * 3.0)
-	if kind == 0:
-		# terracotta pitched roof: tile courses across the lot, a ridge along it
-		var tile := Color(0.70, 0.40, 0.28).lerp(wall_c, 0.15)
-		b.rect(roof, tile)
-		var mid := roof.position.y + roof.size.y * 0.5
-		b.rect(Rect2(roof.position.x, mid, roof.size.x, roof.end.y - mid), tile.darkened(0.16))
-		var tx := roof.position.x + 3.0
-		while tx < roof.end.x:
-			b.line(Vector2(tx, roof.position.y + 2.0), Vector2(tx, roof.end.y - 2.0), tile.darkened(0.30), 1.2)
-			tx += 7.0
-		b.line(Vector2(roof.position.x, mid), Vector2(roof.end.x, mid), tile.lightened(0.22), 2.4)
-	else:
-		# flat terrat: clay tiles in a grid, a parapet, a stair hut and a tank
-		var tc := Color(0.78, 0.66, 0.54) if kind == 1 else Color(0.70, 0.68, 0.64)
-		b.rect(roof, wall_c.lightened(0.10))
-		var inner := roof.grow(-4.0)
-		b.rect(inner, tc)
-		var gx := inner.position.x + 12.0
-		while gx < inner.end.x:
-			b.line(Vector2(gx, inner.position.y), Vector2(gx, inner.end.y), tc.darkened(0.10), 1.0)
-			gx += 12.0
-		var gy := inner.position.y + 12.0
-		while gy < inner.end.y:
-			b.line(Vector2(inner.position.x, gy), Vector2(inner.end.x, gy), tc.darkened(0.10), 1.0)
-			gy += 12.0
-		var near := (inner.end.x - 46.0) if side < 0.0 else (inner.position.x + 30.0)
-		# stair hut with its shadow
-		var hut := Rect2(near - 8.0 + side * 30.0, inner.position.y + 6.0, 26.0, minf(30.0, inner.size.y - 12.0))
-		if hut.size.y > 8.0:
-			b.rect(Rect2(hut.position + Shade.light * 6.0, hut.size), SHADOW)
-			b.rect(hut, wall_c.lightened(0.04))
-			b.rect(Rect2(hut.position.x, hut.position.y, hut.size.x, 5.0), wall_c.darkened(0.12))
-		# water tank or a dish
-		var tp := Vector2(near + side * 82.0, inner.end.y - 16.0)
-		if tp.y > inner.position.y + 8.0:
-			b.circle(tp + Shade.light * 4.0, 9.0, SHADOW)
-			b.circle(tp, 8.5, Color(0.64, 0.68, 0.70))
-			b.circle(tp - Shade.light * 2.0, 5.0, Color(0.78, 0.82, 0.84))
-		# a washing line with the week's laundry
-		if kind == 1 and inner.size.y > 30.0:
-			var ly := inner.position.y + inner.size.y * 0.5 + 6.0
-			var la := near - side * 4.0
-			var lb := la - side * 70.0
-			var lx0 := minf(la, lb)
-			var lx1 := maxf(la, lb)
-			b.line(Vector2(lx0, ly), Vector2(lx1, ly), Color(0.86, 0.86, 0.84), 1.0)
-			var px := lx0 + 4.0
-			var pi := 0
-			while px < lx1 - 8.0:
-				var wc: Color = WASHING[(k + pi) % WASHING.size()]
-				var pw := 7.0 + 4.0 * _h(k * 5 + pi)
-				b.rect(Rect2(px, ly - 1.0, pw, 9.0 + 4.0 * _h(k + pi * 3)), wc)
-				px += pw + 3.0
-				pi += 1
-		else:
-			# planters along the parapet
-			for pp in range(3):
-				var py := inner.position.y + 8.0 + float(pp) * (inner.size.y - 16.0) * 0.5
-				var ppx := (inner.position.x + 6.0) if side > 0.0 else (inner.end.x - 6.0)
-				b.circle(Vector2(ppx, py), 4.5, Color(0.30, 0.50, 0.28))
+	# each lot a house of its own, and the Raval behind it
+	CityRoofs.kept_module(b, fx - 3.0 if side < 0.0 else fx + face + 3.0, side, roof.size.x, body.position.y, body.end.y, 1300 + k)
 
 
 static func _draw_white_museum(b: ShapeBatch, vt: float, vb: float) -> void:

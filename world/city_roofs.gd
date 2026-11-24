@@ -63,17 +63,23 @@ static func module(b: ShapeBatch, inner_x: float, side: float, far: float, y0: f
 
 # The same, kept: built once per place and lamplight, whoever asks.
 static var _kept := {}
+# the place's own: "" the city, "white" a whitewashed fishing town
+static var _tone := ""
+const LIME: Array[Color] = [Color(0.96, 0.95, 0.91), Color(0.92, 0.91, 0.88), Color(0.97, 0.94, 0.86)]
+const LIME_FLOOR: Array[Color] = [Color(0.80, 0.56, 0.42), Color(0.90, 0.86, 0.78), Color(0.86, 0.68, 0.54), Color(0.93, 0.91, 0.86)]
 
 
-static func kept_module(b: ShapeBatch, inner_x: float, side: float, far: float, y0: float, y1: float, salt: int) -> void:
-	var key := [inner_x, far * side, y0, y1, salt, snappedf(_glow(), 0.1)]
+static func kept_module(b: ShapeBatch, inner_x: float, side: float, far: float, y0: float, y1: float, salt: int, tone := "") -> void:
+	var key := [inner_x, far * side, y0, y1, salt, snappedf(_glow(), 0.1), tone]
 	var rec: ShapeBatch = _kept.get(key)
 	if rec == null:
 		if _kept.size() > 120:
 			_kept.clear()
 		rec = ShapeBatch.new()
 		rec.lod = true
+		_tone = tone
 		module(rec, inner_x, side, far, y0, y1, salt)
+		_tone = ""
 		_kept[key] = rec
 	rec.append_to(b)
 
@@ -182,9 +188,10 @@ static func _pot(b: ShapeBatch, p: Vector2, k: int) -> void:
 
 
 static func _terrat(b: ShapeBatch, r: Rect2, k: int) -> void:
-	var par := _pick(PARAPET, k + 11)
+	var white := _tone == "white"
+	var par := _pick(LIME if white else PARAPET, k + 11)
 	var fired := _h(k + 12) < 0.72
-	var ground := _pick(FIRED, k + 13) if fired else _pick(FELT, k + 13)
+	var ground := _pick(LIME_FLOOR, k + 13) if white else _pick(FIRED, k + 13) if fired else _pick(FELT, k + 13)
 	b.rect(r, par.darkened(0.34))
 	var cap := r.grow(-0.8)
 	b.rect(cap, par)
