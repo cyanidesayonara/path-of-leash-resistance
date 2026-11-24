@@ -210,6 +210,8 @@ shot sitges --level=sitges --shot-y=-2500 --shot-at=260
 shot sitges-2 --level=sitges --at-freedom --shot-at=260
 shot atraccions --level=atraccions --shot-y=-2500 --shot-at=260
 shot atraccions-2 --level=atraccions --at-freedom --shot-at=260
+shot girona --level=girona --shot-y=-1250 --shot-at=260
+shot girona-2 --level=girona --at-freedom --shot-at=260
 shot aeroport --level=aeroport --shot-y=-2500 --shot-at=260
 shot aeroport-2 --level=aeroport --shot-y=-3200 --shot-home --shot-sweeper --shot-at=380
 shot aeroport-3 --level=aeroport --at-freedom --shot-at=260

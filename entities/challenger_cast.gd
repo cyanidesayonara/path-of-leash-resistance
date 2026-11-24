@@ -87,6 +87,8 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_farmer(c, fd, t, s)
 		"balloon":
 			_balloon(c, fd, t, s)
+		"florist":
+			_florist(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -1068,3 +1070,24 @@ static func _balloon(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 		c.draw_line(hand, bp, Color(0.96, 0.96, 0.94, 0.55), 0.8)
 		c.draw_circle(bp, 6.2, cols[k])
 		c.draw_circle(bp - Vector2(2.0, 2.0), 1.8, Color(1.0, 1.0, 1.0, 0.55))
+
+
+# Girona: a Temps de Flors florist in a yellow rain slicker holding bright blooms
+static func _florist(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.84, 0.65, 0.50)
+	var slicker := Color(0.92, 0.72, 0.18)
+	var apron := Color(0.22, 0.44, 0.28)
+	_shadow(c, Vector2.ZERO, 14.0, 14.0)
+	_shoes(c, fd, side, Color(0.24, 0.26, 0.28))
+	_person(c, Vector2.ZERO, fd, slicker, skin, Color(0.26, 0.18, 0.14), "bun", "none", Color.BLACK)
+	c.draw_colored_polygon(_bar(fd * 3.0, side, 12.0, 6.0), apron)
+	var sway := sin(t * 2.0 + s) * 1.8
+	var bouquet := fd * 14.0 + side * sway
+	_arm(c, side * 8.0, bouquet + side * 4.0, slicker, skin)
+	_arm(c, -side * 8.0, bouquet - side * 4.0, slicker, skin)
+	c.draw_circle(bouquet, 8.5, apron)
+	var blooms: Array[Color] = [Color(0.92, 0.30, 0.48), Color(0.96, 0.80, 0.22), Color(0.60, 0.38, 0.82), Color(0.96, 0.94, 0.88)]
+	for k in range(5):
+		var bp := bouquet + Vector2.from_angle(float(k) * TAU / 5.0 + sway * 0.1) * 4.5
+		c.draw_circle(bp, 3.0, blooms[k % blooms.size()])

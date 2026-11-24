@@ -205,6 +205,9 @@ const STYLES := {
 	# Vic: soft inland market morning, accordion and muted marimba in the fog
 	"vic": {"bpm": 108, "key": 2, "minor": true, "lead": "accordion", "lead2": ["marimba", 12], "comp": "oompah",
 		"bass": "walk", "drums": "brushsoft", "swing": 0.05, "verb": 0.36},
+	# Girona: rainy dusk over the Onyar, minor guitar and glockenspiel arpeggios
+	"girona": {"bpm": 110, "key": 4, "minor": true, "lead": "guitar", "lead2": ["glock", 12], "comp": "arp",
+		"bass": "walk", "drums": "brushsoft", "swing": 0.05, "verb": 0.36},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
@@ -617,6 +620,13 @@ const DARES := {
 			[4, 0.5, 83], [4.5, 0.5, 86], [5, 0.5, 91], [5.5, 0.5, 86], [6, 1, 83], [7, 1, 79],
 			[8, 0.5, 84], [8.5, 0.5, 88], [9, 0.5, 93], [9.5, 0.5, 88], [10, 1, 84], [11, 1, 79],
 			[12, 0.5, 86], [12.5, 0.5, 84], [13, 0.5, 83], [13.5, 0.5, 81], [14, 2, 84]]},
+	# the florist: bright Temps de Flors guitar and whistle over a brisk dusk shuffle
+	"florist": {"bpm": 134, "lead": "guitar", "lead2": ["whistle", 12], "comp": "rumba", "bass": "walk",
+		"drums": "brush", "verb": 0.24, "chords": [[64, "maj"], [69, "min"], [62, "min"], [67, "maj"]],
+		"mel": [[0, 0.5, 76], [0.5, 0.5, 80], [1, 1, 83], [2, 0.5, 81], [2.5, 0.5, 80], [3, 1, 76],
+			[4, 0.5, 74], [4.5, 0.5, 76], [5, 1, 81], [6, 1, 79], [7, 1, 76],
+			[8, 0.5, 74], [8.5, 0.5, 76], [9, 0.5, 81], [9.5, 0.5, 83], [10, 1, 79], [11, 1, 76],
+			[12, 0.5, 74], [12.5, 0.5, 72], [13, 0.5, 71], [13.5, 0.5, 69], [14, 2, 76]]},
 }
 
 # --- the score: what plays when ---------------------------------------------

@@ -94,6 +94,8 @@ const LEVEL_GOAL_IDS := {
 	"encants": ["mark", "sniff", "phone", "paws", "bag", "fetch", "carry", "encants_spill", "encants_auction", "snack", "combo", "prize", "spell", "jamon", "clock"],
 	"tarragona": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "tarragona_mark", "tarragona_castell", "tarragona_balco", "combo", "prize", "spell", "jamon", "clock"],
 	"vic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "vic_market", "vic_columns", "vic_fuet", "vic_fog", "combo", "prize", "spell", "jamon", "clock"],
+	# Girona: the Onyar fronts, the steps rain cascade, and La Lleona on her column
+	"girona": ["mark", "sniff", "phone", "paws", "bag", "fetch", "drink", "girona_houses", "girona_steps", "girona_lleona", "combo", "prize", "spell", "jamon", "clock"],
 	# Sarrià: the bells of Sant Vicenç, the two bakeries, the balcony gardener
 	"sarria": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bells", "bread", "gardener", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
@@ -215,6 +217,9 @@ static func defs(m: Node2D) -> Dictionary:
 		"vic_columns": {"text": "Mark %d arcade columns", "target": 4, "fn": func() -> int: return m.vic_cols_marked.size()},
 		"vic_fuet": {"text": "Carry the fuet back to its stall", "target": 1, "fn": func() -> int: return m.vic_sausage_returned},
 		"vic_fog": {"text": "Find your human in the fog", "target": 1, "fn": func() -> int: return m.vic_found_human},
+		"girona_houses": {"text": "Sniff %d Onyar fronts", "target": 3, "fn": func() -> int: return m.girona_houses_sniffed.size()},
+		"girona_steps": {"text": "Stay dry through the steps cascade", "target": 1, "fn": func() -> int: return m.girona_steps_saved},
+		"girona_lleona": {"text": "Bark at La Lleona on her column", "target": 1, "fn": func() -> int: return 1 if m.girona_lleona_barked else 0},
 		"bells": {"text": "Howl along with the church bells", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.howled else 0},
 		"bread": {"text": "Sniff the bread at %d bakeries", "target": 2, "fn": func() -> int: return Sarria.bread_sniffed(m)},
 		"gardener": {"text": "Bark good morning to the balcony gardener", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.greeted else 0},

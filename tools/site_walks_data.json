@@ -5,7 +5,7 @@
     "port",
     "raval"
   ],
-  "carousel_count": 51,
+  "carousel_count": 52,
   "chapters": [
     [
       "tutorial",
@@ -55,9 +55,10 @@
       "poble",
       "sitges",
       "atraccions",
-      "site"
+      "girona"
     ],
     [
+      "site",
       "ronda",
       "partit",
       "montserrat",
@@ -80,7 +81,7 @@
     "molina",
     "montserrat"
   ],
-  "count": 50,
+  "count": 51,
   "dogs": [
     {
       "accel_mult": 1.0,
@@ -1836,6 +1837,94 @@
       "sign_material": "solar",
       "star_gate": 37,
       "weather": "wind"
+    },
+    "girona": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "molina",
+      "chase_gate_name": "La Molina",
+      "chase_warning": "",
+      "clock_target": 195,
+      "clock_text": "3:15",
+      "freedom_kind": "clearing",
+      "gate_text": "JARDINS DELS ALEMANYS",
+      "gloss": "Onyar houses, steps and lioness",
+      "gloss_ca": "Cases de l'Onyar, escales i lleona",
+      "gloss_es": "Casas del Onyar, escaleras y leona",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "drink",
+          "text": "Have a good long drink"
+        },
+        {
+          "id": "girona_houses",
+          "text": "Sniff 3 Onyar fronts"
+        },
+        {
+          "id": "girona_steps",
+          "text": "Stay dry through the steps cascade"
+        },
+        {
+          "id": "girona_lleona",
+          "text": "Bark at La Lleona on her column"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Nab the xuixo off the bakery tray"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:15)"
+        }
+      ],
+      "hour": "dusk",
+      "id": "girona",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Girona",
+      "prize_text": "Nab the xuixo off the bakery tray",
+      "sign_material": "petals",
+      "star_gate": 47,
+      "weather": "rain"
     },
     "gracia": {
       "carry_text": "",
@@ -3775,7 +3864,7 @@
     },
     "site": {
       "carry_text": "",
-      "chapter": 4,
+      "chapter": 5,
       "chase_gate": "molina",
       "chase_gate_name": "La Molina",
       "chase_warning": "",

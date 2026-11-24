@@ -664,6 +664,21 @@
       }
     ]
   },
+  "girona": {
+    "about": "Girona in pouring rain at dusk: along the arcaded Rambla flagstones past a tempting bakery xuixo tray, out onto Eiffel's crimson iron Pont de les Peixateries Velles above the Onyar's hanging coloured houses, up the Barri Vell limestone steps as gargoyle spouts dump rain down the centre, and across Plaça de Sant Feliu where La Lleona clings to her column before running free in Jardins dels Alemanys.",
+    "shots": [
+      {
+        "file": "shot-girona.jpg",
+        "caption": "Eiffel's iron bridge over the Onyar in dusk rain",
+        "alt": "Girona: crimson iron bridge crossing the River Onyar beside hanging yellow and terracotta houses in rain at dusk."
+      },
+      {
+        "file": "shot-girona-2.jpg",
+        "caption": "Off the leash in Jardins dels Alemanys",
+        "alt": "Girona: the dog runs free across the mossy garden square in Jardins dels Alemanys."
+      }
+    ]
+  },
   "aeroport": {
     "about": "Out along the gleaming glass pier of Terminal 1 at El Prat, gliding on moving walkways past boarding rushes, giant chocolates and spinning baggage carousels toward La Cabina. Trigger the gate alarm and airport security keeps pace behind you the whole pier back.",
     "shots": [
