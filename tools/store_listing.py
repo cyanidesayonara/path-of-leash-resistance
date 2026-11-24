@@ -137,15 +137,16 @@ def submission(raw: str) -> dict:
 
 
 def ingested_languages(sub: dict) -> set:
-    """The listing languages of the packages the Store has already ingested
-    (an Id, so not this run's PendingUpload; the published package is
-    PendingDelete in a draft that replaces it). The Store refuses a new
-    listing in any other language ("Language codes: ca-ES|es-ES not
-    supported", v1.76): a package's new languages can be listed only in the
-    submission after the one that ships it."""
+    """The listing languages of the packages this submission keeps: ingested
+    (an Id, so not this run's PendingUpload) and not PendingDelete, which is
+    what the published package is in a draft that replaces it. The Store
+    refuses a new listing in any other language ("Language codes: ca-ES|es-ES
+    not supported", v1.76, even with the published package declaring both and
+    only its replacement pending): a new language is added by a draft that
+    keeps the package, the workflow's update_listing."""
     langs = set()
     for package in sub.get("ApplicationPackages") or []:
-        if not package.get("Id") or package.get("FileStatus") == "PendingUpload":
+        if not package.get("Id") or package.get("FileStatus") in ("PendingUpload", "PendingDelete"):
             continue
         for code in package.get("Languages") or []:
             lang = lang_for_listing_key(code)
@@ -207,9 +208,9 @@ def update_submission(sub: dict, by_lang: dict, verbose: bool = True,
             continue
         if store_languages is not None and target not in store_languages:
             if verbose:
-                print(f"note: not adding {target} yet: no package the Store has "
-                      "ingested declares it; the next submission after this "
-                      "package is published adds it")
+                print(f"note: not adding {target} yet: no package this draft keeps "
+                      "declares it; run update_listing once the package that "
+                      "does is published")
             continue
         cloned_entry = {"BaseListing": copy.deepcopy(template_base)}
         if "PlatformOverrides" in template_entry and not template_entry["PlatformOverrides"]:

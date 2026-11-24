@@ -8,6 +8,10 @@
 #   the draft is committed: the Store only ingests uploaded files at commit.
 #   Check the staged draft in this run's log and summary, and the rendered
 #   images in its store-listing-images artifact.
+# - update_listing stages the listing alone, for the release already in the
+#   Store: the text as tagged, the same images, and the published package kept.
+#   A listing language the package brought in can only be added this way: the
+#   Store ignores a package that a draft replaces.
 # - submit commits that draft, which ingests the package and images and
 #   starts certification. Do not use Partner Center's own Submit button for
 #   an API-staged draft: it does not carry the staged files.
@@ -30,9 +34,9 @@ on:
         required: true
         type: string
       mode:
-        description: "configure = check credentials; update_draft = stage the MSIX, the listing text from store/listing.md and the screenshots and logos rendered from the tag; get_draft = print the staged draft; submit = commit it (starts certification)"
+        description: "configure = check credentials; update_draft = stage the MSIX, the listing text from store/listing.md and the screenshots and logos rendered from the tag; update_listing = stage the text and images alone, keeping the published package (adds its new languages); get_draft = print the staged draft; submit = commit it (starts certification)"
         type: choice
-        options: [configure, update_draft, get_draft, submit]
+        options: [configure, update_draft, update_listing, get_draft, submit]
         default: configure
 
 env:
@@ -66,14 +70,14 @@ jobs:
       # The images show the build players get: rendered from the tag, beside
       # main's tools and listing, as pages.yml does for the website.
       - name: Check out the release
-        if: ${{ inputs.mode == 'update_draft' }}
+        if: ${{ inputs.mode == 'update_draft' || inputs.mode == 'update_listing' }}
         uses: actions/checkout@v5
         with:
           ref: ${{ inputs.tag }}
           path: rel
 
       - name: Cache Godot
-        if: ${{ inputs.mode == 'update_draft' }}
+        if: ${{ inputs.mode == 'update_draft' || inputs.mode == 'update_listing' }}
         uses: actions/cache@v4
         with:
           path: godot.zip
@@ -81,7 +85,7 @@ jobs:
 
       # Before anything touches the draft, so a failed render changes nothing
       - name: Render the screenshots and Store logos from the release
-        if: ${{ inputs.mode == 'update_draft' }}
+        if: ${{ inputs.mode == 'update_draft' || inputs.mode == 'update_listing' }}
         run: |
           set -euo pipefail
           if [ ! -s godot.zip ]; then
@@ -102,7 +106,7 @@ jobs:
           ls -l build/store-listing
 
       - name: Keep the rendered images
-        if: ${{ inputs.mode == 'update_draft' }}
+        if: ${{ inputs.mode == 'update_draft' || inputs.mode == 'update_listing' }}
         uses: actions/upload-artifact@v4
         with:
           name: store-listing-images
@@ -170,7 +174,7 @@ jobs:
           python3 tools/store_images.py upload-url pre.json --masks 2> /dev/null || true
           rm -f pre.json
           # never while a submission is in certification or publishing; a
-          # status that cannot be read stops the run
+          # status that cannot be read stops the run (update_listing below too)
           NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 \
             || { show status.txt; exit 1; }
           show status.txt
@@ -180,10 +184,16 @@ jobs:
           show publish.txt
 
       - name: Stage the listing text and images
-        if: ${{ inputs.mode == 'update_draft' }}
+        if: ${{ inputs.mode == 'update_draft' || inputs.mode == 'update_listing' }}
         run: |
           set -euo pipefail
           show() { python3 tools/store_images.py redact "$1"; }
+          if [ "$MODE" = update_listing ]; then
+            NO_COLOR=1 msstore submission status "$PRODUCT_ID" --verbose > status.txt 2>&1 \
+              || { show status.txt; exit 1; }
+            show status.txt
+            python3 tools/store_images.py check-draftable --status status.txt
+          fi
           NO_COLOR=1 msstore submission get "$PRODUCT_ID" > submission.json 2> get.err \
             || { show get.err; exit 1; }
           python3 tools/store_images.py upload-url submission.json --masks
@@ -192,13 +202,20 @@ jobs:
           # the notes for certification: everything under "## Current listing"
           # (only in the languages the release's package declares: the Store
           # refuses a listing in any other)
-          python3 tools/store_listing.py submission.json store/listing.md metadata.json \
+          LISTING=store/listing.md
+          if [ "$MODE" = update_listing ]; then
+            # the published package stays, and the text is the release's own:
+            # main's may already describe the next one
+            python3 tools/store_images.py keep-package submission.json --tag "$TAG"
+            LISTING=rel/store/listing.md
+          fi
+          python3 tools/store_listing.py submission.json "$LISTING" metadata.json \
             --manifest rel/store/msix/AppxManifest.xml
           # the images of the restaged types become PendingDelete and the
           # rendered ones PendingUpload; upload.zip is the MSIX plus those
           # images, and replaces the upload msstore publish just made
           python3 tools/store_images.py stage --draft submission.json --submission metadata.json \
-            --images build/store-listing --msix pkg/*.msix --zip upload.zip
+            --images build/store-listing --zip upload.zip $([ "$MODE" = update_listing ] || echo --msix pkg/*.msix)
           upload_url="$(python3 tools/store_images.py upload-url submission.json)"
           # x-ms-version: a single Put Blob takes up to 5000 MiB from 2019-12-12
           # on; left to the link's own version it could be capped at 64 MiB
@@ -221,7 +238,7 @@ jobs:
           echo "Listing metadata updated."
 
       - name: Read the staged draft back
-        if: ${{ inputs.mode == 'update_draft' }}
+        if: ${{ inputs.mode == 'update_draft' || inputs.mode == 'update_listing' }}
         run: |
           set -euo pipefail
           show() { python3 tools/store_images.py redact "$1"; }

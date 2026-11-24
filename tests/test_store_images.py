@@ -234,16 +234,40 @@ class StoreImages(unittest.TestCase):
         sub = draft()
         sub["ApplicationPackages"][0]["Languages"] = ["en-us"]
         sub["ApplicationPackages"][1]["Languages"] = ["en-us", "ca-es", "es-es"]
-        self.assertEqual(store_listing.ingested_languages(sub), {"en-US"})
+        self.assertEqual(store_listing.ingested_languages(sub), set())
         store_listing.update_submission(sub, by_lang, verbose=False, languages=all_three,
                                         store_languages=store_listing.ingested_languages(sub))
         self.assertEqual(list(sub["Listings"]), ["en-us"])
-        # the next release: the package that declares them is ingested
+        # published, but this draft replaces it: the Store still refuses them
         sub = draft()
         sub["ApplicationPackages"][0]["Languages"] = ["en-us", "ca-es", "es-es"]
         store_listing.update_submission(sub, by_lang, verbose=False, languages=all_three,
                                         store_languages=store_listing.ingested_languages(sub))
+        self.assertEqual(list(sub["Listings"]), ["en-us"])
+        # update_listing keeps the published package, and they go in
+        self.assertEqual(store_images.keep_package(sub, "v1.74"), [])
+        self.assertEqual([(p["FileName"], p["FileStatus"]) for p in sub["ApplicationPackages"]],
+                         [("PathOfLeashResistance-1.74.0.0.msix", "Uploaded")])
+        store_listing.update_submission(sub, by_lang, verbose=False, languages=all_three,
+                                        store_languages=store_listing.ingested_languages(sub))
         self.assertEqual(sorted(sub["Listings"]), ["ca-ES", "en-us", "es-ES"])
+
+    def test_a_listing_only_draft_keeps_the_published_package(self):
+        self.assertEqual(len(store_images.keep_package(draft(), "v1.75")), 1)
+        before, sub = draft(), draft()
+        self.assertEqual(store_images.keep_package(sub, "v1.74"), [])
+        src, out = self.tmp / "sub.json", self.tmp / "out.zip"
+        dr = self.tmp / "draft.json"
+        src.write_text(json.dumps(sub), encoding="utf-8")
+        dr.write_text(json.dumps(before), encoding="utf-8")
+        self.assertEqual(store_images.main(["stage", "--draft", str(dr), "--submission", str(src),
+                                            "--images", str(self.images), "--zip", str(out)]), 0)
+        import zipfile
+        self.assertFalse([n for n in zipfile.ZipFile(out).namelist() if n.endswith(".msix")])
+        staged = json.loads(src.read_text(encoding="utf-8"))
+        ok = "Submission Status = PendingCommit\n"
+        self.assertEqual(store_images.check_submit(ok, staged, "v1.74", "- notes"), [])
+        self.assertEqual(len(store_images.check_submit(ok, staged, "v1.75", "- notes")), 1)
 
     def test_redact_drops_the_upload_link_from_json_and_from_wrapped_log_lines(self):
         sig = "SECRET%3D"
