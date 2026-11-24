@@ -31,7 +31,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Fifty walks in and around Barcelona**, each built as its own place, plus a
+- **Fifty-one walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -42,17 +42,17 @@ you want to go; constant hauling wears their patience down until they say
   near misses.
 - **Dares**: a dare-giver on every walk, each with their own tune. Bark to
   take a dare, then land the tricks before the music runs out.
-- **Nine chases.** A street sweeper careens down a back street at dawn, and
+- **Ten chases.** A street sweeper careens down a back street at dawn, and
   you drag your oblivious human home ahead of it. On El Besòs the river
   comes home with you, in El Veterinari you bolt from the vet's, wild boars
   come down Els Senglars after you, the correfoc's fire devils chase
   you through Gràcia, the Dimoni's rolling firework float pursues you in
   La Cremada, airport security runs you out of L'Aeroport, a runaway snow
-  groomer barrels down La Molina, and the wild goats come down Montserrat
-  after you.
+  groomer barrels down La Molina, the theme park's mascots want a hug in Les
+  Atraccions, and the wild goats come down Montserrat after you.
 - **Seven dogs**, each with a knack and a skill goal of her own, opened with
   stars, with buried finds to sniff out and training to spend on her stats.
-- **Four statue bosses**: El Mamut the stone mammoth in La Ciutadella, Els Lleons the twin bronze lions at El Port, El Drac the mosaic salamander in El Mosaic, and on the Rambla del Raval, El Gat, a fat bronze cat who climbs off his plinth.
+- **Five statue bosses**: El Mamut the stone mammoth in La Ciutadella, Els Lleons the twin bronze lions at El Port, El Drac the mosaic salamander in El Mosaic, La Lleona the stone lioness in Girona, and on the Rambla del Raval, El Gat, a fat bronze cat who climbs off his plinth.
 - **Moods**: a fright, a bark-off or a run off the leash leaves her jumpy,
   barky, full of zoomies or flat, and each changes how she moves.
 - **Ground you can feel**: grass and mud slow her but hold scent, sand drags
@@ -113,6 +113,7 @@ you want to go; constant hauling wears their patience down until they say
 | Sitges | whitewashed streets by the sea |
 | Les Atraccions | coasters, queues and churros |
 | L'Aeroport | airport security on your tail |
+| Girona | the Onyar's houses, the old-town steps and La Lleona |
 | Les Obres | the work site |
 | Camí de Ronda | the cliff path above the coves |
 | Dia de Partit | match day |
