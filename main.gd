@@ -6262,6 +6262,8 @@ func _draw_ground_detail(vt: float, vb: float) -> void:
 		var dir := Vector2.from_angle(float(d.rot))
 		# the concourse floor is polished terrazzo, indoors: grit and litter
 		# on it, never a cracked or damp street slab
+		if lvl == "vet":
+			continue        # mopped twice a day
 		if (lvl == "station" or lvl == "aeroport") and (int(d.kind) == 0 or int(d.kind) == 2):
 			continue
 		match int(d.kind):
