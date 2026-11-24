@@ -149,6 +149,25 @@ func _run() -> void:
 	gat.tick_state(0.016)
 	_check(m.dog.global_position.distance_to(gat.pos) >= BG.BODY_R - 0.5, "she cannot stand inside him")
 
+	# he comes round to her: no faster than his bulk turns, his head first, and
+	# no swat at what is behind him
+	gat.face_dir = Vector2.DOWN
+	gat.stance = Vector2.DOWN
+	gat.look_dir = Vector2.DOWN
+	m.dog.global_position = gat.pos + Vector2(0.0, -120.0)
+	gat.swat_cooldown = 0.0
+	gat.tick_state(0.1)
+	_check(gat.state == BG.State.PROWL, "she is behind him: no swat")
+	_check(absf(Vector2.DOWN.angle_to(gat.face_dir)) <= BG.TURN_ANGRY * 0.1 + 0.01, "he turns, he does not snap round")
+	_check(absf(gat.face_dir.angle_to(gat.look_dir)) <= BG.NECK + 0.01, "his head goes as far as his neck")
+	var leg_was: Vector2 = gat.leg_poles[0] - gat.pos
+	gat.swat_cooldown = 99.0
+	for i in range(30):
+		m.dog.global_position = gat.pos + Vector2(0.0, -120.0)
+		gat.tick_state(0.05)
+	_check(gat.face_dir.dot(Vector2.UP) > 0.9, "in a second and a half he faces her")
+	_check((gat.leg_poles[0] - gat.pos).distance_to(leg_was) > 40.0, "his feet come round with him")
+
 	# the clothesline: a taut rope across his body, then only its ends
 	gat.hp = 90.0
 	gat.pos = Vector2(640.0, -1000.0)

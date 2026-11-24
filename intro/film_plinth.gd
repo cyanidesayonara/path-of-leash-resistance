@@ -13,6 +13,7 @@ extends RefCounted
 # Fireworks burst, confetti rains down, the terrace crowd cheers, and the celebratory
 # title card slams in: EL REI! / VICTÒRIA AL RAVAL.
 
+const BronzeCat := preload("res://entities/bronze_cat.gd")
 const LENGTH := FilmKit.LENGTH
 const BG := Color(0.05, 0.05, 0.10)
 const FEET := 640.0
@@ -27,13 +28,8 @@ const FLASH_AT := 3.6
 const TITLE_AT := FilmKit.TITLE_AT
 
 const INK := IntroKit.INK
-const BRONZE_BASE := Color(0.30, 0.24, 0.19)
 const BRONZE_DARK := Color(0.17, 0.13, 0.11)
 const BRONZE_LIT := Color(0.46, 0.37, 0.27)
-const BRONZE_SPEC := Color(0.78, 0.64, 0.46, 0.32)
-const EYE_PUPIL := Color(0.12, 0.08, 0.06)
-const NOSE_DARK := Color(0.20, 0.15, 0.14)
-const WHISKER_WIRE := Color(0.70, 0.64, 0.54)
 const STONE := Color(0.74, 0.72, 0.68)
 const STONE_DARK := Color(0.56, 0.54, 0.50)
 const PANOT := Color(0.66, 0.64, 0.60)
@@ -159,56 +155,9 @@ static func _toppled_cat(c: CanvasItem, t: float) -> void:
 	var k := 0.88
 	var p := func(v: Vector2) -> Vector2: return cat_at + v * k
 
-	# Shadow on the stone plinth
-	c.draw_colored_polygon(MillieSide.ellipse(cat_at + Vector2(0, 2) * k, Vector2(160, 12) * k), Color(0, 0, 0, 0.32))
+	BronzeCat.lying(c, cat_at, k, t)
 
-	# Curled relaxed tail
-	var tail := PackedVector2Array()
-	var sw := sin(t * 4.0) * 14.0
-	for i in range(9):
-		var f := float(i) / 8.0
-		tail.append(p.call(Vector2(140.0 + f * 40.0 + sin(f * PI) * sw * 0.2, -60.0 - f * 80.0 + sw * f)))
-	c.draw_polyline(tail, INK, 30.0 * k)
-	c.draw_polyline(tail, BRONZE_BASE, 24.0 * k)
-
-	# Chubby belly lying comfortably
-	var bc := Vector2(0, -78)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(165, 96) * k), INK)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc), Vector2(160, 90) * k), BRONZE_BASE)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(-20, -25)), Vector2(100, 42) * k), BRONZE_LIT)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(-50, -45)), Vector2(35, 12) * k), BRONZE_SPEC)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(bc + Vector2(10, 45)), Vector2(130, 32) * k), BRONZE_DARK)
-
-	# Relaxed paws
-	for i in range(4):
-		var paw_base: Vector2 = [Vector2(-90, -40), Vector2(-30, -35), Vector2(30, -35), Vector2(90, -40)][i]
-		var paw_tip: Vector2 = paw_base + Vector2(sin(float(i) + t * 2.0) * 4.0, 38.0)
-		var col := BRONZE_DARK if i % 2 == 0 else BRONZE_BASE
-		c.draw_line(p.call(paw_base), p.call(paw_tip), INK, 34.0 * k)
-		c.draw_line(p.call(paw_base), p.call(paw_tip), col, 26.0 * k)
-		c.draw_colored_polygon(MillieSide.ellipse(p.call(paw_tip), Vector2(18, 10) * k), col)
-
-	# Round contented head resting on paws
-	var hc := Vector2(-120, -110)
-	for s: float in [-1.0, 1.0]:
-		c.draw_colored_polygon(PackedVector2Array([p.call(hc + Vector2(-24 + s * 12, -40)), p.call(hc + Vector2(-12 + s * 12, -78)),
-			p.call(hc + Vector2(0 + s * 12, -44))]), BRONZE_DARK if s < 0.0 else BRONZE_BASE)
-	c.draw_circle(p.call(hc), 64.0 * k, INK)
-	c.draw_circle(p.call(hc), 59.0 * k, BRONZE_BASE)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(-10, -20)), Vector2(35, 18) * k), BRONZE_LIT)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(38, 18)), Vector2(26, 18) * k), BRONZE_LIT)
-	c.draw_colored_polygon(MillieSide.ellipse(p.call(hc + Vector2(-48, 8)), Vector2(9, 6) * k), NOSE_DARK)
-
-	# Contented shut eyes (purring curved lines)
-	var eye := hc + Vector2(-22, -8)
-	c.draw_line(p.call(eye + Vector2(-12, 2)), p.call(eye + Vector2(0, -3)), EYE_PUPIL, 3.5 * k)
-	c.draw_line(p.call(eye + Vector2(0, -3)), p.call(eye + Vector2(12, 2)), EYE_PUPIL, 3.5 * k)
-
-	# Whiskers
-	for w in range(3):
-		var wy := 14.0 + float(w) * 8.0
-		c.draw_line(p.call(hc + Vector2(-40, wy)), p.call(hc + Vector2(-90, wy - 8.0 + float(w) * 8.0)), WHISKER_WIRE, 2.2 * k)
-
+	var hc := Vector2(-136, -124)
 	# Purring vibration bubbles / hearts
 	for h in range(3):
 		var ht := fmod(t * 1.5 + float(h) * 0.7, 2.1)
