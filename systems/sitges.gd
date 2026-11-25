@@ -9,6 +9,7 @@ extends RefCounted
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
 const CityRoofs := preload("res://world/city_roofs.gd")
+const Woods := preload("res://world/woods.gd")
 const HOOKS := ["draw_bin", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_live", "draw_overhead", "draw_snack", "draw_table", "draw_top", "idle_status", "is_lamp", "night_fronts", "on_bark", "surface", "takes_prints", "tick", "tree_kind"]
 
 
@@ -581,26 +582,56 @@ static func _promenade_poly(lo: float, hi: float) -> PackedVector2Array:
 	return left
 
 
+# a color coming in from nothing at x0 to all of it at x1
+static func _fade(b: ShapeBatch, col: Color, x0: float, x1: float, y0: float, y1: float) -> void:
+	var pts := PackedVector2Array()
+	for y: float in [y0, y1]:
+		for k in range(5):
+			pts.append(Vector2(lerpf(x0, x1, float(k) / 4.0), y))
+	b.band(pts, 5, col, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 0.16, 0.5, 0.84, 1.0]))
+
+
 static func _ground(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
 	# 1. Open sea on the west, stepping gently into shallower turquoise near shore
 	wc.rect(Rect2(-520.0, lo, 940.0, hi - lo), SEA_DEEP)
-	wc.rect(Rect2(70.0, lo, 290.0, hi - lo), SEA_MID)
-	wc.rect(Rect2(160.0, lo, 260.0, hi - lo), SEA_SHALLOW)
+	for tone: Array in [[SEA_MID, -320.0, 140.0], [SEA_SHALLOW, -60.0, 236.0]]:
+		_fade(wc, tone[0], tone[1], tone[2], lo, hi)
+		wc.rect(Rect2(tone[2], lo, 420.0 - float(tone[2]), hi - lo), tone[0])
 
 	# 2. Ribera dry sand & Fragata beach (and kite bay apron)
 	var sand_lo := maxf(lo, STEPS_DN_Y1)
 	if hi > STEPS_UP_Y1:
-		wc.rect(Rect2(236.0, maxf(lo, STEPS_UP_Y0), 210.0, hi - maxf(lo, STEPS_UP_Y0)), SAND_WET)
-		wc.rect(Rect2(268.0, maxf(lo, STEPS_UP_Y0), 210.0, hi - maxf(lo, STEPS_UP_Y0)), SAND_DRY)
+		var s0 := maxf(lo, STEPS_UP_Y0)
+		wc.rect(Rect2(250.0, s0, 228.0, hi - s0), SAND_WET)
+		_fade(wc, SAND_WET, 214.0, 250.0, s0, hi)
+		_fade(wc, SAND_DRY, 252.0, 312.0, s0, hi)
+		wc.rect(Rect2(312.0, s0, 166.0, hi - s0), SAND_DRY)
+		# prints, shells, the tide's wrack
+		var sy := ceilf(s0 / 34.0) * 34.0
+		while sy < hi - 10.0:
+			var h1 := _h(sy, 31.0)
+			var sp := Vector2(268.0 + 110.0 * _h(sy, 33.0), sy)
+			if h1 < 0.4:
+				wc.capsule(sp, sp + Vector2(26.0, 5.0), 1.4, SAND_WET)
+			elif h1 < 0.7:
+				for f in range(3):
+					wc.ellipse(sp + Vector2(float(f % 2) * 7.0, float(f) * 9.0), 2.4, 3.4, Color(SAND_WET, 0.8))
+			elif h1 < 0.8:
+				wc.circle(sp, 2.2, Color(0.97, 0.94, 0.90))
+			if _h(sy, 37.0) < 0.35:
+				wc.line(Vector2(258.0, sy), Vector2(266.0, sy + 11.0), Color(0.34, 0.36, 0.22, 0.6), 2.0)
+			sy += 34.0
 	if lo < STEPS_DN_Y1:
 		var frag_col := Color(0.88, 0.81, 0.64)
-		wc.rect(Rect2(236.0, lo, 1460.0, minf(hi, STEPS_DN_Y1) - lo), SAND_DRY)
-		wc.rect(Rect2(268.0, lo, 1420.0, minf(hi, STEPS_DN_Y1) - lo), frag_col)
+		var f1 := minf(hi, STEPS_DN_Y1)
+		wc.rect(Rect2(250.0, lo, 1450.0, f1 - lo), SAND_WET)
+		_fade(wc, SAND_WET, 214.0, 250.0, lo, f1)
+		_fade(wc, frag_col, 252.0, 312.0, lo, f1)
+		wc.rect(Rect2(312.0, lo, 1388.0, f1 - lo), frag_col)
 	if lo < KITE_BAY_Y0 and hi > KITE_BAY_Y1:
 		var by0 := maxf(lo, KITE_BAY_Y1)
 		var by1 := minf(hi, KITE_BAY_Y0)
-		wc.rect(Rect2(268.0, by0, 212.0, by1 - by0), SAND_DRY)
-		wc.rect(Rect2(340.0, by0, 134.0, by1 - by0), SAND_LIGHT)
+		wc.rect(Rect2(312.0, by0, 168.0, by1 - by0), SAND_DRY)
 
 	# 3. Promenade paving from START down to STEPS_UP_Y0 (3520), stopping outside Kite Bay sand
 	if hi > STEPS_UP_Y0:
@@ -611,7 +642,14 @@ static func _ground(m: Node2D, wc: ShapeBatch, lo: float, hi: float) -> void:
 		if plo < KITE_BAY_Y0 and phi > KITE_BAY_Y1:
 			var k0 := maxf(plo, KITE_BAY_Y1)
 			var k1 := minf(phi, KITE_BAY_Y0)
-			wc.rect(Rect2(340.0, k0, 134.0, k1 - k0), SAND_LIGHT)
+			wc.rect(Rect2(340.0, k0, 134.0, k1 - k0), SAND_DRY)
+			wc.glow(KITE_POS, 130.0, SAND_LIGHT, 0.3)
+			# the bay's stone sill, where the paving steps down to the sand
+			wc.rect(Rect2(474.0, k0, 9.0, k1 - k0), PAVE_STONE)
+			wc.rect(Rect2(472.0, k0, 2.0, k1 - k0), Color(0.62, 0.56, 0.48))
+			for sill: float in [KITE_BAY_Y0, KITE_BAY_Y1]:
+				if sill >= k0 and sill <= k1:
+					wc.rect(Rect2(400.0, sill - 4.5, 83.0, 9.0), PAVE_STONE)
 		# Panot strip along the east promenade café zone
 		Panot.flor(wc, 740.0, EAST_WALL, plo, phi, PANOT_INK, PANOT_SHINE)
 		# Promenade curb / seafront stone sill along west edge
@@ -704,19 +742,15 @@ static func draw_edge_layer(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> 
 		if hi > town_lo:
 			b.rect(Rect2(EAST_WALL, town_lo, 620.0, hi - town_lo), WHITEWASH)
 		# East church transept & whitewashed parish cloister behind La Punta
-		if lo < CHURCH_RECT.end.y + 40.0 and hi > CHURCH_RECT.position.y - 40.0:
-			var apse := Rect2(EAST_WALL, CHURCH_RECT.position.y + 34.0, 210.0, CHURCH_RECT.size.y - 68.0)
-			b.rect(apse, WHITEWASH)
-			b.rect(apse.grow(-14.0), TERRACOTTA)
-			b.circle(Vector2(apse.end.x - 18.0, apse.get_center().y), 36.0, TERRACOTTA.darkened(0.08))
-			b.line(Vector2(apse.position.x, apse.get_center().y), Vector2(apse.end.x - 16.0, apse.get_center().y), TERRACOTTA.lightened(0.18), 5.0)
-		var plot_y := floorf(maxf(lo, -4680.0) / 150.0) * 150.0
+		if lo < -3900.0 and hi > -4650.0:
+			_cloister(b)
+		var plot_y := floorf(maxf(lo, -4950.0) / 150.0) * 150.0
 		var idx := int(absf(plot_y) / 150.0)
 		var town_hi := minf(hi, START + 560.0)
 		while plot_y < town_hi:
 			var y0 := plot_y
 			var y1 := plot_y + 150.0
-			if y1 > -4680.0 and not (y1 > CHURCH_RECT.position.y - 30.0 and y0 < CHURCH_RECT.end.y + 30.0):
+			if y0 >= -4950.0 and not (y1 > -4650.0 and y0 < -3900.0):
 				CityRoofs.kept_module(b, EAST_WALL + 6.0, 1.0, 460.0, y0, y1, 1500 + idx, "white")
 				# Whitewash terrace parapets + chimney pot
 				b.rect(Rect2(EAST_WALL - 8.0, y0 + 2.0, 14.0, 146.0), WHITEWASH)
@@ -741,6 +775,53 @@ static func draw_edge_layer(_m: Node2D, b: ShapeBatch, vt: float, vb: float) -> 
 			idx += 1
 			plot_y += 150.0
 	b.lod = keep_lod
+
+
+# Behind the church: its apse, round, under pantiles, and the court it stands
+# in, paved, with cypresses and a well; the town's roofs again across it.
+static func _cloister(b: ShapeBatch) -> void:
+	var r := Rect2(EAST_WALL, -4650.0, 250.0, 750.0)
+	b.rect(r, PAVE_STONE)
+	var y := r.position.y
+	var row := 0
+	while y < r.end.y:
+		b.line(Vector2(r.position.x, y), Vector2(r.end.x, y), PAVE_STONE.darkened(0.1), 1.2)
+		var x := r.position.x + (20.0 if row % 2 == 0 else 45.0)
+		while x < r.end.x:
+			b.line(Vector2(x, y), Vector2(x, y + 30.0), PAVE_STONE.darkened(0.1), 1.2)
+			x += 50.0
+		y += 30.0
+		row += 1
+	for i in range(5):
+		CityRoofs.kept_module(b, r.end.x, 1.0, 330.0, r.position.y + 150.0 * float(i), r.position.y + 150.0 * float(i + 1), 1700 + i, "white")
+	var mid := CHURCH_RECT.get_center().y
+	var nave := Rect2(EAST_WALL - 2.0, mid - 150.0, 96.0, 300.0)
+	var o := Vector2(nave.end.x, mid)
+	b.rect(Rect2(nave.position + Vector2(0.0, 12.0), nave.size + Vector2(14.0, 6.0)), SHADOW)
+	b.circle(o + Vector2(12.0, 14.0), 104.0, SHADOW)
+	b.circle(o, 104.0, WHITEWASH)
+	b.circle(o, 94.0, TERRACOTTA.darkened(0.06))
+	for i in range(13):
+		b.line(o, o + Vector2.from_angle(-PI * 0.5 + PI * float(i) / 12.0) * 94.0, TERRACOTTA.darkened(0.2), 1.8)
+	b.circle(o, 9.0, OCHRE_STONE)
+	b.rect(nave, WHITEWASH)
+	var roof := nave.grow_individual(0.0, -10.0, 0.0, -10.0)
+	b.rect(Rect2(roof.position, Vector2(roof.size.x, roof.size.y * 0.5)), TERRACOTTA.lightened(0.06))
+	b.rect(Rect2(roof.position.x, mid, roof.size.x, roof.size.y * 0.5), TERRACOTTA.darkened(0.08))
+	var rx := roof.position.x + 8.0
+	while rx < roof.end.x:
+		b.line(Vector2(rx, roof.position.y), Vector2(rx, roof.end.y), TERRACOTTA.darkened(0.2), 1.6)
+		rx += 12.0
+	b.line(Vector2(roof.position.x, mid), Vector2(roof.end.x, mid), TERRACOTTA.lightened(0.22), 5.0)
+	for p: Vector2 in [Vector2(950.0, -4600.0), Vector2(1030.0, -4580.0), Vector2(1110.0, -4610.0), Vector2(950.0, -3950.0), Vector2(1034.0, -3970.0), Vector2(1112.0, -3944.0)]:
+		b.circle(p, 24.0, OCHRE_STONE)
+		b.circle(p, 20.0, Color(0.42, 0.32, 0.22))
+		Woods.crown(b, Woods.K.CYPRESS, p, 30.0, int(p.x))
+	var w := Vector2(1096.0, -4040.0)
+	b.circle(w + Vector2(5.0, 6.0), 22.0, SHADOW)
+	b.circle(w, 21.0, OCHRE_STONE)
+	b.circle(w, 14.0, Color(0.12, 0.20, 0.28))
+	b.line(w - Vector2(21.0, 0.0), w + Vector2(21.0, 0.0), Color(0.20, 0.20, 0.22), 3.0)
 
 
 # --- live ground-level details: surf, railings, parasols, wave, church, palms, napkins ---

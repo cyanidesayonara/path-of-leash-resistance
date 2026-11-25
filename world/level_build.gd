@@ -942,7 +942,7 @@ static func diluvi(m: Node2D) -> void:
 		{"y": -600.0, "at": 0.55, "rx": 60.0, "ry": 34.0, "seed": 1.2, "kind": "puddle"},
 		{"y": -1150.0, "at": 0.30, "rx": 74.0, "ry": 40.0, "seed": 2.7, "kind": "puddle"},
 		{"y": -1900.0, "at": 0.62, "rx": 56.0, "ry": 30.0, "seed": 3.9, "kind": "puddle"},
-		{"y": -2450.0, "at": 0.45, "rx": 84.0, "ry": 46.0, "seed": 0.8, "kind": "puddle"},
+		{"y": -2450.0, "at": 0.66, "rx": 84.0, "ry": 46.0, "seed": 0.8, "kind": "puddle"},
 		{"y": -3000.0, "at": 0.66, "rx": 62.0, "ry": 34.0, "seed": 4.4, "kind": "puddle"},
 		{"y": -3350.0, "at": 0.40, "rx": 70.0, "ry": 38.0, "seed": 5.1, "kind": "puddle"},
 		{"y": -4100.0, "at": 0.55, "rx": 90.0, "ry": 48.0, "seed": 2.2, "kind": "puddle"},

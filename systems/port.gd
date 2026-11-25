@@ -14,6 +14,9 @@ const HOOKS := ["cam_lean", "draw_bollard", "draw_edge_layer", "draw_freedom", "
 const Letters := preload("res://world/sign_letters.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+# the masts sway and the palms nod
+const OVERHEAD_FOLLOWS_CAMERA := true
+const CityRoofs := preload("res://world/city_roofs.gd")
 const BossLleons := preload("res://systems/boss_lleons.gd")
 
 const SHADOW := Color(0.04, 0.05, 0.08, 0.22)
@@ -35,7 +38,6 @@ const BOLLARD_IRON := Color(0.16, 0.18, 0.20)
 const BOLLARD_RUST := Color(0.42, 0.26, 0.18)
 const WAREHOUSE_WALL := Color(0.80, 0.78, 0.73)
 const WAREHOUSE_TRIM := Color(0.18, 0.32, 0.48)
-const WAREHOUSE_DOOR := Color(0.38, 0.28, 0.20)
 const ROPE_MANILA := Color(0.76, 0.66, 0.48)
 const BUOY_ORANGE := Color(0.92, 0.35, 0.15)
 const BUOY_WHITE := Color(0.95, 0.95, 0.92)
@@ -55,6 +57,11 @@ const WHARF_EDGE_X := 930.0   # east coping edge: harbor basin extends east
 const WEST_WALL_X := 350.0    # west building line: warehouses, auction shed
 const BOARDWALK_L := 470.0    # central wooden boardwalk strip
 const BOARDWALK_R := 810.0
+const SHED_STEP := 240.0
+const SHED_BACK := 20.0       # the sheds' back wall; the road behind it
+const YARD := Color(0.54, 0.53, 0.51)
+const SHED_ROOFS: Array[Color] = [Color(0.62, 0.40, 0.31), Color(0.50, 0.55, 0.58), Color(0.66, 0.46, 0.34), Color(0.44, 0.52, 0.52)]
+const MARINA_X := 1182.0      # the yachts' pontoon, out in the basin
 
 # cast-iron mooring bollards along the quayside coping (registered in m.poles)
 const BOLLARDS: Array[Vector2] = [
@@ -293,12 +300,14 @@ static func build(m: Node2D) -> Array:
 
 # --- drawing -----------------------------------------------------------------
 static func draw_edge_layer(m: Node2D, c: ShapeBatch, vt: float, vb: float) -> void:
-	# 1. Harbor water basin on the east (from WHARF_EDGE_X to 1280.0)
-	var water_rect := Rect2(WHARF_EDGE_X, vt, 1280.0 - WHARF_EDGE_X, vb - vt)
-	c.rect(water_rect, WATER_DEEP)
-
-	# Gentle water depth gradient and shoreline wash
-	c.rect(Rect2(WHARF_EDGE_X, vt, 28.0, vb - vt), WATER_SHALLOW)
+	# the wharf stops at the gate: past it the pier head is draw_freedom's
+	vt = maxf(vt, m.GATE_Y - 30.0)
+	vb = minf(vb, m.START_Y + 560.0)
+	if vb <= vt:
+		return
+	# 1. Harbor water east of the wharf, paling toward the quay wall
+	c.rect(Rect2(WHARF_EDGE_X, vt, 1700.0 - WHARF_EDGE_X, vb - vt), WATER_DEEP)
+	_shoal(c, WHARF_EDGE_X, 1.0, vt, vb)
 
 	# Wave ripple accents in the basin
 	var step_y := 40.0
@@ -349,19 +358,14 @@ static func draw_edge_layer(m: Node2D, c: ShapeBatch, vt: float, vb: float) -> v
 		c.rect(Rect2(WHARF_EDGE_X - 14.0, haz_y + 24.0, 12.0, 24.0), HAZARD_BLACK)
 		haz_y += 48.0
 
-	# 5. Warehouse / Fish market hall facades on the west (0.0 to WEST_WALL_X)
-	var wall_rect := Rect2(0.0, vt, WEST_WALL_X, vb - vt)
-	c.rect(wall_rect, WAREHOUSE_WALL)
-	c.line(Vector2(WEST_WALL_X, vt), Vector2(WEST_WALL_X, vb), WAREHOUSE_TRIM, 3.0)
-
-	# Warehouse cargo doors & decorations
-	var door_y := floorf(vt / 240.0) * 240.0
-	while door_y <= vb:
-		var dr := Rect2(WEST_WALL_X - 60.0, door_y + 40.0, 56.0, 140.0)
-		c.rect(dr, WAREHOUSE_DOOR)
-		c.rect(Rect2(dr.position.x - 4.0, dr.position.y - 8.0, dr.size.x + 8.0, 8.0), WAREHOUSE_TRIM)
-		_draw_lifebuoy(c, Vector2(WEST_WALL_X - 74.0, door_y + 110.0))
-		door_y += 240.0
+	# 5. The fish market's sheds on the west, the service road behind them and
+	# the city's roofs across it; out in the basin, the marina's pontoon
+	var sy := floorf(vt / SHED_STEP) * SHED_STEP
+	while sy < vb:
+		_shed(c, sy, vt, vb)
+		sy += SHED_STEP
+	c.rect(Rect2(WEST_WALL_X - 1.5, vt, 3.0, vb - vt), WAREHOUSE_TRIM)
+	_marina(c, vt, vb)
 
 	# 6. Moored fishing boats in the harbor basin
 	for b: Rect2 in BOATS:
@@ -381,10 +385,167 @@ static func draw_edge_layer(m: Node2D, c: ShapeBatch, vt: float, vb: float) -> v
 		_draw_net_reel(c, NET_REEL)
 
 
+# The basin's shallows, from a quay wall at `x` out to `side`.
+static func _shoal(c: ShapeBatch, x: float, side: float, y0: float, y1: float) -> void:
+	var pts := PackedVector2Array()
+	for y: float in [y0, y1]:
+		for d: float in [0.0, 26.0, 90.0, 260.0]:
+			pts.append(Vector2(x + side * d, y))
+	c.band(pts, 4, WATER_SHALLOW, PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.95, 0.6, 0.24, 0.0]))
+
+
+static func _h(k: int) -> float:
+	return CityRoofs._h(k)
+
+
+# One shed: a long pitched roof running back from the quay, its ridge lit, its
+# skylights and vents, and the loading bay under a canopy on the quay side.
+static func _shed(c: ShapeBatch, y: float, vt: float, _vb: float) -> void:
+	if y < vt and vt <= y + SHED_STEP and y < -4800.0:
+		# the shed the gate cuts is open ground: the yard at the wharf's end
+		_yard(c, Rect2(-520.0, vt, WEST_WALL_X + 520.0, y + SHED_STEP - vt))
+		return
+	var k := int(absf(y) / SHED_STEP)
+	CityRoofs.kept_module(c, SHED_BACK - 74.0, -1.0, 430.0, y, y + SHED_STEP, 1800 + k)
+	# the road behind, its curbs and its dashes
+	c.rect(Rect2(SHED_BACK - 74.0, y, 74.0, SHED_STEP), Color(0.30, 0.30, 0.32))
+	c.rect(Rect2(SHED_BACK - 80.0, y, 8.0, SHED_STEP), COPING_STONE)
+	for d in range(5):
+		c.rect(Rect2(SHED_BACK - 38.0, y + 10.0 + 48.0 * float(d), 3.0, 24.0), Color(0.86, 0.84, 0.76, 0.7))
+	# the yard between two sheds, then the roof
+	c.rect(Rect2(SHED_BACK, y, WEST_WALL_X - SHED_BACK, SHED_STEP), YARD)
+	var r := Rect2(SHED_BACK + 6.0, y + 16.0, WEST_WALL_X - 40.0 - SHED_BACK, SHED_STEP - 24.0)
+	var col: Color = SHED_ROOFS[k % SHED_ROOFS.size()]
+	c.rect(Rect2(r.position + Shade.light * 12.0, r.size), SHADOW)
+	var mid := r.get_center().y
+	c.rect(Rect2(r.position, Vector2(r.size.x, r.size.y * 0.5)), col.lightened(0.10))
+	c.rect(Rect2(r.position.x, mid, r.size.x, r.size.y * 0.5), col.darkened(0.10))
+	# the slope darkening to each gutter
+	for e: Array in [[r.position.y, 34.0], [r.end.y, -34.0]]:
+		c.band(PackedVector2Array([Vector2(r.position.x, e[0]), Vector2(r.end.x, e[0]),
+			Vector2(r.position.x, e[0] + e[1]), Vector2(r.end.x, e[0] + e[1])]), 2, Color(0.05, 0.04, 0.06), PackedFloat32Array([0.26, 0.0]))
+	var rib := r.position.x + 9.0
+	while rib < r.end.x:
+		c.line(Vector2(rib, r.position.y), Vector2(rib, r.end.y), col.darkened(0.16), 1.2)
+		rib += 13.0
+	c.rect(Rect2(r.position.x, mid - 3.0, r.size.x, 6.0), col.lightened(0.24))
+	c.rect(Rect2(r.position.x, mid + 3.0, r.size.x, 2.0), col.darkened(0.3))
+	for q in range(3):
+		var sx := r.position.x + 34.0 + float(q) * 82.0
+		for half: float in [-62.0, 34.0]:
+			c.rect(Rect2(sx, mid + half, 40.0, 26.0), Color(0.30, 0.38, 0.44))
+			c.rect(Rect2(sx + 2.0, mid + half + 2.0, 36.0, 22.0), Color(0.58, 0.70, 0.76))
+			c.line(Vector2(sx + 20.0, mid + half + 2.0), Vector2(sx + 20.0, mid + half + 24.0), Color(0.36, 0.44, 0.50), 1.6)
+		if _h(k * 7 + q) < 0.6:
+			var vp := Vector2(sx + 60.0, mid)
+			c.circle(vp + Shade.light * 6.0, 9.0, SHADOW)
+			c.circle(vp, 9.0, Color(0.62, 0.64, 0.66))
+			c.circle(vp, 5.0, Color(0.40, 0.42, 0.45))
+	# gulls' work along the ridge
+	for q in range(3):
+		c.ellipse(Vector2(r.position.x + 260.0 * _h(k * 31 + q), mid + 2.0 + 20.0 * _h(k * 17 + q)), 4.0, 2.4, Color(0.96, 0.96, 0.94, 0.7))
+	# the loading bay: a striped canopy over the door, what is waiting by it
+	var bay := Rect2(WEST_WALL_X - 34.0, mid - 64.0, 28.0, 128.0)
+	c.rect(Rect2(bay.position + Vector2(4.0, 8.0), bay.size), SHADOW)
+	for st in range(8):
+		c.rect(Rect2(bay.position.x, bay.position.y + 16.0 * float(st), bay.size.x, 16.0), WAREHOUSE_TRIM if st % 2 == 0 else BOAT_WHITE)
+	c.band(PackedVector2Array([bay.position, Vector2(bay.end.x, bay.position.y), Vector2(bay.position.x, bay.end.y), bay.end]),
+		2, Color(0.05, 0.05, 0.10), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.34, 0.0]))
+	_draw_lifebuoy(c, Vector2(WEST_WALL_X - 15.0, mid + 86.0))
+	for q in range(2):
+		var cr := Rect2(WEST_WALL_X - 30.0, y + 18.0 + 22.0 * float(q), 20.0, 18.0)
+		c.rect(Rect2(cr.position + Shade.light * 4.0, cr.size), SHADOW)
+		c.rect(cr, CRATE_PINE)
+		c.rect(cr.grow(-4.0), ICE_BED if (k + q) % 2 == 0 else CRATE_PINE.darkened(0.3))
+
+
+# Open ground at the wharf's end: containers in rows, a lane between.
+static func _yard(c: ShapeBatch, r: Rect2) -> void:
+	c.rect(r, YARD)
+	c.rect(Rect2(SHED_BACK - 74.0, r.position.y, 74.0, r.size.y), Color(0.30, 0.30, 0.32))
+	var cols: Array[Color] = [Color(0.62, 0.28, 0.22), Color(0.24, 0.40, 0.54), Color(0.74, 0.62, 0.30), Color(0.34, 0.48, 0.40), Color(0.66, 0.66, 0.64)]
+	var row := 0
+	var y := r.position.y + 14.0
+	while y + 38.0 < r.end.y - 6.0:
+		var x := r.position.x + 8.0
+		var i := 0
+		while x + 104.0 < WEST_WALL_X - 20.0:
+			var b := Rect2(x, y, 104.0, 38.0)
+			if not (b.end.x > SHED_BACK - 80.0 and b.position.x < SHED_BACK + 6.0) and _h(row * 17 + i * 5) > 0.2:
+				var col: Color = cols[int(_h(row * 23 + i * 7) * 5.0) % 5]
+				c.rect(Rect2(b.position + Shade.light * 9.0, b.size), SHADOW)
+				c.rect(b, col)
+				for k in range(12):
+					c.line(Vector2(b.position.x + 6.0 + 8.4 * float(k), b.position.y + 2.0), Vector2(b.position.x + 6.0 + 8.4 * float(k), b.end.y - 2.0), col.darkened(0.16), 1.6)
+				c.rect(Rect2(b.position, Vector2(b.size.x, 3.0)), col.lightened(0.24))
+				c.rect(Rect2(b.position.x, b.end.y - 3.0, b.size.x, 3.0), col.darkened(0.3))
+			x += 112.0
+			i += 1
+		y += 46.0
+		row += 1
+
+
+# Moored yachts either side of a floating pontoon, far enough out that the
+# fishing boats and the Golondrina lie clear of them.
+static func _marina(c: ShapeBatch, vt: float, vb: float) -> void:
+	c.rect(Rect2(MARINA_X - 7.0, vt, 26.0, vb - vt), Color(0.03, 0.10, 0.20, 0.45))
+	c.rect(Rect2(MARINA_X - 10.0, vt, 20.0, vb - vt), BOARDWALK_TIMBER)
+	var py := floorf(vt / 18.0) * 18.0 + 18.0
+	while py < vb:
+		c.line(Vector2(MARINA_X - 10.0, py), Vector2(MARINA_X + 10.0, py), BOARDWALK_PLANK, 1.2)
+		py += 18.0
+	var y := floorf(vt / 76.0) * 76.0
+	while y < vb + 76.0:
+		var k := int(absf(y) / 76.0)
+		for side: float in [-1.0, 1.0]:
+			var n := k * 2 + (1 if side > 0.0 else 0)
+			if _h(n * 13) < 0.22 or y - 22.0 < vt:
+				continue
+			# a wooden finger out to every berth
+			c.rect(Rect2(MARINA_X + (8.0 if side > 0.0 else -42.0), y + 30.0, 34.0, 5.0), BOARDWALK_PLANK)
+			_yacht(c, Vector2(MARINA_X + side * 16.0, y), side, 66.0 + 24.0 * _h(n * 17), n)
+		y += 76.0
+
+
+# a yacht moored stern to: its hull, its deck, its cabin, boom and sail cover
+static func _yacht(c: ShapeBatch, stern: Vector2, side: float, ln: float, n: int) -> void:
+	var w := 13.0 + 4.0 * _h(n * 19)
+	var hull := func(grow: float) -> PackedVector2Array:
+		var o := PackedVector2Array()
+		for q: Vector2 in [Vector2(0, -0.8), Vector2(0.35, -1.0), Vector2(0.72, -0.72), Vector2(1.0, 0), Vector2(0.72, 0.72), Vector2(0.35, 1.0), Vector2(0, 0.8)]:
+			o.append(stern + Vector2(side * (q.x * (ln + grow) - grow * 0.4), q.y * (w + grow)))
+		return o
+	var wet: PackedVector2Array = hull.call(4.0)
+	for i in range(wet.size()):
+		wet[i] += Shade.light * 5.0
+	c.polygon(wet, Color(0.03, 0.10, 0.20, 0.5))
+	var trims: Array[Color] = [BOAT_BLUE, BOAT_RED, Color(0.16, 0.36, 0.34), Color(0.90, 0.89, 0.86)]
+	c.polygon(hull.call(2.0), trims[n % 4])
+	c.polygon(hull.call(-2.0), BOAT_WHITE)
+	var cab := Rect2(stern.x + (ln * 0.30 if side > 0.0 else -ln * 0.66), stern.y - w * 0.45, ln * 0.36, w * 0.9)
+	c.rect(Rect2(stern.x + (4.0 if side > 0.0 else -ln * 0.26), stern.y - w * 0.5, ln * 0.26 - 4.0, w), Color(0.68, 0.54, 0.38))
+	c.rect(cab, Color(0.82, 0.83, 0.84))
+	c.rect(cab.grow(-3.0), Color(0.26, 0.36, 0.46))
+	var mast := stern + Vector2(side * ln * 0.64, 0.0)
+	var covers: Array[Color] = [Color(0.20, 0.32, 0.56), Color(0.92, 0.90, 0.84), Color(0.62, 0.20, 0.20)]
+	c.capsule(stern + Vector2(side * 8.0, 0.0), mast, 2.6, covers[n % 3])
+	c.circle(mast, 3.0, Color(0.72, 0.74, 0.76))
+	c.line(mast, mast + Shade.light * 26.0, Color(0.03, 0.08, 0.16, 0.4), 2.0)
+
+
+# A date palm on the west quay: the stone ring it grows from, its trunk.
+static func _draw_palm(m: Node2D, wc: ShapeBatch, p: Vector2) -> void:
+	wc.circle(p, 21.0, COPING_DARK)
+	wc.circle(p, 18.5, COPING_STONE)
+	wc.circle(p, 15.0, Color(0.34, 0.27, 0.20))
+	m.cast_shadow(wc, p, 11.0, 34.0, 0.2)
+	m._palm_trunk(wc, p)
+
+
 static func _draw_lifebuoy(c: ShapeBatch, p: Vector2) -> void:
 	c.circle(p + Shade.light * 3.0, 11.0, SHADOW)
 	c.circle(p, 10.0, BUOY_ORANGE)
-	c.circle(p, 5.0, WAREHOUSE_WALL)
+	c.circle(p, 5.0, YARD)
 	for angle in [0.0, PI * 0.5, PI, PI * 1.5]:
 		var dir := Vector2(cos(angle), sin(angle))
 		c.line(p + dir * 5.0, p + dir * 10.0, BUOY_WHITE, 2.5)
@@ -480,6 +641,8 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 	var c := ShapeBatch.new()
 	var t: float = float(m.elapsed) if m != null else 0.0
 	for b: Rect2 in BOATS:
+		if m != null and absf(b.get_center().y - m.cam.position.y) > 700.0:
+			continue
 		var mast_base := Vector2(b.position.x + b.size.x * 0.5, b.position.y + b.size.y * 0.5)
 		var sway := sin(t * 1.5 + b.position.y * 0.01) * 6.0
 		var mast_top := mast_base + Vector2(sway - 18.0, -120.0)
@@ -489,6 +652,9 @@ static func draw_overhead(m: Node2D, ci: CanvasItem) -> void:
 		c.line(mast_top, Vector2(b.position.x + b.size.x * 0.5, b.position.y + b.size.y - 10.0), Color(0.70, 0.72, 0.75, 0.45), 1.0)
 		var flag_tip := mast_top + Vector2(16.0 + sin(t * 3.0) * 3.0, -2.0)
 		c.line(mast_top, flag_tip, BOAT_RED, 2.5)
+	for p: Vector2 in PALMS:
+		if m != null and absf(p.y - m.cam.position.y) < 560.0:
+			m._palm_crown(c, p)
 	c.flush(ci)
 
 
@@ -498,7 +664,7 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	var t: float = float(m.elapsed) if m != null else 0.0
 
 	for i in 6:
-		var sx := WHARF_EDGE_X + 40.0 + float(i) * 55.0
+		var sx := WHARF_EDGE_X + 36.0 + float(i) * 20.0
 		var sy := vt + fposmod(float(i) * 180.0 + t * 45.0, vb - vt)
 		var spark_w := 14.0 + 8.0 * sin(t * 2.0 + float(i))
 		wc.line(Vector2(sx, sy), Vector2(sx + spark_w, sy), Color(0.65, 0.88, 1.0, 0.4), 1.4)
@@ -523,6 +689,9 @@ static func draw_live(m: Node2D, wc: ShapeBatch, vt: float, vb: float) -> void:
 	for bp: Vector2 in BossLleons.ARENA_BOLLARDS:
 		if not bp in BOLLARDS and bp.y > vt - 40.0 and bp.y < vb + 40.0:
 			_draw_mooring_bollard(wc, bp)
+	for pp: Vector2 in PALMS:
+		if pp.y > vt - 60.0 and pp.y < vb + 60.0:
+			_draw_palm(m, wc, pp)
 	if m.fisherman != null:
 		m.fisherman.draw(wc, vt, vb)
 	if m.lleons != null:
@@ -569,38 +738,101 @@ static func _draw_gull_flying(wc: ShapeBatch, spot: Vector2, dir: Vector2, up: f
 	wc.line(gp + dir * 8.5, gp + dir * 12.0, Color(0.96, 0.75, 0.15), 1.8)
 
 
+# Plaça del Far: the pier's head, the harbor all round it, and the green
+# light on its mole beyond the rail.
 static func draw_freedom(m: Node2D, ci: Object) -> void:
 	var c := ShapeBatch.new()
-	var gy: float = m.GATE_Y
-	var top: float = gy - 600.0
-
-	c.rect(Rect2(0.0, top - 200.0, 1280.0, 200.0), WATER_DEEP)
-	c.line(Vector2(100.0, top - 80.0), Vector2(400.0, top - 80.0), WATER_WAVE, 2.0)
-	c.line(Vector2(600.0, top - 120.0), Vector2(1050.0, top - 120.0), WATER_WAVE, 2.0)
-
-	c.rect(Rect2(160.0, top, 960.0, 600.0), FLAGSTONE_LIGHT)
-
-	c.rect(Rect2(160.0, top, 960.0, 28.0), BOARDWALK_TIMBER)
-	c.rect(Rect2(160.0, top + 572.0, 960.0, 28.0), BOARDWALK_TIMBER)
-	c.rect(Rect2(160.0, top, 28.0, 600.0), BOARDWALK_TIMBER)
-	c.rect(Rect2(1092.0, top, 28.0, 600.0), BOARDWALK_TIMBER)
-
-	var lh := Vector2(640.0, top + 40.0)
-	c.circle(lh + Shade.light * 10.0, 32.0, SHADOW)
-	c.circle(lh, 28.0, Color(0.85, 0.85, 0.82))
-	c.circle(lh, 20.0, Color(0.18, 0.52, 0.32))
-	c.circle(lh, 12.0, Color(0.96, 0.96, 0.92))
-	c.circle(lh, 6.0, Color(0.98, 0.94, 0.50))
-	c.circle(lh, 14.0, Color(1.0, 0.95, 0.60, 0.25))
-
-	letters(c, "PLAÇA DEL FAR", Vector2(640.0, gy + 32.0), 10.0, Color.WHITE, 2.0, 320.0)
+	c.lod = true
+	var gy: float = m.GATE_Y - 30.0
+	var r: Rect2 = m._freedom_rect()
+	var pier := Rect2(r.position.x - 34.0, r.position.y - 30.0, r.size.x + 68.0, gy - r.position.y + 30.0)
+	c.rect(Rect2(-520.0, pier.position.y - 1300.0, 2300.0, gy - pier.position.y + 1300.0), WATER_DEEP)
+	# the shallows all round it, mitred at the corners
+	var ring := PackedVector2Array()
+	for d: float in [0.0, 40.0, 110.0, 260.0]:
+		ring.append_array([Vector2(pier.position.x - d, gy), pier.position - Vector2(d, d),
+			Vector2(pier.end.x + d, pier.position.y - d), Vector2(pier.end.x + d, gy)])
+	c.band(ring, 4, WATER_SHALLOW, PackedFloat32Array([0.95, 0.55, 0.22, 0.0]))
+	for i in range(130):
+		var p := Vector2(-500.0 + 2260.0 * _h(i * 3 + 1), pier.position.y - 900.0 + (gy - pier.position.y + 900.0) * _h(i * 5 + 2))
+		if not pier.grow(44.0).has_point(p):
+			c.line(p, p + Vector2(22.0 + 22.0 * _h(i), 0.0), WATER_WAVE, 1.8)
+	# the quay wall, its coping
+	c.rect(Rect2(pier.position + Vector2(8.0, 0.0), pier.size), Color(0.02, 0.08, 0.16, 0.4))
+	c.rect(pier, COPING_DARK)
+	c.rect(pier.grow_individual(-4.0, -4.0, -4.0, 0.0), COPING_STONE)
+	var inner := pier.grow_individual(-18.0, -18.0, -18.0, 0.0)
+	c.rect(inner, FLAGSTONE_LIGHT)
+	var y := inner.position.y
+	var row := 0
+	while y < inner.end.y:
+		c.line(Vector2(inner.position.x, y), Vector2(inner.end.x, y), FLAGSTONE_DARK, 1.0)
+		var x := inner.position.x + (45.0 if row % 2 == 0 else 90.0)
+		while x < inner.end.x:
+			c.line(Vector2(x, y), Vector2(x, minf(y + 60.0, inner.end.y)), FLAGSTONE_DARK, 1.0)
+			if _h(row * 37 + int(x)) < 0.16:
+				c.rect(Rect2(x, y, 90.0, 60.0).intersection(inner), Color(FLAGSTONE_DARK, 0.4))
+			x += 90.0
+		y += 60.0
+		row += 1
+	# the boardwalk running on round the square
+	for d: Rect2 in [Rect2(inner.position.x, inner.position.y, inner.size.x, 46.0),
+			Rect2(inner.position.x, inner.position.y + 46.0, 46.0, inner.size.y - 46.0),
+			Rect2(inner.end.x - 46.0, inner.position.y + 46.0, 46.0, inner.size.y - 46.0)]:
+		c.rect(d, BOARDWALK_TIMBER)
+		var along := d.size.x > d.size.y
+		var t := 12.0
+		while t < (d.size.x if along else d.size.y):
+			if along:
+				c.line(d.position + Vector2(t, 0), d.position + Vector2(t, d.size.y), BOARDWALK_PLANK, 1.2)
+			else:
+				c.line(d.position + Vector2(0, t), d.position + Vector2(d.size.x, t), BOARDWALK_PLANK, 1.2)
+			t += 24.0
+	# its south face, either side of the wharf it joins
+	for f: Rect2 in [Rect2(pier.position.x, gy - 14.0, WEST_WALL_X - pier.position.x, 14.0), Rect2(WHARF_EDGE_X, gy - 14.0, pier.end.x - WHARF_EDGE_X, 14.0)]:
+		c.rect(f, COPING_STONE)
+		c.rect(Rect2(f.position.x, gy - 4.0, f.size.x, 4.0), COPING_DARK)
+	# a compass rose set in the paving
+	var o := r.get_center() + Vector2(0.0, 40.0)
+	c.circle(o, 92.0, FLAGSTONE_DARK)
+	c.circle(o, 87.0, FLAGSTONE_LIGHT.lightened(0.08))
+	for i in range(8):
+		var v := Vector2.from_angle(TAU * float(i) / 8.0)
+		var l := 82.0 if i % 2 == 0 else 52.0
+		c.polygon(PackedVector2Array([o, o + v.rotated(0.39) * 22.0, o + v * l]), Color(0.36, 0.44, 0.50))
+		c.polygon(PackedVector2Array([o, o + v * l, o + v.rotated(-0.39) * 22.0]), Color(0.80, 0.78, 0.72))
+	# the rail, and the light on its mole outside it
+	var nw := pier.position + Vector2(9.0, 9.0)
+	var ne := Vector2(pier.end.x - 9.0, pier.position.y + 9.0)
+	for p: Array in [[nw, ne], [nw, Vector2(nw.x, gy)], [ne, Vector2(ne.x, gy)]]:
+		var a: Vector2 = p[0]
+		var z: Vector2 = p[1]
+		c.line(a + Shade.light * 4.0, z + Shade.light * 4.0, SHADOW, 3.0)
+		c.line(a, z, WAREHOUSE_TRIM, 3.0)
+		var n := int(a.distance_to(z) / 52.0)
+		for i in range(n + 1):
+			c.circle(a.lerp(z, float(i) / float(n)), 3.6, WAREHOUSE_TRIM.darkened(0.3))
+	var lh := Vector2(900.0, pier.position.y - 64.0)
+	c.rect(Rect2(lh.x - 34.0, lh.y, 68.0, 66.0), COPING_DARK)
+	c.rect(Rect2(lh.x - 30.0, lh.y, 60.0, 66.0), COPING_STONE)
+	c.circle(lh + Shade.light * 8.0, 58.0, Color(0.02, 0.08, 0.16, 0.4))
+	c.circle(lh, 56.0, COPING_DARK)
+	c.circle(lh, 51.0, COPING_STONE)
+	c.circle(lh + Shade.light * 16.0, 30.0, SHADOW)
+	c.circle(lh, 29.0, Color(0.10, 0.36, 0.24))
+	c.circle(lh, 26.0, Color(0.18, 0.54, 0.34))
+	c.circle(lh, 18.0, Color(0.94, 0.94, 0.90))
+	c.circle(lh, 12.0, Color(0.16, 0.30, 0.26))
+	c.circle(lh, 7.0, Color(0.70, 0.98, 0.78))
+	c.glow(lh, 90.0, Color(0.50, 1.0, 0.68, 0.22))
 	c.flush(ci)
-	m._draw_freedom_benches(ci, Rect2(160.0, top, 960.0, 600.0), Color(0.36, 0.30, 0.24))
-	m._freedom_sign(ci, Rect2(160.0, top, 960.0, 600.0), m.gate_text, I18n.t("w_the_lighthouse_square_off_leash"))
+	m._draw_freedom_benches(ci, r, Color(0.36, 0.30, 0.24))
+	m._freedom_sign(ci, r, m.gate_text, I18n.t("w_the_lighthouse_square_off_leash"))
+
 
 # main.surface_at, through walk_mod: the ground here, or -1 for main's own
 static func surface(m: Node2D, p: Vector2) -> int:
-	if p.x > WHARF_EDGE_X:
+	if p.x > WHARF_EDGE_X and p.y > m.GATE_Y - 30.0:
 		return Surfaces.S.WATER
 	if p.y > m.GATE_Y:
 		return Surfaces.S.PAVEMENT
