@@ -4,13 +4,14 @@ name: Screenshot sweep
 # the contact sheets as an artifact for eyeballing. Informational only: it is
 # a separate workflow, so ci.yml and the release gate never wait on it.
 
+# By hand only: run tools/shot_sweep.sh on your own machine, which draws the
+# same sheets on a real GPU. On every pull request and merge it was a large
+# part of what a change cost GitHub (docs/ci-budget.md).
 on:
-  push:
-    branches: [main]
-  # each PR gets its own sheets, so a visual change is seen before it merges
-  pull_request:
-    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: shots-${{ github.ref }}

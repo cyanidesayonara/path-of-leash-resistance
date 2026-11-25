@@ -20,6 +20,8 @@
 # SHARD=K/N runs only the K-th of N shares of all that, split by cost so the
 #          shares take about as long; CI runs the N shards side by side.
 # XVFB=1   runs the tests that need a display under xvfb-run with software GL.
+# PICK=FILE runs only the items named in FILE, one a line, as DRY=1 names them
+#          (tools/pick_tests.py writes one for a change).
 # DRY=1    lists what would run (with SHARD, that shard's share) and exits.
 set -uo pipefail
 
@@ -30,6 +32,7 @@ FILTER="${1:-}"
 WALKS="${WALKS:-0}"
 SHARD="${SHARD:-1/1}"
 XVFB="${XVFB:-0}"
+PICK="${PICK:-}"
 GH="${GITHUB_ACTIONS:-false}"
 TAB="$(printf '\t')"
 
@@ -137,6 +140,7 @@ failed=()
 while IFS="${TAB}" read -r kind payload; do
   name="$(name_of "${kind}" "${payload}")"
   [ -n "${FILTER}" ] && [[ "${name}" != *"${FILTER}"* ]] && continue
+  [ -n "${PICK}" ] && ! tr -d '\r' < "${PICK}" | grep -Fxq -- "${name}" && continue
   start=${SECONDS}
   if run_item "${kind}" "${payload}" "${log}"; then
     pass=$((pass + 1))

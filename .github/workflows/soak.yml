@@ -8,15 +8,21 @@ name: Idle soak
 # Separate from ci.yml while the thresholds are provisional: it does not gate
 # the release. Move it into ci.yml once the thresholds have held for a while.
 #
-# Runs on pushes to main only (and by hand). On every pull request its matrix
-# of a job per walk filled the queue of 20 concurrent jobs and held the PRs'
-# CI shards back; every merge to main is still soaked, and a newer push to
-# main cancels a soak still running on the older one.
+# By hand only, and only on the walks named: on every push to main it ran 26
+# jobs and some eight runner-hours for numbers that gate nothing, most of what
+# this repository asked of GitHub in November 2026 (docs/ci-budget.md). Run
+# tools/idle_soak.sh on your own machine first.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      levels:
+        description: "The walks to soak, as a JSON list"
+        type: string
+        default: '["street", "park", "raval"]'
+
+permissions:
+  contents: read
 
 concurrency:
   group: soak-${{ github.ref }}
@@ -30,8 +36,9 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
+      max-parallel: 3
       matrix:
-        level: [barri, street, park, beach, rain, market, oldtown, trail, station, site, spook, scrap, guell, neteja, montjuic, partit, port, reial, vet, tibidabo, aigues, horta, llevant, boars, gracia, raval]
+        level: ${{ fromJSON(inputs.levels) }}
 
     steps:
       - uses: actions/checkout@v5

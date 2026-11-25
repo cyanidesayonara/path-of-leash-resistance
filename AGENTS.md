@@ -255,11 +255,13 @@ GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/run_tests.sh [leash]
 The list is `tests/ci_tests.txt` plus every `tests/ci.d/*.txt`: a new test is
 a line in its walk's or feature's own file there (`tests/ci.d/WALK_ID.txt`,
 see its README), never a step in ci.yml (give it `# cost N` above it if it takes 10 s or more on CI).
-`WALKS=1` adds what CI also runs on every walk in `Game.LEVELS` (selftest,
-1800 frames) and the four street autowalks. CI splits all of it by cost
-into eight `shard K/8` jobs that run side by side (`SHARD=K/8`; `DRY=1`
-lists a shard's share), and the `smoke` check passes only when every shard
-did, so `smoke` and `attribution` are still the two checks to look for.
+`WALKS=1` adds the walk checks: every walk in `Game.LEVELS` (selftest,
+1800 frames) and the four street autowalks. A pull request runs one job,
+`smoke`, with only the tests its change needs (`tools/pick_tests.py`; `PICK=FILE`
+runs that list locally); the whole list runs on a version tag, weekly and by
+hand, in three shares (`SHARD=K/3`; `DRY=1` lists one). `smoke` and
+`attribution` are the two checks to look for. What may run on GitHub, how often
+and how to keep it small is `docs/ci-budget.md`: read it before pushing.
 
 Playtest a walk as it is played: real input actions from a script of steps,
 screenshots along the way, and a log of what a player would notice (the dog
@@ -382,8 +384,7 @@ presses.
 
 Screenshot sweep (every walk, the title and each menu screen, settings,
 results, street at 844x390 and 390x844) into `shots/`, plus labelled contact sheets `shots/sheet-*.png`.
-Needs Pillow. `.github/workflows/shots.yml` runs the same thing on every PR and
-push to main and uploads the sheets as an artifact; it does not gate CI:
+Needs Pillow. `.github/workflows/shots.yml` runs the same thing by hand only:
 ```
 GODOT=godot/Godot_v4.7-stable_win64_console.exe bash tools/shot_sweep.sh
 ```

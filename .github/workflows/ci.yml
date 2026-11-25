@@ -1,17 +1,31 @@
 name: CI
 
+# As light on GitHub as it can be and still catch what matters
+# (docs/ci-budget.md):
+# - a pull request runs one test job, `smoke`: what its change needs
+#   (tools/pick_tests.py), about ten minutes; docs alone run none of the game.
+#   A draft runs nothing until it is ready.
+# - a merge to main runs nothing again.
+# - a version tag runs everything, and release.yml waits for it; so does one
+#   run a week when main has moved, and a run by hand before tagging.
+# Nothing else starts on its own: the screenshot sweep and the idle soak are by
+# hand only.
+
 on:
   push:
-    branches: [main]
-    # Version tags must run the full suite so release.yml can gate publish
-    # on a green CI result for the exact tagged SHA.
     tags: ["v*"]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: "41 3 * * 1"
+  workflow_dispatch:
 
-# A newer push to a pull request makes its running CI moot. Every push to main
-# or a version tag is a group of its own, so it always runs to the end:
-# release.yml waits for the tagged SHA's run to succeed.
+permissions:
+  contents: read
+
+# A newer push to a pull request makes its running CI moot. A tag's run always
+# goes to the end: release.yml waits for it to succeed.
 concurrency:
   group: ci-${{ github.event_name == 'pull_request' && github.head_ref || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -21,6 +35,7 @@ jobs:
   # travel with a clone or a cloud agent, so the whole history is checked here,
   # and release.yml will not publish a tag whose CI run fails this.
   attribution:
+    if: ${{ github.event_name != 'schedule' && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -40,37 +55,140 @@ jobs:
       - name: Changelog fragments are well formed
         run: python3 tools/changelog.py --check
 
-  # Every test in tests/ci_tests.txt and every walk check (each walk built,
-  # sanity-checked and played, the tutorial and snow smokes, four full
-  # autowalks), split by cost into shards that run side by side. One runner
-  # took ~37 minutes for the lot; a shard takes about six. tools/run_tests.sh
-  # does the splitting and runs the same list locally.
-  shard:
-    name: shard ${{ matrix.shard }}/8
+  # The one test job on a pull request: what its change needs, and nothing more.
+  smoke:
+    if: ${{ github.event_name == 'pull_request' && !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
+    steps:
+      # the history, to compare with main
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Pick the tests this change needs
+        id: pick
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 tests/test_pick_tests.py
+          python3 tools/pick_tests.py "$BASE" > "$RUNNER_TEMP/picks.txt"
+          cat "$RUNNER_TEMP/picks.txt"
+          echo "game=$([ -s "$RUNNER_TEMP/picks.txt" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+
+      # the text the Store submit workflow sends must fit the Store's limits
+      - name: Store listing check
+        run: python3 tools/store_listing.py --check store/listing.md
+
+      # the Store submit workflow's image staging and submit guard
+      - name: Store images tests
+        run: python3 tests/test_store_images.py
+
+      # production secrets only in their environments, and nothing
+      # interpolated into a script (docs/release-secrets.md)
+      - name: Workflow secrets tests
+        run: python3 tests/test_workflow_secrets.py
+
+      # A GitHub release download can fail for minutes at a time (504s on
+      # 2026-11-08 failed every job): keep the zip in the Actions cache and
+      # retry the download when it is not there.
+      - name: Cache Godot
+        if: ${{ steps.pick.outputs.game == 'yes' }}
+        uses: actions/cache@v4
+        with:
+          path: godot.zip
+          key: godot-4.7-stable-linux-x86_64
+
+      - name: Download Godot
+        if: ${{ steps.pick.outputs.game == 'yes' }}
+        run: |
+          if [ ! -s godot.zip ]; then
+            curl -fsSL --retry 8 --retry-delay 15 --retry-all-errors -o godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
+          fi
+          unzip -q godot.zip
+          chmod +x Godot_v4.7-stable_linux.x86_64
+
+      - name: Install virtual display
+        if: ${{ steps.pick.outputs.game == 'yes' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils
+
+      # the icon is the project's one imported resource; without a cache the
+      # windowed runs below complain about a missing dependency
+      - name: Import resources
+        if: ${{ steps.pick.outputs.game == 'yes' }}
+        run: ./Godot_v4.7-stable_linux.x86_64 --headless --path . --import
+
+      # every script's .uid is committed next to it; an import that creates a
+      # file git does not know about means one was forgotten (#16)
+      - name: Import leaves the checkout clean
+        if: ${{ steps.pick.outputs.game == 'yes' }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Import created or changed files - commit them:"
+            git status --porcelain
+            exit 1
+          fi
+
+      # each test's output is a collapsed group in the log; a failure prints
+      # its whole output ungrouped, under an error line naming it
+      - name: The picked tests
+        if: ${{ steps.pick.outputs.game == 'yes' }}
+        env:
+          WALKS: "1"
+          XVFB: "1"
+          TIMEOUT: "600"
+        run: PICK="$RUNNER_TEMP/picks.txt" bash tools/run_tests.sh
+
+  # Whether the weekly run has anything new to look at
+  moved:
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      moved: ${{ steps.look.outputs.moved }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 50
+      - id: look
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" != schedule ] || [ -n "$(git log --since='8 days ago' --format=%h -1)" ]; then
+            echo "moved=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # Everything: every test in tests/ci_tests.txt and every walk check (each
+  # walk built, sanity-checked and played, the tutorial and snow smokes, four
+  # full autowalks), in three shares. tools/run_tests.sh does the splitting and
+  # runs the same list locally.
+  full:
+    needs: [moved]
+    if: ${{ needs.moved.outputs.moved == 'true' }}
+    name: full ${{ matrix.shard }}/3
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        shard: [1, 2, 3, 4, 5, 6, 7, 8]
+        shard: [1, 2, 3]
 
     steps:
       - uses: actions/checkout@v5
 
       # the text the Store submit workflow sends must fit the Store's limits
       - name: Store listing check
-        if: matrix.shard == 1
         run: python3 tools/store_listing.py --check store/listing.md
 
       # the Store submit workflow's image staging and submit guard
       - name: Store images tests
-        if: matrix.shard == 1
         run: python3 tests/test_store_images.py
 
       # production secrets only in their environments, and nothing
       # interpolated into a script (docs/release-secrets.md)
       - name: Workflow secrets tests
-        if: matrix.shard == 1
         run: python3 tests/test_workflow_secrets.py
 
       # A GitHub release download can fail for minutes at a time (504s on
@@ -112,27 +230,10 @@ jobs:
 
       # each test's output is a collapsed group in the log; a failure prints
       # its whole output ungrouped, under an error line naming it
-      - name: Tests and walk checks (shard ${{ matrix.shard }} of 8)
+      - name: Tests and walk checks (share ${{ matrix.shard }} of 3)
         env:
-          SHARD: ${{ matrix.shard }}/8
+          SHARD: ${{ matrix.shard }}/3
           WALKS: "1"
           XVFB: "1"
           TIMEOUT: "600"
         run: bash tools/run_tests.sh
-
-  # The one check to look for on a pull request: it passes only when every
-  # shard did. Keeps the name the single job had.
-  smoke:
-    if: always()
-    needs: [shard]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Every shard passed
-        env:
-          RESULT: ${{ needs.shard.result }}
-        run: |
-          if [ "$RESULT" != "success" ]; then
-            echo "A shard did not pass ($RESULT); see the shard jobs."
-            exit 1
-          fi
