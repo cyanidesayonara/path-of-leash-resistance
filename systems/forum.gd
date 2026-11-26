@@ -25,6 +25,8 @@ extends RefCounted
 const HOOKS := ["draw_bin", "draw_bollard", "draw_column", "draw_cross_section", "draw_edge_layer", "draw_fountain", "draw_freedom", "draw_live", "draw_overhead", "draw_snack", "on_bark", "surface", "tick"]
 
 
+const CityRoofs := preload("res://world/city_roofs.gd")
+const Woods := preload("res://world/woods.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 # a bump costs your human this much of their patience (0..1, entities/human.gd)
 const BUMP_PATIENCE := 0.08
@@ -267,7 +269,7 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		# Deep water, the shallows feathering out from the tetrapods.
 		var sea_x := SEAWALL_EDGE_X + 16.0
 		var sea_bot := sea_top + sea_h
-		b.rect(Rect2(sea_x, sea_top, 1280.0 - sea_x, sea_h), SEA_DEEP)
+		b.rect(Rect2(sea_x, sea_top, 1760.0 - sea_x, sea_h), SEA_DEEP)
 		b.band(PackedVector2Array([
 			Vector2(sea_x, sea_top), Vector2(sea_x + 46.0, sea_top), Vector2(sea_x + 110.0, sea_top), Vector2(sea_x + 190.0, sea_top),
 			Vector2(sea_x, sea_bot), Vector2(sea_x + 46.0, sea_bot), Vector2(sea_x + 110.0, sea_bot), Vector2(sea_x + 190.0, sea_bot),
@@ -336,12 +338,32 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 	var west_w := WALL_L - (-100.0)
 	var west_rect := Rect2(-100.0, vt - 40.0, west_w, (vb - vt) + 80.0)
 	b.rect(west_rect, CONCRETE_DARK)
+	# the city past the esplanade: the road along it, then Diagonal Mar's blocks
+	var gy := floorf((vt - 40.0) / 220.0) * 220.0
+	while gy < vb + 40.0:
+		if gy + 220.0 > float(m.GATE_Y) - 40.0:
+			CityRoofs.kept_module(b, -150.0, -1.0, 380.0, gy, gy + 220.0, 2400 + int(absf(gy) / 220.0))
+		gy += 220.0
+	b.rect(Rect2(-150.0, vt - 40.0, 56.0, (vb - vt) + 80.0), Color(0.30, 0.30, 0.32))
+	b.rect(Rect2(-100.0, vt - 40.0, 6.0, (vb - vt) + 80.0), CONCRETE_JOINT)
 
-	# Base plaza terrace joints
+	# the plaza's slabs, and a row of planted pines down it
 	var wjy := floorf((vt - 40.0) / 90.0) * 90.0
 	while wjy < vb + 60.0:
 		b.rect(Rect2(-100.0, wjy, west_w, 2.0), CONCRETE_JOINT)
+		var jx := -100.0 + (60.0 if int(absf(wjy) / 90.0) % 2 == 0 else 120.0)
+		while jx < WALL_L - 4.0:
+			b.rect(Rect2(jx, wjy, 2.0, 90.0), CONCRETE_JOINT)
+			jx += 120.0
 		wjy += 90.0
+	var py := floorf((vt - 120.0) / 300.0) * 300.0
+	while py < vb + 120.0:
+		var pp := Vector2(310.0, py + 150.0)
+		if not (pp.y > -1770.0 and pp.y < -430.0) and not (pp.y > -3720.0 and pp.y < -1880.0) and pp.y > float(m.GATE_Y) + 40.0:
+			b.circle(pp, 16.0, CONCRETE_MID)
+			b.circle(pp, 12.0, Color(0.38, 0.30, 0.22))
+			Woods.crown(b, Woods.K.PINE, pp, 34.0, int(absf(py)))
+		py += 300.0
 
 	# 1. Museu Blau / Edifici Fòrum (y = -450 to -1750)
 	var mb_top := -1750.0
@@ -379,6 +401,23 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 		# Zinc & stainless cladding
 		b.rect(ccib_rect, CCIB_FACADE.darkened(0.2))
 		b.rect(ccib_rect.grow(-4.0), CCIB_FACADE)
+		# its roof: a grid of skylights, the plant on top, the gutters' lines
+		var sky_y := ccib_top + 60.0
+		while sky_y < ccib_bot - 80.0:
+			if sky_y > vt - 80.0 and sky_y < vb + 80.0:
+				for q in range(3):
+					var sr := Rect2(-30.0 + float(q) * 96.0, sky_y, 72.0, 30.0)
+					b.rect(sr, CCIB_GLASS.darkened(0.2))
+					b.rect(sr.grow(-3.0), Color(0.42, 0.56, 0.66))
+					b.line(sr.position + Vector2(36.0, 0.0), sr.position + Vector2(36.0, 30.0), CCIB_FACADE.darkened(0.3), 2.0)
+				if int(absf(sky_y) / 140.0) % 3 == 0:
+					for q in range(2):
+						var u := Vector2(20.0 + float(q) * 120.0, sky_y + 72.0)
+						b.rect(Rect2(u + Vector2(5.0, 6.0) - Vector2(22.0, 14.0), Vector2(44.0, 28.0)), sh)
+						b.rect(Rect2(u - Vector2(22.0, 14.0), Vector2(44.0, 28.0)), Color(0.66, 0.68, 0.70))
+						b.circle(u + Vector2(-9.0, 0.0), 9.0, Color(0.44, 0.46, 0.48))
+						b.circle(u + Vector2(11.0, 0.0), 9.0, Color(0.44, 0.46, 0.48))
+			sky_y += 140.0
 
 		# Tinted glass curtain wall window bays
 		var bay_y := ccib_top + 30.0

@@ -24,6 +24,7 @@ extends RefCounted
 const HOOKS := ["draw_cross_section", "draw_edge_layer", "draw_freedom", "draw_grove", "draw_live", "is_lamp", "night_fronts", "night_lights", "on_bark", "surface", "tick", "tree_kind"]
 
 
+const CityRoofs := preload("res://world/city_roofs.gd")
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const Surfaces := preload("res://world/surfaces.gd")
 const Panot := preload("res://world/panot.gd")
@@ -517,45 +518,37 @@ static func _block(b: ShapeBatch, top: float, bot: float, side: float, salt: int
 	poly.append(Vector2(far, top))
 	poly.append(Vector2(far, bot))
 	b.polygon(poly, ROOF_TONES[salt % ROOF_TONES.size()].darkened(0.12))
-	# the courtyard: buildings 150 deep, the green inside them
-	var depth := 150.0
-	var cin := CX + side * (HALF + depth)
-	var c_top := top + depth
-	var c_bot := bot - depth
-	if c_bot - c_top > 60.0:
-		var cr := Rect2(minf(cin, far), c_top, absf(far - cin), c_bot - c_top)
-		b.rect(cr, COURTYARD)
-		for i in range(5):
-			var tp := Vector2(cin + side * (40.0 + 60.0 * float(i)), c_top + 40.0 + _h(salt * 5 + i) * maxf(1.0, c_bot - c_top - 80.0))
-			b.circle(tp + Vector2(5.0, 7.0), 22.0, SHADOW)
-			b.circle(tp, 22.0, HEDGE)
-			b.circle(tp - Vector2(5.0, 6.0), 14.0, HEDGE_LIT)
-	# plots along the street front, each its own roof
+	# the island behind the fronts: houses round the yard in the middle, the
+	# backs of the next street's, and the city beyond (world/city_roofs.gd)
+	var reach := absf(far - CX) - HALF
+	var s0 := minf(bot, maxf(top, bot - RAMP))
+	var s1 := maxf(top, minf(bot, top + RAMP))
+	if s0 - s1 > 40.0:
+		CityRoofs.kept_module(b, CX + side * HALF, side, reach, s1, s0, salt * 11 + (1 if side > 0.0 else 0))
+	# behind each cut corner the same, from where its corner house ends
+	for zone: Vector2 in [Vector2(s0, bot), Vector2(top, s1)]:
+		if zone.y - zone.x > 20.0:
+			CityRoofs.kept_module(b, CX + side * (XHALF + 70.0), side, reach - (XHALF + 70.0 - HALF), zone.x, zone.y, salt * 13 + int(zone.x) % 97)
+	# the corner houses on the chamfers, each its own roof
 	var y := bot
 	var k := 0
 	while y > top:
 		var pw := 150.0 + _h(salt * 17 + k) * 70.0
-		# the corner house takes the whole chamfer
 		if half_at(y - 1.0) > HALF + 1.0:
 			pw = RAMP + 2.0
 		var py0 := maxf(top, y - pw)
-		# a plot never straddles the turn from the street front to a chamfer
 		for s_y: float in steps:
 			if s_y < y - 1.0 and s_y > py0:
 				py0 = s_y
-		var tone: Color = ROOF_TONES[(salt * 3 + k) % ROOF_TONES.size()]
 		var chamfer := half_at((py0 + y) * 0.5) > HALF + 1.0
-		var x_front0 := _front_x(y, side)
-		var x_front1 := _front_x(py0, side)
-		var x_back := CX + side * (HALF + depth)
 		if chamfer:
-			x_back = CX + side * (XHALF + 70.0)
-		var pts := PackedVector2Array([
-			Vector2(x_front0, y), Vector2(x_front1, py0),
-			Vector2(x_back, py0), Vector2(x_back, y),
-		])
-		b.polygon(pts, tone)
-		_roof_detail(b, pts, side, salt * 13 + k, chamfer)
+			var tone: Color = ROOF_TONES[(salt * 3 + k) % ROOF_TONES.size()]
+			var pts := PackedVector2Array([
+				Vector2(_front_x(y, side), y), Vector2(_front_x(py0, side), py0),
+				Vector2(CX + side * (XHALF + 70.0), py0), Vector2(CX + side * (XHALF + 70.0), y),
+			])
+			b.polygon(pts, tone)
+			_roof_detail(b, pts, side, salt * 13 + k, true)
 		y = py0
 		k += 1
 	# the cornice and the balconies along the whole front

@@ -9,7 +9,8 @@ extends RefCounted
 # in main.
 
 # the hooks main calls on this walk, held to it by tests/test_walk_hooks.gd
-const HOOKS := ["draw_edge_layer", "draw_grove", "draw_live", "draw_over_walkway", "draw_path_edges", "draw_threshold", "grass_blocked", "night_lights", "surface"]
+const Woods := preload("res://world/woods.gd")
+const HOOKS := ["draw_edge_layer", "draw_grove", "draw_live", "draw_over_walkway", "draw_path_edges", "draw_threshold", "draw_wood_layer", "grass_blocked", "night_lights", "surface"]
 
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
@@ -493,6 +494,33 @@ static func playground(m: Node2D, b: ShapeBatch, pg: Rect2) -> void:
 # poking past the dog-park fence
 static func draw_edge_layer(_m: Node2D, _c: Object, _vt: float, _vb: float) -> void:
 	pass
+
+
+# The park's own wood past the lawns on both sides, and the lawn worn and
+# patched under it rather than mown into ruled stripes to the edge.
+const WOOD_W := 40.0          # the west wood's line
+const WOOD_E := 1246.0        # the east one's, past the bike lane
+static func draw_wood_layer(m: Node2D, b: ShapeBatch, vt: float, vb: float) -> void:
+	var top := maxf(vt - 80.0, float(m.GATE_Y) + 60.0)
+	var bot := minf(vb + 80.0, float(m.HOME_Y) - 10.0)
+	if bot <= top:
+		return
+	var tile := 300.0
+	var ty := floorf(top / tile) * tile
+	while ty < bot:
+		var k := int(absf(ty) / tile)
+		for i in range(5):
+			var p := Vector2(-200.0 + 1700.0 * Woods._h(k * 37 + i * 5), ty + tile * Woods._h(k * 41 + i * 7))
+			if p.y > top + 60.0 and p.y < bot - 60.0 and (p.x < 300.0 or p.x > 1000.0):
+				b.glow(p, 70.0 + 60.0 * Woods._h(k + i), Color(0.36, 0.48, 0.24, 0.32) if i % 2 == 0 else Color(0.18, 0.32, 0.16, 0.3))
+		ty += tile
+	var step := 56.0
+	var y := maxf(floorf(top / step) * step, float(m.GATE_Y) + 120.0)
+	while y < bot - step:
+		var row := int(absf(y) / step)
+		Woods.kept_row(b, "garden", WOOD_W - 10.0 * Woods._h(row * 3), -1.0, y, step, 470.0, row * 2)
+		Woods.kept_row(b, "garden", WOOD_E + 14.0 * Woods._h(row * 5), 1.0, y, step, 470.0, row * 2 + 1)
+		y += step
 
 
 # the beds, the playground, the bandstand's ring and the south sidewalk keep the grass off
