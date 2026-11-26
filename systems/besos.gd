@@ -24,6 +24,8 @@ const HOOKS := [
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
 const LevelBuild := preload("res://world/level_build.gd")
+const Woods := preload("res://world/woods.gd")
+const CityRoofs := preload("res://world/city_roofs.gd")
 const Stones := preload("res://world/stones.gd")
 
 # the deep channel, and the lighter water where it shelves up to the riprap,
@@ -34,6 +36,8 @@ const SHELF_W := 120.0
 const SHELF_COLS: Array[float] = [1.0, 0.7, 0.35, 0.12, 0.0]
 # the riprap: a pair of stones every RIP_STEP down the bank
 const RIP_STEP := 16.0
+const FAR_BANK := 1176.0      # the other side of the river
+const FAR_STEP := 220.0
 const RIP_STONES: Array[Color] = [Color(0.44, 0.43, 0.39), Color(0.50, 0.47, 0.41),
 	Color(0.40, 0.40, 0.38), Color(0.53, 0.50, 0.44)]
 
@@ -72,11 +76,8 @@ static func draw_wall_module(m: Node2D, c: Object, r: Rect2, k: int, inner_x: fl
 		c.draw_rect(Rect2(m.sw_l - 6.0, wy - 3.0, 6.0, 6.0), Color(0.28, 0.32, 0.26, 0.45))
 		c.draw_circle(Vector2(m.sw_l - 3.0, wy), 2.2, Color(0.16, 0.17, 0.18))
 	# Upper embankment hackberry/pine tree crowns west of the upper walkway
-	var ty := y0 + 56.0 + float(k % 3) * 34.0
-	var tp := Vector2(r.position.x - 16.0, ty)
-	c.draw_circle(tp + Vector2(5.0, 6.0), 20.0, Color(0.06, 0.08, 0.06, 0.26))
-	c.draw_circle(tp, 19.0, Color(0.21, 0.36, 0.21))
-	c.draw_circle(tp + Vector2(-4.0, -4.0), 12.0, Color(0.29, 0.46, 0.27))
+	if c is ShapeBatch:
+		_berm(c as ShapeBatch, r, k)
 	# Every second module has a recessed emergency evacuation stairway bay
 	if k % 2 == 0:
 		var sy0 := y0 + 74.0
@@ -95,6 +96,78 @@ static func draw_wall_module(m: Node2D, c: Object, r: Rect2, k: int, inner_x: fl
 		c.draw_rect(sign_r, Color(0.14, 0.52, 0.28))
 		c.draw_rect(sign_r.grow(-1.5), Color(0.94, 0.96, 0.94))
 		c.draw_rect(sign_r.grow(-2.8), Color(0.14, 0.52, 0.28))
+
+
+# the berm's own planting: oaks, pines and olives in loose clumps, tufts
+static func _berm(b: ShapeBatch, r: Rect2, k: int) -> void:
+	for i in range(9):
+		var h := k * 53 + i * 17
+		var p := Vector2(r.position.x - 12.0 - 320.0 * Woods._h(h), r.position.y + 12.0 + (r.size.y - 16.0) * Woods._h(h + 1))
+		for f in range(3):
+			b.line(p, p + Vector2.from_angle(-PI * 0.5 + (float(f) - 1.0) * 0.5) * 9.0, Color(0.38, 0.54, 0.30), 1.8)
+	var kinds: Array = [Woods.K.OAK, Woods.K.ALEPPO, Woods.K.HOLM, Woods.K.OLIVE]
+	for i in range(5):
+		var h := k * 71 + i * 29
+		if Woods._h(h + 3) < 0.2:
+			continue
+		var p := Vector2(r.position.x - 38.0 - 74.0 * float(i) + 24.0 * Woods._h(h), r.position.y + 48.0 + 124.0 * Woods._h(h + 1))
+		Woods.crown(b, int(kinds[int(Woods._h(h + 2) * 4.0) % 4]), p, 24.0 + 16.0 * Woods._h(h + 4), h)
+
+
+# The far bank: its own stones and reeds, the lawn, the riverside path and its
+# trees, the flood wall, and Santa Coloma's roofs. Whole modules are kept.
+static func _far_bank(b: ShapeBatch, top: float, bot: float, y0: float, y1: float) -> void:
+	var sy := floorf(y0 / FAR_STEP) * FAR_STEP
+	while sy < y1:
+		var m0 := maxf(sy, top)
+		var m1 := minf(sy + FAR_STEP, bot)
+		var key := [sy, snappedf(CityRoofs._glow(), 0.1)]
+		var rec: ShapeBatch = _far_kept.get(key)
+		if rec == null:
+			if _far_kept.size() > 40:
+				_far_kept.clear()
+			rec = ShapeBatch.new()
+			rec.lod = true
+			_far_module(rec, sy, m0, m1, int(absf(sy) / FAR_STEP))
+			_far_kept[key] = rec
+		rec.append_to(b)
+		sy += FAR_STEP
+
+
+static var _far_kept := {}
+
+
+static func _far_module(b: ShapeBatch, sy: float, y0: float, y1: float, k: int) -> void:
+	var x := FAR_BANK
+	var sh := PackedVector2Array()
+	for y: float in [y0, y1]:
+		for d: float in [-110.0, -50.0, -14.0, 0.0]:
+			sh.append(Vector2(x + d, y))
+	b.band(sh, 4, Color(0.30, 0.48, 0.50), PackedFloat32Array([1.0, 1.0]), PackedFloat32Array([0.0, 0.25, 0.65, 0.9]))
+	b.rect(Rect2(x, y0, 520.0, y1 - y0), Color(0.30, 0.45, 0.28))
+	b.rect(Rect2(x + 64.0, y0, 34.0, y1 - y0), Color(0.60, 0.54, 0.44))
+	b.rect(Rect2(x + 64.0, y0, 2.5, y1 - y0), Color(0.74, 0.70, 0.60))
+	# the flood wall's lit top and its shade
+	b.rect(Rect2(x + 142.0, y0, 9.0, y1 - y0), Color(0.40, 0.39, 0.37))
+	b.rect(Rect2(x + 148.0, y0, 14.0, y1 - y0), Color(0.66, 0.64, 0.59))
+	b.rect(Rect2(x + 162.0, y0, 60.0, y1 - y0), Color(0.30, 0.30, 0.32))
+	CityRoofs.module(b, x + 222.0, 1.0, 330.0, y0, y1, 2100 + k)
+	var ry := y0
+	var i := 0
+	while ry < y1 - 4.0:
+		var h := Woods._h(k * 37 + i * 5)
+		Stones.stone(b, Vector2(x - 2.0 + 7.0 * h, ry + 6.0), 5.0 + 4.0 * h, RIP_STONES[i % RIP_STONES.size()], h)
+		ry += 13.0
+		i += 1
+	for q in range(7):
+		var h := k * 91 + q * 11
+		var p := Vector2(x + 10.0 + 44.0 * Woods._h(h), lerpf(y0, y1, Woods._h(h + 1)))
+		for f in range(4):
+			b.line(p, p + Vector2.from_angle(-PI * 0.5 + (float(f) - 1.5) * 0.35) * 14.0, Color(0.36, 0.54, 0.30), 2.0)
+	for q in range(2):
+		var p := Vector2(x + 120.0, sy + 50.0 + 110.0 * float(q))
+		if p.y > y0 + 30.0 and p.y < y1 - 30.0:
+			Woods.crown(b, Woods.K.OAK if (k + q) % 3 != 0 else Woods.K.ALEPPO, p, 24.0 + 8.0 * Woods._h(k + q), k * 3 + q)
 
 
 static func draw_post(m: Node2D, c: Object, h: Dictionary) -> void:
@@ -427,6 +500,8 @@ static func draw_river(m: Node2D, vt: float, vb: float) -> void:
 			b.line(Vector2(fx, weir_y + 20.0), Vector2(fx + 2.0, weir_y + 20.0 + flen),
 				Color(0.94, 0.98, 0.98, 0.46), 2.4)
 			fx += 16.0
+
+	_far_bank(b, river_top, river_bot, y0, y1)
 
 	# 9. Mid-walk road bridge shadow (-2560) and cable-stayed Pont de Can Peixauet shadow at GATE_Y
 	if absf(-2560.0 - (vt + vb) * 0.5) < 480.0:

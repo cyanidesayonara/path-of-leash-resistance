@@ -79,6 +79,19 @@ const SHOO_R := 180.0
 const FLOCK := 7
 
 
+# A star laid in the paving: eight points, each half in stone and half in its
+# own shade, on a thin ring of tile.
+static func _star(b: ShapeBatch, c: Vector2) -> void:
+	b.circle(c, 31.0, Color(0.70, 0.58, 0.45))
+	b.circle(c, 28.5, Color(0.86, 0.79, 0.67))
+	for i in range(8):
+		var d := Vector2.from_angle(float(i) * TAU / 8.0)
+		var tip := c + d * (27.0 if i % 2 == 0 else 19.0)
+		var dark := Color(0.70, 0.44, 0.32) if i % 2 == 0 else Color(0.60, 0.60, 0.52)
+		b.polygon(PackedVector2Array([c, c + d.rotated(TAU / 16.0) * 10.5, tip]), dark)
+		b.polygon(PackedVector2Array([c, tip, c + d.rotated(-TAU / 16.0) * 10.5]), dark.lightened(0.22))
+
+
 static func edge_nodes(_m: Node2D) -> Array:
 	return [
 		{"y": 260.0, "cx": 640.0, "half": 300.0},
@@ -415,15 +428,11 @@ static func draw_cross_section(m: Node2D, wc: Object, _top: float, bottom: float
 	var st_y := maxf(floorf(y0 / star_step) * star_step, PASSEIG_TOP + 64.0)
 	while st_y < minf(y1, bottom - 32.0):
 		var cy := st_y + 16.0
-		if cy > PASSEIG_TOP + 52.0:
+		# never under the walk's name and its gloss
+		if cy > PASSEIG_TOP + 52.0 and absf(cy - (m.NAME_Y + 30.0)) > 120.0:
 			var se: Vector2 = m.walk_edges(cy)
 			var c := Vector2((se.x + se.y) * 0.5, cy)
-			b.circle(c, 30.0, Color(0.62, 0.42, 0.30))
-			b.circle(c, 24.0, Color(0.88, 0.82, 0.70))
-			for i in range(8):
-				var d := Vector2.from_angle(float(i) * TAU / 8.0)
-				b.line(c, c + d * 22.0, Color(0.62, 0.42, 0.30), 3.0)
-			b.circle(c, 6.0, Color(0.86, 0.58, 0.22))
+			_star(b, c)
 		st_y += star_step
 
 	# dressed granite threshold where the Passeig meets the park gate plaza

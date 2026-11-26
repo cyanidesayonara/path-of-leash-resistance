@@ -106,6 +106,8 @@ func _run() -> void:
 	var S = load("res://world/surfaces.gd")
 	_check(m.surface_at(p_pier) == S.S.PAVEMENT, "pier surface is pavement")
 	_check(m.surface_at(p_water) == S.S.WATER, "basin surface is water")
+	# the lighthouse square past the gate is paving out to its rail, not harbor
+	_check(m.surface_at(Vector2(1050.0, m.GATE_Y - 250.0)) != S.S.WATER, "the lighthouse square is dry")
 
 	# 9. Simulation step sanity
 	for frame in range(15):

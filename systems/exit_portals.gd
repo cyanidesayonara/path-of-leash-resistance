@@ -17,6 +17,7 @@ extends RefCounted
 # every frame (one draw call); only the door leaf and the lights are live.
 
 const ShapeBatch := preload("res://systems/shape_batch.gd")
+const Woods := preload("res://world/woods.gd")
 const Letters := preload("res://world/sign_letters.gd")
 
 const LIGHT := Vector2(-0.6, -0.8)
@@ -468,10 +469,14 @@ static func _ramp(b: ShapeBatch, m: Node2D, c: Vector2) -> void:
 	_block(b, m, front, concrete, concrete.lightened(0.06), c.x - 34.0, c.x + 34.0)
 	b.rect(Rect2(LEFT, front + 70.0, RIGHT - LEFT, 70.0), Color(0.80, 0.74, 0.60))
 	b.rect(Rect2(LEFT, front + 140.0, RIGHT - LEFT, bottom - front - 140.0), Color(0.40, 0.56, 0.30))
+	# a wood of riverside trees, thinning toward the path
+	var park := Rect2(LEFT, front + 150.0, RIGHT - LEFT, bottom - front - 150.0)
+	Woods.ground(b, Rect2(park.position + Vector2(0.0, 70.0), park.size - Vector2(0.0, 70.0)), "river", 31)
+	b.band(PackedVector2Array([Vector2(LEFT, front + 220.0), Vector2(RIGHT, front + 220.0), Vector2(LEFT, front + 300.0), Vector2(RIGHT, front + 300.0)]),
+		2, Color(0.40, 0.56, 0.30), PackedFloat32Array([1.0, 0.0]))
+	Woods.trees(b, Rect2(LEFT, front + 250.0, RIGHT - LEFT, bottom - front - 270.0), "river", 37, 70.0)
 	for k in range(-6, 7):
-		var tp := Vector2(c.x + float(k) * 150.0 + 40.0, front + 210.0 + float(k % 2) * 40.0)
-		b.circle(tp - LIGHT * 12.0, 30.0, SHADOW)
-		b.circle(tp, 28.0, Color(0.30, 0.48, 0.26))
+		Woods.crown(b, Woods.K.OAK if k % 2 == 0 else Woods.K.OLIVE, Vector2(c.x + float(k) * 150.0 + 40.0, front + 200.0 + float(k % 2) * 24.0), 34.0, k + 20)
 	# the ramp up through the wall: grooved concrete and its two handrails
 	var ramp := Rect2(c.x - 30.0, front - 4.0, 60.0, 74.0)
 	b.rect(ramp, concrete.lightened(0.1))

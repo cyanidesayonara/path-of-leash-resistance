@@ -59,7 +59,7 @@ const DROP_H := 0.9
 const FEEL := {
 	"leaves": {"spacing": 0.12, "r": 0.085, "drag": 5.0, "take": 1.1, "spin": 5.0},
 	"casings": {"spacing": 0.08, "r": 0.10, "drag": 3.0, "take": 1.2, "spin": 7.0},
-	"feathers": {"spacing": 0.08, "r": 0.10, "drag": 3.5, "take": 1.3, "spin": 6.0},
+	"feathers": {"spacing": 0.10, "r": 0.115, "drag": 3.5, "take": 1.3, "spin": 6.0, "align": true},
 	"pipes": {"spacing": 0.07, "r": 0.05, "drag": 6.0, "take": 1.3, "spin": 6.0},
 	"carnations": {"spacing": 0.15, "r": 0.09, "drag": 4.0, "take": 0.9, "spin": 3.0},
 	"flowerbed": {"spacing": 0.075, "r": 0.06, "drag": 7.0, "take": 0.8, "spring": 14.0},
@@ -687,7 +687,7 @@ static func _feathers(c: Object, sign: Dictionary, _h: float) -> void:
 		c.draw_colored_polygon(vane, col)
 		c.draw_colored_polygon(PackedVector2Array([p - ax * r * 0.2 - ay * r * 0.1, p + ax * r * 0.9 + ay * r * 0.1,
 			p + ax * r * 0.3 - ay * r * 0.5]), Color(0.78, 0.86, 0.34))
-		c.draw_line(p - ax * r * 1.5, p + ax * r * 1.25, Color(0.90, 0.92, 0.74), 1.2)
+		c.draw_line(p - ax * r * 1.5, p + ax * r * 1.25, Color(0.08, 0.30, 0.16), 1.2)
 
 
 static func _casings(c: Object, sign: Dictionary, _h: float) -> void:
