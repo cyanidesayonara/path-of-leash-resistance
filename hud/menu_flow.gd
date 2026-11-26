@@ -724,18 +724,31 @@ static func first_choose(m: Node2D) -> void:
 		_go_step(m, 1)
 
 
+# the rows up and down pick from: the two answers, then the box
+const FIRST_ROWS := 3
+
+
 static func tick_first(m: Node2D) -> void:
-	if Input.is_action_just_pressed("move_down") or Input.is_action_just_pressed("move_up"):
-		m.first_idx = 1 - clampi(int(m.first_idx), 0, 1)
+	if Input.is_action_just_pressed("move_down"):
+		m.first_idx = (clampi(int(m.first_idx), 0, FIRST_ROWS - 1) + 1) % FIRST_ROWS
 		Sfx.play("ui")
+	elif Input.is_action_just_pressed("move_up"):
+		m.first_idx = (clampi(int(m.first_idx), 0, FIRST_ROWS - 1) + FIRST_ROWS - 1) % FIRST_ROWS
+		Sfx.play("ui")
+	elif Input.is_action_just_pressed("plant") and int(m.first_idx) == FIRST_ROWS - 1:
+		_toggle_ask()
 	elif Input.is_action_just_pressed("plant"):
 		first_choose(m)
 	elif Input.is_action_just_pressed("pee"):
-		Game.ask_tutorial = not Game.ask_tutorial
-		Game.save_records()
-		Sfx.play("ui")
+		_toggle_ask()
 	elif back_pressed():
 		confirm_cancel(m)
+
+
+static func _toggle_ask() -> void:
+	Game.ask_tutorial = not Game.ask_tutorial
+	Game.save_records()
+	Sfx.play("ui")
 
 
 # The tutorial's checkpoint, halfway: the first real walk now (the tutorial

@@ -1181,13 +1181,18 @@ func _confirm(vs: Vector2) -> void:
 				Kit.chevron(self, Vector2(rr.position.x + 20.0, rr.get_center().y), 8.0, acc)
 			draw_string(f, Vector2(rr.position.x + 38.0, rr.get_center().y + 6.5), String(opts[i]),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Kit.INK if picked else Kit.INK_SOFT)
-		# the "don't ask again" box: the prompt bar's key ticks it, and the
-		# card shows whether it is ticked
+		# the "don't ask again" box: the third row, picked like the answers and
+		# ticked by confirm (or the prompt bar's key from either answer)
 		var label := I18n.t("confirm_dont_ask")
 		var tw: float = Kit.body().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
 		var box := 16.0
 		var x0 := r.position.x + cw * 0.5 - (box + 10.0 + tw) * 0.5
 		var by := oy + FIRST_ROW_H * float(opts.size()) + 12.0
+		if int(main.first_idx) == opts.size():
+			var br := Rect2(x0 - 34.0, by - 9.0, box + 10.0 + tw + 50.0, box + 18.0)
+			draw_rect(br, Kit.pick_fill(acc))
+			draw_rect(br, acc, false, 2.0)
+			Kit.chevron(self, Vector2(br.position.x + 16.0, br.get_center().y), 7.0, acc)
 		Icons.draw_check(self, Vector2(x0, by), box,
 			Icons.Check.DONE_NOW if not Game.ask_tutorial else Icons.Check.OPEN)
 		draw_string(Kit.body(), Vector2(x0 + box + 10.0, by + 13.0), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 16,
