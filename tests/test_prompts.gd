@@ -44,6 +44,7 @@ func _key(pressed := true) -> InputEventKey:
 
 func _devices() -> void:
 	Prompts.device = Prompts.KEYS
+	Prompts.pad_style = Prompts.PadStyle.XBOX
 	var b := InputEventJoypadButton.new()
 	b.button_index = JOY_BUTTON_A
 	b.pressed = true
@@ -55,6 +56,15 @@ func _devices() -> void:
 	drift.axis = JOY_AXIS_LEFT_X
 	drift.axis_value = 0.2
 	_check(not Prompts.note(drift) and Prompts.device == Prompts.KEYS, "a drifting stick does not take the prompts over")
+	var trig_drift := InputEventJoypadMotion.new()
+	trig_drift.axis = JOY_AXIS_TRIGGER_RIGHT
+	trig_drift.axis_value = 0.2
+	_check(not Prompts.note(trig_drift) and Prompts.device == Prompts.KEYS, "a resting trigger does not take the prompts over")
+	var trig_pull := InputEventJoypadMotion.new()
+	trig_pull.axis = JOY_AXIS_TRIGGER_RIGHT
+	trig_pull.axis_value = 0.8
+	_check(Prompts.note(trig_pull) and Prompts.device == Prompts.PAD, "pulling a trigger switches to the pad")
+	_check(Prompts.note(_key()) and Prompts.device == Prompts.KEYS, "a key press returns to keyboard after trigger")
 	var push := InputEventJoypadMotion.new()
 	push.axis = JOY_AXIS_LEFT_Y
 	push.axis_value = -0.9
@@ -66,14 +76,25 @@ func _devices() -> void:
 	click.button_index = MOUSE_BUTTON_LEFT
 	click.pressed = true
 	_check(not Prompts.note(click) and Prompts.device == Prompts.TOUCH, "the mouse click a touch emulates is ignored")
+	Prompts.pad_style = Prompts.PadStyle.XBOX
 
 
 func _names_and_fill() -> void:
+	Prompts.pad_style = Prompts.PadStyle.XBOX
 	Prompts.device = Prompts.KEYS
 	_check(Prompts.key("plant") == "SPACE" and Prompts.key("restart") == "R", "keyboard names")
 	Prompts.device = Prompts.PAD
 	_check(Prompts.key("plant") == "A" and Prompts.key("restart") == "Start" and Prompts.pad(), "controller names")
+	_check(Prompts.key("turbo") == "RT", "xbox turbo prompt defaults to RT (%s)" % Prompts.key("turbo"))
 	_check(Prompts.key("poop") != Prompts.key("share") and Prompts.key("poop") != Prompts.key("skip"), "poop and skip use distinct pad buttons")
+	Prompts.pad_style = Prompts.PadStyle.PLAYSTATION
+	_check(Prompts.key("turbo") == "R2" and Prompts.key("pickup") == "L1", "playstation trigger and shoulder prompts (%s / %s)" % [Prompts.key("turbo"), Prompts.key("pickup")])
+	_check(Prompts.key("restart") == "Options" and Prompts.key("pause") == "Share", "playstation start/back prompts (%s / %s)" % [Prompts.key("restart"), Prompts.key("pause")])
+	_check(Prompts.pad_bind_label(JOY_BUTTON_RIGHT_SHOULDER) == "R1", "pad_bind_label formats PS shoulder")
+	_check(Prompts.pad_bind_label({"axis": JOY_AXIS_TRIGGER_LEFT, "sign": 1}) == "L2", "pad_bind_label formats PS left trigger")
+	Prompts.pad_style = Prompts.PadStyle.XBOX
+	_check(Prompts.pad_bind_label({"axis": JOY_AXIS_TRIGGER_RIGHT, "sign": 1}) == "RT", "pad_bind_label formats Xbox right trigger")
+	_check(Prompts.pad_bind_label({"axis": JOY_AXIS_RIGHT_Y, "sign": -1}) == "R stick ^", "pad_bind_label formats right stick up")
 	Prompts.device = Prompts.TOUCH
 	_check(Prompts.key("plant") == "DIG" and Prompts.key("pee") == "PEE", "touch names are the touch buttons' labels")
 	_check(Prompts.key("turbo") == "RUN" and Prompts.key("pause") == "MENU", "the touch buttons for turbo and the menu (#62)")

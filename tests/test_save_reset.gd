@@ -79,6 +79,7 @@ func _settings(cf: ConfigFile) -> void:
 	cf.set_value("settings", "language", "ca")
 	cf.set_value("settings", "control_layout", "arrows")
 	cf.set_value("settings", "key_binds", {"poop": KEY_V})
+	cf.set_value("settings", "pad_binds", {"pickup": JOY_BUTTON_Y, "turbo": {"axis": JOY_AXIS_TRIGGER_LEFT, "sign": 1}})
 	cf.set_value("settings", "screen_shake", false)
 	cf.set_value("settings", "flashes", false)
 	cf.set_value("settings", "text_size", "large")
@@ -101,7 +102,11 @@ func _is_fresh(g: Node, what: String) -> void:
 
 func _settings_kept(g: Node, what: String) -> void:
 	_check(is_equal_approx(g.vol_master, 0.31) and is_equal_approx(g.vol_sfx, 0.42) and is_equal_approx(g.vol_music, 0.53), "%s: the volumes are kept" % what)
-	_check(g.language == "ca" and g.control_layout == "arrows" and int(g.key_binds.get("poop", 0)) == KEY_V, "%s: language and controls are kept" % what)
+	var tb: Variant = g.pad_binds.get("turbo")
+	var trig_ok: bool = tb is Dictionary and int((tb as Dictionary).get("axis", -1)) == JOY_AXIS_TRIGGER_LEFT
+	_check(g.language == "ca" and int(g.key_binds.get("poop", 0)) == KEY_V
+		and int(g.pad_binds.get("pickup", -1)) == JOY_BUTTON_Y and trig_ok,
+		"%s: language and controls are kept" % what)
 	_check(not g.screen_shake and not g.flashes and g.text_size == "large" and g.goals_expanded, "%s: accessibility is kept" % what)
 
 

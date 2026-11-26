@@ -1652,6 +1652,16 @@ func _input(event: InputEvent) -> void:
 	# (the pause menu, a death card) is re-filled, and the title's is rebuilt
 	if Prompts.note(event):
 		Prompts.refresh()
+		Tips.refill(self)
+		if started:
+			_update_hud()
+			if tutorial_mode:
+				TutorialSteps.update_card(self)
+		if menu_screen != null:
+			menu_screen.queue_redraw()
+		if settings_panel != null and settings_panel.visible:
+			settings_panel.queue_redraw()
+		queue_redraw()
 	if (in_controls or in_settings) and Game.rebind_step >= 0:
 		MenuFlow.rebind_input(self, event)
 
@@ -1659,42 +1669,8 @@ func _input(event: InputEvent) -> void:
 func _setup_input() -> void:
 	if InputMap.has_action("plant"):
 		return
-	var moves := {
-		"move_left": [KEY_A, KEY_LEFT], "move_right": [KEY_D, KEY_RIGHT],
-		"move_up": [KEY_W, KEY_UP], "move_down": [KEY_S, KEY_DOWN],
-	}
-	for action in moves:
-		InputMap.add_action(action)
-		for k in moves[action]:
-			var ev := InputEventKey.new()
-			ev.physical_keycode = k
-			InputMap.action_add_event(action, ev)
-	var axes := {
-		"move_left": [JOY_AXIS_LEFT_X, -1.0], "move_right": [JOY_AXIS_LEFT_X, 1.0],
-		"move_up": [JOY_AXIS_LEFT_Y, -1.0], "move_down": [JOY_AXIS_LEFT_Y, 1.0],
-	}
-	for action in axes:
-		var ev := InputEventJoypadMotion.new()
-		ev.axis = axes[action][0]
-		ev.axis_value = axes[action][1]
-		InputMap.action_add_event(action, ev)
-	var buttons := {
-		"plant": [KEY_SPACE, JOY_BUTTON_A], "bark": [KEY_E, JOY_BUTTON_B],
-		"pee": [KEY_Q, JOY_BUTTON_X], "poop": [KEY_F, JOY_BUTTON_Y],
-		"pickup": [KEY_G, JOY_BUTTON_LEFT_SHOULDER],
-		"turbo": [KEY_SHIFT, JOY_BUTTON_RIGHT_SHOULDER],
-		"restart": [KEY_R, JOY_BUTTON_START], "share": [KEY_C, JOY_BUTTON_DPAD_RIGHT],
-		"pause": [KEY_ESCAPE, JOY_BUTTON_BACK], "mute_music": [KEY_M, JOY_BUTTON_DPAD_DOWN],
-		"goals": [KEY_TAB, JOY_BUTTON_DPAD_UP],
-	}
-	for action in buttons:
-		InputMap.add_action(action)
-		var evk := InputEventKey.new()
-		evk.physical_keycode = buttons[action][0]
-		InputMap.action_add_event(action, evk)
-		var evb := InputEventJoypadButton.new()
-		evb.button_index = buttons[action][1]
-		InputMap.action_add_event(action, evb)
+	for act: String in Game.REBIND_ACTIONS:
+		InputMap.add_action(act)
 	Game.apply_control_layout()
 
 

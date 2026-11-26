@@ -47,6 +47,13 @@ func _make_pad(btn: JoyButton, pressed: bool) -> InputEventJoypadButton:
 	return ev
 
 
+func _make_axis(axis: JoyAxis, value: float) -> InputEventJoypadMotion:
+	var ev := InputEventJoypadMotion.new()
+	ev.axis = axis
+	ev.axis_value = value
+	return ev
+
+
 func _run() -> void:
 	Flow = load("res://hud/menu_flow.gd")
 	Kit = load("res://hud/ui_kit.gd")
@@ -82,7 +89,6 @@ func _run() -> void:
 	game.screen_shake = true
 	game.flashes = true
 	game.text_size = "normal"
-	game.control_layout = "default"
 	game.clear_rebinds()
 	UiScale.apply(main)
 	game.save_path = orig_save_path
@@ -278,19 +284,21 @@ func _test_text_size_and_layouts() -> void:
 
 
 func _test_controls_rebinding() -> void:
-	game.control_layout = "default"
 	game.clear_rebinds()
+	var was_style := Prompts.pad_style
+	Prompts.pad_style = Prompts.PadStyle.XBOX
 	main._open_settings_from_menu()
 	var keys: Array = Flow.settings_keys(main)
 	main.settings_idx = keys.find("controls")
 	_check(Flow.screen(main) == "settings", "settings opens cleanly")
 
-	# Confirm on CONTROLS opens dedicated controls screen (while left/right cycles layout)
-	var before_layout := String(game.control_layout)
+	# Left/right on CONTROLS submenu row leaves bindings untouched
+	var before_keys: Dictionary = game.key_binds.duplicate(true)
+	var before_pads: Dictionary = game.pad_binds.duplicate(true)
 	Flow.settings_adjust(main, 1)
-	_check(game.control_layout != before_layout, "right on controls row still cycles control_layout")
 	Flow.settings_adjust(main, -1)
-	_check(game.control_layout == before_layout, "left cycles back")
+	_check(game.key_binds == before_keys and game.pad_binds == before_pads,
+		"left/right on controls row leaves bindings untouched")
 
 	Input.action_press("plant")
 	main._tick_settings()
@@ -301,16 +309,23 @@ func _test_controls_rebinding() -> void:
 	_check(acts.size() == 15, "all 15 input actions are registered in REBIND_ACTIONS (%d)" % acts.size())
 	_check(Flow.controls_rows(main).size() == 16, "controls screen lists 15 actions + reset row")
 
-	# Select "poop", enter listen mode, release SPACE cleanly via rebind_wait_release
+	# Select "poop", enter listen mode, ignore stick noise, release SPACE cleanly via rebind_wait_release
 	var poop_i := acts.find("poop")
 	main.controls_idx = poop_i
 	Input.action_press("plant")
 	main._tick_controls()
 	_check(game.rebind_step == poop_i and game.rebind_wait_release, "entering listen sets rebind_step & rebind_wait_release")
+	Flow.rebind_input(main, _make_axis(JOY_AXIS_LEFT_X, 0.2))
+	_check(game.rebind_wait_release, "stick drift does not clear rebind_wait_release")
 	Flow.rebind_input(main, _make_key(KEY_SPACE, false))
 	Input.action_release("plant")
 	_check(not game.rebind_wait_release and not game.key_binds.has("poop"),
 		"confirming key release clears rebind_wait_release without binding itself")
+
+	# Strong stick push on a non-move action is ignored
+	Flow.rebind_input(main, _make_axis(JOY_AXIS_LEFT_X, 0.8))
+	_check(game.rebind_step == poop_i and not game.pad_binds.has("poop"),
+		"stick push does not bind to non-movement action")
 
 	# Press KEY_V to bind poop
 	Flow.rebind_input(main, _make_key(KEY_V, true))
@@ -346,6 +361,29 @@ func _test_controls_rebinding() -> void:
 	Flow.rebind_input(main, _make_pad(JOY_BUTTON_Y, true))
 	Prompts.device = Prompts.PAD
 	_check(Prompts.key("pickup") == "Y", "rebound pickup pad updates Prompts (%s)" % Prompts.key("pickup"))
+
+	# Rebind gamepad trigger axis for pickup -> JOY_AXIS_TRIGGER_LEFT
+	game.rebind_step = pick_i
+	game.rebind_wait_release = false
+	Flow.rebind_input(main, _make_axis(JOY_AXIS_TRIGGER_LEFT, 0.85))
+	_check(game.rebind_step == -1 and game.pad_binds.get("pickup") is Dictionary
+		and int((game.pad_binds["pickup"] as Dictionary).get("axis", -1)) == JOY_AXIS_TRIGGER_LEFT
+		and Prompts.key("pickup") == "LT"
+		and InputMap.event_is_action(_make_axis(JOY_AXIS_TRIGGER_LEFT, 0.85), "pickup"),
+		"rebind_input binds analog trigger to pickup and updates Prompts & InputMap")
+
+	# JOY_BUTTON_START can be bound (not treated as cancel); JOY_BUTTON_BACK cancels
+	var bark_i := acts.find("bark")
+	game.rebind_step = bark_i
+	game.rebind_wait_release = false
+	Flow.rebind_input(main, _make_pad(JOY_BUTTON_START, true))
+	_check(game.rebind_step == -1 and int(game.pad_binds.get("bark", -1)) == JOY_BUTTON_START,
+		"Start button binds instead of cancelling")
+	game.rebind_step = bark_i
+	game.rebind_wait_release = false
+	Flow.rebind_input(main, _make_pad(JOY_BUTTON_BACK, true))
+	_check(game.rebind_step == -1 and int(game.pad_binds.get("bark", -1)) == JOY_BUTTON_START and Flow.screen(main) == "controls",
+		"Back button cancels listening cleanly without exiting controls")
 	Prompts.device = Prompts.KEYS
 
 	# Listening + ESC cancels listening cleanly without leaving controls screen
@@ -362,9 +400,13 @@ func _test_controls_rebinding() -> void:
 	Input.action_press("plant")
 	main._tick_controls()
 	Input.action_release("plant")
+	Prompts.device = Prompts.PAD
+	_check(Prompts.key("turbo") == "RT", "reset restores RT trigger prompt for turbo")
+	Prompts.device = Prompts.KEYS
 	_check(game.key_binds.is_empty() and game.pad_binds.is_empty() and Prompts.key("poop") == "F"
 		and Prompts.key("goals") == "TAB" and Prompts.key("move_up") == "W",
 		"reset row clears all rebinds and restores defaults")
+	Prompts.pad_style = was_style
 
 	main._close_controls()
 	_check(Flow.screen(main) == "settings" and main.in_settings, "closing controls returns to settings")
@@ -380,6 +422,7 @@ func _test_persistence(scratch: String) -> void:
 	game.bind_key("poop", KEY_V)
 	game.bind_key("goals", KEY_K)
 	game.bind_pad("pickup", JOY_BUTTON_Y)
+	game.bind_pad_axis("turbo", JOY_AXIS_TRIGGER_LEFT, 1)
 	game.save_records()
 
 	# Clobber in-memory state cleanly before reload
@@ -396,13 +439,17 @@ func _test_persistence(scratch: String) -> void:
 	_check(game.text_size == "large", "text_size persists large across save/load")
 	_check(int(game.key_binds.get("poop", 0)) == KEY_V and int(game.key_binds.get("goals", 0)) == KEY_K,
 		"key_binds survive save/load")
-	_check(int(game.pad_binds.get("pickup", -1)) == JOY_BUTTON_Y, "pad_binds survive save/load")
+	_check(int(game.pad_binds.get("pickup", -1)) == JOY_BUTTON_Y, "pad_binds button survives save/load")
+	var tb: Variant = game.pad_binds.get("turbo")
+	_check(tb is Dictionary and int((tb as Dictionary).get("axis", -1)) == JOY_AXIS_TRIGGER_LEFT,
+		"pad_binds trigger axis survives save/load")
 	Prompts.device = Prompts.KEYS
 	_check(Prompts.key("poop") == "V" and Prompts.key("goals") == "K",
 		"Prompts reflect loaded key binds after load_records()")
 	_check(InputMap.event_is_action(_make_key(KEY_V, true), "poop")
-		and InputMap.event_is_action(_make_key(KEY_K, true), "goals"),
-		"InputMap reflects loaded key binds after load_records()")
+		and InputMap.event_is_action(_make_key(KEY_K, true), "goals")
+		and InputMap.event_is_action(_make_axis(JOY_AXIS_TRIGGER_LEFT, 0.85), "turbo"),
+		"InputMap reflects loaded key and trigger binds after load_records()")
 
 	var roundtrip: Array = Flow.check_settings_roundtrip(main)
 	_check(roundtrip.is_empty(), "MenuFlow.check_settings_roundtrip passes: %s" % str(roundtrip))

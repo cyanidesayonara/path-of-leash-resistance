@@ -61,6 +61,7 @@ const STAT_KEYS := {"speed": "stat_speed", "plant": "stat_plant", "herd": "stat_
 static var exit_hidden := false
 static var back_requested := false
 static var _rebind_consumed_frame := -1
+static var _rebind_wait_axis := -1
 
 
 # --- which screen is up ---------------------------------------------------
@@ -141,7 +142,7 @@ static func _prompt_keys(m: Node2D, which: String) -> Array:
 		"settings":
 			var keys := settings_keys(m)
 			if m.settings_idx >= 0 and m.settings_idx < keys.size() and String(keys[m.settings_idx]) == "controls":
-				return [["up_down", "pick"], ["left_right", "layout"], ["plant", "rebind"], ["back", "back"]]
+				return [["up_down", "pick"], ["plant", "rebind"], ["back", "back"]]
 			return [["up_down", "pick"], ["left_right", "change"], ["back", "back"]]
 		"controls":
 			if Game.rebind_step >= 0:
@@ -1108,8 +1109,7 @@ static func settings_rows(m: Node2D) -> Array:
 				v = float(Game.LANGUAGES.find(Game.language))
 				kind = "choice"
 			"controls":
-				v = float(Game.CONTROL_LAYOUTS.find(Game.control_layout))
-				kind = "choice"
+				kind = "submenu"
 		var row := {"name": I18n.t(SETTING_KEYS[k]) if SETTING_KEYS.has(k) else String(m.SETTING_NAMES[k]),
 			"kind": kind, "v": v}
 		if k == "language":
@@ -1117,10 +1117,7 @@ static func settings_rows(m: Node2D) -> Array:
 		elif k == "text_size":
 			row.text = I18n.t("text_" + Game.text_size)
 		elif k == "controls":
-			var base_txt := I18n.t("layout_" + Game.control_layout)
-			if not Game.key_binds.is_empty() or not Game.pad_binds.is_empty():
-				base_txt += " *"
-			row.text = base_txt
+			row.text = I18n.t("controls_default" if (Game.key_binds.is_empty() and Game.pad_binds.is_empty()) else "controls_custom")
 		out.append(row)
 	return out
 
@@ -1162,51 +1159,51 @@ static func check_settings_roundtrip(m: Node2D) -> Array:
 	var was_persist := Game.persist
 	Game.persist = true
 	var keep := [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.free_play,
-		Game.control_layout, Game.screen_shake, Game.flashes, Game.text_size,
-		Game.key_binds.duplicate(), Game.pad_binds.duplicate()]
+		Game.screen_shake, Game.flashes, Game.text_size,
+		Game.key_binds.duplicate(), Game.pad_binds.duplicate(true)]
 	Game.vol_master = 0.3
 	Game.vol_sfx = 0.1
 	Game.vol_music = 0.7
 	Game.fullscreen = true
 	Game.free_play = true
-	Game.control_layout = "arrows"
 	Game.screen_shake = false
 	Game.flashes = false
 	Game.text_size = "large"
 	Game.key_binds = {"poop": KEY_V, "pause": KEY_P}
-	Game.pad_binds = {"pickup": JOY_BUTTON_Y}
+	Game.pad_binds = {"pickup": JOY_BUTTON_Y, "turbo": {"axis": JOY_AXIS_TRIGGER_LEFT, "sign": 1}}
 	Game.save_records()
 	Game.vol_master = 0.0
 	Game.vol_sfx = 0.0
 	Game.vol_music = 0.0
 	Game.fullscreen = false
 	Game.free_play = false
-	Game.control_layout = "default"
 	Game.screen_shake = true
 	Game.flashes = true
 	Game.text_size = "normal"
 	Game.key_binds = {}
 	Game.pad_binds = {}
 	Game.load_records()
+	var pb_turbo: Variant = Game.pad_binds.get("turbo")
+	var turbo_ok: bool = pb_turbo is Dictionary and int((pb_turbo as Dictionary).get("axis", -1)) == JOY_AXIS_TRIGGER_LEFT
 	if not (is_equal_approx(Game.vol_master, 0.3) and is_equal_approx(Game.vol_sfx, 0.1)
 			and is_equal_approx(Game.vol_music, 0.7) and Game.fullscreen and Game.free_play
-			and Game.control_layout == "arrows" and not Game.screen_shake and not Game.flashes
+			and not Game.screen_shake and not Game.flashes
 			and Game.text_size == "large" and int(Game.key_binds.get("poop", 0)) == KEY_V
-			and int(Game.key_binds.get("pause", 0)) == KEY_P and int(Game.pad_binds.get("pickup", -1)) == JOY_BUTTON_Y):
-		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s %s %s %s %s)"
-			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen, Game.control_layout,
+			and int(Game.key_binds.get("pause", 0)) == KEY_P and int(Game.pad_binds.get("pickup", -1)) == JOY_BUTTON_Y
+			and turbo_ok):
+		p.append("settings did not survive a save/load round trip (%.2f %.2f %.2f %s %s %s %s)"
+			% [Game.vol_master, Game.vol_sfx, Game.vol_music, Game.fullscreen,
 				Game.screen_shake, Game.flashes, Game.text_size])
 	Game.vol_master = keep[0]
 	Game.vol_sfx = keep[1]
 	Game.vol_music = keep[2]
 	Game.fullscreen = keep[3]
 	Game.free_play = keep[4]
-	Game.control_layout = keep[5]
-	Game.screen_shake = keep[6]
-	Game.flashes = keep[7]
-	Game.text_size = keep[8]
-	Game.key_binds = (keep[9] as Dictionary).duplicate()
-	Game.pad_binds = (keep[10] as Dictionary).duplicate()
+	Game.screen_shake = keep[5]
+	Game.flashes = keep[6]
+	Game.text_size = keep[7]
+	Game.key_binds = (keep[8] as Dictionary).duplicate()
+	Game.pad_binds = (keep[9] as Dictionary).duplicate(true)
 	Game.apply_control_layout()
 	Game.save_records()
 	# and the slider steps must stay inside 0..1 however hard you lean on them
@@ -1234,6 +1231,7 @@ static func open_settings(m: Node2D) -> void:
 	m.in_controls = false
 	Game.rebind_step = -1
 	Game.rebind_wait_release = false
+	_rebind_wait_axis = -1
 	m.in_settings = true
 	m.settings_idx = 0
 	m.settings_panel.visible = true
@@ -1251,6 +1249,7 @@ static func close_settings(m: Node2D) -> void:
 	m.in_controls = false
 	Game.rebind_step = -1
 	Game.rebind_wait_release = false
+	_rebind_wait_axis = -1
 	_rebind_consumed_frame = -1
 	m.settings_panel.visible = false
 	m.queue_redraw()
@@ -1269,6 +1268,7 @@ static func open_controls(m: Node2D) -> void:
 	m.controls_idx = 0
 	Game.rebind_step = -1
 	Game.rebind_wait_release = false
+	_rebind_wait_axis = -1
 	_rebind_consumed_frame = -1
 	m.settings_panel.visible = false
 	m.dim.visible = true
@@ -1280,6 +1280,7 @@ static func close_controls(m: Node2D) -> void:
 	m.in_controls = false
 	Game.rebind_step = -1
 	Game.rebind_wait_release = false
+	_rebind_wait_axis = -1
 	_rebind_consumed_frame = -1
 	Game.save_records()
 	m.in_settings = true
@@ -1342,20 +1343,43 @@ static func settings_adjust(m: Node2D, dir: int) -> void:
 				m._update_hud()
 			m.build_signs()
 			m.queue_redraw()
-		"controls":
-			var ci := Game.CONTROL_LAYOUTS.find(Game.control_layout)
-			Game.control_layout = Game.CONTROL_LAYOUTS[wrapi(ci + dir, 0, Game.CONTROL_LAYOUTS.size())]
-			Game.clear_rebinds()
-			Sfx.play("ui")
-			m.queue_redraw()
+
+
+static func _finish_rebind(m: Node2D, act: String, kind: String, code: int, axis_sign: int = 1) -> void:
+	_rebind_consumed_frame = Engine.get_process_frames()
+	var cancel := (kind == "key" and code == KEY_ESCAPE) or (kind == "pad_btn" and code == JOY_BUTTON_BACK)
+	if not cancel:
+		match kind:
+			"key":
+				Game.bind_key(act, code)
+			"pad_btn":
+				Game.bind_pad(act, code)
+			"pad_axis":
+				Game.bind_pad_axis(act, code, axis_sign)
+	Game.rebind_step = -1
+	Game.rebind_wait_release = false
+	_rebind_wait_axis = -1
+	Sfx.play("ui")
+	m.queue_redraw()
+	m.get_viewport().set_input_as_handled()
 
 
 static func rebind_input(m: Node2D, event: InputEvent) -> void:
 	if Game.rebind_step < 0 or Game.rebind_step >= Game.REBIND_ACTIONS.size():
 		return
-	if not (event is InputEventKey or event is InputEventJoypadButton):
+	if not (event is InputEventKey or event is InputEventJoypadButton or event is InputEventJoypadMotion):
 		return
 	if Game.rebind_wait_release:
+		if _rebind_wait_axis >= 0:
+			if event is InputEventJoypadMotion and int((event as InputEventJoypadMotion).axis) == _rebind_wait_axis:
+				if absf((event as InputEventJoypadMotion).axis_value) < 0.25:
+					Game.rebind_wait_release = false
+					_rebind_wait_axis = -1
+				_rebind_consumed_frame = Engine.get_process_frames()
+				m.get_viewport().set_input_as_handled()
+			return
+		if event is InputEventJoypadMotion:
+			return
 		if not event.pressed:
 			Game.rebind_wait_release = false
 		_rebind_consumed_frame = Engine.get_process_frames()
@@ -1364,36 +1388,18 @@ static func rebind_input(m: Node2D, event: InputEvent) -> void:
 	var act := String(Game.REBIND_ACTIONS[Game.rebind_step])
 	if event is InputEventKey and event.pressed and not event.echo:
 		var code: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
-		_rebind_consumed_frame = Engine.get_process_frames()
-		if code == KEY_ESCAPE:
-			Game.rebind_step = -1
-			Game.rebind_wait_release = false
-			Sfx.play("ui")
-			m.queue_redraw()
-			m.get_viewport().set_input_as_handled()
-			return
-		Game.bind_key(act, code)
-		Game.rebind_step = -1
-		Game.rebind_wait_release = false
-		Sfx.play("ui")
-		m.queue_redraw()
-		m.get_viewport().set_input_as_handled()
+		_finish_rebind(m, act, "key", code)
 	elif event is InputEventJoypadButton and event.pressed:
-		var btn: int = event.button_index
-		_rebind_consumed_frame = Engine.get_process_frames()
-		if btn == JOY_BUTTON_BACK or btn == JOY_BUTTON_START:
-			Game.rebind_step = -1
-			Game.rebind_wait_release = false
-			Sfx.play("ui")
-			m.queue_redraw()
-			m.get_viewport().set_input_as_handled()
+		_finish_rebind(m, act, "pad_btn", int((event as InputEventJoypadButton).button_index))
+	elif event is InputEventJoypadMotion:
+		var mev := event as InputEventJoypadMotion
+		if absf(mev.axis_value) < 0.65:
 			return
-		Game.bind_pad(act, btn)
-		Game.rebind_step = -1
-		Game.rebind_wait_release = false
-		Sfx.play("ui")
-		m.queue_redraw()
-		m.get_viewport().set_input_as_handled()
+		var ax := int(mev.axis)
+		if (ax == JOY_AXIS_TRIGGER_LEFT or ax == JOY_AXIS_TRIGGER_RIGHT) and mev.axis_value >= 0.65:
+			_finish_rebind(m, act, "pad_axis", ax, 1)
+		elif act.begins_with("move_") and ax in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]:
+			_finish_rebind(m, act, "pad_axis", ax, 1 if mev.axis_value > 0.0 else -1)
 
 
 static func tick_settings(m: Node2D) -> void:
@@ -1428,6 +1434,7 @@ static func tick_controls(m: Node2D) -> void:
 		if back_pressed():
 			Game.rebind_step = -1
 			Game.rebind_wait_release = false
+			_rebind_wait_axis = -1
 			Sfx.play("ui")
 			m.queue_redraw()
 		return
@@ -1457,6 +1464,15 @@ static func tick_controls(m: Node2D) -> void:
 		else:
 			Game.rebind_step = m.controls_idx
 			Game.rebind_wait_release = true
+			_rebind_wait_axis = -1
+			var pb: Variant = Game.pad_binds.get("plant")
+			if pb is Dictionary and (pb as Dictionary).has("axis"):
+				var ax := int((pb as Dictionary)["axis"])
+				var sg := 1.0 if int((pb as Dictionary).get("sign", 1)) >= 0 else -1.0
+				for id: int in Input.get_connected_joypads():
+					if Input.get_joy_axis(id, ax) * sg >= 0.25:
+						_rebind_wait_axis = ax
+						break
 			Sfx.play("ui")
 			m.queue_redraw()
 	elif back_pressed():

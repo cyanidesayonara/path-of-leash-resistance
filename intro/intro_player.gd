@@ -170,7 +170,8 @@ func _place() -> void:
 func _input(event: InputEvent) -> void:
 	# the hint names the button for the device in hand, and main never sees
 	# the presses the film takes
-	Prompts.note(event)
+	if Prompts.note(event):
+		Prompts.refresh()
 	if not skips(event):
 		return
 	get_viewport().set_input_as_handled()
