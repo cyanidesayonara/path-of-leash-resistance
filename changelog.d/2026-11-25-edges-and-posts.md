@@ -11,3 +11,7 @@
 - Sitges: the sea and the sand are gradients; the church has its apse and court,
   and the town goes on to the end of the walk.
 - El Diluvi: a puddle no longer hides one of the arcade's pillars.
+- La Ciutadella: no paving star under the walk's name, the stars are mosaic
+  rather than wheels, and the name's feathers lie along its letters.
+- La Platja and El Mercat: taking the groomer's dare no longer stops the music
+  with an error.

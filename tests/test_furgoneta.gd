@@ -45,6 +45,10 @@ func _load_walk(level_id: String) -> Node2D:
 
 func _run() -> void:
 	var FurgonetaMod: GDScript = load("res://systems/furgoneta.gd")
+	# main asks a dare's giver for its tune while the clock runs: the groomer has one
+	var giver: Node2D = FurgonetaMod.GroomerGiver.new()
+	_check(giver.has_method("tune") and String(giver.call("tune")).begins_with("dare_"), "the groomer's dare has a tune")
+	giver.free()
 
 	# --- 1. Placement verification on all 4 walks ---
 	var test_walks := ["street", "beach", "superilla", "park"]

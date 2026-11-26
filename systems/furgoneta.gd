@@ -48,6 +48,10 @@ class GroomerGiver extends Node2D:
 	func has_another_go() -> bool:
 		return false
 
+	# main plays a dare giver's own tune while the clock runs
+	func tune() -> String:
+		return "dare_" + who
+
 	func resolve(win: bool) -> void:
 		Furgoneta.resolve_dare(m, win)
 
