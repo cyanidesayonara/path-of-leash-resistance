@@ -969,8 +969,7 @@ static func _house_lots(m: Node2D, b: ShapeBatch, side: float, lo: float, hi: fl
 		var back_tile: Color = (tiles[(h / 7) % tiles.size()] as Color).darkened(0.12)
 		if style == "andalus" and h % 2 == 0:
 			back_tile = AZOTEA.darkened(0.06)
-		b.quad(Vector2(back0, y0), Vector2(far, y0), Vector2(far, y1), Vector2(back1, y1), back_tile)
-		b.line(Vector2(back0 + side * 70.0, y0), Vector2(back1 + side * 70.0, y1), back_tile.lightened(0.10), 2.5)
+		_back_rows(b, side, back0, back1, far, y0, y1, h, tiles, style)
 		# a patio in some back lots: floor, a lemon tree, its walls' shade
 		if h % 4 == 1 and y1 - y0 > 70.0:
 			var pa := Rect2(minf(back0 + side * 20.0, back0 + side * 120.0), y0 + 16.0, 100.0, y1 - y0 - 32.0)
@@ -1051,6 +1050,49 @@ static func _house_lots(m: Node2D, b: ShapeBatch, side: float, lo: float, hi: fl
 		# the party wall between this house and the next one down the street
 		b.line(Vector2(f0, y0), Vector2(far, y0), Color(0.18, 0.13, 0.10, 0.55), 2.5)
 		b.line(Vector2(f0, y0 + 2.5), Vector2(far, y0 + 2.5), Color(1.0, 0.95, 0.85, 0.12), 1.0)
+
+
+# The houses behind the front ones, row after row out to the edge, a lane
+# between every other row: each its own pitched roof or, in the south, a
+# white terrace.
+static func _back_rows(b: ShapeBatch, side: float, back0: float, back1: float, far: float, y0: float, y1: float, h: int, tiles: Array, style: String) -> void:
+	var off := 0.0
+	var row := 0
+	var end := absf(far - back0) + 40.0
+	while off < end:
+		var hh := _lot_hash(h + row * 31, side, 7)
+		if row % 2 == 1:
+			b.quad(Vector2(back0 + side * off, y0), Vector2(back0 + side * (off + 14.0), y0), Vector2(back1 + side * (off + 14.0), y1), Vector2(back1 + side * off, y1), Color(0.30, 0.26, 0.22))
+			off += 14.0
+		var w := 96.0 + float(hh % 44)
+		var a0 := back0 + side * off
+		var a1 := back1 + side * off
+		var z0 := back0 + side * (off + w)
+		var z1 := back1 + side * (off + w)
+		var tone := (tiles[hh % tiles.size()] as Color).darkened(0.04 * float(mini(row, 3)))
+		if style == "andalus" and hh % 3 == 0:
+			b.quad(Vector2(a0, y0), Vector2(z0, y0), Vector2(z1, y1), Vector2(a1, y1), AZOTEA.darkened(0.04))
+			b.line(Vector2(a0, y0 + 3.0), Vector2(z0, y0 + 3.0), AZOTEA.darkened(0.16), 3.0)
+			b.line(Vector2(a1, y1 - 3.0), Vector2(z1, y1 - 3.0), AZOTEA.darkened(0.16), 3.0)
+			if hh % 2 == 0:
+				var tp := Vector2((a0 + z0) * 0.5, (y0 + y1) * 0.5)
+				b.circle(tp, 8.0, Color(0.62, 0.64, 0.66))
+		else:
+			var r0 := (a0 + z0) * 0.5
+			var r1 := (a1 + z1) * 0.5
+			b.quad(Vector2(a0, y0), Vector2(r0, y0), Vector2(r1, y1), Vector2(a1, y1), tone.lightened(0.08) if side > 0.0 else tone.darkened(0.08))
+			b.quad(Vector2(r0, y0), Vector2(z0, y0), Vector2(z1, y1), Vector2(r1, y1), tone.darkened(0.12) if side > 0.0 else tone.lightened(0.04))
+			for q in range(1, 4):
+				var t := float(q) / 4.0
+				b.line(Vector2(lerpf(a0, z0, t), y0 + 2.0), Vector2(lerpf(a1, z1, t), y1 - 2.0), tone.darkened(0.18), 1.0)
+			b.line(Vector2(r0, y0), Vector2(r1, y1), tone.lightened(0.2), 2.4)
+			if hh % 4 == 0:
+				var cp := Vector2(lerpf(r0, z0, 0.5), (y0 + y1) * 0.5 - 8.0)
+				b.rect(Rect2(cp - Vector2(6, 6), Vector2(12, 12)), Color(0.80, 0.74, 0.64) if style != "aragon" else Color(0.66, 0.36, 0.24))
+				b.rect(Rect2(cp - Vector2(3, 3), Vector2(6, 6)), Color(0.26, 0.22, 0.20))
+		b.line(Vector2(z0, y0), Vector2(z1, y1), Color(0.18, 0.13, 0.10, 0.4), 1.6)
+		off += w
+		row += 1
 
 
 static func _draw_crenellated_gate_tower(b: ShapeBatch, center: Vector2) -> void:

@@ -20,7 +20,9 @@ const LevelBuild := preload("res://world/level_build.gd")
 const SHADOW := Color(0.05, 0.05, 0.08, 0.22)
 
 # the compound ground past the fence, darker and greyer than the footway
+const CityRoofs := preload("res://world/city_roofs.gd")
 const YARD := Color(0.45, 0.41, 0.35)
+const HOARD_BACK := 210.0      # how far back from the fence the compound ends
 # one Heras panel, foot to foot along the fence
 const PANEL := 104.0
 # a panel's shadow lies this far out, the way the light falls
@@ -150,6 +152,16 @@ static func draw_yard_module(m: Node2D, b: Object, r: Rect2, side: float, k: int
 	if _on_road(m, r.position.y, r.end.y):
 		return
 	var y0 := r.position.y
+	# the compound's back: a hoarding of green panels, the city behind it
+	if b is ShapeBatch:
+		var hx: float = (m.frontage(y0 + 110.0).x - HOARD_BACK) if side < 0.0 else (m.frontage(y0 + 110.0).y + HOARD_BACK)
+		CityRoofs.kept_module(b as ShapeBatch, hx + side * 16.0, side, 500.0, y0, y0 + r.size.y, 3100 + k * 2 + int(side > 0.0))
+		b.draw_rect(Rect2(minf(hx, hx + side * 16.0), y0, 16.0, r.size.y), Color(0.05, 0.04, 0.07, 0.25))
+		b.draw_rect(Rect2(hx - 4.0, y0, 8.0, r.size.y), Color(0.24, 0.40, 0.30))
+		var pj := y0
+		while pj < y0 + r.size.y:
+			b.draw_rect(Rect2(hx - 4.0, pj, 8.0, 2.0), Color(0.14, 0.26, 0.20))
+			pj += 44.0
 	# grit and ruts on the compound ground
 	for g in range(9):
 		var gy := y0 + _h(float(k), float(g)) * 220.0
