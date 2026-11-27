@@ -199,6 +199,24 @@ jobs:
             leash-resistance-windows.zip
           generate_release_notes: true
 
+  # Tell santtu.fyi to refresh project-meta after a successful itch publish.
+  # Own environment so PORTFOLIO_SYNC_TOKEN never sits with butler / Play keys.
+  notify-portfolio:
+    needs: publish
+    if: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') }}
+    environment: portfolio
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Notify portfolio-site
+        continue-on-error: true
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PORTFOLIO_SYNC_TOKEN }}
+          repository: cyanidesayonara/portfolio-site
+          event-type: project-updated
+          client-payload: '{"project": "path-of-leash-resistance", "tag": "${{ github.ref_name }}"}'
+
   # The Microsoft Store package: packs the exe exported above into an unsigned
   # MSIX, installs and launches it once to prove it runs packaged, runs WACK,
   # and attaches it to the GitHub release for upload in Partner Center. A separate job after

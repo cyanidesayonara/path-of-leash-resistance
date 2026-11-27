@@ -22,6 +22,7 @@ page, and on any `${{` in a `run:` script.
 | `store` | branch `main` | `store-submit.yml` submit | `PARTNER_CENTER_TENANT_ID`, `PARTNER_CENTER_SELLER_ID`, `PARTNER_CENTER_CLIENT_ID`, `PARTNER_CENTER_CLIENT_SECRET` |
 | `itch` | tags `v*`, branch `main` | `release.yml` publish, `credentials.yml` itch | `BUTLER_API_KEY` |
 | `google-play` | tags `v*`, branch `main` | `release.yml` android, `credentials.yml` google-play | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` |
+| `portfolio` | tags `v*` | `release.yml` notify-portfolio | `PORTFOLIO_SYNC_TOKEN` |
 
 Why this split:
 
@@ -37,6 +38,9 @@ Why this split:
   so nothing publishes from main. (A release dispatched from a branch used to
   push a `manual-<sha>` build to itch; it now skips. Dispatch on the tag for
   the escape hatch, as before.)
+- **`portfolio`, tags only.** Holds the PAT that notifies `portfolio-site`
+  after itch publish. Kept apart so a portfolio sync token never shares an
+  environment with butler or Play.
 - The MSIX job (`release.yml` msix, `msix.yml`) and the website (`pages.yml`,
   the `github-pages` environment) use only `github.token` and need no
   environment of their own.
@@ -54,6 +58,7 @@ Why this split:
 | `ANDROID_KEY_ALIAS` | The alias given to `keytool -genkeypair` (`upload`). |
 | `ANDROID_KEY_PASSWORD` | The keystore's password, which is also the key's (Godot's export uses one password for both). |
 | `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | A JSON key of a Google Cloud service account invited in Play Console > Users and permissions with release rights for the app. Optional: without it the `android` job builds and attaches the bundles but skips the Play upload. |
+| `PORTFOLIO_SYNC_TOKEN` | Fine-grained PAT with Contents: Read and write on `cyanidesayonara/portfolio-site`, used to fire `repository_dispatch` so santtu.fyi refreshes project metadata after a release. Same token value as Stemma's and dopepod's `PORTFOLIO_SYNC_TOKEN` repo secrets. |
 
 ## Setting them up (GitHub > Settings > Environments)
 

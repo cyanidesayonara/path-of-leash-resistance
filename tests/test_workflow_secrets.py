@@ -30,12 +30,14 @@ ENVIRONMENTS = {
     "itch": {"BUTLER_API_KEY"},
     "google-play": {"ANDROID_KEYSTORE_BASE64", "ANDROID_KEY_ALIAS",
                     "ANDROID_KEY_PASSWORD", "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"},
+    "portfolio": {"PORTFOLIO_SYNC_TOKEN"},
 }
 
 # (workflow, job): (environment, the condition its if: must contain)
 JOBS = {
     ("store-submit.yml", "submit"): ("store", ON_MAIN),
     ("release.yml", "publish"): ("itch", ON_TAG),
+    ("release.yml", "notify-portfolio"): ("portfolio", ON_TAG),
     ("release.yml", "android"): ("google-play", ON_TAG),
     ("credentials.yml", "itch"): ("itch", ON_MAIN),
     ("credentials.yml", "google-play"): ("google-play", ON_MAIN),
