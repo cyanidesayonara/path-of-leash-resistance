@@ -4,9 +4,9 @@ extends SceneTree
 # 1. Action separation: poop is separate from plant (dig in).
 #    Holding plant does not squat when nature calls.
 # 2. Pick-up action: dedicated pickup action grabs balls and parcels.
-# 3. Layouts & rebinding: default, arrows, compact, and southpaw layouts
-#    properly configure InputMap and Prompts tokens.
-# 4. Persistence: control_layout survives settings save/load roundtrip.
+# 3. Trigger default & per-action rebinding: turbo defaults to right trigger
+#    (RT / R2) and individual keyboard/gamepad/trigger rebinds update InputMap and Prompts.
+# 4. Persistence: key_binds and pad_binds survive settings save/load roundtrip.
 
 var checks := 0
 var failures: Array[String] = []
@@ -27,18 +27,16 @@ func _run() -> void:
 	var game: Node = root.get_node("Game")
 	var keep_persist: bool = game.persist
 	var keep_level: String = game.level_id
-	var keep_layout: String = game.control_layout
 	var keep_key_binds: Dictionary = game.key_binds.duplicate(true)
 	var keep_pad_binds: Dictionary = game.pad_binds.duplicate(true)
 	game.persist = false
 	root.get_node("Sfx").muted = true
 
-	_test_prompts_and_layouts(game)
 	_test_gameplay_actions(game)
+	_test_prompts_and_rebinds(game)
 
 	game.key_binds = keep_key_binds
 	game.pad_binds = keep_pad_binds
-	game.control_layout = keep_layout
 	game.apply_control_layout()
 	game.level_id = keep_level
 	game.persist = keep_persist
@@ -51,7 +49,24 @@ func _run() -> void:
 		quit(1)
 
 
-func _test_prompts_and_layouts(game: Node) -> void:
+func _make_motion(axis: JoyAxis, value: float) -> InputEventJoypadMotion:
+	var ev := InputEventJoypadMotion.new()
+	ev.axis = axis
+	ev.axis_value = value
+	return ev
+
+
+func _make_btn(btn: JoyButton) -> InputEventJoypadButton:
+	var ev := InputEventJoypadButton.new()
+	ev.button_index = btn
+	ev.pressed = true
+	return ev
+
+
+func _test_prompts_and_rebinds(game: Node) -> void:
+	var was_style := Prompts.pad_style
+	Prompts.pad_style = Prompts.PadStyle.XBOX
+	game.clear_rebinds()
 	Prompts.device = Prompts.KEYS
 	_check(Prompts.key("poop") == "F", "poop key default is F (%s)" % Prompts.key("poop"))
 	_check(Prompts.key("pickup") == "G", "pickup key default is G (%s)" % Prompts.key("pickup"))
@@ -59,40 +74,47 @@ func _test_prompts_and_layouts(game: Node) -> void:
 	Prompts.device = Prompts.PAD
 	_check(Prompts.key("poop") == "Y", "poop pad default is Y (%s)" % Prompts.key("poop"))
 	_check(Prompts.key("pickup") == "LB", "pickup pad default is LB (%s)" % Prompts.key("pickup"))
+	_check(Prompts.key("turbo") == "RT", "turbo pad default is RT (%s)" % Prompts.key("turbo"))
+	_check(InputMap.event_is_action(_make_motion(JOY_AXIS_TRIGGER_RIGHT, 0.8), "turbo"),
+		"turbo defaults to JOY_AXIS_TRIGGER_RIGHT")
+	_check(not InputMap.event_is_action(_make_btn(JOY_BUTTON_RIGHT_SHOULDER), "turbo"),
+		"turbo no longer triggers on RB by default")
 
-	# Layout switching
-	game.control_layout = "arrows"
-	game.apply_control_layout()
-	Prompts.device = Prompts.KEYS
-	_check(Prompts.key("move") == "ARROWS", "arrows layout key prompt for move is ARROWS")
-	_check(Prompts.key("poop") == "END", "arrows layout key prompt for poop is END")
-	_check(Prompts.key("pickup") == "PGDN", "arrows layout key prompt for pickup is PGDN")
+	Prompts.pad_style = Prompts.PadStyle.PLAYSTATION
+	_check(Prompts.key("turbo") == "R2", "PlayStation turbo pad default is R2 (%s)" % Prompts.key("turbo"))
+	_check(Prompts.key("pickup") == "L1", "PlayStation pickup pad default is L1 (%s)" % Prompts.key("pickup"))
+	Prompts.pad_style = Prompts.PadStyle.XBOX
 
-	game.control_layout = "compact"
-	game.apply_control_layout()
-	_check(Prompts.key("move") == "IJKL", "compact layout key prompt for move is IJKL")
-	_check(Prompts.key("poop") == "H", "compact layout key prompt for poop is H")
-	_check(Prompts.key("pickup") == "N", "compact layout key prompt for pickup is N")
-
-	game.control_layout = "southpaw"
-	game.apply_control_layout()
-	Prompts.device = Prompts.PAD
-	_check(Prompts.key("move") == "right stick", "southpaw layout pad prompt for move is right stick")
-	_check(Prompts.key("turbo") == "LB", "southpaw layout pad prompt for turbo is LB")
-	_check(Prompts.key("pickup") == "RB", "southpaw layout pad prompt for pickup is RB")
-
-	# Per-action rebinding on keyboard and controller
-	game.control_layout = "default"
+	# Per-action rebinding on keyboard, controller buttons, triggers, and sticks
 	game.bind_key("poop", KEY_V)
 	game.bind_pad("pickup", JOY_BUTTON_Y)
+	game.bind_pad("turbo", JOY_BUTTON_RIGHT_SHOULDER)
 	Prompts.device = Prompts.KEYS
 	_check(Prompts.key("poop") == "V", "rebound poop key prompt updates to V (%s)" % Prompts.key("poop"))
 	Prompts.device = Prompts.PAD
 	_check(Prompts.key("pickup") == "Y", "rebound pickup pad prompt updates to Y (%s)" % Prompts.key("pickup"))
+	_check(Prompts.key("turbo") == "RB" and InputMap.event_is_action(_make_btn(JOY_BUTTON_RIGHT_SHOULDER), "turbo")
+		and not InputMap.event_is_action(_make_motion(JOY_AXIS_TRIGGER_RIGHT, 0.8), "turbo"),
+		"rebinding turbo to button replaces trigger axis")
+
+	game.bind_pad_axis("pickup", JOY_AXIS_TRIGGER_LEFT, 1)
+	_check(Prompts.key("pickup") == "LT" and InputMap.event_is_action(_make_motion(JOY_AXIS_TRIGGER_LEFT, 0.8), "pickup"),
+		"rebinding pickup to left trigger updates Prompts and InputMap (%s)" % Prompts.key("pickup"))
+
+	game.bind_pad_axis("move_up", JOY_AXIS_RIGHT_Y, -1)
+	_check(Prompts.key("move") == "right stick"
+		and Prompts.bound_pad_label("move_up", game.pad_binds) == "R stick ^"
+		and InputMap.event_is_action(_make_motion(JOY_AXIS_RIGHT_Y, -0.8), "move_up"),
+		"rebinding move_up to right stick updates Prompts and InputMap")
 
 	# Reset to default
 	game.clear_rebinds()
+	_check(Prompts.key("turbo") == "RT" and InputMap.event_is_action(_make_motion(JOY_AXIS_TRIGGER_RIGHT, 0.8), "turbo"),
+		"clear_rebinds restores RT trigger default for turbo")
+	_check(InputMap.event_is_action(_make_motion(JOY_AXIS_LEFT_Y, -0.8), "move_up"),
+		"clear_rebinds restores left stick for move_up")
 	Prompts.device = Prompts.KEYS
+	Prompts.pad_style = was_style
 
 
 func _test_gameplay_actions(game: Node) -> void:
@@ -107,7 +129,7 @@ func _test_gameplay_actions(game: Node) -> void:
 	var roundtrip_problems: Array = m._check_settings_roundtrip()
 	game.save_path = orig_path
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(scratch))
-	_check(roundtrip_problems.is_empty(), "settings roundtrip with control_layout succeeded: %s" % str(roundtrip_problems))
+	_check(roundtrip_problems.is_empty(), "settings roundtrip succeeded: %s" % str(roundtrip_problems))
 
 	# 2. Verify plant vs poop separation
 	m.poop_state = 1

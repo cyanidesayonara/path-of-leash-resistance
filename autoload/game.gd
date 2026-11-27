@@ -549,14 +549,6 @@ var language := "en":
 	set(v):
 		language = v
 		I18n.set_language(v)
-const CONTROL_LAYOUTS: Array[String] = ["default", "arrows", "compact", "southpaw"]
-const CONTROL_LAYOUT_NAMES := {
-	"default": "DEFAULT",
-	"arrows": "ARROWS",
-	"compact": "COMPACT",
-	"southpaw": "SOUTHPAW",
-}
-var control_layout := "default"
 const REBIND_ACTIONS: Array[String] = [
 	"move_up", "move_down", "move_left", "move_right",
 	"plant", "bark", "pee", "poop", "pickup", "turbo",
@@ -1178,111 +1170,56 @@ func apply_settings() -> void:
 
 
 func apply_control_layout() -> void:
-	Prompts.update_layout(control_layout, key_binds, pad_binds)
 	if not InputMap.has_action("plant"):
+		Prompts.update_binds(key_binds, pad_binds)
 		return
-	for act in REBIND_ACTIONS:
+	for act: String in REBIND_ACTIONS:
 		if InputMap.has_action(act):
 			InputMap.action_erase_events(act)
 
-	var sticks: Dictionary = {
-		"move_left": [JOY_AXIS_RIGHT_X if control_layout == "southpaw" else JOY_AXIS_LEFT_X, -1.0],
-		"move_right": [JOY_AXIS_RIGHT_X if control_layout == "southpaw" else JOY_AXIS_LEFT_X, 1.0],
-		"move_up": [JOY_AXIS_RIGHT_Y if control_layout == "southpaw" else JOY_AXIS_LEFT_Y, -1.0],
-		"move_down": [JOY_AXIS_RIGHT_Y if control_layout == "southpaw" else JOY_AXIS_LEFT_Y, 1.0],
-	}
-	for act in sticks:
-		var ev := InputEventJoypadMotion.new()
-		ev.axis = sticks[act][0]
-		ev.axis_value = sticks[act][1]
-		InputMap.action_add_event(act, ev)
+	_add_pad_axis("move_left", JOY_AXIS_LEFT_X, -1.0)
+	_add_pad_axis("move_right", JOY_AXIS_LEFT_X, 1.0)
+	_add_pad_axis("move_up", JOY_AXIS_LEFT_Y, -1.0)
+	_add_pad_axis("move_down", JOY_AXIS_LEFT_Y, 1.0)
+	for act: String in ["move_left", "move_right", "move_up", "move_down"]:
+		InputMap.action_set_deadzone(act, 0.25)
 
-	match control_layout:
-		"arrows":
-			_add_key_events("move_left", [KEY_LEFT, KEY_A])
-			_add_key_events("move_right", [KEY_RIGHT, KEY_D])
-			_add_key_events("move_up", [KEY_UP, KEY_W])
-			_add_key_events("move_down", [KEY_DOWN, KEY_S])
-			_add_key_events("plant", [KEY_SPACE, KEY_ENTER])
-			_add_key_events("bark", [KEY_CTRL, KEY_E])
-			_add_key_events("pee", [KEY_DELETE, KEY_Q])
-			_add_key_events("poop", [KEY_END, KEY_F])
-			_add_key_events("pickup", [KEY_PAGEDOWN, KEY_G])
-			_add_key_events("turbo", [KEY_SHIFT, KEY_BRACKETRIGHT])
-			_add_pad_button("plant", JOY_BUTTON_A)
-			_add_pad_button("bark", JOY_BUTTON_B)
-			_add_pad_button("pee", JOY_BUTTON_X)
-			_add_pad_button("poop", JOY_BUTTON_Y)
-			_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
-			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
-		"compact":
-			_add_key_events("move_left", [KEY_J, KEY_A])
-			_add_key_events("move_right", [KEY_L, KEY_D])
-			_add_key_events("move_up", [KEY_I, KEY_W])
-			_add_key_events("move_down", [KEY_K, KEY_S])
-			_add_key_events("plant", [KEY_SPACE])
-			_add_key_events("bark", [KEY_O, KEY_E])
-			_add_key_events("pee", [KEY_U, KEY_Q])
-			_add_key_events("poop", [KEY_H, KEY_F])
-			_add_key_events("pickup", [KEY_N, KEY_G])
-			_add_key_events("turbo", [KEY_SEMICOLON, KEY_SHIFT])
-			_add_pad_button("plant", JOY_BUTTON_A)
-			_add_pad_button("bark", JOY_BUTTON_B)
-			_add_pad_button("pee", JOY_BUTTON_X)
-			_add_pad_button("poop", JOY_BUTTON_Y)
-			_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
-			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
-		"southpaw":
-			_add_key_events("move_left", [KEY_A, KEY_LEFT])
-			_add_key_events("move_right", [KEY_D, KEY_RIGHT])
-			_add_key_events("move_up", [KEY_W, KEY_UP])
-			_add_key_events("move_down", [KEY_S, KEY_DOWN])
-			_add_key_events("plant", [KEY_SPACE])
-			_add_key_events("bark", [KEY_E])
-			_add_key_events("pee", [KEY_Q])
-			_add_key_events("poop", [KEY_F])
-			_add_key_events("pickup", [KEY_G])
-			_add_key_events("turbo", [KEY_SHIFT])
-			_add_pad_button("plant", JOY_BUTTON_X)
-			_add_pad_button("bark", JOY_BUTTON_A)
-			_add_pad_button("pee", JOY_BUTTON_B)
-			_add_pad_button("poop", JOY_BUTTON_Y)
-			_add_pad_button("pickup", JOY_BUTTON_RIGHT_SHOULDER)
-			_add_pad_button("turbo", JOY_BUTTON_LEFT_SHOULDER)
-		_:
-			_add_key_events("move_left", [KEY_A, KEY_LEFT])
-			_add_key_events("move_right", [KEY_D, KEY_RIGHT])
-			_add_key_events("move_up", [KEY_W, KEY_UP])
-			_add_key_events("move_down", [KEY_S, KEY_DOWN])
-			_add_key_events("plant", [KEY_SPACE])
-			_add_key_events("bark", [KEY_E])
-			_add_key_events("pee", [KEY_Q])
-			_add_key_events("poop", [KEY_F])
-			_add_key_events("pickup", [KEY_G])
-			_add_key_events("turbo", [KEY_SHIFT])
-			_add_pad_button("plant", JOY_BUTTON_A)
-			_add_pad_button("bark", JOY_BUTTON_B)
-			_add_pad_button("pee", JOY_BUTTON_X)
-			_add_pad_button("poop", JOY_BUTTON_Y)
-			_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
-			_add_pad_button("turbo", JOY_BUTTON_RIGHT_SHOULDER)
+	_add_key_events("move_left", [KEY_A, KEY_LEFT])
+	_add_key_events("move_right", [KEY_D, KEY_RIGHT])
+	_add_key_events("move_up", [KEY_W, KEY_UP])
+	_add_key_events("move_down", [KEY_S, KEY_DOWN])
+	_add_key_events("plant", [KEY_SPACE])
+	_add_key_events("bark", [KEY_E])
+	_add_key_events("pee", [KEY_Q])
+	_add_key_events("poop", [KEY_F])
+	_add_key_events("pickup", [KEY_G])
+	_add_key_events("turbo", [KEY_SHIFT])
 	_add_key_events("goals", [KEY_TAB])
-	_add_pad_button("goals", JOY_BUTTON_DPAD_UP)
 	_add_key_events("restart", [KEY_R])
-	_add_pad_button("restart", JOY_BUTTON_START)
 	_add_key_events("share", [KEY_C])
-	_add_pad_button("share", JOY_BUTTON_DPAD_RIGHT)
 	_add_key_events("mute_music", [KEY_M])
-	_add_pad_button("mute_music", JOY_BUTTON_DPAD_DOWN)
 	_add_key_events("pause", [KEY_ESCAPE])
+
+	_add_pad_button("plant", JOY_BUTTON_A)
+	_add_pad_button("bark", JOY_BUTTON_B)
+	_add_pad_button("pee", JOY_BUTTON_X)
+	_add_pad_button("poop", JOY_BUTTON_Y)
+	_add_pad_button("pickup", JOY_BUTTON_LEFT_SHOULDER)
+	_add_pad_axis("turbo", JOY_AXIS_TRIGGER_RIGHT, 1.0)
+	InputMap.action_set_deadzone("turbo", 0.3)
+	_add_pad_button("goals", JOY_BUTTON_DPAD_UP)
+	_add_pad_button("restart", JOY_BUTTON_START)
+	_add_pad_button("share", JOY_BUTTON_DPAD_RIGHT)
+	_add_pad_button("mute_music", JOY_BUTTON_DPAD_DOWN)
 	_add_pad_button("pause", JOY_BUTTON_BACK)
+
 	for act: String in key_binds.keys():
 		if InputMap.has_action(act):
 			_replace_key_events(act, int(key_binds[act]))
 	for act: String in pad_binds.keys():
-		if InputMap.has_action(act):
-			_replace_pad_events(act, int(pad_binds[act]))
-	Prompts.update_layout(control_layout, key_binds, pad_binds)
+		if InputMap.has_action(act) and valid_pad_bind(pad_binds[act]):
+			_replace_pad_events(act, pad_binds[act])
+	Prompts.update_binds(key_binds, pad_binds)
 
 
 func _replace_key_events(action: String, code: int) -> void:
@@ -1296,15 +1233,25 @@ func _replace_key_events(action: String, code: int) -> void:
 	_add_key_events(action, [code])
 
 
-func _replace_pad_events(action: String, btn: int) -> void:
+func _replace_pad_events(action: String, bind: Variant) -> void:
 	var keep: Array = []
 	for ev in InputMap.action_get_events(action):
-		if not (ev is InputEventJoypadButton):
+		if not (ev is InputEventJoypadButton or ev is InputEventJoypadMotion):
 			keep.append(ev)
 	InputMap.action_erase_events(action)
 	for ev in keep:
 		InputMap.action_add_event(action, ev)
-	_add_pad_button(action, btn)
+	if bind is int:
+		_add_pad_button(action, int(bind))
+	elif bind is Dictionary and (bind as Dictionary).has("axis"):
+		var d := bind as Dictionary
+		var ax := int(d["axis"])
+		var sg := 1.0 if int(d.get("sign", 1)) >= 0 else -1.0
+		_add_pad_axis(action, ax, sg)
+		if ax == JOY_AXIS_TRIGGER_LEFT or ax == JOY_AXIS_TRIGGER_RIGHT:
+			InputMap.action_set_deadzone(action, 0.3)
+		else:
+			InputMap.action_set_deadzone(action, 0.25)
 
 
 func bind_key(action: String, code: int) -> void:
@@ -1321,6 +1268,23 @@ func bind_pad(action: String, btn: int) -> void:
 	pad_binds[action] = btn
 	apply_control_layout()
 	save_records()
+
+
+func bind_pad_axis(action: String, axis: int, axis_sign: int = 1) -> void:
+	if not action in REBIND_ACTIONS:
+		return
+	pad_binds[action] = {"axis": axis, "sign": 1 if axis_sign >= 0 else -1}
+	apply_control_layout()
+	save_records()
+
+
+static func valid_pad_bind(v: Variant) -> bool:
+	if v is int:
+		return int(v) >= 0
+	if v is Dictionary:
+		var d: Dictionary = v
+		return d.has("axis") and int(d["axis"]) >= 0
+	return false
 
 
 func clear_rebinds() -> void:
@@ -1340,6 +1304,13 @@ func _add_key_events(action: String, keys: Array) -> void:
 func _add_pad_button(action: String, btn: int) -> void:
 	var ev := InputEventJoypadButton.new()
 	ev.button_index = btn
+	InputMap.action_add_event(action, ev)
+
+
+func _add_pad_axis(action: String, axis: int, axis_sign: float) -> void:
+	var ev := InputEventJoypadMotion.new()
+	ev.axis = axis as JoyAxis
+	ev.axis_value = axis_sign
 	InputMap.action_add_event(action, ev)
 
 
@@ -1455,7 +1426,6 @@ func _reset_persisted_state() -> void:
 	vol_music = DEFAULT_VOL_MUSIC
 	fullscreen = false
 	language = "en"
-	control_layout = "default"
 	key_binds = {}
 	pad_binds = {}
 	goals_expanded = false
@@ -1523,13 +1493,14 @@ func load_records() -> void:
 	language = String(cf.get_value("settings", "language", "en"))
 	if not language in LANGUAGES:
 		language = "en"
-	control_layout = String(cf.get_value("settings", "control_layout", "default"))
-	if not control_layout in CONTROL_LAYOUTS:
-		control_layout = "default"
 	var kb: Variant = cf.get_value("settings", "key_binds", {})
 	key_binds = (kb as Dictionary).duplicate() if kb is Dictionary else {}
 	var pb: Variant = cf.get_value("settings", "pad_binds", {})
-	pad_binds = (pb as Dictionary).duplicate() if pb is Dictionary else {}
+	pad_binds = {}
+	if pb is Dictionary:
+		for k in (pb as Dictionary).keys():
+			if String(k) in REBIND_ACTIONS and valid_pad_bind((pb as Dictionary)[k]):
+				pad_binds[String(k)] = (pb as Dictionary)[k]
 	goals_expanded = bool(cf.get_value("settings", "goals_expanded", false))
 	free_play = bool(cf.get_value("settings", "free_play", false))
 	screen_shake = bool(cf.get_value("settings", "screen_shake", true))
@@ -1616,7 +1587,6 @@ func save_records() -> void:
 	cf.set_value("settings", "vol_music", vol_music)
 	cf.set_value("settings", "fullscreen", fullscreen)
 	cf.set_value("settings", "language", language)
-	cf.set_value("settings", "control_layout", control_layout)
 	cf.set_value("settings", "key_binds", key_binds)
 	cf.set_value("settings", "pad_binds", pad_binds)
 	cf.set_value("settings", "goals_expanded", goals_expanded)

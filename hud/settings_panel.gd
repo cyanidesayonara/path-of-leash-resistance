@@ -154,6 +154,8 @@ func _draw() -> void:
 			_slider(f, bar_x, bar_w, y, float(row.v), val_px, picked)
 		elif String(row.kind) == "choice":
 			_choice(f, bar_x, bar_w + val_room, y, String(row.text), val_px, picked)
+		elif String(row.kind) == "submenu":
+			_submenu(f, bar_x, bar_w + val_room, y, String(row.text), val_px, picked)
 		else:
 			_toggle(f, bar_x, bar_w, y, bool(row.v), val_px, picked)
 	# the buttons are on the prompt bar along the bottom (menu_screen.gd)
@@ -183,6 +185,13 @@ func _choice(f: Font, bx: float, bw: float, y: float, txt: String, px: int, pick
 	var arrow := Kit.accent("settings") if picked else Color(1, 1, 1, 0.22)
 	draw_colored_polygon(PackedVector2Array([Vector2(bx + 8.0, y - 6.5), Vector2(bx, y), Vector2(bx + 8.0, y + 6.5)]), arrow)
 	draw_string(f, Vector2(bx + 14.0, y + float(px) * 0.34), txt, HORIZONTAL_ALIGNMENT_CENTER, bw - 28.0, px, col)
+	draw_colored_polygon(PackedVector2Array([Vector2(bx + bw - 8.0, y - 6.5), Vector2(bx + bw, y), Vector2(bx + bw - 8.0, y + 6.5)]), arrow)
+
+
+func _submenu(f: Font, bx: float, bw: float, y: float, txt: String, px: int, picked: bool) -> void:
+	var col := Kit.INK if picked else Kit.INK_DIM
+	var arrow := Kit.accent("settings") if picked else Color(1, 1, 1, 0.30)
+	draw_string(f, Vector2(bx, y + float(px) * 0.34), txt, HORIZONTAL_ALIGNMENT_RIGHT, bw - 18.0, px, col)
 	draw_colored_polygon(PackedVector2Array([Vector2(bx + bw - 8.0, y - 6.5), Vector2(bx + bw, y), Vector2(bx + bw - 8.0, y + 6.5)]), arrow)
 
 

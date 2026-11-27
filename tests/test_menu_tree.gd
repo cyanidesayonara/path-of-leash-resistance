@@ -163,6 +163,8 @@ func _run() -> void:
 				if String(row[0]) == "settings":
 					# open CONTROLS from SETTINGS, test listen cancel, and return to SETTINGS via BACK
 					main.settings_idx = Flow.settings_keys(main).find("controls")
+					await _press("move_right")
+					_check(_screen() == "settings", "%s/%s: right on controls stays in settings" % [lang, back])
 					await _press("plant")
 					_check(_screen() == "controls" and main.in_controls and not main.in_settings,
 						"%s/%s: plant on controls row enters controls" % [lang, back])

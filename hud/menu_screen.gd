@@ -774,12 +774,7 @@ func _controls(vs: Vector2) -> void:
 	Kit.card(self, r, acc, 16)
 	var pad_x := 28.0 if compact else 34.0
 	var f := Kit.display()
-	var body := Kit.body()
 	Kit.heading(self, r.position + Vector2(pad_x, title_y), I18n.t("controls_title"), title_px, acc)
-	var hint := I18n.t("controls_layout_hint") % I18n.t("layout_" + Game.control_layout)
-	var title_end := pad_x + Kit.text_w(f, I18n.t("controls_title"), title_px) + 18.0
-	draw_string(body, r.position + Vector2(title_end, title_y), hint, HORIZONTAL_ALIGNMENT_LEFT,
-		maxf(80.0, w * 0.45 - title_end), 14 if compact else 15, Kit.INK_SOFT)
 	var col_gap := 28.0
 	var col_w := (w - pad_x * 2.0 - col_gap) * 0.5 if two_col else (w - pad_x * 2.0)
 	var pad_slot_w := clampf(col_w * 0.24, 72.0, 106.0)

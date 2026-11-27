@@ -15,6 +15,9 @@ extends RefCounted
 # event. A class rather than a node, so tests and panels can call it.
 
 enum { KEYS, PAD, TOUCH }
+enum PadStyle { XBOX, PLAYSTATION }
+
+const PS_NAMES := {"LB": "L1", "RB": "R1", "LT": "L2", "RT": "R2", "Start": "Options", "Back": "Share"}
 
 # per action: [keyboard, controller, touch]. The touch names are the labels
 # on hud/touch_controls.gd's buttons; an action with no touch button falls
@@ -31,7 +34,7 @@ const NAMES := {
 	"pee": ["Q", "X", "PEE"],
 	"poop": ["F", "Y", "POOP"],
 	"pickup": ["G", "LB", "GRAB"],
-	"turbo": ["SHIFT", "RB", "RUN"],
+	"turbo": ["SHIFT", "RT", "RUN"],
 	"restart": ["R", "Start", "R"],
 	"share": ["C", "right", "SHARE"],
 	# same physical action as share, but the tutorial needs to describe what
@@ -53,18 +56,27 @@ const NAMES := {
 const STICK_WAKE := 0.5
 
 static var device: int = _initial()
+static var pad_style: int = _initial_pad_style()
 # labels whose text came from set_text: [WeakRef, template, text last set]
 static var _bound: Array = []
 
 
 static var _layout_key_overrides: Dictionary = {}
-static var _layout_pad_overrides: Dictionary = {}
+static var _custom_pad_binds: Dictionary = {}
+
+
+static func _style_for_name(joy_name: String) -> int:
+	var s := joy_name.to_lower()
+	for k: String in ["dualsense", "dualshock", "playstation", "sony", "ps3", "ps4", "ps5"]:
+		if s.contains(k):
+			return PadStyle.PLAYSTATION
+	return PadStyle.XBOX
 
 
 static func _initial() -> int:
-	# --prompts=pad or --prompts=touch starts on that device, for screenshots
+	# --prompts=pad, --prompts=ps or --prompts=touch starts on that device, for screenshots
 	for a in OS.get_cmdline_user_args():
-		if a == "--prompts=pad":
+		if a == "--prompts=pad" or a == "--prompts=ps":
 			return PAD
 		if a == "--prompts=touch":
 			return TOUCH
@@ -77,13 +89,48 @@ static func _initial() -> int:
 	return KEYS
 
 
+static func _initial_pad_style() -> int:
+	for a in OS.get_cmdline_user_args():
+		if a == "--prompts=ps":
+			return PadStyle.PLAYSTATION
+		if a == "--prompts=pad":
+			return PadStyle.XBOX
+	for id: int in Input.get_connected_joypads():
+		if _style_for_name(Input.get_joy_name(id)) == PadStyle.PLAYSTATION:
+			return PadStyle.PLAYSTATION
+	return PadStyle.XBOX
+
+
+static func _pad_uses_right_stick() -> bool:
+	for act: String in ["move_up", "move_down", "move_left", "move_right"]:
+		var b: Variant = _custom_pad_binds.get(act)
+		if b is Dictionary:
+			var ax := int((b as Dictionary).get("axis", -1))
+			if ax == JOY_AXIS_RIGHT_X or ax == JOY_AXIS_RIGHT_Y:
+				return true
+	return false
+
+
 static func key(action: String) -> String:
 	if device == KEYS and _layout_key_overrides.has(action):
 		return String(_layout_key_overrides[action])
-	if device == PAD and _layout_pad_overrides.has(action):
-		return String(_layout_pad_overrides[action])
+	if device == PAD:
+		if _custom_pad_binds.has(action):
+			return pad_bind_label(_custom_pad_binds[action])
+		if action == "skip" and _custom_pad_binds.has("share"):
+			return pad_bind_label(_custom_pad_binds["share"])
+		if action == "back" and _custom_pad_binds.has("bark"):
+			return pad_bind_label(_custom_pad_binds["bark"])
+		if (action == "move" or action == "move_with") and _pad_uses_right_stick():
+			return "the right stick" if action == "move_with" else "right stick"
+		if (action == "left" or action == "right") and _custom_pad_binds.has("move_" + action):
+			return pad_bind_label(_custom_pad_binds["move_" + action])
+		if (action == "up_down" or action == "left_right") and _pad_uses_right_stick():
+			return "R stick"
 	var names: Array = NAMES.get(action, [action, action, ""])
 	var n := String(names[device])
+	if device == PAD and pad_style == PadStyle.PLAYSTATION and PS_NAMES.has(n):
+		return String(PS_NAMES[n])
 	return n if n != "" else String(names[KEYS])
 
 
@@ -132,15 +179,22 @@ static func refresh() -> void:
 # clicks, and nothing in the game is played with a mouse.
 static func note(event: InputEvent) -> bool:
 	var was := device
+	var was_style := pad_style
 	if event is InputEventKey and event.pressed:
 		device = KEYS
 	elif event is InputEventJoypadButton and event.pressed:
 		device = PAD
+		var jname := Input.get_joy_name(event.device)
+		if jname != "":
+			pad_style = _style_for_name(jname)
 	elif event is InputEventJoypadMotion and absf(event.axis_value) >= STICK_WAKE:
 		device = PAD
+		var jname := Input.get_joy_name(event.device)
+		if jname != "":
+			pad_style = _style_for_name(jname)
 	elif event is InputEventScreenTouch and event.pressed:
 		device = TOUCH
-	return device != was
+	return device != was or pad_style != was_style
 
 
 static func key_label(code: int) -> String:
@@ -176,74 +230,49 @@ static func key_label(code: int) -> String:
 
 
 static func pad_label(btn: int) -> String:
+	var ps := pad_style == PadStyle.PLAYSTATION
 	match btn:
 		JOY_BUTTON_A: return "A"
 		JOY_BUTTON_B: return "B"
 		JOY_BUTTON_X: return "X"
 		JOY_BUTTON_Y: return "Y"
-		JOY_BUTTON_LEFT_SHOULDER: return "LB"
-		JOY_BUTTON_RIGHT_SHOULDER: return "RB"
+		JOY_BUTTON_LEFT_SHOULDER: return "L1" if ps else "LB"
+		JOY_BUTTON_RIGHT_SHOULDER: return "R1" if ps else "RB"
 		JOY_BUTTON_LEFT_STICK: return "L3"
 		JOY_BUTTON_RIGHT_STICK: return "R3"
 		JOY_BUTTON_DPAD_UP: return "up"
 		JOY_BUTTON_DPAD_DOWN: return "down"
 		JOY_BUTTON_DPAD_LEFT: return "left"
 		JOY_BUTTON_DPAD_RIGHT: return "right"
-		JOY_BUTTON_START: return "Start"
-		JOY_BUTTON_BACK: return "Back"
+		JOY_BUTTON_START: return "Options" if ps else "Start"
+		JOY_BUTTON_BACK: return "Share" if ps else "Back"
 	return "B%d" % btn
 
 
-static func update_layout(layout: String, custom_keys: Dictionary = {}, custom_pads: Dictionary = {}) -> void:
+static func pad_axis_label(axis: int, axis_sign: int = 1) -> String:
+	var ps := pad_style == PadStyle.PLAYSTATION
+	match axis:
+		JOY_AXIS_TRIGGER_LEFT: return "L2" if ps else "LT"
+		JOY_AXIS_TRIGGER_RIGHT: return "R2" if ps else "RT"
+		JOY_AXIS_LEFT_X: return "L stick <" if axis_sign < 0 else "L stick >"
+		JOY_AXIS_LEFT_Y: return "L stick ^" if axis_sign < 0 else "L stick v"
+		JOY_AXIS_RIGHT_X: return "R stick <" if axis_sign < 0 else "R stick >"
+		JOY_AXIS_RIGHT_Y: return "R stick ^" if axis_sign < 0 else "R stick v"
+	return "AX%d" % axis
+
+
+static func pad_bind_label(bind: Variant) -> String:
+	if bind is Dictionary and (bind as Dictionary).has("axis"):
+		var d := bind as Dictionary
+		return pad_axis_label(int(d["axis"]), int(d.get("sign", 1)))
+	return pad_label(int(bind))
+
+
+static func update_binds(custom_keys: Dictionary = {}, custom_pads: Dictionary = {}) -> void:
 	_layout_key_overrides.clear()
-	_layout_pad_overrides.clear()
-	match layout:
-		"arrows":
-			_layout_key_overrides["move"] = "ARROWS"
-			_layout_key_overrides["move_with"] = "the arrow keys"
-			_layout_key_overrides["move_up"] = "UP"
-			_layout_key_overrides["move_down"] = "DOWN"
-			_layout_key_overrides["move_left"] = "LEFT"
-			_layout_key_overrides["move_right"] = "RIGHT"
-			_layout_key_overrides["up_down"] = "UP / DOWN"
-			_layout_key_overrides["left_right"] = "LEFT / RIGHT"
-			_layout_key_overrides["left"] = "LEFT"
-			_layout_key_overrides["right"] = "RIGHT"
-			_layout_key_overrides["bark"] = "CTRL"
-			_layout_key_overrides["pee"] = "DEL"
-			_layout_key_overrides["poop"] = "END"
-			_layout_key_overrides["pickup"] = "PGDN"
-			_layout_key_overrides["turbo"] = "SHIFT"
-		"compact":
-			_layout_key_overrides["move"] = "IJKL"
-			_layout_key_overrides["move_with"] = "IJKL"
-			_layout_key_overrides["move_up"] = "I"
-			_layout_key_overrides["move_down"] = "K"
-			_layout_key_overrides["move_left"] = "J"
-			_layout_key_overrides["move_right"] = "L"
-			_layout_key_overrides["up_down"] = "I / K"
-			_layout_key_overrides["left_right"] = "J / L"
-			_layout_key_overrides["left"] = "J"
-			_layout_key_overrides["right"] = "L"
-			_layout_key_overrides["plant"] = "SPACE"
-			_layout_key_overrides["bark"] = "O"
-			_layout_key_overrides["pee"] = "U"
-			_layout_key_overrides["poop"] = "H"
-			_layout_key_overrides["pickup"] = "N"
-			_layout_key_overrides["turbo"] = ";"
-		"southpaw":
-			_layout_pad_overrides["move"] = "right stick"
-			_layout_pad_overrides["move_with"] = "the right stick"
-			_layout_pad_overrides["plant"] = "X"
-			_layout_pad_overrides["bark"] = "A"
-			_layout_pad_overrides["pee"] = "B"
-			_layout_pad_overrides["poop"] = "Y"
-			_layout_pad_overrides["pickup"] = "RB"
-			_layout_pad_overrides["turbo"] = "LB"
+	_custom_pad_binds = custom_pads.duplicate(true)
 	for act: String in custom_keys.keys():
 		_layout_key_overrides[act] = key_label(int(custom_keys[act]))
-	for act: String in custom_pads.keys():
-		_layout_pad_overrides[act] = pad_label(int(custom_pads[act]))
 	if custom_keys.has("move_left"):
 		_layout_key_overrides["left"] = _layout_key_overrides["move_left"]
 	if custom_keys.has("move_right"):
@@ -271,10 +300,6 @@ static func update_layout(layout: String, custom_keys: Dictionary = {}, custom_p
 		_layout_key_overrides["skip"] = _layout_key_overrides["share"]
 	if custom_keys.has("pause"):
 		_layout_key_overrides["back"] = _layout_key_overrides["pause"]
-	if custom_pads.has("share"):
-		_layout_pad_overrides["skip"] = _layout_pad_overrides["share"]
-	if custom_pads.has("bark"):
-		_layout_pad_overrides["back"] = _layout_pad_overrides["bark"]
 	refresh()
 
 
@@ -296,20 +321,22 @@ static func bound_key_label(action: String, custom_keys: Dictionary = {}) -> Str
 
 static func bound_pad_label(action: String, custom_pads: Dictionary = {}) -> String:
 	if custom_pads.has(action):
-		return pad_label(int(custom_pads[action]))
+		return pad_bind_label(custom_pads[action])
 	if InputMap.has_action(action):
 		for ev: InputEvent in InputMap.action_get_events(action):
 			if ev is InputEventJoypadButton:
 				return pad_label((ev as InputEventJoypadButton).button_index)
-		if action.begins_with("move_"):
-			for ev: InputEvent in InputMap.action_get_events(action):
-				if ev is InputEventJoypadMotion:
-					var ax := (ev as InputEventJoypadMotion).axis
-					if ax == JOY_AXIS_RIGHT_X or ax == JOY_AXIS_RIGHT_Y:
-						return "R stick"
-					return "L stick"
-	if _layout_pad_overrides.has(action):
-		return String(_layout_pad_overrides[action])
+		for ev: InputEvent in InputMap.action_get_events(action):
+			if ev is InputEventJoypadMotion:
+				var mev := ev as InputEventJoypadMotion
+				var ax := int(mev.axis)
+				if ax == JOY_AXIS_TRIGGER_LEFT or ax == JOY_AXIS_TRIGGER_RIGHT:
+					return pad_axis_label(ax, 1)
+				if action.begins_with("move_"):
+					return "R stick" if (ax == JOY_AXIS_RIGHT_X or ax == JOY_AXIS_RIGHT_Y) else "L stick"
+				return pad_axis_label(ax, 1 if mev.axis_value >= 0.0 else -1)
 	var names: Array = NAMES.get(action, ["", "stick", ""])
 	var p := String(names[PAD])
+	if pad_style == PadStyle.PLAYSTATION and PS_NAMES.has(p):
+		return String(PS_NAMES[p])
 	return p if p != "" else "-"

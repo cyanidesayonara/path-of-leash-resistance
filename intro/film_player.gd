@@ -124,7 +124,8 @@ func _place() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	Prompts.note(event)
+	if Prompts.note(event):
+		Prompts.refresh()
 	if done_t >= 0.0 or not IntroPlayer.skips(event):
 		return
 	get_viewport().set_input_as_handled()
