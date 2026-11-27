@@ -199,6 +199,16 @@ jobs:
             leash-resistance-windows.zip
           generate_release_notes: true
 
+      - name: Notify portfolio-site
+        if: success()
+        continue-on-error: true
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PORTFOLIO_SYNC_TOKEN }}
+          repository: cyanidesayonara/portfolio-site
+          event-type: project-updated
+          client-payload: '{"project": "path-of-leash-resistance", "tag": "${{ github.ref_name }}"}'
+
   # The Microsoft Store package: packs the exe exported above into an unsigned
   # MSIX, installs and launches it once to prove it runs packaged, runs WACK,
   # and attaches it to the GitHub release for upload in Partner Center. A separate job after
