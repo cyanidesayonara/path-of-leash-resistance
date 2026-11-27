@@ -1,0 +1,3 @@
+# Les Tres Xemeneies (brick chimneys, murals & skate ledges)
+# cost 12
+--headless --path . --script res://tests/test_xemeneies.gd

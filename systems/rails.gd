@@ -115,6 +115,10 @@ static func build(m: Node2D) -> void:
 			m.rails.append(line(Vector2(340.0, -2620.0), Vector2(340.0, -3260.0), "LEDGE GRIND"))
 			m.rails.append(line(Vector2(450.0, -1840.0), Vector2(450.0, -2100.0), "HANDRAIL"))
 			m.rails.append(line(Vector2(920.0, -1900.0), Vector2(920.0, -2420.0), "LEDGE GRIND"))
+		"xemeneies":
+			for lr: Rect2 in Xemeneies.SKATE_LEDGES:
+				var rx := lr.get_center().x
+				m.rails.append(line(Vector2(rx, lr.end.y), Vector2(rx, lr.position.y), "LEDGE RUN"))
 
 
 # The nearest point of a rail to p: {"q": point, "dir": unit direction of that

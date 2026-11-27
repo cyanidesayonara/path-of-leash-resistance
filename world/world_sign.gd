@@ -38,6 +38,10 @@ const MATERIALS := {
 	"encants": "buttons",
 	"vic": "cheeses",
 	"girona": "petals",
+	"poblenou": "fartons",
+	"xemeneies": "caps",
+	"llucia": "tinsel",
+	"santacoloma": "dominoes",
 }
 # No glow or bed under the pieces: a name reads on its ground by each piece's
 # own dark edge and contact shadow, the way a real thing lying there would.
@@ -82,6 +86,10 @@ const FEEL := {
 	"tesserae": {"spacing": 0.09, "r": 0.055, "drag": 4.0, "take": 0.9, "spin": 2.0, "align": true},
 	"cheeses": {"spacing": 0.14, "r": 0.075, "drag": 1.2, "take": 1.1, "roll": true},
 	"petals": {"spacing": 0.12, "r": 0.08, "drag": 4.2, "take": 1.15, "spin": 5.5},
+	"fartons": {"spacing": 0.15, "r": 0.07, "drag": 3.8, "take": 1.1, "spin": 3.5, "align": true},
+	"caps": {"spacing": 0.13, "r": 0.068, "drag": 2.4, "take": 1.2, "roll": true},
+	"tinsel": {"spacing": 0.14, "r": 0.075, "drag": 3.6, "take": 1.15, "spin": 4.0},
+	"dominoes": {"spacing": 0.15, "r": 0.072, "drag": 4.2, "take": 1.1, "spin": 3.2, "align": true},
 	"pastries": {"spacing": 0.15, "r": 0.07, "drag": 4.0, "take": 1.1, "spin": 3.0, "align": true},
 	"bagtags": {"spacing": 0.16, "r": 0.07, "drag": 4.5, "take": 1.2, "spin": 5.0, "align": true},
 	"snowflakes": {"spacing": 0.2, "r": 0.11, "drag": 3.6, "take": 0.9, "spin": 2.0},
@@ -576,6 +584,14 @@ static func draw(c: Object, sign: Dictionary, t: float, light: Vector2) -> void:
 			_cheeses(c, sign, h)
 		"petals":
 			_petals(c, sign, h)
+		"fartons":
+			_fartons(c, sign, h)
+		"caps":
+			_caps(c, sign, h)
+		"tinsel":
+			_tinsel(c, sign, h)
+		"dominoes":
+			_dominoes(c, sign, h)
 		"brollies":
 			_brollies(c, sign, h)
 		"pastries":
@@ -1445,6 +1461,83 @@ static func _petals(c: Object, sign: Dictionary, _h: float) -> void:
 		]), col.darkened(0.22))
 		c.draw_circle(p, r * 0.72, col)
 		c.draw_circle(p - Vector2(r * 0.22, r * 0.22), r * 0.26, col.lightened(0.36))
+
+
+static func _fartons(c: Object, sign: Dictionary, _h: float) -> void:
+	# Poblenou's sugar-glazed fartons scattered along the Rambla flagstones
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var half := Vector2.from_angle(float(pc.rot)) * r * 1.45
+		var w := r * 1.15
+		var p: Vector2 = pc.p
+		c.draw_line(p - half + Vector2(1.8, 2.2), p + half + Vector2(1.8, 2.2), Color(0, 0, 0, 0.30), w)
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var half := Vector2.from_angle(float(pc.rot)) * r * 1.45
+		var w := r * 1.15
+		var p: Vector2 = pc.p
+		c.draw_line(p - half, p + half, Color(0.42, 0.24, 0.10), w)
+		c.draw_line(p - half * 0.88, p + half * 0.88, Color(0.84, 0.56, 0.22), w * 0.74)
+		c.draw_line(p - half * 0.72, p + half * 0.72, Color(0.99, 0.96, 0.88), w * 0.34)
+
+
+const CAP_COLS: Array[Color] = [
+	Color(0.95, 0.64, 0.16), Color(0.10, 0.66, 0.64), Color(0.84, 0.22, 0.48),
+	Color(0.68, 0.86, 0.24), Color(0.24, 0.48, 0.88),
+]
+
+
+static func _caps(c: Object, sign: Dictionary, _h: float) -> void:
+	# Xemeneies' spray-paint nozzle caps popped along the skate concrete
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.4, 2.0), float(pc.r) * 1.06, Color(0, 0, 0, 0.32))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col := CAP_COLS[int(float(pc["var"]) * 97.0) % CAP_COLS.size()]
+		c.draw_circle(p, r, Color(0.14, 0.14, 0.18))
+		c.draw_circle(p, r * 0.82, col)
+		c.draw_circle(p, r * 0.26, Color(0.12, 0.12, 0.14))
+
+
+const TINSEL_COLS: Array[Color] = [
+	Color(0.86, 0.18, 0.22), Color(0.96, 0.78, 0.22), Color(0.16, 0.58, 0.32), Color(0.96, 0.94, 0.88),
+]
+
+
+static func _tinsel(c: Object, sign: Dictionary, _h: float) -> void:
+	# Fira de Santa Llúcia's sparkling baubles and pine-gold foil clusters
+	for pc: Dictionary in sign.pieces:
+		c.draw_circle((pc.p as Vector2) + Vector2(1.5, 2.0), float(pc.r) * 1.08, Color(0, 0, 0, 0.30))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var col := TINSEL_COLS[int(float(pc["var"]) * 97.0) % TINSEL_COLS.size()]
+		c.draw_circle(p, r, col.darkened(0.28))
+		c.draw_circle(p, r * 0.84, col)
+		c.draw_circle(p - Vector2(r * 0.24, r * 0.24), r * 0.28, col.lightened(0.42))
+
+
+static func _dominoes(c: Object, sign: Dictionary, _h: float) -> void:
+	# Santa Coloma's ivory double-six domino tiles rimmed in slate black
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var ln := r * 2.25
+		var w := r * 1.25
+		c.draw_colored_polygon(_box((pc.p as Vector2) + Vector2(1.8, 2.2), float(pc.rot), ln, w), Color(0, 0, 0, 0.32))
+	for pc: Dictionary in sign.pieces:
+		var r: float = pc.r
+		var p: Vector2 = pc.p
+		var rot: float = pc.rot
+		var ln := r * 2.25
+		var w := r * 1.25
+		c.draw_colored_polygon(_box(p, rot, ln, w), Color(0.14, 0.14, 0.16))
+		c.draw_colored_polygon(_box(p, rot, ln * 0.86, w * 0.82), Color(0.98, 0.96, 0.90))
+		var dir := Vector2.from_angle(rot)
+		var perp := dir.orthogonal()
+		c.draw_line(p - perp * w * 0.36, p + perp * w * 0.36, Color(0.14, 0.14, 0.16), 1.3)
+		c.draw_circle(p - dir * ln * 0.24, w * 0.15, Color(0.14, 0.14, 0.16))
+		c.draw_circle(p + dir * ln * 0.24, w * 0.15, Color(0.14, 0.14, 0.16))
 
 
 # a croissant's three lobes along its curve, and their bake from the

@@ -57,8 +57,8 @@ func _run() -> void:
 	# --- registration & campaign placement ---
 	_check(game.LEVELS.has("girona"), "girona present in Game.LEVELS")
 	var idx: int = game.CAROUSEL.find("girona")
-	_check(idx == 41, "CAROUSEL places girona at index 41 (got %d)" % idx)
-	_check(game.CAROUSEL[40] == "atraccions" and game.CAROUSEL[42] == "site",
+	_check(idx == 44, "CAROUSEL places girona at index 44 (got %d)" % idx)
+	_check(game.CAROUSEL[43] == "atraccions" and game.CAROUSEL[45] == "site",
 		"CAROUSEL places girona between atraccions and site")
 	_check(int(game.STAR_GATE.get("girona", -1)) == 47, "STAR_GATE girona == 47")
 	_check(String(game.CHASE_GATE.get("girona", "")) == "atraccions", "CHASE_GATE girona == atraccions")

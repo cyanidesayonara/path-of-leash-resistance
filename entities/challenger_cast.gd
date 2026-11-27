@@ -89,6 +89,14 @@ static func draw(c: Node2D, who: String, fd: Vector2, t: float, s: float) -> boo
 			_balloon(c, fd, t, s)
 		"florist":
 			_florist(c, fd, t, s)
+		"horchatero":
+			_horchatero(c, fd, t, s)
+		"muralist":
+			_muralist(c, fd, t, s)
+		"caroler":
+			_caroler(c, fd, t, s)
+		"barber":
+			_barber(c, fd, t, s)
 		_:
 			return false
 	return true
@@ -1091,3 +1099,62 @@ static func _florist(c: Node2D, fd: Vector2, t: float, s: float) -> void:
 	for k in range(5):
 		var bp := bouquet + Vector2.from_angle(float(k) * TAU / 5.0 + sway * 0.1) * 4.5
 		c.draw_circle(bp, 3.0, blooms[k % blooms.size()])
+
+
+# Rambla del Poblenou: an horchatero in striped green apron serving a cold glass
+static func _horchatero(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.86, 0.68, 0.54)
+	var shirt := Color(0.95, 0.94, 0.88)
+	var apron := Color(0.16, 0.54, 0.40)
+	_shadow(c, Vector2.ZERO, 13.0, 14.0)
+	_shoes(c, fd, side, Color(0.24, 0.22, 0.20))
+	_person(c, Vector2.ZERO, fd, shirt, skin, Color(0.24, 0.18, 0.14), "short", "cap", apron)
+	c.draw_colored_polygon(_bar(fd * 3.0, side, 12.0, 5.5), apron)
+	var hand := fd * 12.0 + side * (5.0 + sin(t * 2.4 + s) * 1.6)
+	_arm(c, side * 8.0, hand, shirt, skin)
+	c.draw_circle(hand, 6.2, Color(0.82, 0.84, 0.88))
+	c.draw_circle(hand, 3.4, Color(0.96, 0.93, 0.84))
+
+
+# Les Tres Xemeneies: a muralist holding a bright rattle spray can
+static func _muralist(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.82, 0.64, 0.50)
+	var hoodie := Color(0.22, 0.24, 0.30)
+	_shadow(c, Vector2.ZERO, 13.0, 14.0)
+	_shoes(c, fd, side, Color(0.92, 0.92, 0.94))
+	_person(c, Vector2.ZERO, fd, hoodie, skin, Color(0.18, 0.14, 0.14), "short", "cap", Color(0.84, 0.22, 0.48))
+	var hand := fd * 12.0 + side * 6.0 + Vector2(0.0, sin(t * 6.0 + s) * 2.2)
+	_arm(c, side * 8.0, hand, hoodie, skin)
+	c.draw_circle(hand, 4.2, Color(0.10, 0.66, 0.64))
+	c.draw_circle(hand, 2.0, Color(0.96, 0.96, 0.96))
+
+
+# Fira de Santa Llúcia: a caroler in red barretina and festive knit scarf
+static func _caroler(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.88, 0.72, 0.58)
+	var coat := Color(0.16, 0.38, 0.24)
+	_shadow(c, Vector2.ZERO, 13.0, 14.0)
+	_shoes(c, fd, side, Color(0.22, 0.18, 0.16))
+	_person(c, Vector2.ZERO, fd, coat, skin, Color(0.32, 0.22, 0.16), "short", "cap", Color(0.78, 0.18, 0.20))
+	c.draw_colored_polygon(_bar(fd * 2.0, side, 12.0, 4.5), Color(0.96, 0.78, 0.26))
+	var book := fd * 12.0 + side * sin(t * 2.0 + s) * 1.4
+	_arm(c, side * 7.0, book + side * 3.0, coat, skin)
+	_arm(c, -side * 7.0, book - side * 3.0, coat, skin)
+	c.draw_colored_polygon(_bar(book, side, 12.0, 8.0), Color(0.96, 0.92, 0.80))
+
+
+# Santa Coloma: a neighborhood barber in crisp white coat & comb
+static func _barber(c: Node2D, fd: Vector2, t: float, s: float) -> void:
+	var side := fd.orthogonal()
+	var skin := Color(0.84, 0.64, 0.48)
+	var coat := Color(0.94, 0.94, 0.96)
+	_shadow(c, Vector2.ZERO, 13.0, 14.0)
+	_shoes(c, fd, side, Color(0.18, 0.18, 0.20))
+	_person(c, Vector2.ZERO, fd, coat, skin, Color(0.20, 0.16, 0.14), "short", "none", Color.BLACK)
+	c.draw_colored_polygon(_bar(fd * 2.5, side, 10.0, 4.0), Color(0.84, 0.28, 0.22))
+	var hand := fd * 12.0 + side * (5.5 + sin(t * 4.5 + s) * 1.8)
+	_arm(c, side * 8.0, hand, coat, skin)
+	c.draw_line(hand - side * 4.0, hand + side * 4.0, Color(0.18, 0.38, 0.78), 2.4)

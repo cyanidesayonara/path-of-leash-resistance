@@ -62,8 +62,8 @@ func _run() -> void:
 
 	_check(game.LEVELS.has("aeroport"), "in LEVELS")
 	var ci: int = game.CAROUSEL.find("aeroport")
-	_check(ci == 30 and game.CAROUSEL[ci + 1] == "port",
-		"the chase at campaign walk 30, right before El Port's boss (%d)" % ci)
+	_check(ci == 32 and game.CAROUSEL[ci + 1] == "port",
+		"the chase at campaign walk 32, right before El Port's boss (%d)" % ci)
 	_check(int(game.STAR_GATE["aeroport"]) == 39, "opens at 39 stars")
 	_check(String(game.CHASE_GATE.get("aeroport", "")) == "cremada", "after La Cremada")
 	_check(String(game.LEVEL_NAMES["aeroport"]) == "L'Aeroport", "named L'Aeroport")
