@@ -39,8 +39,12 @@ func _run() -> void:
 	var row_count: int = game.LEVELS.size()
 	_check(row_count >= 17, "roster has at least 17 walks (%d)" % row_count)
 
+	# the progress screen draws one chapter at a time: size it for the longest
+	var chapter_rows := 0
+	for ch: Array in game.chapters():
+		chapter_rows = maxi(chapter_rows, ch.size())
 	for vs: Vector2 in [Vector2(1280, 720), Vector2(1024, 640), Vector2(844, 390)]:
-		var r: Rect2 = MenuScreen.progress_rect(vs, row_count)
+		var r: Rect2 = MenuScreen.progress_rect(vs, chapter_rows)
 		var bar_top: float = vs.y - float(Kit.BAR_FROM_BOTTOM)
 		_check(r.position.y >= 10.0,
 			"progress card top stays on screen at %dx%d (y=%.1f)" % [int(vs.x), int(vs.y), r.position.y])
