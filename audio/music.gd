@@ -208,6 +208,18 @@ const STYLES := {
 	# Girona: rainy dusk over the Onyar, minor guitar and glockenspiel arpeggios
 	"girona": {"bpm": 110, "key": 4, "minor": true, "lead": "guitar", "lead2": ["glock", 12], "comp": "arp",
 		"bass": "walk", "drums": "brushsoft", "swing": 0.05, "verb": 0.36},
+	# Rambla del Poblenou: bright sea-breeze stroll under the plane trees
+	"poblenou": {"bpm": 114, "key": 0, "lead": "guitar", "lead2": ["marimba", 12], "comp": "rumba",
+		"bass": "walk", "drums": "brushsoft", "swing": 0.05, "verb": 0.28},
+	# Les Tres Xemeneies: dusk concrete skate & graffiti plaza groove
+	"xemeneies": {"bpm": 118, "key": 3, "minor": true, "lead": "vibes", "lead2": ["marimba", 0], "comp": "skank",
+		"bass": "walk", "drums": "kickrim", "swing": 0.06, "verb": 0.30},
+	# Fira de Santa Llúcia: blue-hour glockenspiel & accordion Christmas fair
+	"llucia": {"bpm": 106, "key": 5, "lead": "glock", "lead2": ["accordion", 0], "comp": "oompah",
+		"bass": "walk", "drums": "brush", "swing": 0.04, "verb": 0.38},
+	# Santa Coloma: sunny hillside market & domino plaza rumba
+	"santacoloma": {"bpm": 116, "key": 2, "lead": "accordion", "lead2": ["guitar", 12], "comp": "rasgueado",
+		"bass": "walk", "drums": "claps", "swing": 0.06, "verb": 0.26},
 	# El Metro: a rush-hour shuffle under the street, vibes and glockenspiel
 	# over a skank and a walking bass, minor, with the tiles' long echo
 	"metro": {"bpm": 116, "key": 5, "minor": true, "lead": "vibes", "lead2": ["glock", 12], "comp": "skank",
@@ -627,6 +639,30 @@ const DARES := {
 			[4, 0.5, 74], [4.5, 0.5, 76], [5, 1, 81], [6, 1, 79], [7, 1, 76],
 			[8, 0.5, 74], [8.5, 0.5, 76], [9, 0.5, 81], [9.5, 0.5, 83], [10, 1, 79], [11, 1, 76],
 			[12, 0.5, 74], [12.5, 0.5, 72], [13, 0.5, 71], [13.5, 0.5, 69], [14, 2, 76]]},
+	"horchatero": {"bpm": 136, "lead": "marimba", "lead2": ["whistle", 12], "comp": "rumba", "bass": "walk",
+		"drums": "claps", "verb": 0.20, "chords": [[60, "maj"], [67, "maj"], [69, "min"], [65, "maj"]],
+		"mel": [[0, 0.5, 72], [0.5, 0.5, 76], [1, 1, 79], [2, 0.5, 84], [2.5, 0.5, 83], [3, 1, 79],
+			[4, 0.5, 77], [4.5, 0.5, 79], [5, 1, 81], [6, 1, 76], [7, 1, 72],
+			[8, 0.5, 74], [8.5, 0.5, 76], [9, 0.5, 79], [9.5, 0.5, 81], [10, 1, 79], [11, 1, 74],
+			[12, 0.5, 76], [12.5, 0.5, 74], [13, 0.5, 72], [13.5, 0.5, 71], [14, 2, 72]]},
+	"muralist": {"bpm": 142, "lead": "vibes", "lead2": ["marimba", 0], "comp": "push", "bass": "octave",
+		"drums": "kickrim", "verb": 0.22, "chords": [[62, "min"], [67, "maj"], [65, "maj"], [64, "min"]],
+		"mel": [[0, 0.5, 74], [0.5, 0.5, 77], [1, 1, 81], [2, 0.5, 84], [2.5, 0.5, 81], [3, 1, 79],
+			[4, 0.5, 77], [4.5, 0.5, 76], [5, 1, 74], [6, 1, 79], [7, 1, 74],
+			[8, 0.5, 74], [8.5, 0.5, 77], [9, 0.5, 81], [9.5, 0.5, 86], [10, 1, 84], [11, 1, 81],
+			[12, 0.5, 79], [12.5, 0.5, 77], [13, 0.5, 76], [13.5, 0.5, 74], [14, 2, 74]]},
+	"caroler": {"bpm": 128, "lead": "glock", "lead2": ["accordion", 0], "comp": "oompah", "bass": "walk",
+		"drums": "brush", "verb": 0.28, "chords": [[65, "maj"], [60, "maj"], [62, "min"], [67, "maj"]],
+		"mel": [[0, 0.5, 77], [0.5, 0.5, 81], [1, 1, 84], [2, 0.5, 86], [2.5, 0.5, 84], [3, 1, 81],
+			[4, 0.5, 79], [4.5, 0.5, 81], [5, 1, 84], [6, 1, 79], [7, 1, 77],
+			[8, 0.5, 77], [8.5, 0.5, 81], [9, 0.5, 84], [9.5, 0.5, 89], [10, 1, 86], [11, 1, 84],
+			[12, 0.5, 81], [12.5, 0.5, 79], [13, 0.5, 77], [13.5, 0.5, 76], [14, 2, 77]]},
+	"barber": {"bpm": 138, "lead": "accordion", "lead2": ["whistle", 12], "comp": "rasgueado", "bass": "walk",
+		"drums": "claps", "verb": 0.20, "chords": [[64, "maj"], [69, "maj"], [67, "maj"], [64, "maj"]],
+		"mel": [[0, 0.5, 76], [0.5, 0.5, 79], [1, 1, 83], [2, 0.5, 84], [2.5, 0.5, 83], [3, 1, 79],
+			[4, 0.5, 76], [4.5, 0.5, 81], [5, 1, 84], [6, 1, 81], [7, 1, 76],
+			[8, 0.5, 76], [8.5, 0.5, 79], [9, 0.5, 83], [9.5, 0.5, 88], [10, 1, 86], [11, 1, 83],
+			[12, 0.5, 81], [12.5, 0.5, 79], [13, 0.5, 78], [13.5, 0.5, 76], [14, 2, 76]]},
 }
 
 # --- the score: what plays when ---------------------------------------------

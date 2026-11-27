@@ -406,6 +406,10 @@ const WALK_MODULES := {
 	"tarragona": preload("res://systems/tarragona.gd"),
 	"vic": preload("res://systems/vic.gd"),
 	"girona": preload("res://systems/girona.gd"),
+	"poblenou": preload("res://systems/poblenou.gd"),
+	"xemeneies": preload("res://systems/xemeneies.gd"),
+	"llucia": preload("res://systems/llucia.gd"),
+	"santacoloma": preload("res://systems/santacoloma.gd"),
 	"metro": preload("res://systems/metro.gd"),
 	"sarria": preload("res://systems/sarria.gd"),
 	"angels": preload("res://systems/angels.gd"),
@@ -809,6 +813,28 @@ var vic_sniffs: Dictionary = {}
 var girona_spout: Dictionary = {}
 var girona_steps_saved := 0
 var girona_houses_sniffed: Dictionary = {}
+# Rambla del Poblenou: horchata waiter tray, plane trees, Rambla kiosks (systems/poblenou.gd)
+var poblenou_tray: Dictionary = {}
+var poblenou_trays_dodged := 0
+var poblenou_trees_marked: Dictionary = {}
+var poblenou_kiosks_sniffed: Dictionary = {}
+# Les Tres Xemeneies: muralist spray, chimneys, walls, echo (systems/xemeneies.gd)
+var xemeneies_spray: Dictionary = {}
+var xemeneies_sprays_dodged := 0
+var xemeneies_chimneys_marked: Dictionary = {}
+var xemeneies_murals_sniffed: Dictionary = {}
+var xemeneies_echo_barked := false
+# Fira de Santa Llúcia: Caga Tió log drop, fair stalls, festive pines (systems/llucia.gd)
+var llucia_tio: Dictionary = {}
+var llucia_tio_dodged := 0
+var llucia_stalls_sniffed: Dictionary = {}
+var llucia_trees_marked: Dictionary = {}
+# Santa Coloma: Capicua domino slam, spice stalls, barber poles, clock (systems/santacoloma.gd)
+var santacoloma_domino: Dictionary = {}
+var santacoloma_slams_dodged := 0
+var santacoloma_spices_sniffed: Dictionary = {}
+var santacoloma_poles_marked: Dictionary = {}
+var santacoloma_clock_barked := false
 # La Lleona (systems/boss_lleona.gd) and what the goals count of her
 var lleona: RefCounted = null
 var lleona_dodges := 0
@@ -11482,6 +11508,14 @@ const FREEDOM_KINDS := {
 	"vic": "clearing",
 	# walled garden of Jardins dels Alemanys past Passeig Arqueològic
 	"girona": "clearing",
+	# Plaça del Poblenou along the seaward rambla
+	"poblenou": "placa",
+	# Jardí de les Xemeneies beside the industrial chimneys
+	"xemeneies": "yard",
+	# Plaça de la Catedral with its lit Christmas tree
+	"llucia": "placa",
+	# Mirador del Fondo above the hillside streets
+	"santacoloma": "yard",
 	# up the stairs at Sant Gos, into its little square
 	"metro": "placa",
 	# the beach where the Dimoni is burned

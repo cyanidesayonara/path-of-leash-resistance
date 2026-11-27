@@ -50,9 +50,9 @@ func _run() -> void:
 
 	# 1. registration
 	_check(game.CHASE_WALKS.has("atraccions") and game.CHASE_WALKS.size() == 10, "the tenth chase (%d)" % game.CHASE_WALKS.size())
-	for i in range(5, 51, 5):
+	for i in [5, 10, 16, 21, 27, 32, 38, 43, 49, 54]:
 		_check(game.CHASE_WALKS.has(game.CAROUSEL[i]), "walk %d, %s, is a chase" % [i, game.CAROUSEL[i]])
-	for w in ["girona", "site", "ronda", "partit", "montserrat"]:
+	for w in ["girona", "site", "ronda", "santacoloma", "partit", "montserrat"]:
 		_check(String(game.CHASE_GATE[w]) == "atraccions", "%s opens after it" % w)
 	var prof: Dictionary = HC.profile_for("atraccions")
 	_check(String(prof.kind) == "mascots" and ResourceLoader.exists(String(prof.film)) and ResourceLoader.exists(String(prof.script)), "its profile, script and film")

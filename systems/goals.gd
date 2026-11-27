@@ -96,6 +96,14 @@ const LEVEL_GOAL_IDS := {
 	"vic": ["mark", "sniff", "phone", "paws", "bag", "fetch", "vic_market", "vic_columns", "vic_fuet", "vic_fog", "combo", "prize", "spell", "jamon", "clock"],
 	# Girona: the Onyar fronts, the steps rain cascade, and La Lleona on her column
 	"girona": ["mark", "sniff", "phone", "paws", "bag", "girona_houses", "girona_steps", "lleona_hide", "lleona_kiss", "lleona_trip", "combo", "prize", "spell", "jamon", "clock"],
+	# Rambla del Poblenou: kiosks, plane trees and the horchata waiter's tray
+	"poblenou": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "poblenou_kiosks", "poblenou_trees", "poblenou_tray", "combo", "prize", "spell", "jamon", "clock"],
+	# Les Tres Xemeneies: mural walls, brick chimneys, spray burst and echo
+	"xemeneies": ["mark", "sniff", "phone", "paws", "bag", "snack", "xemeneies_murals", "xemeneies_chimneys", "xemeneies_spray", "xemeneies_echo", "combo", "prize", "spell", "jamon", "clock"],
+	# Fira de Santa Llúcia: Christmas booths, pines and the Caga Tió drop
+	"llucia": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "llucia_stalls", "llucia_trees", "llucia_tio", "combo", "prize", "spell", "jamon", "clock"],
+	# Santa Coloma: Mercat del Fondo stalls, barber poles, Capicua slam and clock tower
+	"santacoloma": ["mark", "sniff", "phone", "paws", "bag", "snack", "santacoloma_spices", "santacoloma_poles", "santacoloma_domino", "santacoloma_clock", "combo", "prize", "spell", "jamon", "clock"],
 	# Sarrià: the bells of Sant Vicenç, the two bakeries, the balcony gardener
 	"sarria": ["mark", "sniff", "phone", "paws", "bag", "fetch", "snack", "bells", "bread", "gardener", "combo", "prize", "spell", "jamon", "clock"],
 	# Els Àngels: the skate plaza outside the white museum
@@ -222,6 +230,20 @@ static func defs(m: Node2D) -> Dictionary:
 		"lleona_hide": {"text": "Hide from the lioness's gaze %d times", "target": 2, "fn": func() -> int: return m.lleona_hides},
 		"lleona_kiss": {"text": "Kiss the lioness behind", "target": 1, "fn": func() -> int: return 1 if m.lleona_kissed else 0},
 		"lleona_trip": {"text": "Trip or drench the lioness", "target": 1, "fn": func() -> int: return 1 if m.lleona_tripped or m.lleona_blinded else 0},
+		"poblenou_kiosks": {"text": "Sniff %d Rambla kiosks", "target": 3, "fn": func() -> int: return m.poblenou_kiosks_sniffed.size()},
+		"poblenou_trees": {"text": "Mark %d plane trees", "target": 3, "fn": func() -> int: return m.poblenou_trees_marked.size()},
+		"poblenou_tray": {"text": "Dodge the tipping horchata tray", "target": 1, "fn": func() -> int: return mini(int(m.poblenou_trays_dodged), 1)},
+		"xemeneies_murals": {"text": "Sniff %d painted mural walls", "target": 2, "fn": func() -> int: return m.xemeneies_murals_sniffed.size()},
+		"xemeneies_chimneys": {"text": "Mark %d brick chimneys", "target": 2, "fn": func() -> int: return m.xemeneies_chimneys_marked.size()},
+		"xemeneies_spray": {"text": "Dodge the muralist's spray burst", "target": 1, "fn": func() -> int: return mini(int(m.xemeneies_sprays_dodged), 1)},
+		"xemeneies_echo": {"text": "Bark an echo up a brick chimney", "target": 1, "fn": func() -> int: return 1 if m.xemeneies_echo_barked else 0},
+		"llucia_stalls": {"text": "Sniff %d Christmas market stalls", "target": 3, "fn": func() -> int: return m.llucia_stalls_sniffed.size()},
+		"llucia_trees": {"text": "Mark %d festive pines", "target": 3, "fn": func() -> int: return m.llucia_trees_marked.size()},
+		"llucia_tio": {"text": "Dodge the Caga Tió torró drop", "target": 1, "fn": func() -> int: return mini(int(m.llucia_tio_dodged), 1)},
+		"santacoloma_spices": {"text": "Sniff %d Mercat del Fondo stalls", "target": 3, "fn": func() -> int: return m.santacoloma_spices_sniffed.size()},
+		"santacoloma_poles": {"text": "Mark %d barber poles", "target": 2, "fn": func() -> int: return m.santacoloma_poles_marked.size()},
+		"santacoloma_domino": {"text": "Dodge a Capicua domino slam", "target": 1, "fn": func() -> int: return mini(int(m.santacoloma_slams_dodged), 1)},
+		"santacoloma_clock": {"text": "Bark at the clock tower plinth", "target": 1, "fn": func() -> int: return 1 if m.santacoloma_clock_barked else 0},
 		"bells": {"text": "Howl along with the church bells", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.howled else 0},
 		"bread": {"text": "Sniff the bread at %d bakeries", "target": 2, "fn": func() -> int: return Sarria.bread_sniffed(m)},
 		"gardener": {"text": "Bark good morning to the balcony gardener", "target": 1, "fn": func() -> int: return 1 if m.sarria != null and m.sarria.greeted else 0},

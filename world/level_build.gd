@@ -43,6 +43,10 @@ const Encants := preload("res://systems/encants.gd")
 const Tarragona := preload("res://systems/tarragona.gd")
 const Vic := preload("res://systems/vic.gd")
 const Girona := preload("res://systems/girona.gd")
+const Poblenou := preload("res://systems/poblenou.gd")
+const Xemeneies := preload("res://systems/xemeneies.gd")
+const Llucia := preload("res://systems/llucia.gd")
+const SantaColoma := preload("res://systems/santacoloma.gd")
 const Metro := preload("res://systems/metro.gd")
 const Sarria := preload("res://systems/sarria.gd")
 # walks whose camera is turned: degrees clockwise of screen-up their north runs
@@ -147,6 +151,10 @@ const CROSS_SECTIONS := {
 	"tarragona": ["none", 0.0, "none", 0.0],       # Roman city at dusk in systems/tarragona.gd
 	"vic": ["none", 0.0, "none", 0.0],             # inland market town, Mercadal and Mèder bridge in systems/vic.gd
 	"girona": ["none", 0.0, "none", 0.0],          # Onyar houses, Eiffel bridge, steps and Plaça de Sant Feliu in systems/girona.gd
+	"poblenou": ["none", 0.0, "none", 0.0],        # Rambla del Poblenou and Plaça de Prim in systems/poblenou.gd
+	"xemeneies": ["none", 0.0, "none", 0.0],       # Les Tres Xemeneies murals, chimneys and skate ledges in systems/xemeneies.gd
+	"llucia": ["none", 0.0, "none", 0.0],          # Fira de Santa Llúcia Christmas market and Caga Tió in systems/llucia.gd
+	"santacoloma": ["none", 0.0, "none", 0.0],     # Mercat del Fondo and Plaça del Rellotge in systems/santacoloma.gd
 	"sarria": ["none", 0.0, "none", 0.0],          # the village houses at the paving, in systems/sarria.gd
 	"eixample": ["none", 0.0, "none", 0.0],        # the grid street and its blocks in systems/eixample.gd
 	"angels": ["none", 0.0, "none", 0.0],          # skate plaza, museum and convent in systems/angels.gd
@@ -1408,6 +1416,10 @@ static func apply_corridor(m: Node2D) -> void:
 		"tarragona": half = Tarragona.HALF
 		"vic": half = Vic.HALF             # the Mercadal and the Mèder bridge (Vic.edge_nodes)
 		"girona": half = Girona.HALF       # Onyar, Eiffel bridge, steps and Sant Feliu (Girona.edge_nodes)
+		"poblenou": half = Poblenou.HALF
+		"xemeneies": half = Xemeneies.HALF
+		"llucia": half = Llucia.HALF
+		"santacoloma": half = SantaColoma.HALF
 		"sarria": half = Sarria.HALF       # the plaça, wall to wall (Sarria.edge_nodes)
 		"eixample": half = Eixample.HALF   # the octagons at the crossings (Eixample.edge_nodes)
 		"angels": half = Angels.HALF
@@ -1600,6 +1612,14 @@ static func apply_corridor(m: Node2D) -> void:
 		m.edge_nodes = Vic.edge_nodes(m)
 	elif m.lvl == "girona":
 		m.edge_nodes = Girona.edge_nodes(m)
+	elif m.lvl == "poblenou":
+		m.edge_nodes = Poblenou.edge_nodes(m)
+	elif m.lvl == "xemeneies":
+		m.edge_nodes = Xemeneies.edge_nodes(m)
+	elif m.lvl == "llucia":
+		m.edge_nodes = Llucia.edge_nodes(m)
+	elif m.lvl == "santacoloma":
+		m.edge_nodes = SantaColoma.edge_nodes(m)
 	elif m.lvl == "sarria":
 		m.edge_nodes = Sarria.edge_nodes(m)
 	elif m.lvl == "angels":
@@ -1640,7 +1660,7 @@ static func fit_x(m: Node2D, x: float, lo: float, hi: float) -> float:
 static func fit_props_to_corridor(m: Node2D) -> void:
 	# El Gotic, El Mercat, La Castanyada and El Mosaic place everything in
 	# level space
-	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "metro" or m.lvl == "blai" or m.lvl == "santpau" or m.lvl == "ronda" or m.lvl == "encants" or m.lvl == "tarragona" or m.lvl == "vic" or m.lvl == "girona" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat" or m.lvl == "sitges" or m.lvl == "molina":
+	if m.lvl == "oldtown" or m.lvl == "market" or m.lvl == "spook" or m.lvl == "guell" or m.lvl == "partit" or m.lvl == "port" or m.lvl == "reial" or m.lvl == "vet" or m.lvl == "tibidabo" or m.lvl == "aigues" or m.lvl == "horta" or m.lvl == "raval" or m.lvl == "boars" or m.lvl == "gracia" or m.lvl == "carmel" or m.lvl == "superilla" or m.lvl == "forum" or m.lvl == "eixample" or m.lvl == "diagonal" or m.lvl == "metro" or m.lvl == "blai" or m.lvl == "santpau" or m.lvl == "ronda" or m.lvl == "encants" or m.lvl == "tarragona" or m.lvl == "vic" or m.lvl == "girona" or m.lvl == "poblenou" or m.lvl == "xemeneies" or m.lvl == "llucia" or m.lvl == "santacoloma" or m.lvl == "sarria" or m.lvl == "angels" or m.lvl == "poble" or m.lvl == "ciutadella" or m.lvl == "cremada" or m.lvl == "aeroport" or m.lvl == "montserrat" or m.lvl == "sitges" or m.lvl == "molina":
 		return
 	# and so does El Barri, and the First Walk built on it, whose stations
 	# (systems/tutorial.gd) are laid out where they stand
@@ -1780,13 +1800,29 @@ static func build_level_data(m: Node2D) -> void:
 			hyd_list.assign(pl_encants[0])
 			keb_list.assign(pl_encants[1])
 		"vic":
-			var pl_vic: Array = Vic.build(m)
-			hyd_list.assign(pl_vic[0])
-			keb_list.assign(pl_vic[1])
+			var ps_vic: Array = Vic.build(m)
+			hyd_list.assign(ps_vic[0])
+			keb_list.assign(ps_vic[1])
 		"girona":
-			var pl_girona: Array = Girona.build(m)
-			hyd_list.assign(pl_girona[0])
-			keb_list.assign(pl_girona[1])
+			var ps_girona: Array = Girona.build(m)
+			hyd_list.assign(ps_girona[0])
+			keb_list.assign(ps_girona[1])
+		"poblenou":
+			var pl_poblenou: Array = Poblenou.build(m)
+			hyd_list.assign(pl_poblenou[0])
+			keb_list.assign(pl_poblenou[1])
+		"xemeneies":
+			var pl_xem: Array = Xemeneies.build(m)
+			hyd_list.assign(pl_xem[0])
+			keb_list.assign(pl_xem[1])
+		"llucia":
+			var pl_llucia: Array = Llucia.build(m)
+			hyd_list.assign(pl_llucia[0])
+			keb_list.assign(pl_llucia[1])
+		"santacoloma":
+			var pl_sc: Array = SantaColoma.build(m)
+			hyd_list.assign(pl_sc[0])
+			keb_list.assign(pl_sc[1])
 		"sarria":
 			var pl_sarria: Array = Sarria.build(m)
 			hyd_list.assign(pl_sarria[0])
@@ -2656,6 +2692,18 @@ static func build_level_data(m: Node2D) -> void:
 		# La Lleona's legs walk: after the bodies and the radii, as El Mamut's
 		if m.lleona != null:
 			m.lleona.register_legs(m)
+	if m.lvl == "poblenou":
+		for r: Rect2 in Poblenou.wrap_rects(m):
+			add_rope_rect(m, r)
+	if m.lvl == "xemeneies":
+		for r: Rect2 in Xemeneies.wrap_rects(m):
+			add_rope_rect(m, r)
+	if m.lvl == "llucia":
+		for r: Rect2 in Llucia.wrap_rects(m):
+			add_rope_rect(m, r)
+	if m.lvl == "santacoloma":
+		for r: Rect2 in SantaColoma.wrap_rects(m):
+			add_rope_rect(m, r)
 	if m.lvl == "metro":
 		for r: Rect2 in Metro.wrap_rects():
 			add_rope_rect(m, r)
@@ -2797,6 +2845,18 @@ static func build_level_data(m: Node2D) -> void:
 		"girona":
 			m.prize_pos = Girona.PRIZE
 			m.prize_text = Girona.PRIZE_TEXT
+		"poblenou":
+			m.prize_pos = Poblenou.PRIZE
+			m.prize_text = Poblenou.PRIZE_TEXT
+		"xemeneies":
+			m.prize_pos = Xemeneies.PRIZE
+			m.prize_text = Xemeneies.PRIZE_TEXT
+		"llucia":
+			m.prize_pos = Llucia.PRIZE
+			m.prize_text = Llucia.PRIZE_TEXT
+		"santacoloma":
+			m.prize_pos = SantaColoma.PRIZE
+			m.prize_text = SantaColoma.PRIZE_TEXT
 		"sarria":
 			m.prize_pos = Sarria.PRIZE
 			m.prize_text = Sarria.PRIZE_TEXT
@@ -3321,6 +3381,34 @@ const FREEDOM_PROPS := {
 		[Vector2(280.0, -450.0), "dig"], [Vector2(640.0, -280.0), "dig"], [Vector2(970.0, -310.0), "dig"],
 		[Vector2(380.0, -460.0), "planter"], [Vector2(900.0, -460.0), "planter"],
 		[Vector2(230.0, -340.0), "post"], [Vector2(520.0, -450.0), "post"], [Vector2(760.0, -450.0), "post"],
+		[Vector2(1020.0, -360.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
+		[Vector2(820.0, -340.0), "log"],
+	],
+	"poblenou": [
+		[Vector2(280.0, -455.0), "dig"], [Vector2(650.0, -285.0), "dig"], [Vector2(975.0, -310.0), "dig"],
+		[Vector2(380.0, -465.0), "planter"], [Vector2(905.0, -485.0), "planter"],
+		[Vector2(230.0, -340.0), "post"], [Vector2(520.0, -455.0), "post"], [Vector2(755.0, -455.0), "post"],
+		[Vector2(1025.0, -355.0), "post"], [Vector2(255.0, -225.0), "shrub"], [Vector2(1005.0, -230.0), "shrub"],
+		[Vector2(760.0, -335.0), "log"],
+	],
+	"xemeneies": [
+		[Vector2(280.0, -455.0), "dig"], [Vector2(640.0, -285.0), "dig"], [Vector2(970.0, -310.0), "dig"],
+		[Vector2(380.0, -465.0), "planter"], [Vector2(900.0, -465.0), "planter"],
+		[Vector2(230.0, -340.0), "post"], [Vector2(520.0, -455.0), "post"], [Vector2(760.0, -455.0), "post"],
+		[Vector2(1020.0, -360.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
+		[Vector2(820.0, -340.0), "log"],
+	],
+	"llucia": [
+		[Vector2(280.0, -455.0), "dig"], [Vector2(655.0, -285.0), "dig"], [Vector2(975.0, -310.0), "dig"],
+		[Vector2(380.0, -465.0), "planter"], [Vector2(910.0, -490.0), "planter"],
+		[Vector2(230.0, -340.0), "post"], [Vector2(500.0, -465.0), "post"], [Vector2(765.0, -455.0), "post"],
+		[Vector2(1025.0, -360.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
+		[Vector2(760.0, -330.0), "log"],
+	],
+	"santacoloma": [
+		[Vector2(280.0, -455.0), "dig"], [Vector2(640.0, -285.0), "dig"], [Vector2(970.0, -310.0), "dig"],
+		[Vector2(380.0, -465.0), "planter"], [Vector2(900.0, -465.0), "planter"],
+		[Vector2(230.0, -340.0), "post"], [Vector2(520.0, -455.0), "post"], [Vector2(760.0, -455.0), "post"],
 		[Vector2(1020.0, -360.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
 		[Vector2(820.0, -340.0), "log"],
 	],
@@ -3851,6 +3939,22 @@ static func level_solid_rects(m: Node2D) -> Array:
 			var ps_girona: Array[Rect2] = Girona.solids(m)
 			for i in range(ps_girona.size()):
 				out.append(["girona_solid_%d" % i, ps_girona[i]])
+		"poblenou":
+			var ps_poblenou: Array[Rect2] = Poblenou.solids(m)
+			for i in range(ps_poblenou.size()):
+				out.append(["poblenou_solid_%d" % i, ps_poblenou[i]])
+		"xemeneies":
+			var ps_xem: Array[Rect2] = Xemeneies.solids(m)
+			for i in range(ps_xem.size()):
+				out.append(["xemeneies_solid_%d" % i, ps_xem[i]])
+		"llucia":
+			var ps_llucia: Array[Rect2] = Llucia.solids(m)
+			for i in range(ps_llucia.size()):
+				out.append(["llucia_solid_%d" % i, ps_llucia[i]])
+		"santacoloma":
+			var ps_sc: Array[Rect2] = SantaColoma.solids(m)
+			for i in range(ps_sc.size()):
+				out.append(["santacoloma_solid_%d" % i, ps_sc[i]])
 		"sarria":
 			var ps_sarria: Array[Rect2] = Sarria.solids(m)
 			for i in range(ps_sarria.size()):
@@ -4297,7 +4401,7 @@ static func build_walls(m: Node2D) -> void:
 	match m.lvl:
 		"street": wall_sides = [-1.0]
 		"rain": wall_sides = []      # its frontage walls are the building line
-		"park", "trail", "beach", "llevant", "barri", "carmel", "ronda", "sitges", "encants", "tarragona", "vic", "girona": wall_sides = []
+		"park", "trail", "beach", "llevant", "barri", "carmel", "ronda", "sitges", "encants", "tarragona", "vic", "girona", "poblenou", "xemeneies", "llucia", "santacoloma": wall_sides = []
 		# a hillside with no buildings, and its path winds right across where
 		# the straight building line would stand
 		"montjuic": wall_sides = []
@@ -4477,6 +4581,18 @@ static func build_walls(m: Node2D) -> void:
 			add_circle_body(m, p, 8.0)
 	if m.lvl == "girona":
 		for r: Rect2 in Girona.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "poblenou":
+		for r: Rect2 in Poblenou.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "xemeneies":
+		for r: Rect2 in Xemeneies.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "llucia":
+		for r: Rect2 in Llucia.solids(m):
+			add_rect_body(m, r.get_center(), r.size)
+	if m.lvl == "santacoloma":
+		for r: Rect2 in SantaColoma.solids(m):
 			add_rect_body(m, r.get_center(), r.size)
 	if m.lvl == "metro":
 		for r: Rect2 in Metro.solids(m):
@@ -4763,6 +4879,10 @@ const CONE_KINDS := {
 	"tarragona": ["bottle", "can"],
 	"vic": ["can", "bottle"],
 	"girona": ["can", "bottle"],
+	"poblenou": ["can", "bottle"],
+	"xemeneies": ["bottle", "can"],
+	"llucia": ["can", "bottle"],
+	"santacoloma": ["can", "bottle"],
 	"trail": ["bottle", "can"],          # litter someone left on the path
 	"montjuic": ["bottle", "can"],
 	"aigues": ["bottle", "can"],

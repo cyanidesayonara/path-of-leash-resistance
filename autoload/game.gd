@@ -2,7 +2,7 @@ extends Node
 
 # Autoload: session state that must survive scene reloads.
 
-const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "sarria", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "metro", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "blai", "molina", "santpau", "sitges", "ronda", "atraccions", "encants", "tarragona", "vic", "girona"]
+const LEVELS: Array[String] = ["barri", "street", "park", "beach", "rain", "market", "oldtown", "sarria", "trail", "station", "besos", "site", "spook", "scrap", "guell", "neteja", "montjuic", "partit", "port", "reial", "vet", "tibidabo", "aigues", "horta", "llevant", "boars", "gracia", "carmel", "superilla", "metro", "forum", "espanya", "raval", "eixample", "angels", "poble", "ciutadella", "cremada", "aeroport", "montserrat", "diagonal", "blai", "molina", "santpau", "sitges", "ronda", "atraccions", "encants", "tarragona", "vic", "girona", "poblenou", "xemeneies", "llucia", "santacoloma"]
 const LEVEL_NAMES := {
 	"tutorial": "First Walk",
 	# One scheme: a Catalan article plus one everyday noun for the place you
@@ -72,6 +72,10 @@ const LEVEL_NAMES := {
 	"tarragona": "Tarragona",
 	"vic": "Vic",
 	"girona": "Girona",
+	"poblenou": "Rambla del Poblenou",
+	"xemeneies": "Les Tres Xemeneies",
+	"llucia": "Fira de Santa Llúcia",
+	"santacoloma": "Santa Coloma",
 }
 # The Catalan name carries the character; this carries the meaning. The game
 # ships in English, so a player who does not speak Catalan should never have to
@@ -136,11 +140,15 @@ const LEVEL_SUBTITLES := {
 	"tarragona": "Roman walls above the dusk sea",
 	"vic": "Fog, arcades and hanging fuet",
 	"girona": "Onyar houses, steps and lioness",
+	"poblenou": "Plane trees, horchata and breeze",
+	"xemeneies": "Brick chimneys, murals and ramps",
+	"llucia": "Christmas stalls and Caga Tió",
+	"santacoloma": "Steep market, spices & dominoes",
 }
 # Tony Hawk-style gating: total stars earned so far unlocks the next
 # walk. The first is always open; each subsequent walk asks a little more.
 # The first few open quickly, so a new player is never stuck on one walk.
-const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "carmel": 31, "cremada": 33, "station": 35, "reial": 36, "forum": 37, "aigues": 38, "aeroport": 39, "port": 39, "diagonal": 40, "blai": 41, "horta": 42, "molina": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "atraccions": 47, "girona": 47, "site": 47, "ronda": 47, "partit": 47, "montserrat": 48, "encants": 49, "tarragona": 50, "vic": 50, "scrap": 50, "gracia": 52, "raval": 53}
+const STAR_GATE := {"barri": 0, "street": 1, "park": 2, "beach": 3, "neteja": 4, "oldtown": 7, "montjuic": 9, "market": 11, "rain": 13, "besos": 14, "ciutadella": 15, "llevant": 15, "eixample": 16, "poblenou": 17, "tibidabo": 17, "vet": 19, "sarria": 21, "trail": 21, "angels": 22, "spook": 23, "boars": 25, "guell": 27, "superilla": 29, "metro": 31, "xemeneies": 31, "carmel": 31, "cremada": 33, "station": 35, "reial": 36, "forum": 37, "aigues": 38, "aeroport": 39, "port": 39, "diagonal": 40, "blai": 41, "llucia": 42, "horta": 42, "molina": 43, "espanya": 45, "santpau": 46, "poble": 46, "sitges": 47, "atraccions": 47, "girona": 47, "site": 47, "ronda": 47, "santacoloma": 47, "partit": 47, "montserrat": 48, "encants": 49, "tarragona": 50, "vic": 50, "scrap": 50, "gracia": 52, "raval": 53}
 
 # Keystone Chase milestone gates: each tier requires surviving the previous
 # tier's chase level end-to-end to enter.
@@ -153,6 +161,7 @@ const CHASE_GATE := {
 	"ciutadella": "besos",
 	"llevant": "besos",
 	"eixample": "besos",
+	"poblenou": "besos",
 	"tibidabo": "besos",
 	"vet": "besos",
 	"sarria": "vet",
@@ -163,6 +172,7 @@ const CHASE_GATE := {
 	"guell": "boars",
 	"superilla": "boars",
 	"metro": "boars",
+	"xemeneies": "boars",
 	"carmel": "boars",
 	"cremada": "boars",
 	"station": "cremada",
@@ -173,6 +183,7 @@ const CHASE_GATE := {
 	"port": "aeroport",
 	"diagonal": "aeroport",
 	"blai": "aeroport",
+	"llucia": "aeroport",
 	"horta": "aeroport",
 	"molina": "aeroport",
 	"espanya": "molina",
@@ -183,6 +194,7 @@ const CHASE_GATE := {
 	"girona": "atraccions",
 	"site": "atraccions",
 	"ronda": "atraccions",
+	"santacoloma": "atraccions",
 	"partit": "atraccions",
 	"montserrat": "atraccions",
 	"encants": "montserrat",
@@ -272,10 +284,18 @@ const CAMPAIGN_SKY := {
 	"vic": ["fog", "morning"],
 	# Onyar houses, Eiffel bridge and La Lleona in rain at dusk
 	"girona": ["rain", "dusk"],
+	# leafy rambla with sea breeze in the morning
+	"poblenou": ["breeze", "morning"],
+	# Paral·lel brick chimneys and skate concrete at dusk
+	"xemeneies": ["clear", "dusk"],
+	# cathedral Christmas fair in the evening blue hour under fairy lights
+	"llucia": ["clear", "evening"],
+	# steep hillside market and domino plazas across the Besòs
+	"santacoloma": ["clear", "day"],
 }
 
 # the walk select: the first walk, then the campaign walks in order
-const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "carmel", "cremada", "station", "reial", "forum", "aigues", "aeroport", "port", "diagonal", "blai", "horta", "molina", "espanya", "santpau", "poble", "sitges", "atraccions", "girona", "site", "ronda", "partit", "montserrat", "encants", "tarragona", "vic", "scrap", "gracia", "raval"]
+const CAROUSEL: Array[String] = ["tutorial", "barri", "street", "park", "beach", "neteja", "oldtown", "montjuic", "market", "rain", "besos", "ciutadella", "llevant", "eixample", "poblenou", "tibidabo", "vet", "sarria", "trail", "angels", "spook", "boars", "guell", "superilla", "metro", "xemeneies", "carmel", "cremada", "station", "reial", "forum", "aigues", "aeroport", "port", "diagonal", "blai", "llucia", "horta", "molina", "espanya", "santpau", "poble", "sitges", "atraccions", "girona", "site", "ronda", "santacoloma", "partit", "montserrat", "encants", "tarragona", "vic", "scrap", "gracia", "raval"]
 
 # Cosmetics keep their catalog keys when equipped, but ownership is namespaced
 # by category so identically named items remain separate purchases.
@@ -462,9 +482,10 @@ const DEFAULT_DOG := "millie"
 
 const SAVE_PATH := "user://records.cfg"
 # The save's version. A save from an older one starts the campaign again: its
-# settings are kept and everything earned is not (_start_fresh). Version 1 is
-# the finished 51-walk campaign; saves before it carry no version.
-const SAVE_VERSION := 1
+# settings are kept and everything earned is not (_start_fresh). Version 2 is
+# the finished 55-walk campaign; version 1 was the 51-walk campaign, and saves
+# before it carry no version.
+const SAVE_VERSION := 2
 # settings kept in that section that belong to the old campaign, not the player
 const FRESH_SETTINGS := ["ask_tutorial", "free_play"]
 const DEFAULT_OWNED := {"collar:red": true, "bandana:none": true, "coat:millie": true}
@@ -632,6 +653,10 @@ const LEVEL_SUBTITLES_CA := {
 	"tarragona": "Muralles romanes al capvespre",
 	"vic": "Boira, porxos i fuets penjats",
 	"girona": "Cases de l'Onyar, escales i lleona",
+	"poblenou": "Plàtans, orxata i brisa de mar",
+	"xemeneies": "Xemeneies, murals i rampes",
+	"llucia": "Fira de Nadal i Caga Tió",
+	"santacoloma": "Mercat en pujada, espècies i dòmino",
 }
 const LEVEL_SUBTITLES_ES := {
 	"tutorial": "Aprende la correa, truco a truco",
@@ -686,6 +711,10 @@ const LEVEL_SUBTITLES_ES := {
 	"tarragona": "Murallas romanas al atardecer",
 	"vic": "Niebla, porches y fuet colgado",
 	"girona": "Casas del Onyar, escaleras y leona",
+	"poblenou": "Plátanos, horchata y brisa marina",
+	"xemeneies": "Chimeneas, murales y rampas",
+	"llucia": "Feria de Navidad y Caga Tió",
+	"santacoloma": "Cuestas, especias, mercado y dominó",
 }
 # the off-leash agility course's best time in seconds (0: never run). One
 # record for all of them: it is the same course in every space.

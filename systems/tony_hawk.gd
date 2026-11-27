@@ -54,6 +54,10 @@ const CLOCK_TARGETS := {
 	"tarragona": 190,   # amphitheatre rim and old-town pinch
 	"vic": 175,         # fog market, cathedral and the Mèder bridge
 	"girona": 195,      # Onyar bridge, steps cascade and Sant Feliu plaza
+	"poblenou": 180,    # leafy rambla, horchata terraces and Plaça de Prim
+	"xemeneies": 185,   # mural walls, three brick chimneys and skate concrete
+	"llucia": 180,      # Christmas stalls and Caga Tió by the cathedral
+	"santacoloma": 185, # Mercat del Fondo climb and Plaça del Rellotge
 	"metro": 185,    # the turnstiles, the surge and one stop on the train
 	"sarria": 175,
 	"angels": 180,
@@ -108,6 +112,10 @@ const JAMON_POS := {
 	"tarragona": Vector2(600.0, -2440.0),
 	"vic": Vector2(520.0, -2680.0),
 	"girona": Vector2(560.0, -2920.0),
+	"poblenou": Vector2(575.0, -2520.0),
+	"xemeneies": Vector2(695.0, -2580.0),
+	"llucia": Vector2(605.0, -2580.0),
+	"santacoloma": Vector2(620.0, -2560.0),
 	"metro": Vector2(846.0, -4330.0),   # by the platform edge at Sant Gos, past the last pillar
 	"sarria": Vector2(300.0, -3010.0),
 	"angels": Vector2(380.0, -2950.0),

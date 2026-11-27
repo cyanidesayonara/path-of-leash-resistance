@@ -1,0 +1,3 @@
+# Rambla del Poblenou (tree-lined rambla, horchata & sea breeze)
+# cost 12
+--headless --path . --script res://tests/test_poblenou.gd

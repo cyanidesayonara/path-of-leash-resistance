@@ -147,6 +147,22 @@ func _run() -> void:
 	back.free()
 	g.free()
 
+	# 2b. a version 1 save (51-walk campaign) also resets cleanly on SAVE_VERSION 2
+	_clean()
+	cf = ConfigFile.new()
+	_full(cf)
+	cf.set_value("global", "save_version", 1)
+	cf.save(PATH)
+	bytes = FileAccess.get_file_as_bytes(PATH)
+	g = _game()
+	_check(g.SAVE_VERSION == 2, "SAVE_VERSION bumped to 2 for the 55-walk campaign")
+	g.load_records()
+	_is_fresh(g, "51-walk v1")
+	_settings_kept(g, "51-walk v1")
+	_check(g.fresh_start, "a returning v1 player is told")
+	_check(FileAccess.get_file_as_bytes(PATH) == bytes and not FileAccess.file_exists(OLD), "loading v1 writes nothing")
+	g.free()
+
 	# 3. from before the chase gates: no gates version, ownership by bare name
 	_clean()
 	cf = ConfigFile.new()

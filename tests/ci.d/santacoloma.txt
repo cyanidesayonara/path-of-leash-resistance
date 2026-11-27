@@ -1,0 +1,3 @@
+# Santa Coloma (Mercat del Fondo & Plaça del Rellotge)
+# cost 12
+--headless --path . --script res://tests/test_santacoloma.gd
