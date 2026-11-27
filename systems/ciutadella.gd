@@ -1132,63 +1132,81 @@ static func draw_overhead(m: Node2D, wc: Object) -> void:
 	while x < r.end.x - 30.0:
 		b.rect(Rect2(x, r.position.y + 10.0, 12.0, 18.0), Color(0.80, 0.42, 0.28))
 		x += 30.0
-	_draw_arc_crown(b, Vector2(r.get_center().x, r.position.y + 34.0))
+	_draw_arc_crown(b, Vector2(r.get_center().x, r.position.y + 36.0))
 	b.flush(wc)
 
 
-# Barcelona's arms on the Arc: a pointed gold shield with Sant Jordi's cross
-# and the four bars, and the bat whose wings spread above it.
+# Barcelona's arms on the Arc: a pointed shield quartered, Sant Jordi's red
+# cross on white in two quarters and the four red bars on gold in the other
+# two, with the bat spreading its wings above it.
 static func _draw_arc_crown(b: ShapeBatch, mid: Vector2) -> void:
 	var gold := Color(0.84, 0.70, 0.30)
-	var gold_lit := Color(0.96, 0.86, 0.48)
-	var pale := Color(0.94, 0.90, 0.80)
-	var bar := Color(0.72, 0.18, 0.16)
-	var bat := Color(0.78, 0.62, 0.22)
-	# the bat above the shield: body, then two tapered wings
-	var head := mid + Vector2(0.0, -22.0)
+	var gold_lit := Color(0.96, 0.84, 0.44)
+	var silver := Color(0.95, 0.92, 0.84)
+	var red := Color(0.74, 0.16, 0.14)
+	var bat := Color(0.70, 0.54, 0.18)
+	var bone := Color(0.94, 0.80, 0.42)
+	# the bat: each wing a leading edge out to the tip, then the membrane
+	# scalloped between three finger bones back to the body
+	var head := mid + Vector2(0.0, -24.0)
+	var wing := [Vector2(3.0, -2.0), Vector2(18.0, -12.0), Vector2(40.0, -4.0),
+		Vector2(29.0, -3.0), Vector2(31.0, 6.0), Vector2(23.0, 1.0),
+		Vector2(20.0, 8.0), Vector2(14.0, 1.0), Vector2(4.0, 6.0)]
 	for sd: float in [-1.0, 1.0]:
-		var root := head + Vector2(sd * 3.0, 1.0)
-		var tip := head + Vector2(sd * 38.0, -6.0)
-		var mid_w := head + Vector2(sd * 20.0, -14.0)
-		b.polygon(PackedVector2Array([
-			root,
-			mid_w + Vector2(0.0, -6.0),
-			tip,
-			mid_w + Vector2(0.0, 8.0),
-			root + Vector2(0.0, 4.0),
-		]), bat)
-		b.polygon(PackedVector2Array([
-			root + Vector2(sd * 2.0, 0.0),
-			mid_w + Vector2(sd * 2.0, -3.0),
-			tip + Vector2(-sd * 4.0, 0.0),
-			mid_w + Vector2(sd * 2.0, 4.0),
-		]), gold_lit)
-	b.circle(head, 5.5, bat)
-	b.circle(head + Vector2(0.0, -1.0), 3.2, gold_lit)
-	b.circle(head + Vector2(-1.6, -1.4), 1.1, Color(0.18, 0.12, 0.08))
-	b.circle(head + Vector2(1.6, -1.4), 1.1, Color(0.18, 0.12, 0.08))
-	# pointed heater shield
-	var shield := PackedVector2Array([
-		mid + Vector2(-16.0, -12.0),
-		mid + Vector2(16.0, -12.0),
-		mid + Vector2(16.0, 4.0),
-		mid + Vector2(0.0, 22.0),
-		mid + Vector2(-16.0, 4.0),
-	])
-	b.polygon(shield, gold.darkened(0.18))
-	var face := PackedVector2Array([
-		mid + Vector2(-13.0, -9.0),
-		mid + Vector2(13.0, -9.0),
-		mid + Vector2(13.0, 3.0),
-		mid + Vector2(0.0, 18.0),
-		mid + Vector2(-13.0, 3.0),
-	])
-	b.polygon(face, gold_lit)
-	# four bars across the lower half
+		var pts := PackedVector2Array()
+		for v: Vector2 in wing:
+			pts.append(head + Vector2(v.x * sd, v.y))
+		b.polygon(pts, bat)
+		for f: int in [2, 4, 6]:
+			b.line(pts[1], pts[f], bone, 1.4)
+		b.line(pts[0], pts[1], bone, 1.8)
+		# a pointed ear
+		b.polygon(PackedVector2Array([head + Vector2(sd * 1.5, -3.0),
+			head + Vector2(sd * 5.5, -10.0), head + Vector2(sd * 5.0, -2.0)]), bat)
+	b.circle(head + Vector2(0.0, 3.0), 4.0, bat)
+	b.circle(head, 4.5, bat)
+	b.circle(head + Vector2(0.0, -0.5), 2.6, gold_lit)
+	# the shield, pointed at the foot
+	b.polygon(PackedVector2Array([mid + Vector2(-16.0, -12.0), mid + Vector2(16.0, -12.0),
+		mid + Vector2(16.0, 4.0), mid + Vector2(0.0, 22.0), mid + Vector2(-16.0, 4.0)]), gold.darkened(0.18))
+	# its face: 13 wide each side, flat from -9 to 3, then down to the point at 18
+	var cy := mid.y - 1.0
+	for sd: float in [-1.0, 1.0]:
+		# upper quarter: the cross on the left, the bars on the right; the
+		# lower two the other way round
+		var up_cross := sd < 0.0
+		_arms_quarter(b, mid, sd, true, up_cross, silver, gold_lit, red)
+		_arms_quarter(b, mid, sd, false, not up_cross, silver, gold_lit, red)
+	b.line(Vector2(mid.x, mid.y - 9.0), Vector2(mid.x, mid.y + 18.0), gold.darkened(0.18), 1.0)
+	b.line(Vector2(mid.x - 13.0, cy), Vector2(mid.x + 13.0, cy), gold.darkened(0.18), 1.0)
+
+
+# One quarter of the arms. `sd` is the side, `upper` the half; a cross
+# quarter is Sant Jordi's red cross on white, the other the four red bars
+# (upright stripes) on gold.
+static func _arms_quarter(b: ShapeBatch, mid: Vector2, sd: float, upper: bool, cross: bool, silver: Color, gold: Color, red: Color) -> void:
+	var cy := mid.y - 1.0
+	var pts := PackedVector2Array()
+	if upper:
+		pts = PackedVector2Array([Vector2(mid.x, mid.y - 9.0), Vector2(mid.x + sd * 13.0, mid.y - 9.0),
+			Vector2(mid.x + sd * 13.0, cy), Vector2(mid.x, cy)])
+	else:
+		pts = PackedVector2Array([Vector2(mid.x, cy), Vector2(mid.x + sd * 13.0, cy),
+			Vector2(mid.x + sd * 13.0, mid.y + 3.0), Vector2(mid.x, mid.y + 18.0)])
+	b.polygon(pts, silver if cross else gold)
+	var top := mid.y - 9.0 if upper else cy
+	if cross:
+		var cx := mid.x + sd * (6.5 if upper else 4.5)
+		var foot := cy if upper else mid.y + 11.0
+		var arm_y := (top + foot) * 0.5 - (0.0 if upper else 2.0)
+		var reach := 13.0 if upper else 11.5
+		b.rect(Rect2(cx - 1.2, top, 2.4, foot - top), red)
+		b.line(Vector2(mid.x, arm_y), Vector2(mid.x + sd * reach, arm_y), red, 2.4)
+		return
 	for i in range(4):
-		var by := mid.y + 1.0 + float(i) * 3.6
-		var half := 11.0 - float(i) * 1.6
-		b.line(Vector2(mid.x - half, by), Vector2(mid.x + half, by), bar, 2.2)
-	# Sant Jordi's cross over the upper face
-	b.rect(Rect2(mid.x - 2.0, mid.y - 9.0, 4.0, 16.0), pale)
-	b.rect(Rect2(mid.x - 11.0, mid.y - 3.0, 22.0, 4.0), pale)
+		var px := mid.x + sd * (1.6 + float(i) * 3.2 + 0.8)
+		var bottom := cy
+		if not upper:
+			# down to the slanted edge: y = mid.y + 18 - 15 * |x| / 13, capped at the flat part
+			bottom = minf(mid.y + 18.0 - 15.0 * absf(px - mid.x) / 13.0, mid.y + 18.0) - 1.0
+		b.line(Vector2(px, top), Vector2(px, bottom), red, 1.6)
