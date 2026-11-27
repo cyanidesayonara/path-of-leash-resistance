@@ -3386,10 +3386,10 @@ const FREEDOM_PROPS := {
 	],
 	"poblenou": [
 		[Vector2(280.0, -455.0), "dig"], [Vector2(650.0, -285.0), "dig"], [Vector2(975.0, -310.0), "dig"],
-		[Vector2(380.0, -465.0), "planter"], [Vector2(905.0, -485.0), "planter"],
+		[Vector2(380.0, -465.0), "planter"], [Vector2(1060.0, -485.0), "planter"],
 		[Vector2(230.0, -340.0), "post"], [Vector2(520.0, -455.0), "post"], [Vector2(755.0, -455.0), "post"],
-		[Vector2(1025.0, -355.0), "post"], [Vector2(255.0, -225.0), "shrub"], [Vector2(1005.0, -230.0), "shrub"],
-		[Vector2(760.0, -335.0), "log"],
+		[Vector2(1040.0, -370.0), "post"], [Vector2(255.0, -225.0), "shrub"], [Vector2(1005.0, -230.0), "shrub"],
+		[Vector2(820.0, -315.0), "log"],
 	],
 	"xemeneies": [
 		[Vector2(280.0, -455.0), "dig"], [Vector2(640.0, -285.0), "dig"], [Vector2(970.0, -310.0), "dig"],
@@ -3400,17 +3400,17 @@ const FREEDOM_PROPS := {
 	],
 	"llucia": [
 		[Vector2(280.0, -455.0), "dig"], [Vector2(655.0, -285.0), "dig"], [Vector2(975.0, -310.0), "dig"],
-		[Vector2(380.0, -465.0), "planter"], [Vector2(910.0, -490.0), "planter"],
+		[Vector2(380.0, -465.0), "planter"], [Vector2(1065.0, -490.0), "planter"],
 		[Vector2(230.0, -340.0), "post"], [Vector2(500.0, -465.0), "post"], [Vector2(765.0, -455.0), "post"],
-		[Vector2(1025.0, -360.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
-		[Vector2(760.0, -330.0), "log"],
+		[Vector2(1045.0, -375.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
+		[Vector2(825.0, -320.0), "log"],
 	],
 	"santacoloma": [
-		[Vector2(280.0, -455.0), "dig"], [Vector2(640.0, -285.0), "dig"], [Vector2(970.0, -310.0), "dig"],
+		[Vector2(280.0, -455.0), "dig"], [Vector2(630.0, -295.0), "dig"], [Vector2(970.0, -310.0), "dig"],
 		[Vector2(380.0, -465.0), "planter"], [Vector2(900.0, -465.0), "planter"],
 		[Vector2(230.0, -340.0), "post"], [Vector2(520.0, -455.0), "post"], [Vector2(760.0, -455.0), "post"],
 		[Vector2(1020.0, -360.0), "post"], [Vector2(250.0, -220.0), "shrub"], [Vector2(1000.0, -230.0), "shrub"],
-		[Vector2(820.0, -340.0), "log"],
+		[Vector2(805.0, -325.0), "log"],
 	],
 	"forum": [
 		[Vector2(210.0, -480.0), "dig"], [Vector2(620.0, -320.0), "dig"], [Vector2(780.0, -220.0), "dig"],
