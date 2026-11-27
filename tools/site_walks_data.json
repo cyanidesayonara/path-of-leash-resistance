@@ -6,7 +6,7 @@
     "girona",
     "raval"
   ],
-  "carousel_count": 52,
+  "carousel_count": 56,
   "chapters": [
     [
       "tutorial",
@@ -25,6 +25,7 @@
     [
       "llevant",
       "eixample",
+      "poblenou",
       "tibidabo",
       "vet",
       "sarria",
@@ -37,6 +38,7 @@
     [
       "superilla",
       "metro",
+      "xemeneies",
       "carmel",
       "cremada",
       "station",
@@ -49,6 +51,7 @@
     [
       "diagonal",
       "blai",
+      "llucia",
       "horta",
       "molina",
       "espanya",
@@ -61,6 +64,7 @@
     [
       "site",
       "ronda",
+      "santacoloma",
       "partit",
       "montserrat",
       "encants",
@@ -83,7 +87,7 @@
     "atraccions",
     "montserrat"
   ],
-  "count": 51,
+  "count": 55,
   "dogs": [
     {
       "accel_mult": 1.0,
@@ -2280,6 +2284,94 @@
       "star_gate": 15,
       "weather": "wind"
     },
+    "llucia": {
+      "carry_text": "",
+      "chapter": 4,
+      "chase_gate": "aeroport",
+      "chase_gate_name": "L'Aeroport",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DE LA CATEDRAL",
+      "gloss": "Christmas stalls and Caga Tió",
+      "gloss_ca": "Fira de Nadal i Caga Tió",
+      "gloss_es": "Feria de Navidad y Caga Tió",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "llucia_stalls",
+          "text": "Sniff 3 Christmas market stalls"
+        },
+        {
+          "id": "llucia_trees",
+          "text": "Mark 3 festive pines"
+        },
+        {
+          "id": "llucia_tio",
+          "text": "Dodge the Caga Tió torró drop"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Grab a marzipan figure off the stall"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "evening",
+      "id": "llucia",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Fira de Santa Llúcia",
+      "prize_text": "Grab a marzipan figure off the stall",
+      "sign_material": "tinsel",
+      "star_gate": 42,
+      "weather": "clear"
+    },
     "market": {
       "carry_text": "Run the oranges to the far stall",
       "chapter": 1,
@@ -3160,6 +3252,94 @@
       "star_gate": 46,
       "weather": "clear"
     },
+    "poblenou": {
+      "carry_text": "",
+      "chapter": 2,
+      "chase_gate": "besos",
+      "chase_gate_name": "El Besòs",
+      "chase_warning": "",
+      "clock_target": 180,
+      "clock_text": "3:00",
+      "freedom_kind": "placa",
+      "gate_text": "PLAÇA DEL POBLENOU",
+      "gloss": "Plane trees, horchata and breeze",
+      "gloss_ca": "Plàtans, orxata i brisa de mar",
+      "gloss_es": "Plátanos, horchata y brisa marina",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "fetch",
+          "text": "Bring the ball back 3 times"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "poblenou_kiosks",
+          "text": "Sniff 3 Rambla kiosks"
+        },
+        {
+          "id": "poblenou_trees",
+          "text": "Mark 3 plane trees"
+        },
+        {
+          "id": "poblenou_tray",
+          "text": "Dodge the tipping horchata tray"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Snatch a farton off the horchata counter"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:00)"
+        }
+      ],
+      "hour": "morning",
+      "id": "poblenou",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Rambla del Poblenou",
+      "prize_text": "Snatch a farton off the horchata counter",
+      "sign_material": "fartons",
+      "star_gate": 17,
+      "weather": "breeze"
+    },
     "port": {
       "carry_text": "",
       "chapter": 3,
@@ -3599,6 +3779,94 @@
       "sign_material": "floats",
       "star_gate": 47,
       "weather": "wind"
+    },
+    "santacoloma": {
+      "carry_text": "",
+      "chapter": 5,
+      "chase_gate": "atraccions",
+      "chase_gate_name": "Les Atraccions",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "yard",
+      "gate_text": "MIRADOR DEL FONDO",
+      "gloss": "Steep market, spices & dominoes",
+      "gloss_ca": "Mercat en pujada, espècies i dòmino",
+      "gloss_es": "Cuestas, especias, mercado y dominó",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "santacoloma_spices",
+          "text": "Sniff 3 Mercat del Fondo stalls"
+        },
+        {
+          "id": "santacoloma_poles",
+          "text": "Mark 2 barber poles"
+        },
+        {
+          "id": "santacoloma_domino",
+          "text": "Dodge a Capicua domino slam"
+        },
+        {
+          "id": "santacoloma_clock",
+          "text": "Bark at the clock tower plinth"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Nab an empanada from El Fondo market"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "day",
+      "id": "santacoloma",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Santa Coloma",
+      "prize_text": "Nab an empanada from El Fondo market",
+      "sign_material": "dominoes",
+      "star_gate": 47,
+      "weather": "clear"
     },
     "santpau": {
       "carry_text": "",
@@ -4954,6 +5222,94 @@
       "sign_material": "cheeses",
       "star_gate": 50,
       "weather": "fog"
+    },
+    "xemeneies": {
+      "carry_text": "",
+      "chapter": 3,
+      "chase_gate": "boars",
+      "chase_gate_name": "Els Senglars",
+      "chase_warning": "",
+      "clock_target": 185,
+      "clock_text": "3:05",
+      "freedom_kind": "yard",
+      "gate_text": "JARDÍ DE LES XEMENEIES",
+      "gloss": "Brick chimneys, murals and ramps",
+      "gloss_ca": "Xemeneies, murals i rampes",
+      "gloss_es": "Chimeneas, murales y rampas",
+      "goals": [
+        {
+          "id": "mark",
+          "text": "Mark 5 spots"
+        },
+        {
+          "id": "sniff",
+          "text": "Have 4 good long sniffs"
+        },
+        {
+          "id": "phone",
+          "text": "Get the phone home without a scratch"
+        },
+        {
+          "id": "paws",
+          "text": "Get yourself home without a bump"
+        },
+        {
+          "id": "bag",
+          "text": "Get your business bagged"
+        },
+        {
+          "id": "snack",
+          "text": "Scarf down 2 dropped snacks"
+        },
+        {
+          "id": "xemeneies_murals",
+          "text": "Sniff 2 painted mural walls"
+        },
+        {
+          "id": "xemeneies_chimneys",
+          "text": "Mark 2 brick chimneys"
+        },
+        {
+          "id": "xemeneies_spray",
+          "text": "Dodge the muralist's spray burst"
+        },
+        {
+          "id": "xemeneies_echo",
+          "text": "Bark an echo up a brick chimney"
+        },
+        {
+          "id": "combo",
+          "text": "Land an x3 trick combo"
+        },
+        {
+          "id": "prize",
+          "text": "Nab the muralist's rattle can"
+        },
+        {
+          "id": "spell",
+          "text": "Spell LEASH"
+        },
+        {
+          "id": "jamon",
+          "text": "Find the hidden pernil"
+        },
+        {
+          "id": "clock",
+          "text": "Beat the clock (under 3:05)"
+        }
+      ],
+      "hour": "dusk",
+      "id": "xemeneies",
+      "is_boss": false,
+      "is_chase": false,
+      "is_tutorial": false,
+      "kind": "walk",
+      "lessons": [],
+      "name": "Les Tres Xemeneies",
+      "prize_text": "Nab the muralist's rattle can",
+      "sign_material": "caps",
+      "star_gate": 31,
+      "weather": "clear"
     }
   },
   "wardrobe": {

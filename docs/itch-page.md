@@ -51,7 +51,7 @@ The leash is real rope. The one you see is the one doing the physics: it wraps, 
 
 Your human answers it like a person. A steady pull leads them where you want to go. Haul on them constantly and their patience runs out: a glance up from the phone, a mutter, then "Hey!" and a shorter leash. Walk nicely and the reel lets you out. Everything they are about to do, they announce first: "Ring ring!", "Ooh!". They are never smarter than that.
 
-FIFTY-ONE WALKS IN AND AROUND BARCELONA
+FIFTY-FIVE WALKS IN AND AROUND BARCELONA
 
 El Barri, the neighborhood park
 La Rambla, the crowded promenade
@@ -66,6 +66,7 @@ El Besòs, the river park
 La Ciutadella, the waterfall cascade and El Mamut
 Platja de Llevant, the dog beach at the far end of the coast
 L'Eixample, the grid of cut corners round the basilica
+Rambla del Poblenou, plane trees, horchata and breeze
 El Tibidabo, the mountain road
 El Veterinari, the clinic escape
 Sarrià, the old village the city swallowed, at first light
@@ -76,6 +77,7 @@ Els Senglars, the wild boar trail
 El Mosaic, the tiled terraces
 La Superilla, the superblock play streets
 El Metro, down out of the rain and one stop on the metro
+Les Tres Xemeneies, brick chimneys, murals and ramps
 Els Búnquers, the overlook above the city
 La Cremada, Badalona's devil night and the Dimoni
 L'Estació, the train station
@@ -86,6 +88,7 @@ L'Aeroport, Terminal 1's long pier, with airport security on your tail
 El Port, the fishing wharf
 La Diagonal, the avenue that cuts the grid, with its tram
 Carrer de Blai, the pintxos street, where everything on the floor is food
+Fira de Santa Llúcia, Christmas stalls and Caga Tió
 El Laberint d'Horta, the cypress maze
 La Molina, the ski slopes and a runaway snow groomer
 Plaça d'Espanya, the fountain avenue
@@ -96,6 +99,7 @@ Les Atraccions, coasters, queues and churros, and mascots who want a hug
 Girona, the Onyar's houses, the old-town steps and La Lleona, the stone lioness
 Les Obres, the work site
 Camí de Ronda, the cliff path above the coves
+Santa Coloma, steep market, spices & dominoes
 Dia de Partit, match day
 Montserrat, the mountain trail across the funicular and the wild goats
 Els Encants, the flea market under the mirrored canopy
@@ -130,7 +134,7 @@ Mark a spot (hold): Q / X
 Squat when nature calls (hold): F / Y
 Pick up: G / LB
 Bark: E / B
-Run: Shift / RB
+Run: Shift / RT
 Goals: Tab / d-pad up
 Pause: Esc / Back
 Start again: R / Start
@@ -149,7 +153,7 @@ El teu humà va enganxat al mòbil i camina amb el pilot automàtic. Tu ets a l'
 
 El teu humà pesa quatre cops més que tu i guanya totes les estrebades directes. Així que guanyes com un gos: planta't en el moment just, enrotlla la corretja a un fanal per frenar-lo en sec i borda per aturar-lo a la vorera. Enrotlla'l a un pal i continua estirant, i sortirà voltant com una pilota lligada. Una estirada constant el guia; si l'estires sense parar, se li acaba la paciència («Ei!» i corretja curta).
 
-Cinquanta-un passejos per Barcelona i els voltants (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, Els Búnquers, La Cremada, L'Estació, Plaça Reial, El Fòrum, La Carretera de les Aigües, L'Aeroport, El Port, La Diagonal, Carrer de Blai, El Laberint d'Horta, La Molina, Plaça d'Espanya, Sant Pau, El Poble Espanyol, Sitges, Les Atraccions, Girona, Les Obres, Camí de Ronda, Dia de Partit, Montserrat, Els Encants, Tarragona, Vic, La Ferralla, Festa de Gràcia i Rambla del Raval), amb set gossos, reptes musicals, persecucions i cinc caps estàtua. Cada passeig acaba sense corretja i es pot jugar amb pluja, vent, neu o de nit.
+Cinquanta-cinc passejos per Barcelona i els voltants (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, Rambla del Poblenou, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, Les Tres Xemeneies, Els Búnquers, La Cremada, L'Estació, Plaça Reial, El Fòrum, La Carretera de les Aigües, L'Aeroport, El Port, La Diagonal, Carrer de Blai, Fira de Santa Llúcia, El Laberint d'Horta, La Molina, Plaça d'Espanya, Sant Pau, El Poble Espanyol, Sitges, Les Atraccions, Girona, Les Obres, Camí de Ronda, Santa Coloma, Dia de Partit, Montserrat, Els Encants, Tarragona, Vic, La Ferralla, Festa de Gràcia i Rambla del Raval), amb set gossos, reptes musicals, persecucions i cinc caps estàtua. Cada passeig acaba sense corretja i es pot jugar amb pluja, vent, neu o de nit.
 
 Teclat, comandament o tàctil. Un jugador. Sense anuncis, sense compres, sense compte. Fet amb Godot per Santtu Nykänen.
 ```
@@ -161,9 +165,26 @@ Tu humano va pegado al móvil y camina con el piloto automático. Tú estás al 
 
 Tu humano pesa cuatro veces más que tú y gana todos los tirones directos. Así que ganas como un perro: plántate en el momento justo, enrolla la correa en una farola para frenarlo en seco y ladra para pararlo en el bordillo. Enróllalo en un poste y sigue tirando, y saldrá dando vueltas como una pelota atada. Un tirón constante lo guía; si tiras sin parar, se le acaba la paciencia («¡Oye!» y correa corta).
 
-Cincuenta y un paseos por Barcelona y sus alrededores (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, Els Búnquers, La Cremada, L'Estació, Plaça Reial, El Fòrum, La Carretera de les Aigües, L'Aeroport, El Port, La Diagonal, Carrer de Blai, El Laberint d'Horta, La Molina, Plaça d'Espanya, Sant Pau, El Poble Espanyol, Sitges, Les Atraccions, Girona, Les Obres, Camí de Ronda, Dia de Partit, Montserrat, Els Encants, Tarragona, Vic, La Ferralla, Festa de Gràcia y Rambla del Raval), con siete perros, retos musicales, persecuciones y cinco jefes estatua. Cada paseo acaba sin correa y puede jugarse con lluvia, viento, nieve o de noche.
+Cincuenta y cinco paseos por Barcelona y sus alrededores (El Barri, La Rambla, El Parc, Passeig Marítim, La Neteja, El Gòtic, Montjuïc, El Mercat, El Diluvi, El Besòs, La Ciutadella, Platja de Llevant, L'Eixample, Rambla del Poblenou, El Tibidabo, El Veterinari, Sarrià, El Bosc, Els Àngels, La Castanyada, Els Senglars, El Mosaic, La Superilla, El Metro, Les Tres Xemeneies, Els Búnquers, La Cremada, L'Estació, Plaça Reial, El Fòrum, La Carretera de les Aigües, L'Aeroport, El Port, La Diagonal, Carrer de Blai, Fira de Santa Llúcia, El Laberint d'Horta, La Molina, Plaça d'Espanya, Sant Pau, El Poble Espanyol, Sitges, Les Atraccions, Girona, Les Obres, Camí de Ronda, Santa Coloma, Dia de Partit, Montserrat, Els Encants, Tarragona, Vic, La Ferralla, Festa de Gràcia y Rambla del Raval), con siete perros, retos musicales, persecuciones y cinco jefes estatua. Cada paseo acaba sin correa y puede jugarse con lluvia, viento, nieve o de noche.
 
 Teclado, mando o táctil. Un jugador. Sin anuncios, sin compras, sin cuenta. Hecho con Godot por Santtu Nykänen.
+```
+
+## What's new in 1.78
+
+For a devlog post or the top of the body. Everything since v1.77, from
+CHANGELOG.md. The Store's What's new is the short form of this.
+
+```
+- Four new walks, fifty-five in all, balancing every chapter to 11 walks (4 walks, chase, 4 walks, chase, boss):
+  - Rambla del Poblenou (Chapter 2, morning breeze): plane-tree panot promenade, tiled horchata kiosks, Plaça de Prim planters, a telegraphed wobbling horchata tray & farton snatch, and the horchatero dare-giver out to Plaça del Poblenou.
+  - Les Tres Xemeneies (Chapter 3, dusk): Paral·lel graffiti walls, waxed skate ledges, three brick chimneys with echo barks, telegraphed spray-can bursts, and the muralist dare-giver out to Jardí de les Xemeneies.
+  - Fira de Santa Llúcia (Chapter 4, clear evening): Christmas market booths lit with fairy garlands, potted pines, telegraphed Caga Tió torró drops, and the caroler dare-giver out to Plaça de la Catedral.
+  - Santa Coloma (Chapter 5, clear day): steep hillside climb past Mercat del Fondo and barber poles to Plaça del Rellotge, telegraphed Capicua domino slams, clock chimes, and the barber dare-giver out to Mirador del Fondo.
+- Everyone starts fresh again (`SAVE_VERSION = 2`) for the finished 55-walk route; preferences, audio, language and controls stay.
+- Per-action control rebinding for keyboard keys, gamepad buttons, sticks and analog triggers (with zoomies moved to RT/R2 by default) and automatic Xbox / PlayStation prompt detection.
+- Living streets past the edges: Barcelona rooftops beside city walks and off-leash yards (`world/city_roofs.gd`), El Veterinari's hospital rooms (`systems/vet_rooms.gd`), full streets round Plaça Reial and Rambla del Raval, multi-species woods (`world/woods.gd`), La Rambla redrawn crossings, a turning bronze El Gat and shaggy Fur-goneta van, and wider boss fight camera framing.
+- Fixed: up/down navigation reaches "Don't ask me again" on the first-time question, and La Molina's snow off-leash area.
 ```
 
 ## What's new in 1.77

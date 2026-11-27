@@ -143,6 +143,8 @@ shot llevant --level=llevant --shot-y=-2500 --shot-at=260
 shot llevant-2 --level=llevant --at-freedom --shot-at=260
 shot eixample --level=eixample --shot-y=-2500 --shot-at=260
 shot eixample-2 --level=eixample --at-freedom --shot-at=260
+shot poblenou --level=poblenou --shot-y=-3100 --shot-at=260
+shot poblenou-2 --level=poblenou --at-freedom --shot-at=260
 shot tibidabo --level=tibidabo --shot-y=-2500 --shot-at=260
 shot tibidabo-2 --level=tibidabo --at-freedom --shot-at=260
 shot vet --level=vet --shot-y=-2500 --shot-at=260
@@ -168,6 +170,8 @@ shot superilla --level=superilla --shot-y=-2500 --shot-at=140
 shot superilla-2 --level=superilla --at-freedom --shot-at=260
 shot metro --level=metro --shot-y=-2900 --shot-at=260
 shot metro-2 --level=metro --at-freedom --shot-at=260
+shot xemeneies --level=xemeneies --shot-y=-3100 --shot-at=260
+shot xemeneies-2 --level=xemeneies --at-freedom --shot-at=260
 shot station --level=station --shot-y=-2500 --shot-at=260
 shot station-2 --level=station --at-freedom --shot-at=260
 shot carmel --level=carmel --shot-y=-2500 --shot-at=260
@@ -185,6 +189,8 @@ shot diagonal --level=diagonal --shot-y=-2500 --shot-at=260
 shot diagonal-2 --level=diagonal --at-freedom --shot-at=260
 shot blai --level=blai --shot-y=-2500 --shot-at=260
 shot blai-2 --level=blai --at-freedom --shot-at=260
+shot llucia --level=llucia --shot-y=-1900 --shot-at=70
+shot llucia-2 --level=llucia --at-freedom --shot-at=260
 shot aigues --level=aigues --shot-y=-2500 --shot-at=260
 shot aigues-2 --level=aigues --at-freedom --shot-at=260
 shot gracia --level=gracia --shot-y=-2500 --shot-at=260
@@ -219,6 +225,8 @@ shot site --level=site --shot-y=-1150 --shot-at=140
 shot site-2 --level=site --at-freedom --shot-at=260
 shot ronda --level=ronda --shot-y=-2500 --shot-at=260
 shot ronda-2 --level=ronda --at-freedom --shot-at=260
+shot santacoloma --level=santacoloma --shot-y=-3250 --shot-at=70
+shot santacoloma-2 --level=santacoloma --at-freedom --shot-at=260
 shot encants --level=encants --shot-y=-2500 --shot-at=260
 shot encants-2 --level=encants --at-freedom --shot-at=260
 shot tarragona --level=tarragona --shot-y=-2500 --shot-at=260

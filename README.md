@@ -31,7 +31,7 @@ you want to go; constant hauling wears their patience down until they say
   tangles with other people's leashes.
 - **A human with patience**, who telegraphs everything they are about to do
   ("Ring ring!", "Ooh!") and is never smarter than that.
-- **Fifty-one walks in and around Barcelona**, each built as its own place, plus a
+- **Fifty-five walks in and around Barcelona**, each built as its own place, plus a
   first walk that teaches one trick at a time. Every walk can be played in
   any weather, by day or at night.
 - **Off the leash at the end**: a dog park, a dog beach, a clearing in the
@@ -85,6 +85,7 @@ you want to go; constant hauling wears their patience down until they say
 | La Ciutadella | the waterfall cascade and El Mamut |
 | Platja de Llevant | the dog beach at the coast's end |
 | L'Eixample | the grid of cut corners |
+| Rambla del Poblenou | plane trees, horchata and breeze |
 | El Tibidabo | the mountain road |
 | El Veterinari | the clinic escape |
 | Sarrià | the village the city swallowed |
@@ -95,6 +96,7 @@ you want to go; constant hauling wears their patience down until they say
 | El Mosaic | the tiled terraces |
 | La Superilla | the superblock play streets |
 | El Metro | rush hour, one stop on the metro |
+| Les Tres Xemeneies | brick chimneys, murals and ramps |
 | L'Estació | the train station |
 | Els Búnquers | the overlook above the city |
 | Plaça Reial | the arcaded square |
@@ -102,6 +104,7 @@ you want to go; constant hauling wears their patience down until they say
 | El Fòrum | the seaside esplanade |
 | La Diagonal | the avenue that cuts the grid |
 | Carrer de Blai | pintxos, and food on the floor |
+| Fira de Santa Llúcia | Christmas stalls and Caga Tió |
 | La Carretera de les Aigües | the hillside hike |
 | Festa de Gràcia | the decorated festival street |
 | El Laberint d'Horta | the cypress maze |
@@ -116,6 +119,7 @@ you want to go; constant hauling wears their patience down until they say
 | Girona | the Onyar's houses, the old-town steps and La Lleona |
 | Les Obres | the work site |
 | Camí de Ronda | the cliff path above the coves |
+| Santa Coloma | steep market, spices & dominoes |
 | Dia de Partit | match day |
 | La Ferralla | the junkyard |
 | Montserrat | the mountain trail, the funicular crossing and the wild goats |
@@ -137,7 +141,7 @@ whatever you used last.
 | Squat when nature calls (hold) | F | Y |
 | Pick up | G | LB |
 | Bark: stops your human for a beat, scares off squirrels | E | B |
-| Run | Shift | RB |
+| Run | Shift | RT |
 | Goals | Tab | d-pad up |
 | Pause | Esc | Back |
 | Start again | R | Start |
@@ -166,7 +170,7 @@ Web export (needs the web export templates, see AGENTS.md):
 godot\Godot_v4.7-stable_win64_console.exe --headless --path . --export-release "Web" build/web/index.html
 ```
 
-Releasing is a tag. v1.75 is the last one. The next tag builds web and
+Releasing is a tag. v1.78 is the last one. The next tag builds web and
 Windows and pushes each to its own itch channel. AGENTS.md has the rest:
 tests, screenshots and benchmarks.
 
