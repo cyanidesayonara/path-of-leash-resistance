@@ -2,6 +2,807 @@
 
 Append-only session history, newest first.
 
+## 2026-11-27 - 55-walk campaign (Poblenou, Xemeneies, Santa Llúcia, Santa Coloma)
+
+- Added four new campaign walks across Chapters 2–5 (`poblenou`, `xemeneies`, `llucia`, `santacoloma`) so every chapter follows a steady `4 walks -> chase -> 4 walks -> chase -> boss` rhythm (55 campaign walks total, 56 carousel entries with `tutorial`).
+- Rambla del Poblenou (`breeze` morning): panot de flor central promenade, horchata kiosks, Plaça de Prim planters, telegraphed wobbling horchata tray & farton snatch, and the horchatero dare-giver.
+- Les Tres Xemeneies (`clear` dusk): painted graffiti walls, grindable skate ledges, three circular red-brick chimneys with echo barks, telegraphed spray-can bursts, and the muralist dare-giver.
+- Fira de Santa Llúcia (`clear` evening): Cathedral Christmas market booths lit by fairy garlands, potted pines, telegraphed Caga Tió torró drops, Plaça de la Catedral tree, and the caroler dare-giver.
+- Santa Coloma (`clear` day): hillside streets up past Mercat del Fondo and striped barber poles to Plaça del Rellotge, telegraphed Capicua domino slams, clock chimes, and the barber dare-giver.
+- Bumped `Game.SAVE_VERSION` from `1` to `2` so returning players start fresh on the 55-walk campaign while keeping all preferences, audio, language, and keybinds.
+
+## 2026-11-26 - The plain sides of five walks
+
+- L'Eixample: its blocks are the city's own roofs now, houses round their yards
+  and the next street behind, in place of flat salmon slabs on a lawn.
+- El Parc: a wood round the lawns on both sides, and the lawn patched and worn
+  under it rather than mown in stripes to the edge.
+- Poble Espanyol: the houses behind the front ones go on in rows, each its own
+  roof, with lanes between, out to the edge.
+- El Fòrum: the convention halls have their roofs, the esplanade its slabs and
+  pines, and the sea goes on past the edge of a wide screen.
+- Les Obres: past each compound, a site hoarding and the city behind it.
+
+## 2026-11-26 - Gamepad play, trigger support, and per-action rebinding
+
+- Removed preset control layouts (`DEFAULT`, `ARROWS`, `COMPACT`, `SOUTHPAW`) from Settings and `CONTROLS`, turning the Settings `CONTROLS` row into a submenu entry showing `DEFAULT` or `CUSTOM` and letting players bind any keyboard key, gamepad button, analog trigger, or movement stick axis per action.
+- Moved default gamepad zoomies (`turbo`) to the right trigger (`JOY_AXIS_TRIGGER_RIGHT`), updated `Prompts` to support analog triggers (`RT` / `R2`, `LT` / `L2`), and added automatic Xbox / PlayStation prompt detection (`--prompts=ps` or connected joypad name) with live HUD and menu prompt refreshes when switching devices.
+- Updated `rebind_input` and `pad_binds` persistence to accept and save analog trigger and movement stick axis bindings alongside key and button binds.
+
+## 2026-11-26 - Reach "Don't ask me again" from the first-time question
+
+- The box is a third row on the first-time question: up and down reach it and
+  confirm ticks it. It could only be ticked with the pee key before.
+
+## 2026-11-25 - A lighter touch on GitHub
+
+- A pull request runs one test job with only the tests its change needs (`tools/pick_tests.py`); a merge runs nothing again; everything runs on a version tag, weekly and by hand. The screenshot sweep and the idle soak are by hand only. The rules are in `docs/ci-budget.md`.
+
+## 2026-11-25 - What lies beside four walks, and two hidden posts
+
+- El Port: the five palms the leash caught on are drawn; its west side is the
+  fish market's sheds, its east a marina. Plaça del Far, the lighthouse square
+  past its gate, is drawn at last (the wharf was painted over it) and is no
+  longer water on its east side.
+- El Tibidabo: the city far below in the haze, the wood falling away under the
+  balustrade, and Collserola's wood above the funicular.
+- El Besòs: the far bank, with its path, trees and flood wall; trees on the
+  near berm and by the ramp.
+- Sitges: the sea and the sand are gradients; the church has its apse and court,
+  and the town goes on to the end of the walk.
+- El Diluvi: a puddle no longer hides one of the arcade's pillars.
+- La Ciutadella: no paving star under the walk's name, the stars are mosaic
+  rather than wheels, and the name's feathers lie along its letters.
+- La Platja and El Mercat: taking the groomer's dare no longer stops the music
+  with an error.
+
+## 2026-11-24 - Woods
+
+- The woods beside El Bosc and Els Senglars, and round every off-leash clearing, are trees of several kinds and every size over a floor of litter, ferns and stones (`world/woods.gd`): holm oaks, stone and Aleppo pines, turning oaks, olives and cypresses by the place. They were rows of one disc. El Bosc's own trees are drawn the same way.
+- La Molina's off-leash space is snow among snowy firs; it was a green lawn.
+- They are drawn on the verge layer, which redraws only as the view scrolls: El Bosc's draw time is a fifth of what it was.
+
+## 2026-11-24 - A whole walk on one sheet
+
+- `tools/walk_strip.sh` photographs a walk from its start line to past its far fence, interface off, and lays the frames out on one sheet.
+
+## 2026-11-24 - Inside the clinic
+
+- El Veterinari's corridor runs between the clinic's rooms with their roofs off and everyone at work (`systems/vet_rooms.gd`): consultations, X-ray, theatre, kennels, cats, baths, pharmacy, quarantine, the staff's sofa. There was blank gray both sides.
+- The floor has lines of paws to follow, the shine of the ceiling lights, real waiting chairs (park benches stood on them), pedal bins, and rubber plants to mark. Its eight drip stands, solid and never drawn, are there to be seen. The east medicine cabinet stands inside the wall.
+- No pigeons, cats, rubbish bags, cracks or drains indoors.
+
+## 2026-11-24 - Stage a Store listing without a package
+
+- The Store submit workflow has a mode `update_listing`: the text as tagged and the images, with the published package kept. New listing languages are only tried this way, and are keyed in lower case, as the Store keys its own.
+
+## 2026-11-24 - The campaign starts fresh
+
+- A save from before the finished campaign starts again: walks, stars, bones, the wardrobe, dogs, training, finds, achievements, your human's look and the tutorial are all a new player's. Settings are kept (`Game.SAVE_VERSION`).
+- A returning player is told on the main menu, until their first new save. Loading writes nothing, and the old file is kept beside the new one as `records_before_campaign.cfg`.
+- The gate tables of four older campaign orders, and the code that kept walks open across them, are gone.
+- A screenshot run no longer saves anything: losing focus wrote its `--lang` into the player's settings.
+- `tests/test_save_reset.gd`.
+
+## 2026-11-24 - The save reset keeps nothing earned
+
+- Roadmap: the campaign lock resets everything earned, the wardrobe and trained stats included, once the campaign is ready. What is left before it is Les Atraccions' chase and film.
+
+## 2026-11-24 - The 1.77 release text
+
+- The Store listing in three languages, the itch page and the website's copy describe the finished campaign: 51 walks, ten chases, five bosses, the fresh start, and What's new in 1.77.
+
+## 2026-11-24 - La Rambla's junctions redrawn
+
+- The zebras on La Rambla's side road and bike lane are whole, evenly spaced and centred between their kerbs, level with each other, with the lane lines cleared from under them, botons tiles at each end and a stop line only for the traffic that comes to it.
+- The bike crossing runs between granite bands with a centre line, arrows and give-way teeth each way. The Drac door's zebra is laid the same way, and a side road's centre line is in its middle on every walk that has one.
+- The Store's first screenshot and the website's link preview show the terrace on La Rambla.
+
+## 2026-11-24 - The website deploy waits for its upload
+
+- The Website workflow waits until GitHub lists the site it has just uploaded, and tries the deploy a second time if the first finds nothing.
+
+## 2026-11-24 - Roofs past the first row
+
+- Festa de Gràcia, La Cremada and La Castanyada have the town's roofs behind their first row of houses, where there was flat dark. Superilla's mills and lofts have their blocks behind them, Els Àngels' lots are houses of their own, and Sitges is a whitewashed town of terraces instead of one orange roof repeated.
+
+## 2026-11-24 - Les Atraccions: the mascot chase
+
+- Les Atraccions is the tenth chase. On the way home the park's five mascots, with a giant foam dog in the middle, come for a hug (`entities/mascot_threat.gd`). One at a time they belly-flop down a telegraphed lane: step out of it and the mascot is left flat on its foam.
+- They stop for a ride on the carousel and for the Canyon's queue, and each is a checkpoint.
+- Its film, "Group hug" (`intro/film_mascots.gd`): the waving stops, the heads turn one by one, HUG!
+- Two new goals, dodge three belly flops and get home without one landing, in place of the fetch and the no-bump goal. Girona to Montserrat now open after Les Atraccions.
+- Fixed: after a continue, every chase line on foot stayed where it had caught you until the countdown ended. It goes back to its place at once.
+
+## 2026-11-24 - La Lleona, Girona's statue boss
+
+- Girona is a boss walk and ends chapter four: the stone lioness of Plaça de Sant Feliu (`systems/boss_lleona.gd`) climbs down off her column as the dog passes, and your human waits until she is settled.
+- Her big move is the stone gaze: from a perch on the square's edge a telegraphed beam sweeps the square and turns a dog it sees to stone for a moment. Hide behind the column or a flower planter (each planter hides her once).
+- Around it, a claw rake and a ripple of flagstones, and five counters: dodge, trip her bound with the leash, lead her under the Basílica's rain spout, bowl her with your human, and boop her nose or kiss her tail while she is dazed.
+- Three goals of hers in Girona's list (in place of barking at the statue, the fetch and the drink), the NEVER SAW ME achievement, MONUMENT BOOPER now asks for all five bosses, and the square's benches moved clear of the fight.
+- `tests/test_lleona.gd` covers the fight, the gaze's cover from every perch, and the tie with the real rope.
+
+## 2026-11-24 - La Lleona's films
+
+- La Lleona has her wake film (`intro/film_lleona.gd`): Plaça de Sant Feliu in the rain at dusk, two gold eyes opening on the column, the roar and the drop, and a pigeon turned to stone by a look.
+- And her victory film (`intro/film_lleona_win.gd`): the boop, the climb back up her column, the pigeon's thaw, and the kiss on the iron steps. Your human looks up just too late.
+- `tools/intro_render.gd` renders both (`lleona`, `lleona_win`); `tests/test_film_lleona.gd` holds them to the films' shared timing.
+
+## 2026-11-24 - Girona's art pass
+
+- Girona is redrawn round the path: a lit Onyar with the painted houses' colours lying in it, gravel bars under the iron bridge and rain rings on the water; deep house fronts with shutters, balconies and flowers; tiled roofs, terraces and courtyards over the old town.
+- The Rambla has its arcade (shops, awnings, a florist, book boxes), the steps have stone fronts with ivy, doorways and Temps de Flors pots, the square has a cobbled rose round La Lleona, and the Basílica has its nave, apse, buttresses, cloister and blunt tower.
+- The city wall has round towers, battlements and terraced gardens, and the gaps where one part of the walk met the next are closed.
+- The paving is warmer and lighter, with kerbs and puddles. Nothing solid and no surface has moved. The art is in `systems/girona_art.gd`.
+
+## 2026-11-24 - Looking for solids never drawn
+
+- `tools/ghost_check.gd` photographs every post and solid of a walk and flags the ones with nothing drawn on them, with a crop of each to look at.
+
+## 2026-11-24 - El Gat and the Fur-goneta redrawn
+
+- El Gat is one swollen, seamless bronze cat on the walk and in both his films (`entities/bronze_cat.gd`): a vast barrel on pillar legs, a moon of a face with everything on it too small, stub ears, a sausage tail, worn to gold on his nose and paws. Angry, he swells and his eyes heat; no more hackles.
+- El Gat turns. His head finds her first, then his bulk comes round with his feet under it, and he walks the way he is facing. He strikes only what is in front of him, so going round behind him buys time. He steps round benches and palms, and nobody can stand on his head.
+- The Fur-goneta is a shaggy dog of a van: a nose for a badge, eyes in the windscreen, a combed fringe, ears, a collar with a swinging tag, a bone for its signwriting and a half-washed coat with suds.
+- CI runs three tests that were in the repository and never listed.
+
+## 2026-11-24 - A camera for fights
+
+- In every boss fight the camera leans and pulls back so that the dog, your human and the boss are all in the picture, clear of the banner, whichever way round him she runs; it lets go of a boss who is far away. It holds through the last stand, where it used to zoom back in.
+- The shake is a smooth shudder that dies away, not a new random jolt every frame.
+
+## 2026-11-24 - Barcelona's rooftops
+
+- The blocks beside the city walks are Barcelona's own roofs (`world/city_roofs.gd`): houses each with its own terrat (stair house, tank, washing, solar panels, pots, light wells), pitched pantiles among them, island yards with trees between. La Rambla, El Barri, El Diluvi and both seafronts have them, and so does every walk whose start is an apartment house.
+- Past the off-leash fence there is a street with its trees and roofs in the city, and a wood of trees of every size elsewhere; the town squares have roofs on every side, El Gòtic's included, which had bare gray.
+
+## 2026-11-24 - Plaça Reial and the Rambla del Raval past their edges
+
+- The Rambla del Raval runs between its two streets, with scooters and containers at the kerb, and the Raval's houses and rooftops across them; its lit bars are theirs. Lamps hang on wires down the middle of it, and its flags are laid in courses. There was blank gray on both sides.
+- Plaça Reial's arcades have their palaces' roofs over them (tiles, balustrade, lit dormers, chimneys) with the city's behind, fuller palms, and worn flags underfoot. There were plain brown slabs and black.
+- The other town squares' off-leash spaces have roofs at their sides, where gray showed.
+
+## 2026-11-23 - Put the walks in the roadmap's order: equal chapters
+
+- The campaign takes the order in docs/ROADMAP.md: a chase every fifth walk (La Cremada 25, L'Aeroport 30, La Molina 35, Montserrat 45, Festa de Gràcia 50) and the bosses at 11, 21 and 31 (El Port moves up from 35), with walk 41 kept for Girona. Chapters are now 11, 10, 10, 10 and 9 walks (10 and 10 once Girona is in).
+- Star gates rise steadily along the new order, and every walk now waits for the chase just before it (most later walks only needed Els Senglars).
+- Gates version 5: a save keeps every walk its old gates had opened.
+- The Store description's chapters and the website's chapter lists follow the new order.
+
+## 2026-11-23 - Girona walk
+
+- Added the Girona walk (`systems/girona.gd`, walk 41 between Les Atraccions and Les Obres in rain at dusk): arcaded Rambla flagstones, crimson iron Eiffel bridge between the Onyar's hanging coloured houses, Barri Vell stone steps with telegraphed gargoyle rain cascades, Plaça de Sant Feliu with La Lleona on her column, ancient wall walk and Jardins dels Alemanys off-leash, plus petals gate sign, florist dare-giver, 15 goals (with Catalan and Spanish translations) and regression tests (`tests/test_girona.gd`).
+
+## 2026-11-22 - Cross-walk world draw perf
+
+- Stopped world/sign_layer.gd from reallocating a sign's SubViewport on small rolling-piece bounds growth (ALLOC_STEP = 128 bucketed sizing with draw_texture_rect_region) and from repainting unchanged non-live signs in view.
+- Added batched ShapeBatch.ellipse() and ShapeBatch.arc() so contact_shadow, cast_shadow, _broadleaf_ground, _draw_pilona, cafe tables, terrace chairs and manholes stay inside the single world ShapeBatch without draw_set_transform or draw_arc batch breaks.
+- Turned circle LOD on for the world pass (_wc.lod = true), ground_layer.gd, _draw_section, _draw_ground and helper batches (keying cached sections by want_lod so lod = false tests keep full 64-segment parity), Y-culled parasols, terrace chairs and fountains in _draw_furniture, and cached _draw_ground_detail via _draw_section.
+
+## 2026-11-22 - Vic night market, palace roof and a lighter frame
+
+- After dark the Mercadal's market is packing up instead of standing empty: a tarp pulled over every stall's goods, a lantern hung at each stall's front, a stallholder at every one with a crate, and at every third a helper carrying one out.
+- The bishop's palace beside the cathedral now has a real roof: three wings, each with a ridge, two slopes lit or shaded by which way they face, hips at the corners, Catalan tile channels, capped ridges, chimneys and a skylight, frost on the north slopes on a fog morning, and a well in its court.
+- The market's figures are drawn with fewer sides on their small discs, the same picture for a fraction of the per-frame vertices.
+
+## 2026-11-22 - The touch stick steps through menus
+
+- On a phone or tablet the stick now moves the menu selection the way you
+  pull it, one step per pull, in every menu (main menu, walk select, GET
+  READY, the pause grid, the wardrobe, settings). A tap on the stick used to
+  step it down or right every time, whatever you meant.
+- In a menu the stick is a d-pad: the direction it is pulled along most,
+  once it is pulled about half its reach. On a walk it stays analog.
+
+## 2026-11-22 - Name the Store's refusal of a listing update
+
+- `store-submit.yml` runs `msstore submission updateMetadata` with `--verbose` and, when it fails, shows its error lines with every upload link stripped, instead of a bare "Error!" (the v1.76 draft stopped there with no reason given). A successful update no longer prints its output; the next step reads the draft back.
+
+## 2026-11-22 - Add Store listing languages only once the Store has the package
+
+- `tools/store_listing.py` adds a ca-ES or es-ES Store listing only when a package the Store has already ingested declares that language. The Store refused the v1.76 draft ("Language codes: ca-ES|es-ES not supported") because 1.76 is the first package to declare them; 1.76 goes out with its English listing and the next submission adds the Catalan and Spanish ones.
+
+## 2026-11-22 - A privacy policy on the website
+
+- The website has a privacy policy page (`/privacy/`), linked from every
+  footer: the game collects nothing, and saves stay on the device. Google
+  Play needs its URL before the game can be listed there.
+
+## 2026-11-22 - Put Les Atraccions, Tarragona and Vic on the website
+
+- The website's walk list and pages now cover all 50 walks: place descriptions, screenshots and walk pages for Les Atraccions, Tarragona and Vic, which stopped the v1.76 site deploy ("walk 'atraccions' missing from site/walks.json").
+- `tools/site_media.sh` takes their shots on a release, and the committed `tools/site_walks_data.json` is regenerated from the game.
+
+## 2026-11-22 - Release secrets in GitHub environments
+
+- The release secrets move into three GitHub environments: `store` (Partner
+  Center, main only), `itch` (butler) and `google-play` (Android signing and
+  the Play service account), both of those deploying from v* tags and main.
+  Each job that reads one declares its environment and a matching `if:`.
+- No workflow writes a secret, an input or any other expression into a shell
+  script any more; they reach scripts through `env:`. Store submit checks its
+  tag input's shape before anything runs.
+- A release dispatched from a branch no longer pushes a `manual-<sha>` build
+  to itch; dispatch on the tag, as the escape hatch always meant.
+- New: `credentials.yml` checks the itch and Play secrets without publishing,
+  and `tests/test_workflow_secrets.py` (CI) holds every workflow to all this.
+  `docs/release-secrets.md` lists each secret, its environment and its source.
+
+## 2026-11-22 - La Molina's snowballs and berm stand off the snow
+
+- The groomer's snowballs were pale discs that melted into the piste. In the film and on the walk they now have a dark blue outline with packed lumps on their rim, a deep side and a lit top, a fir twig and grit rolled into them, an ice glint, and in the film speed lines off their back.
+- In the film the snow shoved ahead of the blade is an outlined heap of packed lumps instead of a pale circle, and the blade has a row of steel teeth along its foot and up its face.
+
+## 2026-11-22 - Montserrat's goats charge like they mean it
+
+- In Montserrat's chase film the goats run head down with their horns forward, mouths open on a row of teeth, the eye bloodshot round its slot pupil under a heavy brow, snorting from both nostrils, on thicker legs with cloven hooves.
+- Their boulder is the mountain's rock in shade, with a lit cap, a deep side and a jagged crack, and streaks behind it, so it stands off the pale cliffs instead of reading as a pale disc.
+- On the walk the herd matches: bloodshot eyes with a glint under heavier brows, stronger and more frequent snorts, and the same darker boulders.
+
+## 2026-11-22 - The flood is heavier, film and walk
+
+- El Besòs's surge throws a shade ahead of itself over the path, its curl
+  breaks over a hollow instead of a dark hole, and it rolls a park bench and
+  a litter bin over in its face, in the film and on the walk alike.
+- On the walk the river's debris rides in the wash, never out on the dry
+  ground ahead of it.
+
+## 2026-11-22 - Android build that runs
+
+- The Android export now installs Godot's gradle build template, targets
+  API 36 (what Google Play requires of new apps and updates since August
+  2026) and takes its signing key through Godot's own environment variables
+  instead of writing the password into export_presets.cfg.
+- One script, `tools/android_export.sh`, does the export for release.yml and
+  for the new android.yml, which builds it on every pull request touching the
+  Android export with a throwaway key and keeps the APK to install by hand.
+
+## 2026-11-22 - L'Aeroport's crate reads as a dog crate
+
+- The airport squad's travel crate was a flat grey box with dark slots that read as an X-ray scanner. It is now an airline dog crate in the film and on the walk: an off-white shell over a cobalt tray, wing nuts round the seam, rows of vent holes, a wire window, a carry handle and the LIVE ANIMAL sticker.
+- In the film its front turns toward you, the opening dark inside a blue lip, and the wire door hinged at its foot chomps open and shut with the bar ends standing up like teeth. On the RUN! card the shoving hand grips its handle.
+- On the walk its open front faces you, the wire door flapping off its hinge with a dark outline so it reads on the pale floor.
+
+## 2026-11-21 - Tarragona trees, shadows, dusk sea and bench clearance
+
+- Planted Plaça de la Seu's off-leash holm oaks in Mèdol limestone ashlar tree pits with cast-iron grates via a dedicated `draw_grove` hook instead of bare forest roots over flagstones.
+- Softened cast shadows on the Roman wall towers, Ajuntament clock turret, cypresses, pines, casteller monument, Augustus podium, and cathedral nave and bell tower with feathered `band` and `glow` penumbras.
+- Brightened Tarragona's sea palette and brought warm dusk golden-and-coral sky reflection bands and swell shimmer into the visible offshore water.
+- Moved the Rambla Nova benches and bollards along the kerb line clear of trees, lamps and the middle walking lanes, and widened the Balcó railing's solid body across the cliffside so NPC pairs never step into benches or the rail.
+
+## 2026-11-21 - Subtitles for the four new walks
+
+- Revised the walk and off-leash subtitles for Els Encants, Tarragona, Vic and Les Atraccions in English, Catalan and Spanish.
+
+## 2026-11-21 - Els Encants people scale, mirror facets and off-leash plaza
+
+- Scaled Els Encants passers-by, market sellers, aisle browsers, bidders and the auctioneer up to full adult size with matching umbrellas, folding chairs and rostrum props.
+- Replaced blurred circular glows on the mirrored canopy facets and fascia with crisp sheared triangle-clipped reflections of striped awnings, tables, pitch paint and metallic sheen bands.
+- Replaced bare forest tree roots in the off-leash yard with Barcelona stone-kerbed tree grates and redesigned Plaça dels Encants with an inlaid sandstone-and-terracotta market carpet, trencadís center medallion, folded-mirror gate wings, north antique stalls and a vermut cart.
+
+## 2026-11-21 - Les Atraccions coaster loop, canyon, arch and night polish
+
+- Rebuilt the coaster's clothoid vertical loop with foreshortened height, a four-legged steel A-frame, height-projected shadows and inverted car undercarriages across the crown.
+- Detailed the mine station roof with cedar shakes, rusted corrugated tin patches, ridge straps, platform awning, clerestory vents, ore dormer and brick chimney.
+- Layered desert alkali flats, iron-red washes, a winding arroyo, sandstone outcrops, wagon ruts and feathered boardwalk drifts across Canyon del Sol, and anchored the entrance arch crest in a stepped pediment.
+- Floodlit the log-flume splash wave for night visibility and added village, harbour, churro cart, picnic table, pergola and gate lighting after dark.
+
+## 2026-11-20 - New walk: Els Encants
+
+- Els Encants, the flea market under the mirrored canopy at Glòries: wet street start, dry lanes of junk stalls under the stilts, an auction ring, and a little square off the leash at the far end, on a rainy day
+- Signature live event: a chair stack wobbles with a seller's "Watch out!", then spills across the lane; plant to hold your human clear, or let them walk into it and risk their phone
+- Dare-giver is the flea-market haggler; the world sign is laid in coat buttons; steal a sock off a stall and bring it to your human
+
+## 2026-11-20 - Vic
+
+- New walk: Vic, the inland market town on a winter morning in thick fog
+- Plaça Major with sand setts, portico roofs over the arcades, Saturday stalls of fuet, cheese, veg and coats with stallholders and shoppers
+- Old-street stone houses with tiled roofs, eaves, balconies and shutters
+- Cathedral with pitched nave, rounded apse, cloister and Romanesque bell tower (fog eats only the top)
+- Mèder bridge: sett deck between parapets, cutwaters into soft river water with earth banks and reeds; frosty meadow with a soft edge, wall and benches
+- Signature live event: a loose fuet that swings and rolls readable through the fog, carried back (or eaten for a bleh)
+- Dare-giver: a pagès selling cheese; world sign laid in wheels of cheese
+
+## 2026-11-20 - Vic art pass
+
+- The old street's houses drawn from above: stone fronts with shutters, balconies and wooden eaves, tiled roofs with ridges, chimneys and rooflights, patis and the next street's roofs, varied by a hash of position
+- The Mercadal: pale sand setts, flagged walks under the porticoes with their shade, shopfronts and cafe tables, painted fronts above with balconies and the odd senyera; a full Saturday market of twelve striped-awning stalls (fuet and llonganissa hung, cheese wheels and mató, crates of vegetables, winter coats, bread, flowers) with stallholders, customers and shoppers in beanies
+- The cathedral: pitched nave, side chapels, half-cone apse, square Romanesque tower with its pyramid roof, Gothic cloister round a frosted garth, the bishop's palace, long shadows
+- The tanneries and kitchen gardens down to the Mèder, which now flows across under Pont de Queralt: coped parapets, cutwaters upstream and spurs downstream, wing walls and end posts, nothing round on the deck
+- The meadow: rimed grass, dry-stone walls along the path, bare poplars on the bank, a ploughed field and a masia; frost on roofs, coping and fields in the campaign's fog
+- The corridor's paving quads no longer stair-step; the bridge's parapet solids span the bridge; static pieces are recorded once and replayed in the walk's existing batches
+- The farmer's dare lines are translated in Catalan and Spanish
+
+## 2026-11-20 - New walk: Tarragona
+
+- Tarragona (`tarragona`): Roman city above the sea at dusk — Balcó del Mediterrani with rail and railway over gold water, a recognisable amphitheatre oval, Rambla Nova with plane trees, benches and kiosks, Roman wall courses with a gate, and Plaça de la Seu with cathedral steps
+- Soft-crowd casteller practice: gralla telegraph you can see, tower rising in tiers with depth, crowd packed in a ring; pull round the edge or plant clear for the crowning cheer
+- Gladiator dare-giver, tesserae world sign, dusk lamps on the Rambla, goals for Roman stones, the crowning, and the Balcó view
+
+## 2026-11-20 - Tarragona: the art pass
+
+- Tarragona's fronts are houses now, different down both sides: the Rambla Nova's blocks with flat terrats (stair huts, water tanks, solar panels, washing), balconies along their fronts and café terraces on the pavement; the Ajuntament with its tiled hipped roof, clock turret and flag on the plaça, and arcaded houses across from it; Part Alta houses with tiled roofs, shutters and geraniums; the arcades of the Plaça del Fòrum
+- The coast is drawn: the cliff under the Balcó's railing, the railway in its cutting, shingle and beach, and the sea deepening from the shore in soft bands with surf and evening glints; the railing is iron on a stone coping, worn bright where people touch it
+- The amphitheatre is an oval of stepped tiers with lit and shaded risers, broken on its seaward side, an arena with its podium wall, the fossae and the ruined church; the arena's collider follows the drawn wall, and a visitor railing marks where the path stops on the cavea
+- The garden terrace above it has palms, a balustrade and flower beds; the Roman wall is a top of megaliths with square towers, a gate and a garden of cypresses beyond
+- Each stretch is laid in its own stone (no Barcelona panots): limestone flags, a raked sauló path, setts in the Rambla's lanes and the Part Alta, square slabs on the plaça; the hard shadow rectangle at the walls is gone, and the houses' shade lies feathered across the paving
+- The castellers' monument is a bronze tower on a stepped plinth; the practice's colla wears one shirt with sash and mocador, the crowd is people, and the grallers and drummer play by the corner
+- Strollers, people at the Balcó's railing, diners on the terraces and people on the cathedral steps, all as the hour and weather say; Augustus stands on the podium at the top of the old town, and the cathedral's front, rose window, bell tower and stair close the walk
+
+## 2026-11-20 - The sweeper glares at her
+
+- La Neteja's sweeper on the walk now has the film's menace: its headlamp eyes are bigger, their pupils follow the dog, and their lids and brows drop into a squint the closer she gets to the brushes. The grille's lower teeth champ, wider and faster as it closes in (`Sweeper._draw_body`). The emergency and fast variants share the face.
+- Its lamps and beacons glow as soft gradients instead of flat discs, two headlamp beams reach down the road at the pair (stronger after dark), and the beacon wash on the road ahead is one gradient instead of stacked bands. Nothing it does or where it is changes.
+
+## 2026-11-20 - The website in Catalan and Spanish, in full
+
+- The Catalan and Spanish landing pages carry everything the English one does: what you do, the chapters and every walk card, the four bosses, the nine chase films, the seven dogs and the wardrobe. `tools/site_walks.py` writes those sections in all three languages from one dump; the website's own words are in `tools/site_i18n.py`.
+- The dog cards' bars are her five training stats as a new player has them, her head start counted, each against the best in the pack: no more full Heft for five dogs out of seven.
+- The wardrobe's lead says bones buy collars, bandanas and coats; training is earned on the walks.
+
+## 2026-11-20 - The website's dogs and chases
+
+- The dog cards show all seven dogs, each with her portrait (drawn by the films' own dog, `tools/site_dogs.gd`), her skill and its goal, and bars for her speed, grip and heft against the pack.
+- Every chase walk's film plays on the landing page, not just La Neteja's and Els Senglars'; the compact list of walks is gone (the chapter cards list them all).
+- The footer says "Made by Santtu Nykänen" in every language, the training paragraph describes training points as they now work, and Els Encants has its page.
+- `tools/site_walks.gd` stopped dumping after the training rewrite removed `STAT_UPGRADE_COST`; it runs again.
+
+## 2026-11-20 - Test harness
+
+- Close Godot's stdin in `tools/run_tests.sh` so a Windows editor cannot drain the plan pipe mid-suite
+- Map El Gòtic's night-front fallback to `home` (the old `ajar` kind is gone)
+
+## 2026-11-20 - The campaign stays five chapters as walks are added
+
+- `Game.chapters()` still cuts the carousel after each boss, but now halves the longest run between bosses until there are five chapters (`Game.CHAPTERS`), one for each chapter achievement. Before, a run past twelve walks split on its own, so adding one walk to the last chapter made a sixth chapter with no achievement, which failed `test_achievements` on the Tarragona, Vic and theme park PRs. Today's chapters are unchanged.
+- `Game.chapters_of(carousel)` gives the chapters any carousel would make; `tests/test_chapters.gd` uses it to check that four more walks still make five chapters.
+
+## 2026-11-20 - Your human acts in the films
+
+- Your human's stroll in every film has a little life: the body dips forward as the feet part, the head counters it so the eyes stay on the phone, and the free arm swings as far as the leash lets it (`HumanSide.draw`).
+- When the leash snaps taut in a chase film, his head whips back and the phone arm flies up overhead, phone still gripped, and stays up while he is hauled along; his legs run in the air in turn instead of trailing side by side (`FilmKit.pair`, the new `flail` pose key). The intro's sofa yank and the rooftop chase get the running legs too.
+
+## 2026-11-20 - Every dog looks like herself in the films
+
+- Perla and Duna had no look of their own side on: every film and the intro drew Perla as Millie and Duna as Pipa. Perla is now a white ratonero with a black saddle, a black and tan head, small folded ears and a short tail carried up; Duna is a red and white podenco on a galgo's frame, with huge upright ears, a white blaze and a sickle tail (`intro/millie_side.gd`).
+- The films built every dog's ears and tail from Millie's shape whatever the breed: Mochi now has his bat ears, Tito his upright ones, Pipa her long whip tail and Bruna her shaggy tail in every film.
+- The intro's title street now has all seven dogs out: Perla scrabbling at the pavement while her bodega owner waits, and Duna beside her, ears up, watching her dig.
+
+## 2026-11-20 - Els Encants: the canopy and the lanes
+
+- Every stall is its own: twelve kinds of goods (furniture, odd chairs, lamps, record crates, boxes of books, clothes rails, rugs, bric-a-brac, bicycles, frames and mirrors, old radios, crockery), each with its own awning colour, cut and depth, a tarp at the back, a table, blanket or bare floor, and its seller on a folding chair. At night the stalls are packed up under roped tarps.
+- Browsers stand at the stalls and shoppers drift up and down the lane; more stall rows and an aisle of their own either side under the canopy.
+- The canopy reads overhead along both sides of the lane: tilted mirror facets catching the stalls' colours, steel joints and a bolted edge beam, and a steel fascia across each end that drips in the rain. The old blue wash over the whole lane is gone; under the roof the rain fades from the screen and the light is half the dry day's.
+- The market floor is poured concrete in slabs with stains, cracks and painted pitch lines, the mirror's light a soft warm gradient down the lane; ramps are ribbed slopes with a shadowed foot, a lit crest and yellow nosing.
+- The street at Glòries follows the weather: dry or rain-dark panots, lamp reflections and puddles only in the rain, umbrellas (eight panels, mixed colours) over the passers-by, the tram on its grass bed with plane trees and scooters, an office block, and Torre Glòries from above as a glass bullet of coloured louvres with its long shadow (no branding; lit in colours at night).
+- The auction is a roped timber dais with the lots round its rim, the auctioneer at his rostrum and rows of bidders with paddles; the chair tower rises in a stack of mismatched chairs with its long shadow.
+- Past the canopy, blocks of flats with terrats, washing and tiled roofs line Castillejos and Plaça dels Encants.
+
+## 2026-11-20 - Each dog is born with a head start
+
+- Every dog starts with two training levels in what she is bred for, free: Millie's nose, Pipa's speed, Mochi's plant, Bruna's herding and Tito's agility; Perla a level each of nose and agility, Duna of speed and agility (`DOGS` "innate", `Game.innate_stat`). They count toward the stat's level and its effect like trained ones, under the same cap of five, so a specialist has fewer levels left to train in her specialty.
+- The training screen counts them in the level and says so under the picked stat ("Pipa was born with 2 of these").
+
+## 2026-11-20 - New walk: the theme park
+
+- Les Atraccions: an original Costa Daurada theme park walk (gates, Corsari harbour, Canyon del Sol, Selva flume, coaster plaza, picnic lawn)
+- Each land has its own edges, ground and props; rides swing, turn and roll with shadows
+- Flume splash pool sits beside the path; the wave sloshes across a dry walkway
+- Signature flume splash telegraphs with a scream, then soaks; pull clear for a dodge
+- Balloon dare-giver, stubs world-sign pieces (LES / ATRACCIONS on two lines), clear-day park crowd
+- Building fronts drawn from above with roofs, eaves, wall faces and cast shadows, different in every land
+- Each ride has its own queue maze and seeded visitors beside the entrance; path centre stays clear
+- Picnic lawn with tables, cloths, grill smoke, blankets and a back fence; harbour as one soft pool on a stone quay
+- Park lamps and ride bulbs pool soft light after dark through Game.lamp_glow and night_fronts
+- Sign room and stub feel fit LES / ATRACCIONS on the paving; turnstiles sit clear of the letters
+
+## 2026-11-20 - Les Atraccions: the art pass
+
+- Every land's fronts redrawn from above as its own buildings: gift shops under striped awnings and ticket pavilions at the gates, whitewashed terracotta houses (terrats, net lofts, shutters, bougainvillea) in Cala del Corsari, false-fronted tin and shingle stores with porches, a mine station, a water tower and mesas in Canyon del Sol, thatched huts in clearings behind bamboo fences in the Selva, kiosks, arcade stalls and the coaster's sawtooth station on Plaça del Loop
+- The welcome arch is a gateway: two towers in the park's wall and a lintel overhead lettered LES ATRACCIONS, which lights up after dark
+- The harbour is one basin of soft-edged water inside a stone quay, the pirate ship swinging north and south between A-frames on the quay
+- The flume is a lagoon in rocks under its lift tower and trough; the coaster runs a full circuit from its station up the lift, round the loop and back; the mine train runs its trestle over the boardwalk
+- Each ride's queue maze has its own lanes and its own visitors (cowboy hats, ponchos, ears), seeded, never the RNG
+- The picnic lawn has mown stripes, hedges, shade trees, a pergola, families on blankets and the park's back fence
+- After dark: lit shop and house fronts, pools under the rides and lamps, festoons and ride bulbs
+- Land meets land on a feathered seam instead of a hard line; the plaza paving is the park's own, not panots
+- Animated rides moved out of the cached ground into draw_live, so the ground caches again
+
+## 2026-11-19 - Walk glosses
+
+- Nine walks' glosses rewritten to say what the place is like rather than what it is: El Parc, El Mercat, Les Obres, La Ferralla, El Port, Camí de Ronda, Sitges, Sant Pau and La Carretera de les Aigües, in English, Catalan and Spanish, with the site's walk pages to match.
+
+## 2026-11-19 - The tug rope in their jaws
+
+- The tug rope is thinner, twisted like a cotton rope toy, and taut: no red bow in the middle (a short band of the dyed strand marks it for the chalk lines) and only a little of the tug's jiggle.
+- Each dog holds her end in her jaws: the rope runs in under her muzzle and its knot pokes out of the corner of her mouth, for Millie's dogs and the park's own.
+- A won rope is carried across the jaws with a knot out either side; a ball sits in her mouth with her nose over it, a frisbee by its rim, a branch crosswise.
+- `--shot-tug`, `--shot-carry=rope|ball|frisbee` and `--shot-dog-at=X,Y` (with `--at-freedom`) photograph a tug or a held toy.
+
+## 2026-11-19 - A pass over the game's words
+
+From a read of all 2,113 strings against the game's voice; every change in English, Catalan and Spanish.
+- American English: "around" for "round" in twelve places, Harbor Watch, Home Turf for Old Pavement; Catalan names keep their accents (mató, porró); Dressed for La Rambla.
+- Goals say what to do, plainly: the four chase goals are "Stay a leash length ahead of" the flood, the sweeper, the boars and the fire devils; "Look through the cliffside viewfinder", "Cross the Sant Joan funicular track safely", "Bark hello to the school tour group", "Get a shower from a watering can", "Walk past every chocolate without a bite", "Claim the dream bone in El Somni" (and the star, cubist and dragon bones), and more.
+- The prizes stop all starting with "snatch": nab, swipe, pinch, steal, raid, lift, make off with; cotton candy and a wheelbarrow, not spun sugar and a barrow.
+- Achievement names: Not a Scratch, Dare Accepted, Three for Three.
+- Banners exclaim once, then say what to do ("PINCER ATTACK! STEP OUT"); the long lion, goat, correfoc and gallery shouts are shorter; "LOOP THE LEASH AROUND BOTH PLINTHS"; "PERFECT WALK! EVERY GOAL IN ONE GO".
+- The chase-loss cards' titles lose their "!", and the newer ones are two short, dry lines, as the first ones are ("The goat sent your human into the brambles. The phone went the rest of the way down.").
+- Strings no longer carry spaces for layout; the code that joins them adds them.
+- The Store listing in all three languages: forty-six walks and a tutorial in five chapters, a line each; nine chases; the seven dogs, their skills and training; nine skies; the languages and accessibility settings. The website's copy and the itch page follow it.
+
+## 2026-11-19 - Store listing images staged by the submit workflow
+
+- The Store submit workflow's `update_draft` now renders the listing's screenshots (the ordered list in `store/screenshots.txt`, at 1920x1080) and the Store logos from the tag being submitted, and stages them in the draft with the package: the Store's current images of those types marked PendingDelete, the new ones PendingUpload, one zip of the MSIX and images PUT to the draft's upload URL (`tools/store_images.py`, ported from Stemma). Nobody uploads images in Partner Center by hand anymore. The run fails unless the read-back lists the package and every image pending upload.
+- The draft's upload link (a write-capable blob SAS link) no longer reaches the public logs: no `--verbose` on msstore publish, get or submission publish, every msstore output shown only through `tools/store_images.py redact`, and the link masked as a backstop. Earlier runs logged it.
+- `update_draft` refuses while a submission is in certification. `submit` refuses unless the draft is PendingCommit, its package is the tag's and its What's new is the listing's, and reads msstore's status from stderr too. Every run reports the publish mode and warns when it is Manual.
+- A cloned ca-ES or es-ES listing is added only when the release's package declares that language (v1.75's declares en-US alone, and the Store refused them).
+
+## 2026-11-19 - Blend El Poble Espanyol's seams
+
+- The pale Andalusian mosaic and the red Aragonese brick met as a ruled cut, and the Plaza Mayor met the Andalusian quarter the same way. Soft bands of each paving now fade across both joins (`Poble._zone_seam`); the layout, the workshops, the tower and the slate sill to the off-leash garden are unchanged.
+
+## 2026-11-19 - Blend La Molina's seams
+
+- The corduroy piste met the xalet terrace's cleared boards as a ruled line at both ends. The boards now stop a little short of each join and a soft snow bank covers the cut, fading onto the boards and out over the piste (`Molina._draw_terrace_seams`), without moving the terrace, its tables or the grill.
+
+## 2026-11-19 - Two new dogs: Perla the ratonero and Duna the podenco
+
+- **Perla**, a ratonero bodeguero, the Andalusian ratter of the wine cellars, unlocked at 55 stars: small, square and busy. A white dog with her coat's colour as a saddle and a head, a white blaze, tan brow spots, small pricked ears with folded tips and a short tail carried high (drawn on the mongrel's frame at 0.84, `entities/dog.gd` BODY_PLAN). She digs in about half the time (`dig_mult` 1.9, buried finds and a yard's dig patches), noses a little further, and is quick off the mark. Her skill goal: "Dig up 2 holes".
+- **Duna**, a podenco, unlocked at 65 stars: the galgo's long frame with huge upright ears, a white chest and blaze, and a long stride. Running into a bench, she clears it in a standing jump: the bench lets her through for the leap while she arcs over it ("Hup!", `DogSkills.tick_leap`). Her skill goal: "Leap 2 benches".
+- In the films Duna is drawn on the galgo's side-on frame and Perla on Millie's, at full size for now.
+- Resetting the save now also clears training points, dug-up finds and met skill goals (`Game._reset_persisted_state`), which it had missed since they were added.
+- "Finish a walk with every dog" instead of "with all 5 dogs".
+- Each has an idle quirk and a bark of her own: Perla a quick scrabble at the ground and a sharp terrier double bark; Duna ears up tall, listening, and a hound's higher yelp.
+- `tests/test_dog_skills.gd` covers both dogs' goals, Perla's digging, Duna's leap (meeting a real bench, passing through it, landing, the bench solid again, one leap per bench) and the reset.
+
+## 2026-11-19 - The menus' own tune
+
+- The menus play a tune of their own (`audio/music.gd`, style "menu"): a breezy bossa in G, vibes over a whistle, sixteen bars with its own melody and chords, picked from three previews. It plays on the main menu and the screens it opens (the wardrobe, YOUR WALKS, settings, controls, credits), the wardrobe opened from the walk select included.
+- The walk select and GET READY play the shown walk's own tune, so browsing walks is hearing them (`main._menu_music`).
+- The intro film still drops into the title theme on the bark; as it ends, the menus' tune fades in from the top. The title theme stays after a walk's end-of-walk sting.
+- `tests/test_menu_music.gd`, listed in `tests/ci.d/menu-music.txt`.
+
+## 2026-11-19 - Each dog's own idle quirks and bark
+
+- Every dog now has a small thing of her own that she does when she has stood still a while, on a walk or in the wardrobe: Millie puts her nose down and sniffs from side to side, Pipa stretches her front legs out long and shivers, Mochi sits down heavily and looks up at your human (snorting every other time), Bruna lies down with her head up watching your human and her ears flicking, and Tito trembles and then cocks his head. The first comes after four seconds of standing still, then one every eight to fifteen seconds, each about a second and a half; moving or pressing anything ends it at once. Drawing only: where she is and how fast are unchanged, and she draws in the same draw calls as before (`entities/dog.gd`, each dog's `quirk` in `Game.DOGS`).
+- Every dog barks in her own voice, synthesized from her size and matched to Millie's loudness: Tito a quick high double yap, Pipa a thin short bark, Millie the bark she had, Bruna a fuller, lower bark, and Mochi a low gruff boof with a snort (`autoload/sfx.gd`, each dog's `bark` in `Game.DOGS`). Her bark is the one heard when she barks on a walk, when she boops a boss, and in the chase films. Other dogs (the walkers' dogs, Brutus, the guard dogs) keep the old bark.
+- The films' side-on pose has no resting moment (she is trotting, startled, staring back or bolting throughout), so the quirks stay out of them.
+- `tests/test_dog_quirks.gd` (in `tests/ci.d/dog-quirks.txt`): a quirk and a bark for each dog, the barks equally loud, quirks only after standing still and ended by moving or any input, the wardrobe's dog too, no extra canvas calls, and a walk played with and without quirks matching frame for frame. `tools/dog_quirk_capture.gd` renders one dog's quirk to frames and writes her bark as a WAV.
+
+## 2026-11-19 - The calima: a Sahara dust sky
+
+- A ninth sky on GET READY's WEATHER row: the calima (SAHARA DUST; CALIMA in Catalan and Spanish), the days the wind brings the Sahara's dust over Barcelona. To the rules it is a clear day with a light wind (0.35, short of gusts); its new strength, dust (`Game.dust_amount()`), is read only by the look and by who is out. No walk's campaign sky is a calima.
+- The look is one more term in the existing tint and grade, scaled by the dust: by day an ochre haze, shadows lifted into it (a new `haze` uniform in `hud/grade.gdshader`, a per-channel lift, zero on every other sky), contrast and colour lowered, the highlights ochre and a low sun at dawn or dusk softened; after dark a dim sodium-orange murk instead of the night's blue. No new full-screen draw.
+- The overlay drifts fine dust motes slowly downwind, tiny and soft, far fewer and slower than rain, in the same one ShapeBatch; never leaves or grit.
+- A calima is a bad-air day: sunbathers, towels, picnics, the ice-cream cart, kids on scooters and the beach parasols stay in, as in fog (`Outdoors.fair`, after the spawners' draws).
+- `tests/test_calima.gd` (listed in `tests/ci.d/calima.txt`).
+
+## 2026-11-18 - The walks' shouts, speech and tutorial in Catalan and Spanish
+
+- The LANGUAGE setting now reaches everything said during a walk: the feed's shouts, your human's and every passer-by's speech bubbles, the score chips (the amount stays last: "marcat! +3"), the sounds, the combo line's trick names, the dare-givers' lines and names, the tutorial's lessons and its skip hint, the freedom games, every walk's own shouts and lines, the off-leash areas' glosses under their Catalan names and the boss cards' subtitles. The First Walk is the one walk name that is not a place, so it reads "Primer Passeig" and "Primer Paseo"; every other name stays Catalan, as does the street's own signage. About 1,400 new entries in the same table, `hud/i18n.gd`; the films stay English for now.
+- Call sites name their words by key (`I18n.t`); lines kept in English tables (the greetings, the held-up crowds, the dare-givers' `LINES` and `NAMES`, the bosses' crowds, the combo labels, the lessons, the chases' warnings and shouts, the other dogs' names) stay English data and are looked up by their English where they are shown. The walk's sinks (`main.float_text`, `EventFeed.say`, your human's bubble) look up what reaches them, and a score is still sorted by its English, so English plays exactly as before: a full shot sweep came out pixel-identical.
+- Sentences that were assembled from English pieces ("HE'S GOT %s WALLET", the agility finish, the station's departures, the combo bank) are whole entries now. In Catalan and Spanish a dare-giver's name carries its "de" ("del nen", "de la pescadora"), so the dare card says "a prop del nen" rather than "de el".
+- `--shot-say` adds a shout and a score to its two bubbles, and says them just before the shot, so the walk's start no longer clears them.
+- `tests/test_i18n.gd`: no walk script hands a shout, a bubble, a remark or a score an English literal; every line in the English tables (the balcony's replies among them), every combo label, rail, lesson and chase line (its caught shout too) has an entry; a score stays a score with its amount last; every translation fits where it is drawn (a bubble's two lines, a chip, the feed at its smallest, a lesson card); and a translation comes back from a second look-up unchanged.
+
+## 2026-11-18 - Each walk declares what main asks of it in its own file
+
+- Walk PRs side by side kept colliding on shared lists: `SOFT_WEAR` in main.gd four times in one day, the hook declarations in `tests/test_walk_hooks.gd`, the end of `tests/ci_tests.txt`. Each now lives with the walk:
+  - a walk module's hooks are its own `const HOOKS := [...]` (all 46 moved); `tests/test_walk_hooks.gd` reads them from each module and fails a module that declares none;
+  - a soft worn patch past the gate is `const SOFT_WEAR := true` in the module, read into `main.soft_wear` when the walk is set (La Neteja, El Besòs, Sarrià, El Tibidabo);
+  - `tools/run_tests.sh` reads `tests/ci.d/*.txt` after `tests/ci_tests.txt`, so a walk's or feature's new tests go in a file of its own (`tests/ci.d/README.md`).
+- No player-facing change.
+
+## 2026-11-18 - Store pages and website in Catalan and Spanish
+
+- `store/listing.md`: added `ca-ES` and `es-ES` sections (`Description`, `Short description`, `Product features`, `Keywords`, `What's new in this version`) alongside the unchanged English listing, with all release notes within the Store's 1500-character limit and keywords within 30 characters / 21 words.
+- `tools/store_listing.py`: kept single-argument `fields(md)` returning `en-US`, added `lang` support for `en-US` / `ca-ES` / `es-ES`, made `--check` validate all three languages against Store limits, updated the submission updater to match existing `en*` / `ca*` / `es*` `Listings` entries and clone `en-US`'s `BaseListing` structure when `ca-ES` or `es-ES` is missing, and added `--selftest` over a synthetic `submission.json` in a temporary directory.
+- `docs/itch-page.md`: added `## En català` and `## En español` sections under the English `## Body` without altering any English text.
+- Website (`site/` and `tools/site_copy.py`, `.github/workflows/pages.yml`): added static `ca/` and `es/` landing and press-kit pages (`site/ca/index.html`, `site/ca/press/index.html`, `site/es/index.html`, `site/es/press/index.html`), added a pure-link `EN` / `CA` / `ES` switch across all six pages styled in `site/style.css` using only `site/palette.css` variables, extended `tools/site_copy.py` to fill and `--check` all six pages from `store/listing.md` and `autoload/game.gd`, and tightened `.github/workflows/pages.yml` to verify `site_copy.py --check` and all six HTML outputs.
+- The package manifest declares Catalan and Spanish beside English (`store/msix/AppxManifest.xml`): the Store takes a listing only in a language the package declares.
+
+## 2026-11-18 - Website walk pages, chapters and screenshots
+- Added `tools/site_walks.gd` (dumped metadata in `tools/site_walks_data.json`), `site/walks.json`, and `tools/site_walks.py` to generate chapter sections, boss/chase/dog/wardrobe sections, and an individual `site/walks/<id>.html` page for all 47 walks (First Walk tutorial plus 46 main walks).
+- Extended `site/index.html` with What you do beats, five campaign chapters (`Game.chapters()`), the four bosses (`El Mamut`, `El Drac`, `Els Lleons`, `El Gat`), the chases (`sweeper.gif`, `boars.gif`, nine chase links), five dogs, and wardrobe/training/New Look swatches.
+- Extended `tools/site_media.sh` to capture 107 `960x540` progressive JPEGs across every walk (campaign sky, off-leash area, bosses, chases) alongside the clips and icon (8.5 MB total), updated `site/press/index.html`, `.github/workflows/pages.yml`, and `docs/website.md` (15 MB image budget).
+
+## 2026-11-18 - Blend El Veterinari's seams
+
+- El Veterinari's linoleum, sheen and skirting no longer run on through the recovery yard: the clinic ends at its back wall on the gate line and the yard is grass from there.
+- The back door is an aluminium sill in that wall, then a short concrete apron through the gate to the yard's fence line, worn on into the grass with grass over its far edge (a new draw_threshold hook in place of the street's soldier course).
+- The corridor's teal skirting turns the corner and runs along the back wall either side of the door, its foot feathered into the grass, where the clinic's grey stopped in a ruled line against the lawn.
+- The last column of floor tiles no longer pokes out past the east wall.
+
+## 2026-11-18 - Blend El Bosc's seams
+
+- El Bosc's way into La Clariana no longer stops on a ruled line: the trail's packed dirt runs a step on into the lawn and fades, with a worn way through the gate, and the clearing's lawn spills back down the verges either side into the forest floor, so the walk and the clearing read as one wood. The granite kerb across the gate, a town detail, is gone from the forest.
+- The wood beside the trail thins out toward the clearing instead of ending its last row in a straight dark edge.
+
+## 2026-11-18 - Blend El Tibidabo's seams
+
+- El Tibidabo: where the drop to the city and the hillside meet the mirador's paving at the gate, a stone coping course now runs out from the balustrade and the kerb, the balustrade's posts turning the corner along it on the west, with the terrace's shadow feathering down off it, in place of a bare straight cut.
+- El Tibidabo: the funicular's rails no longer stop bare on the hillside below the gate; a top station platform from the road's kerb and a buffer stop at the head of the climb meet the carriage, as at the bottom station.
+
+## 2026-11-18 - Blend La Superilla's seams
+
+- La Superilla's gate: the street's asphalt bands and pavement slabs no longer run on past the soldier course as a grey slab over Passatge del Vapor's paving; the courtyard now meets the street at the course.
+- The mill roofs either side of the gate run on to the courtyard's wall instead of stopping short over a dark strip.
+- At each cross street the side street's pavement turns the corner into the walk's own, kerb and all, instead of leaving a notch of asphalt where the walk's slabs stop.
+
+## 2026-11-18 - Blend La Rambla's seams
+
+- La Rambla's north end meets Pipicà as one place: the side road stops at a kerb with a stop line and bollards, the pavements run on as a stone apron to the fence, the bike lane ends in a rounded turnaround, and both city blocks finish at the fence with a coping and corner piers instead of a roof cut off in the grass.
+- The south end does the same in front of the apartment block: the side road stops at a kerb and stop line, the bike lane turns round, and a stone footway runs across both.
+- The Drac's gallery door is reached over a zebra across the side road, with dropped kerbs and stop lines either side.
+- The promenade's cream waves keep inside the kerb and clear of the bike lane where the walk widens round the plaça.
+
+## 2026-11-18 - Blend L'Estació's seams
+
+- The concourse's terrazzo now stops at the goods yard: its brass divider strips, marble chips and roof-light reflections no longer spill a band onto the yard's slabs past the gate.
+- A granite sill with a brass nosing joins the two floors across the walk, the yard's grit is walked a few steps onto the polish, the polish's dust lies on the slabs beyond it, and the way through the gate is worn pale. Drawn in the concourse's own batch, so no new draw call.
+
+## 2026-11-18 - Blend Sarrià's seams
+
+- Sarrià: where the street's granite setts meet the flags of the plaça (both mouths) and of Plaça de Sant Vicenç, a course of sandstone edging now runs across the join, the setts' grey is trodden a little way out onto the first flags, and the drainage channel ends in a grate at the edging, so the street and the square read as one place instead of two pictures cut along a straight line.
+
+## 2026-11-18 - Blend Plaça Reial's seams
+
+- The square's granite paving, the terracotta arcade floors, the panot strips along the colonnades and the arcade roofs now run on past the north archway to the gate (`Reial.draw_edge_layer`, `Reial.draw_overhead`), where they stopped 240 px short in a hard line across the whole screen and left a strip of plain asphalt between the archway and the off-leash plaça. The plaça's paving now meets the square's at the gate's soldier course and stone sill, one more pillar pair and window bay carry the colonnade to the end, and the bar fronts nearest the gate glow from the arcade wall instead of floating on the road.
+
+## 2026-11-18 - Blend El Diluvi's seams
+
+- Blended El Porxo's threshold: dressed stone entrance apron inside the gate, soldier course and worn saulo tongue meeting the street panots, and porch stone kerbs with feathered wet eave-drip bands instead of hard strips
+- Joined El Porxo's outer pantile roofs with mitered hip ridges at the north corners and stopped the side wings flush against the south stone wall
+- Added El Diluvi's own edge layer and night fronts so generic edge awnings no longer clip under the west arcade or double up behind the east awnings, and framed the cross-streets and south boundary cleanly
+- Seated the arcade in dry stone panots with a granite kerb and end-return thresholds, routing the west gutter outside the arcade, bridging doorways with culvert slabs, and terminating gutters at catch-basin grates before crossings, the gate, and the start facade
+
+## 2026-11-18 - Blend El Parc's seams
+
+- El Parc's off-leash threshold (`Parc.draw_threshold` and `Parc.draw_edge_layer`) now drops the hidden edge-layer undergrowth that poked above the fence, continues the mown lawn up to the chain-link line, returns the fence corners cleanly to the timber gateposts, and carries a continuous worn gravel tongue through a matching granite kerb into Pipicà.
+- Path edging and the low iron hoop fence (`Parc.draw_path_edges`) now offset along true segment normals with mitered corners and world-locked posts, stop neatly at the gateposts and the south sidewalk kerb, and meet a stone footway apron along the apartment frontage with `Parc.grass_blocked` and `Parc.surface` updated to match.
+- Mown grass stripes (`Parc._mown_stripes`) now follow the lake bends flush to the edging instead of leaving stair-stepped gaps, and the worn center track (`Parc.draw_over_walkway`) feathers smoothly at both ends.
+- The lake shore (`Parc._lake_shore`) now samples `main.pond_outline()` wobble so reeds, lily pads, ducks, and the south timber jetty anchor to the actual shoreline, feathered into the gravel with a soft silt band and pebbles.
+- Roadside flower borders (`Parc._borders`) now sit inside rounded clipped-box edging clear of the hoop fence, the kiosk bike rack sits clear of the bike lane kerb, and the east bike lane ends in a rounded turnaround cap.
+
+## 2026-11-18 - Blend El Gòtic's seams
+
+- **Alley walls, roofs and doorways** (world/gotic.gd, systems/detour.gd): El Gòtic now draws its own edge and cross-section layers (draw_edge_layer, draw_cross_section, 
+ight_fronts) along the alley's true walk_edges(y) line instead of the generic stepped uilding_line(y). Front-row pantile roofs meet the outer roofscape and the inclined stone wall face without grey masonry triangles or diagonal kerb seams across the bends, and doorways sit only on straight wall runs with lit night fronts to match.
+- **Scooter cross-alley and steps** (world/gotic.gd): The courier's crossing at y = -1720 opens through both alley walls as a cobblestoned side lane framed by stone parapets and dressed limestone corner quoins instead of emerging through a solid rooftop. The five steps at y = -2000 follow the slanted walls as wall-to-wall trapezoids with sett mortar and drainage channels stopped cleanly either side.
+- **Plaça de Sant Felip Neri, El Somni portal and thresholds** (world/gotic.gd, world/detour_layer.gd): The plaza's radial stone medallion (
+ = 118) stays inside the open court between the tree pit and castellers with orthogonal sett joints clipped around it. El Somni's gallery entrance sits in a carved Gothic sandstone surround clearing the orange wallcat's ledge below, with a wider banner and easel that no longer clip their text. The north gate threshold (-5030..-5000) carries Plaça dels Gossos' flagstones and a dressed cornice return into the gateposts, and the central drainage channel stops north of the title and home threshold.
+
+## 2026-11-18 - Blend La Neteja's seams
+
+- Clip La Neteja's northmost building modules at the Plaça dels Gossos boundary with a stone parapet coping and lay a dressed stone threshold course across the gate (systems/neteja.gd).
+- Feather open-bakery doorway light with a smooth gradient band aligned to each shutter opening, align wall-lantern halos to their brackets, and keep cross-street sun bands, storm drains, and doorways inside the street corridor (systems/neteja.gd).
+- Join the water truck's wet sheen streaks seamlessly across the full 220 px module stride with continuous north and south boundary fades instead of pinching out every 200 px (systems/neteja.gd).
+
+## 2026-11-18 - Blend Montjuïc's seams
+
+- Join the castle esplanade to the climb at `GATE_Y - 30` (`draw_threshold`, `draw_edge_layer`, `draw_ground`): align `draw_edge_layer` and `draw_ground` to `-5030` so no grey asphalt stripe crosses the gate mouth, flare the hilltop rims to meet the esplanade corners with smooth trapezoidal ground quads, continue the west/east sea and haze gradients and rim shadows smoothly past the gate, and build the stone south parapet walls flanking the gateposts over a feathered gravel threshold.
+- Fit the escalators' flanking stairs (`draw_conveyor`) to the path's real edges per tread with even step spacing, stone cheek curbs, and top/bottom stone landing aprons.
+- Frame the hill road (`draw_road`) with stone kerbs on the hillside, crossing thresholds at the path, viaduct parapets/piers/shadow past the rims, and block verge grass on the asphalt (`surface`, `grass_blocked`).
+- Ground the low and top Telefèric stations (`draw_on_hill`) on stone boarding pads with gravel spurs to the path, keep the `40m` height post clear of the low station, break the `-3900` wall around the top station, seat the `-1500` mirador cleanly into the retaining wall without overlapping a flowerpot, add step cheek curbs, and add a gravel path entry to Jardí de Cactus with its title clear of the `-2100` wall shadow.
+
+## 2026-11-18 - Blend El Metro's seams
+
+- El Metro: where the passage's small tiles meet Paraigües platform's slabs, a steel expansion strip runs across and the passage's tone feathers a step onto the platform, instead of one tile simply stopping at the next.
+- El Metro: the other track no longer ends in a flat cut where each platform ends; it runs under a concrete headwall and darkens into its tunnel.
+- El Metro: the road beside the stairs up ends at the plaça's kerb, and the far pavement runs into it over a soldier course of setts, instead of the asphalt stopping dead at the off-leash square.
+
+## 2026-11-18 - Blend El Mercat's seams
+
+- Replaced the stepped edge strips and flat brown margin on El Mercat with a continuous edge layer: street-hugging old-town roofs outside the market hall, a glazed iron-truss roof bounded cleanly to the hall arches, smooth flared wall faces, and a dressed stone cornice with corner quoin piers where the exit street meets Plaça dels Gossos.
+- Added exterior stone flagstones on the approach and exit streets, indoor terrazzo bay joints, dressed granite doorway sills under both arches, and carried the plaça's stone flags through the gateposts to a soldier-course apron at the sill.
+- Enabled soft feathered wear on the plaça's worn patch (SOFT_WEAR := true) and filled the flanking plaça roof margins and south corner fronts.
+
+## 2026-11-18 - Blend Platja de Llevant's seams
+
+- At the dog beach's gate line (y = -5030), main's granite kerb crossed only the path, so the bike lane and the paving by the buildings stopped in a bare edge against the off-leash sand, and the timber boardwalk ended in a blunt cut. The same kerb, shadow and joints now run on over the bike lane and the paving, the boardwalk ends on a header board, and sand feathers back over all three with a scatter of drifted grains (Llevant._gate_edging, batched into the deck's existing draw, so no new draw call).
+
+## 2026-11-18 - Blend El Mosaic's seams
+
+- El Mosaic's gate onto the hilltop no longer stops in one ruled line: each terrace wall ends in a capped rubble pier with stones tumbled off it, and the soldier course of setts across the gravel path is gone.
+- The path's gravel feathers out into the hilltop's earth, worn palest where people walk in, and the garden's scrub runs on up past the terrace walls instead of meeting the earth at a square corner.
+- The hilltop clearing's sides thin into the scrub on a ragged line.
+
+## 2026-11-18 - Blend El Fòrum's seams
+
+- The sea along the esplanade was three flat colour strips, shallow then mid then deep, with hard edges the whole length of the wall, and the bathing basin repeated a hard shallow strip beside the steps. The shallows now feather out into the deep water (`Forum.draw_edge_layer`, `Forum.draw_freedom`).
+
+## 2026-11-18 - Blend L'Eixample's seams
+
+- L'Eixample: the last block on the left no longer stops in a bare cut against the garden's sauló at the off-leash gate; it shows the Interior d'Illa its rear galleries and washing, as the garden's far end does.
+- L'Eixample: the basilica precinct's railing turns the corner along its garden side on a stone coping, instead of the precinct's paving ending in a straight line on the sand.
+
+## 2026-11-18 - Seams: La Rambla's crossings and the threshold at every gate
+
+- The bike lanes across the walk (La Rambla, El Parc, Passeig, El Mercat) were a band of asphalt sliced straight through the walk. Across the walk they are the bike path's red now, edged in granite, with the cyclists' squares, give-way teeth facing the riders at the walk's edges and the round blue bike-lane sign at the corners; asphalt with its lines only over the roads.
+- La Rambla as the real one: no traffic crosses the promenade, so its zebras are where people step off it, on the side road and the bike path beside it, either side of the cross street, with the side road's stop line behind each (`main._draw_bike_lanes`).
+- Every walk's path stopped in a straight line under its off-leash ground. The threshold (`main._draw_threshold`, or a walk's own `draw_threshold`) joins them by what meets what: into grass, sand or mud a granite kerb right across with the grass poking over it (or sand drifting onto the paving) and a gap where a worn tongue of the path's ground runs on through the gate; into a paved plaça a soldier course of setts.
+
+## 2026-11-18 - Blend La Cremada's seams
+
+- The railway underpass painted a solid dark slab 30 px past the deck on both sides, a hard band across Carrer del Mar. The dark now stays under the opening and feathers about 64 px past each lip (Cremada.draw_scenery), so the shadow dies into the paving.
+
+## 2026-11-18 - Blend La Ciutadella's seams
+
+- La Ciutadella's Passeig now meets the park gate at a granite kerb and threshold, with crosswalk aprons over the side carriageways, the city blocks squared off at the cross-street, palms in kerbed pits and the mosaic stars no longer sheared by the tile courses.
+- The gate plaza ends on a granite sill, and the park railings run on to the gate piers instead of stopping at the path.
+- The sauló path now curves smoothly from the avenue into El Mamut's west promenade and on into La Cascada's plaza, with no stepped cuts. El Mamut's plinth stands in a kerbed sauló surround, and the boating lake gets a stone coping on its west side.
+- La Cascada's pool lip is the basin's own water behind a stone coping, and the drinking fountain stands on a stone pier.
+- The giraffe yard is closed at both ends by tiled return walls and corner piers, and the Parlament, its colonnade and its pond stand on one stone forecourt.
+- The dark asphalt band at the dog park gate is gone. A worn sauló tongue now runs through the gate, with a granite kerb and grass feathering into the dog park, and the off-leash wear is soft at the edge.
+
+## 2026-11-18 - Blend Els Búnquers's seams
+
+- The summit's dry-stone parapet now runs on along the top of both slopes beside the gate, where the city view and the terraced hillside used to stop in a straight cut under the off-leash plateau, and the plateau's scrub feathers down over them below it.
+- The hilltop's scrub carries on past the plateau's side walls instead of ending at them.
+- Where the sauló climb reaches the battery's concrete slabs, the first row is laid unevenly, grit drifts up over the slabs and the walking ruts wear out before them, so the path no longer stops in a ruled line.
+
+## 2026-11-18 - Blend Els Senglars's seams
+
+- Els Senglars' wood floor and El Mirador's grass now feather into each other at the gate instead of meeting on a ruled line, fading out where the clearing's fence ends.
+- The trail's dirt is scuffed a little way into the grass all across its width, with a short worn way on through the gate, in place of the paved soldier course that main laid there.
+
+## 2026-11-18 - Blend El Besòs's seams
+
+- The gate sits on the riverside path, and the path wears through it into the meadow over a kerb with grass across its rim, instead of stopping at a straight line
+- The west flood wall, its upper promenade and the berm end at an abutment pier and a kerb return at the gate, and the lawn there feathers into the paving behind it
+- The Pont de Can Peixauet's deck shadow runs across the whole walk at the gate, and the river's headwall coping meets the deck with no strip of water between them
+- The river bank feathers from lawn through shingle into the shallows, with cobbles and grass over the edge, and the path has a kerb with grass tufts along the lawn
+- The clearing's edges feather into the woods, and its south edge matches the riverbank lawn
+- The cycle lane ends in a painted line at the flood apron and at the start, and the SAHBE sign board stands clear of the lane
+
+## 2026-11-18 - Blend Passeig Marítim's seams
+
+- The shoreline down Passeig Marítim and into the Hotel L'Onada bay was three ruler-straight vertical bands, and the off-leash bay's sea and wet sand cut a two-segment chord across beach_shore_x(y) that parted from the animated waves and narrowed the dry sand beside the hotel seawall to a 2 px sliver. The deep-to-shallow reef shelf, waterline swash and damp-sand margin undulate along the walk now, the bay's water and wet sand sample beach_shore_x(y) along its curve at BEACH_WET_W, and the espigó is two staggered courses of tipped granite rooted into the shore (Passeig.draw_espigo).
+- At the gate line (y = -5030), main._draw_threshold() and main._draw_gate() placed a short soldier course 10 px inside the plaza and a stone sill 24 px south on the slabs, while the timber boardwalk stopped in a blunt step under the northernmost seaward palm. Passeig.draw_threshold and Passeig.draw_gate lay a full-width limestone soldier course and gate piers directly along the threshold from the boardwalk to the eastern parapet, with a stepped timber beachhead bastion around the palm and a tactile red-oxide end apron across the bike path.
+- Behind Hotel L'Onada, the plaza's northern backing was an ungridded beige slab ending in a bare vertical cutoff, and the seaward timber coping stopped dead at y = -5560 beside the hotel. The ashlar grid, seaward timber balustrade and eastern limestone parapet run the full height of the esplanade now, with a landscaped coastal garden terrace behind the hotel.
+- Down the promenade, the horizontal slab joints poked 10 px into the bike lane (x = 560..570), the four longitudinal material joins were single lines, the apartment roofs left a 6 px dark trench along x = 1190, and La Fàbrica's three sheds jutted over the flower panots with raw gaps between them. The joints stop at the slab kerb, dressed stone kerbs and timber border beams frame each strip, the eastern building line carries a stone plinth with cobbled side-street thresholds, and La Fàbrica stands on a walled stone factory yard apron.
+- At the south end (Estació de Badalona), the sea, beach sand, boardwalk and bike lane crashed straight into the grey station wall. A granite retaining seawall with riprap and banked sand closes the beach, and a stone station forecourt apron with a soldier-course kerb meets the boardwalk, bike lane, slabs and panots (Passeig._station_south_edge).
+
+## 2026-11-18 - Blend El Barri's seams
+
+- El Barri's pipica gate now meets the square across a flush granite threshold sill, triangular saulo wedges behind the angled gate wings, a concrete kerb plinth under the perimeter fence, and clipped hedges outside the east and west fences.
+- The south entrance (and the First Walk tutorial) now lay a panot pavement with a granite kerb to the home finca wall, with the park's perimeter railings returning to the square's edging.
+- The lawn desire paths now cross the square's edging on flush granite threshold stones, and the west side street opens cleanly between split rooftop terraces with corner panot pavements, kerbs, and a stop line.
+- Street trees and east-block rooftops now clear the pipica fence line instead of overhanging it.
+
+## 2026-11-18 - Blend Els Àngels's seams
+
+- Els Àngels: where the Raval alleys open into the skate plaza, at both ends, the setts now finish in a soldier course of granite setts instead of a straight colour cut, granite dust lightens the last rows of setts, and the street's tone carries a little way onto the granite.
+- Els Àngels: the dark porphyry inlay no longer runs right alongside those joins, so each reads as one edge, not two.
+
+## 2026-11-18 - Blend La Carretera de les Aigües's seams
+
+- The Font de la Budellera's gate wore main's granite kerb across the track of packed sauló. The grit now runs on into the clearing and fades there (`Aigues.draw_threshold`), with a worn tongue through the mouth and the grass feathering down either side.
+
+## 2026-11-18 - The wind off the sea carries spray, not leaves
+
+- A windy sky blew autumn leaves across every walk, beaches included, where the wind comes in off the water with nothing to pick leaves off. Where the sea is out to one side of her, the weather overlay blows salt spray now: bright droplets riding the wind with a fine streak behind each, quicker than a leaf and sinking as they go. The grit's sandy streaks read as blown sand. Inland it is leaves, as before.
+- `Gusts.tick_sea` checks every half second whether the wind is off the sea where she is (`main.wind_off_sea`), from the ground alone, never the wind's dice, so a seeded walk replays. Off the sea it also blows onshore in a breeze between gusts, not only in a gust.
+- `tests/test_gusts.gd`: spray in a breeze and a gale by the sea, blowing onshore; nothing on a calm day; leaves in the park.
+
+## 2026-11-18 - Polish El Bosc
+
+- La Clariana, the clearing past the gate, is drawn as grass from edge to edge, but it handled as pavement down the middle, where the trail's width ran on past the gate. It is lawn underfoot right across now (`Bosc.surface`, through `Surfaces.lawn_past_gate`); the trail up to the gate handles as before.
+- The trodden earth in the middle of the clearing was a hard-edged flat disc. It is drawn soft now, fading into the grass (El Bosc is on `main.SOFT_WEAR`).
+- `tests/test_bosc.gd` covers the clearing's lawn, the way in from the gate, the trail itself and the soft wear.
+
+## 2026-11-18 - Polish El Tibidabo
+
+- The worn patch in the middle of the mirador, past the gate, was a hard-edged flat disc. It is drawn soft now, fading into the flags (El Tibidabo is on `main.SOFT_WEAR`).
+- The mirador's trees drew the forest's roots, which poked out past their crowns like sticks. They stand in their pits as broadleaves now (`Tibidabo.draw_grove`, through `main.broadleaf_grove`).
+- The mirador's flags handled as grass wall to wall. They are paving now, soft only in the tree pits and planters (`Tibidabo.surface`, through `Surfaces.paved_past_gate`), and the strip just inside the gate is paving too; the road up is paved as before.
+- After dark the mirador was unlit. Its house fronts carry wall lamps now, two down each side (`Tibidabo.night_lights`: the street's own lamps and `main.freedom_side_lamps`). The walk's own foggy morning is unchanged.
+- `tests/test_tibidabo.gd` covers the paving, the strip inside the gate and a tree pit, the soft wear, the trees and the wall lamps.
+
+## 2026-11-18 - Polish La Castanyada
+
+- The festival yard past the gate is paved from house front to house front, but off the walk's own width it handled as grass. It is paving now, the dance floor included, soft only in its tree pits and planters (`Castanyada.surface`, through `Surfaces.paved_past_gate`); the street up to the gate handles as before.
+- The yard's trees drew the forest's roots, which poked out past their crowns like sticks. They stand in their pits as broadleaves now (`Castanyada.draw_grove`, through `main.broadleaf_grove`).
+- The lanterns' light on the yard's ground and the lit windows' spill were stacks of flat discs, whose edges showed as faint rings. They are soft gradients now, in the same batch (`ShapeBatch.glow`).
+- The yard was darker than the street that leads to it. Its house fronts carry wall lamps now, two down each side (`Castanyada.night_lights`: the street's own lamps and `main.freedom_side_lamps`). The walk's own night is unchanged.
+- `tests/test_castanyada.gd` covers the yard's paving and a tree pit, the trees and the wall lamps.
+
+## 2026-11-18 - Polish Sarrià
+
+- The worn patch in the middle of the Plaça de Sant Vicenç, past the gate, was a hard-edged flat disc. It is drawn soft now, fading into the flags (Sarrià is on `main.SOFT_WEAR`).
+- The plaça's plane trees drew the forest's roots, which poked out past their crowns like sticks. They stand in their pits as broadleaves now (`Sarria.draw_grove`, through `main.broadleaf_grove`).
+- The plaça handled as paving right across, its tree pits and planters included. They are soft earth now (`Sarria.surface`, through `Surfaces.paved_past_gate`); the rest of the walk is paved as before.
+- After dark the plaça was unlit. Its house fronts carry wall lamps now, two down each side (`Sarria.night_lights`: the street's own lamps and `main.freedom_side_lamps`). The walk's own dawn is unchanged.
+- `tests/test_sarria.gd` covers the paving and a tree pit, the soft wear, the trees and the wall lamps.
+
+## 2026-11-18 - Polish Els Àngels
+
+- The trees in the Claustre de les Lletres, past the gate, drew the forest's roots, which poked out past their crowns like sticks across the sandstone. They stand in the flags as broadleaves now (`Angels.draw_grove`, through `main.broadleaf_grove`).
+- After dark the cloister was unlit but for the gate. Its side walls carry lamps now, two down each side (`Angels.night_lights`: the street's own lamps and `main.freedom_side_lamps`). The walk's own clear day is unchanged.
+- `tests/test_angels.gd` covers the trees and the cloister's lamps.
+
+## 2026-11-18 - Polish Platja de Llevant
+
+- The two groins out into the sea and the espigó across the water at the gate were rows of round pebbles of nearly one size, each with a pale dot on top, which read as strings of beads. They are runs of tipped granite now: two staggered courses of angular blocks of every size, each with its shadow and a lit facet (`Llevant._rock_run`, through `world/stones.gd`'s `Stones.lit_stone`).
+- The espigó is the walk's own (`Llevant.draw_espigo`, a new `draw_espigo` hook on `main._draw_espigo`), so La Cremada's and Sitges' dog beaches keep their breakwater as it was.
+- New `tests/test_llevant.gd` covers the groins' rock from end to end and on its line, and the espigó's hook.
+
+## 2026-11-18 - Frames for the names that vanished into their ground
+
+- Fifteen walks' names were laid in a material close to the ground under it, and hard to read. Each lies on what the place would put it on now (`WorldSign._backing`, `BACKINGS`):
+  - Tibidabo's bulbs on the fairground's marquee board, an old-gold frame ringed in bulbs;
+  - La Castanyada's chestnuts on the seller's newspaper, two sheets a little crooked, the print faint;
+  - on thirteen paved walks, a flat panel of the street's own tiles, a field inside a border course, nothing raised and no shadow: Sarrià, L'Aeroport, El Besòs, Carrer de Blai, La Cremada, Plaça d'Espanya, Festa de Gràcia, El Metro, Dia de Partit, El Diluvi, Rambla del Raval, Plaça Reial and Sitges. Each walk's tones are in `TILE_TONES`: warm stone, granite, sandstone, a pale terrazzo under dark pieces, a dark slate under pale ones, Sitges' terracotta.
+- A name's two lines (the title, the gate's OFF LEASH) lie on one backing or flower bed, not two boxes overlapping (`main._share_bed`).
+- Tried and dropped: a feeding mat at the vet (more legible without), darker patches of wet sand at Llevant and earth at El Bosc (they read as stains), and a bakery tray at Sarrià (it sat on the street, not in it). The names on sand, snow and dirt keep no backing.
+
+## 2026-11-18 - No dark rim round the labels, sand that reads as sand, La Rambla's flower beds, and two fixes
+
+- Every walk's name had a dark rim round its pieces since the names were painted offscreen (#612): the offscreen pass leaves its colours multiplied by their coverage, and drawing it with plain alpha multiplied them again. `world/sign_layer.gd` draws it premultiplied.
+- Passeig Marítim's name, laid in sand on the promenade, was a string of tan beads with a brown outline. It is a pale drift now (`WorldSign._sand`): a dusting along each stroke, low mounds lit on the sun's side with only a soft contact shadow, loose grains round them, and a paw spreads a heap flatter and paler and kicks its grains wider.
+- The other dog walkers and their dogs walked through bin bags, cans and cones as if they were not there; they shove them aside now as your human does (`cone.gd`, `main.pairs_cache`). `tests/test_junk_pairs.gd`.
+- The x2 STREAK chip on the vitals card sat over the last of the five marked drops. It starts after them, and where the word will not fit there (always, on that card) it is the bare count, "x2".
+- La Rambla's carnation names were hard to read: on the bare cream paving the flower heads blended in. Each is planted in a municipal flower bed now (`WorldSign._flower_planter`): a granite kerb round a rectangle of dark soil and fine ground cover, the letters a band of bright foliage set with the carnations, which stays when the flowers are kicked about. The bed sits close round the letters (`PLANTER_PAD`), and the gate's OFF LEASH and PIPICÀ share one.
+
+## 2026-11-18 - Polish L'Eixample
+
+- After dark the lit shopfronts and doorways were placed on the chamfered corners too, where the facade runs at an angle: their fans of light and the lit windows above them crossed the chamfer and lay on the pavement and the road. Fronts now sit only on the facades that run along the walk (`Eixample.night_fronts`).
+- The block's interior garden, past the gate, drew its trees with the forest's roots, which poked out past their crowns like sticks across the lawn. They are broadleaves now (`Eixample.draw_grove`, through `main.broadleaf_grove`).
+- After dark the garden was unlit. Its walls carry lamps now, two down each side (`Eixample.night_lights`: the street's own lamps and `main.freedom_side_lamps`). The walk's own day is unchanged.
+- Your human weaved the whole width of the street past the planted islands, walked into the end of the bench on an island's west side and stayed pinned between it and the island (on main too, in a plain walk up the street). Each island, its bench included, is one he walks round now, keeping to its east side (`main.islands`, as El Mercat's stall blocks are).
+- `tests/test_eixample.gd` covers the fronts clear of every chamfer, the trees, the garden's lamps and the islands he walks round.
+
+## 2026-11-18 - Each dog's skill, and a skill goal on every walk
+
+- Every dog has a signature skill and, on every walk, one skill goal that only she has (`systems/dog_skills.gd`). It is a row of its own under the walk's goals, set apart by a rule and her turquoise, and never counts toward the walk's goals or stars, so the campaign is as fair with one dog as another. The first time a dog meets it on a walk it is a training point for her, spent on her stats in the wardrobe like a buried find's; met again, it is the quieter "again" toast.
+  - Millie, the nose: "Sniff out and dig up a buried find".
+  - Pipa, the sprint: "Sprint flat out for 2 seconds", well past her own top speed on turbo, without a break.
+  - Mochi, the plant: "Dig in and trip your human 2 times", planted as the leash yanks.
+  - Bruna, the herd: "Herd your human for 5 seconds", leading him across the path on a steady pull while he walks on.
+  - Tito, the squeeze: "Slip through 3 gaps only you fit", where a normal dog's body would touch solid things on both sides ("Squeeze!"). Her gaps are counted along the walk in the first seconds, a few rows a frame, and her target is what the walk has, up to three; a walk with none has no skill goal for her.
+- Saved with the records (`Game.skills_done`). `--dog=NAME` walks that dog for a run, unsaved, for screenshots and playtests.
+- `tests/test_dog_skills.gd` (32 checks), listed in `tests/ci.d/dog-skills.txt`.
+
+## 2026-11-18 - Credits screen and in-game achievements
+
+- Added a **CREDITS** screen off the main menu (`MenuFlow.MAIN_ITEMS`, above `EXIT GAME`, so it sits last when exit is hidden on web / `--no-exit`), rendered by `MenuScreen._credits` with clipped auto-scrolling (`18 px/s`) that pauses while `move_up` or `move_down` is held for clamped manual scrolling, ignores `plant`, and returns to the main menu on `BACK` (`bark` or `pause`). Supports `--shot-menu=credits` (`--shot-scroll=Y`).
+- Credits show the game title, `Made by Santtu Nykänen`, `Made in Barcelona`, the playable dogs (`Millie, Pipa, Mochi, Bruna, Tito (and Tofu)`), the font OFL 1.1 notices (`Bricolage Grotesque` and `Inter`), and the Godot Engine MIT copyright and full permission/as-is notice, with all UI headings, labels, and prompt bar verbs localized in `hud/i18n.gd` (`en`, `ca`, `es`).
+- Added 24 in-game achievements in `systems/achievements.gd` (`FEATS`), triggered solely from existing gameplay events (`Goals.finish_walk`, `Goals.credit`, `main.on_combo_banked`, `main.on_challenge_done`, `MenuFlow.shop_select`, `Detour.tick` gallery bones, and `BossMamut`/`BossDrac`/`BossLleons`/`BossGat` victory transitions) with tutorial, autowalk, `free_play`, and `free_walk` excluded. New unlocks persist in `records.cfg` (`achievements`, `dogs_walked`, `gallery_bones` in `autoload/game.gd`) and pop a localized `EventFeed` toast.
+- Added an **ACHIEVEMENTS** page at the end of `YOUR WALKS` (`progress`, paged with `left`/`right`, `--shot-menu=progress --shot-achievements`), laying out all 24 feats in a responsive multi-column grid (3x8 on `1280x720` and `844x390`, 2x12 on `390x844`) with unlocked feats lit and locked feats dimmed with their hints.
+- Added `tests/test_achievements.gd` (in `tests/ci_tests.txt`), expanded `tests/test_menu_flow.gd` and `tests/test_menu_tree.gd` (including credits auto/manual scroll bounds), and added `credits` to `tools/shot_sweep.sh`.
+
+## 2026-11-18 - Changelog entries as fragments
+
+- Every change adds its changelog entry as its own file in `changelog.d/` (`YYYY-MM-DD-short-slug.md`, the entry as it will read) instead of at the top of `CHANGELOG.md`, where pull requests landing side by side all conflicted on the same lines. `python tools/changelog.py` folds the fragments in, newest first; `--check` runs in CI. `changelog.d/README.md` says how, and AGENTS.md points to it.
+
+## 2026-11-18 - Buried finds, and training that buys her stats
+
+- Every walk has three finds buried just off the path (`systems/buried_finds.gd`): in grass, sand or mud, never paving; on a paved walk in a street tree's pit or a stash tucked by a bench or a bin. The same spots every run, from a hash of the walk, never the RNG. 133 of the 138 are placed; a walk with nowhere soft to hide one has fewer.
+- A faint scent rises off a find when she is close, further with a better nose. Stand still over it and she digs it up: a shout, three bones, and the first time that dog has it, a training point. A find she has had before is just a hole.
+- Training, as a skater's stats are: each dog has her own points, earned by what she digs up, and spends them on her own stats in the wardrobe, a level at a time (level n costs n points, a maxed stat 15, a maxed dog 75). Stats no longer cost bones. A new stat, NOSE, reaches finds from further away; Millie, the beagle, starts with a better one (`nose_mult` 1.3).
+- Every walk's finds are each dog's own, so 138 points are there for every dog, more than the 75 a dog can spend.
+- Saved with the records (`Game.training`, `Game.finds_found`). `tests/test_buried_finds.gd`, listed in `tests/ci.d/buried-finds.txt`.
+- `tests/ci.d/README.md` gave the wrong line format; it is the editor's arguments, as in `tests/ci_tests.txt`.
+- `--shot-tab=collar|bandana|coat|stats` opens that wardrobe tab in a `--shot-menu=shop` shot.
+
+## 2026-11-18 - Polish El Besòs
+
+- The river's deep channel was two flat strips of blue, and the edge between them ran down the whole walk as a seam. It is one fill now, lighter where it shelves up to the riprap and feathering into the deep water (`ShapeBatch.band`).
+- The riprap along the channel was a single file of round stones the same size, which read as a string of beads. It is quarry stone tipped in two staggered courses now, angular blocks of every size with the odd chip wedged between (`world/stones.gd`'s `Stones.stone`).
+- After dark a wall lamp hung over the river's shingle on the east bank, where there is no wall. The walk keeps the street's lamps but drops those (`Besos.night_lights`).
+- The meadow's trodden earth past the gate is drawn soft at the edge (El Besòs is on `main.SOFT_WEAR`).
+- `tests/test_besos.gd` covers the night lamps and the soft wear.
+
+## 2026-11-18 - Accessibility settings
+
+- Added four accessibility controls to SETTINGS (`hud/menu_flow.gd`, `hud/settings_panel.gd`, `autoload/game.gd`), all saved under `[settings]` in `user://records.cfg` and reset in `_reset_persisted_state()`:
+  - **SCREEN SHAKE** (`on` / `off`): zeroes `cam.offset` (`main.gd`), suppresses/resets the enrage dutch tilt (`systems/cam_tricks.gd`), disables the feed arrival punch (`hud/event_feed.gd`), disables world pop punch (`world/pops_layer.gd`), skips locked menu nudge shakes (`hud/menu_screen.gd`), and removes landing shake in intro/chase films (`intro/film_kit.gd`, `intro/film_plinth.gd`).
+  - **FLASHES** (`on` / `off`): disables full-screen flash overlays and bright white hit/strobe pops across bosses (`systems/boss_gat.gd`, `systems/boss_mamut.gd`, `systems/boss_drac.gd`), match flashes (`main.gd`), van headlamp bursts (`systems/furgoneta.gd`), camera flashes (`systems/eixample_tour.gd`, `entities/tourist.gd`, `entities/challenger_cast.gd`), blinking boards and crossing/warning strobes (`systems/estacio.gd`, `systems/pilones_retractils.gd`, `systems/molina.gd`, `systems/forklift.gd`, `systems/besos.gd`, `entities/sweeper.gd`, `systems/metro_art.gd`, `systems/montjuic.gd`, `systems/tibidabo.gd`, `systems/march.gd`, `systems/tutorial.gd`), and bright white flash fades in intros (`intro/kit.gd`, `intro/film_kit.gd`, `intro/film_sweeper.gd`, `intro/film_flood.gd`, `intro/film_plinth.gd`).
+  - **TEXT SIZE** (`normal` / `large`): raises the HUD and menu text factor one step via `hud/ui_scale.gd` (`UiScale.LARGE_MULT`), applying immediately when toggled and leaving `"normal"` unchanged. Made `hud/settings_panel.gd`, `hud/menu_screen.gd` (`_controls`, `_details`, `_shop`, `_pause`, `_confirm`), `hud/results_panel.gd`, and `hud/ui_kit.gd` (`prompt_bar` gap/wrap) fit cleanly above the prompt bar across `1280x720`, `844x390`, and `390x844` in both `"normal"` and `"large"`.
+  - **CONTROLS** screen (`MenuFlow.screen(m) == "controls"`): pressing confirm on `CONTROLS` opens a dedicated rebinding screen listing all 15 actions registered in `main.gd/_setup_input` plus a `"RESET TO DEFAULTS"` row (`Game.clear_rebinds()`), while left/right on `CONTROLS` in SETTINGS still cycles `control_layout`. Handles `rebind_wait_release`, cancels cleanly via `ESC`/`JOY_BUTTON_BACK`/BACK, persists `key_binds` and `pad_binds`, and updates live `Prompts.key()` across `hud/prompts.gd`.
+- Localized all new strings into English, Catalan, and Spanish (`hud/i18n.gd`), extended `MenuFlow.check_settings_roundtrip()` and `tests/test_menu_tree.gd`, and added `tests/test_accessibility.gd` to `tests/ci_tests.txt`.
+
 ## 2026-11-18 - Polish La Neteja
 
 - The plaça's worn patch was a hard-edged flat disc. It is drawn soft now, fading into the flags (La Neteja is on `main.SOFT_WEAR`).

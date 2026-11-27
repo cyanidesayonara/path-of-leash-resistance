@@ -1,9 +1,0 @@
-## 2026-11-20 - Tarragona: the art pass
-
-- Tarragona's fronts are houses now, different down both sides: the Rambla Nova's blocks with flat terrats (stair huts, water tanks, solar panels, washing), balconies along their fronts and café terraces on the pavement; the Ajuntament with its tiled hipped roof, clock turret and flag on the plaça, and arcaded houses across from it; Part Alta houses with tiled roofs, shutters and geraniums; the arcades of the Plaça del Fòrum
-- The coast is drawn: the cliff under the Balcó's railing, the railway in its cutting, shingle and beach, and the sea deepening from the shore in soft bands with surf and evening glints; the railing is iron on a stone coping, worn bright where people touch it
-- The amphitheatre is an oval of stepped tiers with lit and shaded risers, broken on its seaward side, an arena with its podium wall, the fossae and the ruined church; the arena's collider follows the drawn wall, and a visitor railing marks where the path stops on the cavea
-- The garden terrace above it has palms, a balustrade and flower beds; the Roman wall is a top of megaliths with square towers, a gate and a garden of cypresses beyond
-- Each stretch is laid in its own stone (no Barcelona panots): limestone flags, a raked sauló path, setts in the Rambla's lanes and the Part Alta, square slabs on the plaça; the hard shadow rectangle at the walls is gone, and the houses' shade lies feathered across the paving
-- The castellers' monument is a bronze tower on a stepped plinth; the practice's colla wears one shirt with sash and mocador, the crowd is people, and the grallers and drummer play by the corner
-- Strollers, people at the Balcó's railing, diners on the terraces and people on the cathedral steps, all as the hour and weather say; Augustus stands on the podium at the top of the old town, and the cathedral's front, rose window, bell tower and stair close the walk

@@ -224,6 +224,21 @@
       }
     ]
   },
+  "poblenou": {
+    "about": "A morning sea breeze down Rambla del Poblenou's flower-tile central promenade under tall plane trees, past tiled horchata kiosks and café terraces into Plaça de Prim's compass paving before palms lead out to Plaça del Poblenou. Wait staff cross with wobbling trays of horchata and fartons; pull clear in time and snatch the dropped treat.",
+    "shots": [
+      {
+        "file": "shot-poblenou.jpg",
+        "caption": "Plane trees and compass paving in Plaça de Prim",
+        "alt": "Rambla del Poblenou: flower-tile promenade widening into Plaça de Prim with compass inlay, flower planters and plane trees."
+      },
+      {
+        "file": "shot-poblenou-2.jpg",
+        "caption": "Off the leash in Plaça del Poblenou",
+        "alt": "Rambla del Poblenou: the open tiled square at Plaça del Poblenou past the gate."
+      }
+    ]
+  },
   "tibidabo": {
     "about": "Up the steep flanks of Barcelona's tallest mountain toward the old hilltop fairground, where the vintage funicular climbs the slope alongside cliffside coin viewfinders, spun-sugar stalls and string lights glowing above the city.",
     "shots": [
@@ -389,6 +404,21 @@
       }
     ]
   },
+  "xemeneies": {
+    "about": "At dusk beside Poble-sec's three soaring red-brick power-station chimneys on Paral·lel: painted legal-graffiti walls, waxed concrete skate ledges to grind, amphitheatre tiers and tall iron-ringed shafts casting long shadows across the sunken plaza out to Jardí de les Xemeneies.",
+    "shots": [
+      {
+        "file": "shot-xemeneies.jpg",
+        "caption": "Brick chimney tower and dusk shadow in Les Tres Xemeneies",
+        "alt": "Les Tres Xemeneies: sunken concrete plaza at dusk with a circular red-brick chimney, long shadow and warm streetlamps."
+      },
+      {
+        "file": "shot-xemeneies-2.jpg",
+        "caption": "Green courtyard at Jardí de les Xemeneies",
+        "alt": "Les Tres Xemeneies: grassy courtyard off-leash space at Jardí de les Xemeneies."
+      }
+    ]
+  },
   "station": {
     "about": "Main-line concourse underfoot: gleaming station paving, brass tactile guide strips, ticket turnstiles, luggage trolleys and long moving walkways carrying hurried travelers from wall to wall while the clock ticks down.",
     "shots": [
@@ -496,6 +526,21 @@
         "file": "shot-blai-2.jpg",
         "caption": "End of the alley at Plaça del Sortidor",
         "alt": "Carrer de Blai: the evening square at Plaça del Sortidor."
+      }
+    ]
+  },
+  "llucia": {
+    "about": "Barcelona's old Christmas market outside the cathedral at blue hour: timber booths piled with nativity moss and figurines under strung fairy garlands, potted winter pines, and a smiling striped Caga Tió log wrapped in a red barretina ready to shower torró across Plaça de la Catedral.",
+    "shots": [
+      {
+        "file": "shot-llucia.jpg",
+        "caption": "Christmas stalls and fairy lights at Fira de Santa Llúcia",
+        "alt": "Fira de Santa Llúcia: blue-hour market avenue with illuminated nativity booths, string garlands and panot paving."
+      },
+      {
+        "file": "shot-llucia-2.jpg",
+        "caption": "Christmas pine circle on Plaça de la Catedral",
+        "alt": "Fira de Santa Llúcia: evening off-leash square on Plaça de la Catedral."
       }
     ]
   },
@@ -726,6 +771,21 @@
         "file": "shot-ronda-2.jpg",
         "caption": "Sheltered pines at Cala del Pinar",
         "alt": "Camí de Ronda: pine-framed coastal yard above Cala del Pinar."
+      }
+    ]
+  },
+  "santacoloma": {
+    "about": "A steep climb up from the Besòs bridgehead into Santa Coloma past Mercat del Fondo's spice sacks and striped barber poles, laundry flapping above balconies, to the tiled clock square and domino elders of Plaça del Rellotge before finishing at Mirador del Fondo.",
+    "shots": [
+      {
+        "file": "shot-santacoloma.jpg",
+        "caption": "Clock plinth and domino tables in Plaça del Rellotge",
+        "alt": "Santa Coloma: sunlit square with glazed clock tower plinth, green domino tables and panot tiles."
+      },
+      {
+        "file": "shot-santacoloma-2.jpg",
+        "caption": "Hilltop trees at Mirador del Fondo",
+        "alt": "Santa Coloma: grassy hillside off-leash overlook at Mirador del Fondo."
       }
     ]
   },

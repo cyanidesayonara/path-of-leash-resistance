@@ -1,4 +1,0 @@
-## 2026-11-18 - Website walk pages, chapters and screenshots
-- Added `tools/site_walks.gd` (dumped metadata in `tools/site_walks_data.json`), `site/walks.json`, and `tools/site_walks.py` to generate chapter sections, boss/chase/dog/wardrobe sections, and an individual `site/walks/<id>.html` page for all 47 walks (First Walk tutorial plus 46 main walks).
-- Extended `site/index.html` with What you do beats, five campaign chapters (`Game.chapters()`), the four bosses (`El Mamut`, `El Drac`, `Els Lleons`, `El Gat`), the chases (`sweeper.gif`, `boars.gif`, nine chase links), five dogs, and wardrobe/training/New Look swatches.
-- Extended `tools/site_media.sh` to capture 107 `960x540` progressive JPEGs across every walk (campaign sky, off-leash area, bosses, chases) alongside the clips and icon (8.5 MB total), updated `site/press/index.html`, `.github/workflows/pages.yml`, and `docs/website.md` (15 MB image budget).
