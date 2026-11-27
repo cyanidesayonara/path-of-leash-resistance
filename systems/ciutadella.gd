@@ -639,7 +639,7 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				b.rect(Rect2(sx, PASSEIG_TOP + 14.0, 14.0, 18.0), Color(0.84, 0.82, 0.76, 0.75))
 				sx += 32.0
 			b.line(Vector2(x0, PASSEIG_TOP), Vector2(x0 + w, PASSEIG_TOP), Color(0.80, 0.76, 0.68), 4.0)
-	# palms in curbed soil pits along the carriageway
+	# palms in curbed soil pits along the carriageway (same crown as the beach)
 	var p_step := 144.0
 	var py := floorf(maxf(y_top, PASSEIG_TOP + 120.0) / p_step) * p_step + 24.0
 	while py < y_bot:
@@ -650,11 +650,8 @@ static func draw_edge_layer(m: Node2D, c: Object, vt: float, vb: float) -> void:
 				var pp := Vector2(xa + side * 54.0, py)
 				b.rect(Rect2(pp - Vector2(14.0, 14.0), Vector2(28.0, 28.0)), Color(0.70, 0.67, 0.60))
 				b.rect(Rect2(pp - Vector2(10.0, 10.0), Vector2(20.0, 20.0)), Color(0.34, 0.27, 0.20))
-				b.circle(pp + Shade.light * 10.0, 24.0, SHADOW)
-				for i in range(7):
-					var d := Vector2.from_angle(float(i) * TAU / 7.0 + py * 0.02)
-					b.line(pp, pp + d * 30.0, Color(0.22, 0.48, 0.24), 6.0)
-				b.circle(pp, 6.0, Color(0.46, 0.36, 0.24))
+				b.circle(pp + Shade.light * 12.0, 30.0, SHADOW)
+				m._palm_crown(b, pp)
 		py += p_step
 
 	# iron railings along the park's edge, running all the way behind the gate piers
@@ -1129,15 +1126,69 @@ static func draw_overhead(m: Node2D, wc: Object) -> void:
 	b.rect(Rect2(r.position + Shade.light * 20.0, r.size), Color(0.04, 0.03, 0.07, 0.26))
 	b.rect(r, Color(0.62, 0.28, 0.19))
 	b.rect(r.grow(-8.0), Color(0.72, 0.36, 0.24))
-	# the stone frieze along its face and the bats' crown at the middle
+	# the stone frieze along its face and Barcelona's shield and bat at the middle
 	b.rect(Rect2(r.position.x + 20.0, r.end.y - 22.0, r.size.x - 40.0, 12.0), Color(0.84, 0.78, 0.66))
 	var x := r.position.x + 30.0
 	while x < r.end.x - 30.0:
 		b.rect(Rect2(x, r.position.y + 10.0, 12.0, 18.0), Color(0.80, 0.42, 0.28))
 		x += 30.0
-	var mid := Vector2(r.get_center().x, r.position.y + 30.0)
-	b.circle(mid, 22.0, Color(0.84, 0.70, 0.30))
-	b.circle(mid, 14.0, Color(0.92, 0.80, 0.42))
-	for sd: float in [-1.0, 1.0]:
-		b.line(mid + Vector2(sd * 20.0, 0.0), mid + Vector2(sd * 44.0, -10.0), Color(0.84, 0.70, 0.30), 5.0)
+	_draw_arc_crown(b, Vector2(r.get_center().x, r.position.y + 34.0))
 	b.flush(wc)
+
+
+# Barcelona's arms on the Arc: a pointed gold shield with Sant Jordi's cross
+# and the four bars, and the bat whose wings spread above it.
+static func _draw_arc_crown(b: ShapeBatch, mid: Vector2) -> void:
+	var gold := Color(0.84, 0.70, 0.30)
+	var gold_lit := Color(0.96, 0.86, 0.48)
+	var pale := Color(0.94, 0.90, 0.80)
+	var bar := Color(0.72, 0.18, 0.16)
+	var bat := Color(0.78, 0.62, 0.22)
+	# the bat above the shield: body, then two tapered wings
+	var head := mid + Vector2(0.0, -22.0)
+	for sd: float in [-1.0, 1.0]:
+		var root := head + Vector2(sd * 3.0, 1.0)
+		var tip := head + Vector2(sd * 38.0, -6.0)
+		var mid_w := head + Vector2(sd * 20.0, -14.0)
+		b.polygon(PackedVector2Array([
+			root,
+			mid_w + Vector2(0.0, -6.0),
+			tip,
+			mid_w + Vector2(0.0, 8.0),
+			root + Vector2(0.0, 4.0),
+		]), bat)
+		b.polygon(PackedVector2Array([
+			root + Vector2(sd * 2.0, 0.0),
+			mid_w + Vector2(sd * 2.0, -3.0),
+			tip + Vector2(-sd * 4.0, 0.0),
+			mid_w + Vector2(sd * 2.0, 4.0),
+		]), gold_lit)
+	b.circle(head, 5.5, bat)
+	b.circle(head + Vector2(0.0, -1.0), 3.2, gold_lit)
+	b.circle(head + Vector2(-1.6, -1.4), 1.1, Color(0.18, 0.12, 0.08))
+	b.circle(head + Vector2(1.6, -1.4), 1.1, Color(0.18, 0.12, 0.08))
+	# pointed heater shield
+	var shield := PackedVector2Array([
+		mid + Vector2(-16.0, -12.0),
+		mid + Vector2(16.0, -12.0),
+		mid + Vector2(16.0, 4.0),
+		mid + Vector2(0.0, 22.0),
+		mid + Vector2(-16.0, 4.0),
+	])
+	b.polygon(shield, gold.darkened(0.18))
+	var face := PackedVector2Array([
+		mid + Vector2(-13.0, -9.0),
+		mid + Vector2(13.0, -9.0),
+		mid + Vector2(13.0, 3.0),
+		mid + Vector2(0.0, 18.0),
+		mid + Vector2(-13.0, 3.0),
+	])
+	b.polygon(face, gold_lit)
+	# four bars across the lower half
+	for i in range(4):
+		var by := mid.y + 1.0 + float(i) * 3.6
+		var half := 11.0 - float(i) * 1.6
+		b.line(Vector2(mid.x - half, by), Vector2(mid.x + half, by), bar, 2.2)
+	# Sant Jordi's cross over the upper face
+	b.rect(Rect2(mid.x - 2.0, mid.y - 9.0, 4.0, 16.0), pale)
+	b.rect(Rect2(mid.x - 11.0, mid.y - 3.0, 22.0, 4.0), pale)
